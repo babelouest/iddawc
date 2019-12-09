@@ -61,9 +61,6 @@ void i_clean_session(struct _i_session * i_session) {
 }
 
 int i_set_int_option(struct _i_session * i_session, uint option, uint i_value) {
-  (void)(i_session);
-  (void)(option);
-  (void)(i_value);
   int ret = I_OK;
   if (i_session != NULL) {
     switch (option) {
@@ -96,8 +93,35 @@ int i_set_int_option(struct _i_session * i_session, uint option, uint i_value) {
 }
 
 int i_set_str_option(struct _i_session * i_session, uint option, const char * s_value) {
-  (void)(i_session);
-  (void)(option);
-  (void)(s_value);
-  return I_ERROR;
+  int ret = I_OK;
+  if (i_session != NULL) {
+    switch (option) {
+      case I_OPT_SCOPE_SET:
+        o_free(i_session->scope);
+        if (o_strlen(s_value)) {
+          i_session->scope = o_strdup(s_value);
+        } else {
+          i_session->scope = NULL;
+        }
+        break;
+      case I_OPT_SCOPE_APPEND:
+        if (o_strlen(s_value)) {
+          if (i_session->scope == NULL) {
+            i_session->scope = o_strdup(s_value);
+          } else {
+            i_session->scope = mstrcatf(i_session->scope, " %s", s_value);
+          }
+        } else {
+          o_free(i_session->scope);
+          i_session->scope = NULL;
+        }
+        break;
+      default:
+        ret = I_ERROR_PARAM;
+        break;
+    }
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
 }

@@ -41,15 +41,16 @@
 enum _i_option {
   I_OPT_NONE                 = 0,
   I_OPT_RESPONSE_TYPE        = 1,
-  I_OPT_SCOPE                = 2,
-  I_OPT_STATE                = 3,
-  I_OPT_NONCE                = 4,
-  I_OPT_ADDITIONAL_PARAMETER = 5,
-  I_OPT_RESULT               = 6,
-  I_OPT_CODE                 = 7,
-  I_OPT_REFRESH_TOKEN        = 8,
-  I_OPT_ACCESS_TOKEN         = 9,
-  I_OPT_REDIRECT_URI         = 10
+  I_OPT_SCOPE_SET            = 2,
+  I_OPT_SCOPE_APPEND         = 3,
+  I_OPT_STATE                = 4,
+  I_OPT_NONCE                = 5,
+  I_OPT_ADDITIONAL_PARAMETER = 6,
+  I_OPT_RESULT               = 7,
+  I_OPT_CODE                 = 8,
+  I_OPT_REFRESH_TOKEN        = 9,
+  I_OPT_ACCESS_TOKEN         = 10,
+  I_OPT_REDIRECT_URI         = 11
 };
 
 struct _i_session {

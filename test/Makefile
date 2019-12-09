@@ -44,5 +44,5 @@ test: test_core
 
 check: test
 
-memcheck: $(IDDAWC_LIBRARY) u_map core framework websocket
+memcheck: $(IDDAWC_LIBRARY) core
 	-CK_FORK=no LD_LIBRARY_PATH=$(IDDAWC_LOCATION):${LD_LIBRARY_PATH} $(VALGRIND_COMMAND) ./core 2>valgrind-core.txt

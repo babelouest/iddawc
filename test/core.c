@@ -6,6 +6,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define SCOPE1 "scope1"
+#define SCOPE2 "scope2"
 #define SCOPE_LIST "scope1 scope2"
 
 START_TEST(test_iddawc_init_session)
@@ -50,8 +52,16 @@ START_TEST(test_iddawc_set_option_scope)
 
   ck_assert_int_eq(i_set_str_option(&i_session, 0, NULL), I_ERROR_PARAM);
   ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_NONE, NULL), I_ERROR_PARAM);
-  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE, NULL), I_OK);
-  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE, SCOPE_LIST), I_OK);
+  
+  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE_SET, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE_SET, SCOPE1), I_OK);
+  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE_SET, SCOPE2), I_OK);
+  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE_SET, SCOPE_LIST), I_OK);
+
+  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE_APPEND, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE_APPEND, SCOPE1), I_OK);
+  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE_APPEND, SCOPE2), I_OK);
+  ck_assert_int_eq(i_set_str_option(&i_session, I_OPT_SCOPE_APPEND, SCOPE_LIST), I_OK);
 
   i_clean_session(&i_session);
 }
