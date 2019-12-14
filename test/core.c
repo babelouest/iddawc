@@ -12,6 +12,7 @@
 #define STATE "stateXyz1234"
 #define NONCE "nonceXyz1234"
 #define REDIRECT_URI "https://iddawc.tld"
+#define REDIRECT_TO "https://iddawc.tld#access_token=plop"
 #define CLIENT_ID "clientXyz1234"
 #define CLIENT_SECRET "secretXyx1234"
 #define ADDITIONAL_KEY "key"
@@ -24,7 +25,9 @@
 #define REFRESH_TOKEN "refreshXyz1234"
 #define ACCESS_TOKEN "accessXyz1234"
 #define ID_TOKEN "idTokenXyz1234"
-#define RESULT_MESSAGE "messageXyz1234"
+#define ERROR "errorXyz1234"
+#define ERROR_DESCRIPTION "errorDescriptionXyz1234"
+#define ERROR_URI "errorUriXyz1234"
 #define GLEWLWYD_API_URL "https://glewlwyd.tld/api"
 #define GLEWLWYD_COOKIE_SESSION "cookieXyz1234"
 
@@ -38,7 +41,7 @@ START_TEST(test_iddawc_init_session)
 }
 END_TEST
 
-START_TEST(test_iddawc_set_oauth2_parameter_response_type)
+START_TEST(test_iddawc_set_response_type)
 {
   struct _i_session i_session;
 
@@ -59,111 +62,170 @@ START_TEST(test_iddawc_set_oauth2_parameter_response_type)
 }
 END_TEST
 
-START_TEST(test_iddawc_set_oauth2_parameter)
+START_TEST(test_iddawc_set_result)
 {
   struct _i_session i_session;
+
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, 0, NULL), I_ERROR_PARAM);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_NONE, NULL), I_ERROR_PARAM);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_RESPONSE_TYPE, NULL), I_ERROR_PARAM);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_ADDITIONAL_PARAMETER, NULL), I_ERROR_PARAM);
   
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE, SCOPE1), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE, SCOPE2), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE, SCOPE_LIST), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE_APPEND, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE_APPEND, SCOPE1), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE_APPEND, SCOPE2), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE_APPEND, SCOPE_LIST), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_STATE, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_STATE, STATE), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_NONCE, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_NONCE, NONCE), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_REDIRECT_URI, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_REDIRECT_URI, REDIRECT_URI), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_CLIENT_ID, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_CLIENT_ID, CLIENT_ID), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_CLIENT_SECRET, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_CLIENT_SECRET, CLIENT_SECRET), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_AUTH_ENDPOINT, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_TOKEN_ENDPOINT, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_OPENID_CONFIG_ENDPOINT, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT, ACCESS_TOKEN_VALIDATION_ENDPOINT), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_RESULT_MESSAGE, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_RESULT_MESSAGE, RESULT_MESSAGE), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_CODE, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_CODE, CODE), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_REFRESH_TOKEN, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_REFRESH_TOKEN, REFRESH_TOKEN), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_ACCESS_TOKEN, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_ID_TOKEN, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_ID_TOKEN, ID_TOKEN), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_GLEWLWYD_API_URL, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_GLEWLWYD_API_URL, GLEWLWYD_API_URL), I_OK);
-
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION, NULL), I_OK);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION), I_OK);
+  ck_assert_int_eq(i_set_result(&i_session, I_ERROR_MEMORY), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_result(&i_session, I_OK), I_OK);
+  ck_assert_int_eq(i_set_result(&i_session, I_ERROR), I_OK);
+  ck_assert_int_eq(i_set_result(&i_session, I_ERROR_PARAM), I_OK);
+  ck_assert_int_eq(i_set_result(&i_session, I_ERROR_UNAUTHORIZED), I_OK);
+  ck_assert_int_eq(i_set_result(&i_session, I_ERROR_SERVER), I_OK);
 
   i_clean_session(&i_session);
 }
 END_TEST
 
-START_TEST(test_iddawc_get_oauth2_parameter)
+START_TEST(test_iddawc_set_parameter)
 {
   struct _i_session i_session;
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_STATE, STATE), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_STATE), STATE);
+  ck_assert_int_eq(i_set_parameter(&i_session, 0, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_NONE, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_RESPONSE_TYPE, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ADDITIONAL_PARAMETER, NULL), I_ERROR_PARAM);
+  
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE, SCOPE1), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE, SCOPE2), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE, SCOPE_LIST), I_OK);
 
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_NONCE, NONCE), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_NONCE), NONCE);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE_APPEND, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE_APPEND, SCOPE1), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE_APPEND, SCOPE2), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE_APPEND, SCOPE_LIST), I_OK);
 
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE, SCOPE1), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_SCOPE), SCOPE1);
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_SCOPE_APPEND, SCOPE2), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_SCOPE), SCOPE_LIST);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_STATE, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_STATE, STATE), I_OK);
 
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_REDIRECT_URI, REDIRECT_URI), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_REDIRECT_URI), REDIRECT_URI);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_NONCE, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_NONCE, NONCE), I_OK);
 
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_CLIENT_ID, CLIENT_ID), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_CLIENT_ID), CLIENT_ID);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_URI, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_URI, REDIRECT_URI), I_OK);
 
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_AUTH_ENDPOINT), AUTH_ENDPOINT);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_TO), I_OK);
 
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_CLIENT_SECRET, CLIENT_SECRET), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_CLIENT_SECRET), CLIENT_SECRET);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_CLIENT_ID, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_CLIENT_ID, CLIENT_ID), I_OK);
 
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_TOKEN_ENDPOINT), TOKEN_ENDPOINT);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_CLIENT_SECRET, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_CLIENT_SECRET, CLIENT_SECRET), I_OK);
 
-  ck_assert_int_eq(i_set_oauth2_parameter(&i_session, I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT), I_OK);
-  ck_assert_str_eq(i_get_oauth2_parameter(&i_session, I_OPT_OPENID_CONFIG_ENDPOINT), OPENID_CONFIG_ENDPOINT);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_AUTH_ENDPOINT, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_TOKEN_ENDPOINT, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_OPENID_CONFIG_ENDPOINT, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT, ACCESS_TOKEN_VALIDATION_ENDPOINT), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ERROR, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ERROR, ERROR), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ERROR_DESCRIPTION, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ERROR_DESCRIPTION, ERROR_DESCRIPTION), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ERROR_URI, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ERROR_URI, ERROR_URI), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_CODE, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_CODE, CODE), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REFRESH_TOKEN, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REFRESH_TOKEN, REFRESH_TOKEN), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ACCESS_TOKEN, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ID_TOKEN, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ID_TOKEN, ID_TOKEN), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_GLEWLWYD_API_URL, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_GLEWLWYD_API_URL, GLEWLWYD_API_URL), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION), I_OK);
+
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_get_parameter)
+{
+  struct _i_session i_session;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_STATE, STATE), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_STATE), STATE);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_NONCE, NONCE), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_NONCE), NONCE);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE, SCOPE1), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_SCOPE), SCOPE1);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_SCOPE_APPEND, SCOPE2), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_SCOPE), SCOPE_LIST);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_URI, REDIRECT_URI), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_URI), REDIRECT_URI);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_TO), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_TO);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_CLIENT_ID, CLIENT_ID), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_CLIENT_ID), CLIENT_ID);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_AUTH_ENDPOINT), AUTH_ENDPOINT);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_CLIENT_SECRET, CLIENT_SECRET), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_CLIENT_SECRET), CLIENT_SECRET);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_ENDPOINT), TOKEN_ENDPOINT);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_OPENID_CONFIG_ENDPOINT), OPENID_CONFIG_ENDPOINT);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT, ACCESS_TOKEN_VALIDATION_ENDPOINT), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT), ACCESS_TOKEN_VALIDATION_ENDPOINT);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ERROR, ERROR), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), ERROR);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ERROR_DESCRIPTION, ERROR_DESCRIPTION), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), ERROR_DESCRIPTION);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ERROR_URI, ERROR_URI), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), ERROR_URI);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_CODE, CODE), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_CODE), CODE);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REFRESH_TOKEN, REFRESH_TOKEN), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), REFRESH_TOKEN);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ID_TOKEN, ID_TOKEN), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ID_TOKEN), ID_TOKEN);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_GLEWLWYD_API_URL, GLEWLWYD_API_URL), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_GLEWLWYD_API_URL), GLEWLWYD_API_URL);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION), GLEWLWYD_COOKIE_SESSION);
 
   i_clean_session(&i_session);
 }
@@ -197,15 +259,35 @@ START_TEST(test_iddawc_get_response_type)
 }
 END_TEST
 
-START_TEST(test_iddawc_set_oauth2_parameter_additional_parameter)
+START_TEST(test_iddawc_get_result)
+{
+  struct _i_session i_session;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  ck_assert_int_eq(i_set_result(&i_session, I_OK), I_OK);
+  ck_assert_int_eq(i_get_result(&i_session), I_OK);
+  ck_assert_int_eq(i_set_result(&i_session, I_ERROR), I_OK);
+  ck_assert_int_eq(i_get_result(&i_session), I_ERROR);
+  ck_assert_int_eq(i_set_result(&i_session, I_ERROR_PARAM), I_OK);
+  ck_assert_int_eq(i_get_result(&i_session), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_result(&i_session, I_ERROR_UNAUTHORIZED), I_OK);
+  ck_assert_int_eq(i_get_result(&i_session), I_ERROR_UNAUTHORIZED);
+  ck_assert_int_eq(i_set_result(&i_session, I_ERROR_SERVER), I_OK);
+  ck_assert_int_eq(i_get_result(&i_session), I_ERROR_SERVER);
+
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_set_additional_parameter)
 {
   struct _i_session i_session;
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
-  ck_assert_int_eq(i_set_oidc_additional_parameter(&i_session, NULL, NULL), I_ERROR_PARAM);
-  ck_assert_int_eq(i_set_oidc_additional_parameter(&i_session, ADDITIONAL_KEY, NULL), I_ERROR_PARAM);
-  ck_assert_int_eq(i_set_oidc_additional_parameter(&i_session, NULL, ADDITIONAL_VALUE), I_ERROR_PARAM);
-  ck_assert_int_eq(i_set_oidc_additional_parameter(&i_session, ADDITIONAL_KEY, ADDITIONAL_VALUE), I_OK);
+  ck_assert_int_eq(i_set_additional_parameter(&i_session, NULL, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_additional_parameter(&i_session, ADDITIONAL_KEY, NULL), I_OK);
+  ck_assert_int_eq(i_set_additional_parameter(&i_session, NULL, ADDITIONAL_VALUE), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_additional_parameter(&i_session, ADDITIONAL_KEY, ADDITIONAL_VALUE), I_OK);
 
   i_clean_session(&i_session);
 }
@@ -216,8 +298,75 @@ START_TEST(test_iddawc_get_additional_parameter)
   struct _i_session i_session;
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   
-  ck_assert_int_eq(i_set_oidc_additional_parameter(&i_session, ADDITIONAL_KEY, ADDITIONAL_VALUE), I_OK);
-  ck_assert_str_eq(i_get_oidc_additional_parameter(&i_session, ADDITIONAL_KEY), ADDITIONAL_VALUE);
+  ck_assert_int_eq(i_set_additional_parameter(&i_session, ADDITIONAL_KEY, ADDITIONAL_VALUE), I_OK);
+  ck_assert_str_eq(i_get_additional_parameter(&i_session, ADDITIONAL_KEY), ADDITIONAL_VALUE);
+  ck_assert_int_eq(i_set_additional_parameter(&i_session, ADDITIONAL_KEY, NULL), I_OK);
+  ck_assert_ptr_eq(i_get_additional_parameter(&i_session, ADDITIONAL_KEY), NULL);
+  ck_assert_int_eq(i_set_additional_parameter(&i_session, ADDITIONAL_KEY, ADDITIONAL_VALUE ADDITIONAL_VALUE), I_OK);
+  ck_assert_str_eq(i_get_additional_parameter(&i_session, ADDITIONAL_KEY), ADDITIONAL_VALUE ADDITIONAL_VALUE);
+  ck_assert_int_eq(i_set_additional_parameter(&i_session, ADDITIONAL_KEY, NULL), I_OK);
+  ck_assert_ptr_eq(i_get_additional_parameter(&i_session, ADDITIONAL_KEY), NULL);
+
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parameter_list)
+{
+  struct _i_session i_session;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  ck_assert_int_eq(set_parameter_list(&i_session, 666, "error", I_OPT_NONE), I_ERROR_PARAM);
+  ck_assert_int_eq(set_parameter_list(&i_session, I_OPT_SCOPE_APPEND, "error", I_OPT_NONE), I_ERROR_PARAM);
+  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_STATE), NULL);
+  ck_assert_int_eq(set_parameter_list(&i_session, I_OPT_NONE), I_OK);
+  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_STATE), NULL);
+  
+  ck_assert_int_eq(set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                  I_OPT_SCOPE, SCOPE_LIST,
+                                                  I_OPT_STATE, STATE,
+                                                  I_OPT_NONCE, NONCE,
+                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                  I_OPT_REDIRECT_TO, REDIRECT_TO,
+                                                  I_OPT_CLIENT_ID, CLIENT_ID,
+                                                  I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                  I_OPT_ADDITIONAL_PARAMETER, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                  I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                  I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT,
+                                                  I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT, ACCESS_TOKEN_VALIDATION_ENDPOINT,
+                                                  I_OPT_RESULT, I_OK,
+                                                  I_OPT_ERROR, ERROR,
+                                                  I_OPT_ERROR_DESCRIPTION, ERROR_DESCRIPTION,
+                                                  I_OPT_ERROR_URI, ERROR_URI,
+                                                  I_OPT_CODE, CODE,
+                                                  I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
+                                                  I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                  I_OPT_ID_TOKEN, ID_TOKEN,
+                                                  I_OPT_GLEWLWYD_API_URL, GLEWLWYD_API_URL,
+                                                  I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION,
+                                                  I_OPT_NONE), I_OK);
+  
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_STATE), STATE);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_NONCE), NONCE);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_SCOPE), SCOPE_LIST);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_URI), REDIRECT_URI);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_TO);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_CLIENT_ID), CLIENT_ID);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_AUTH_ENDPOINT), AUTH_ENDPOINT);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_CLIENT_SECRET), CLIENT_SECRET);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_ENDPOINT), TOKEN_ENDPOINT);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_OPENID_CONFIG_ENDPOINT), OPENID_CONFIG_ENDPOINT);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT), ACCESS_TOKEN_VALIDATION_ENDPOINT);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), ERROR);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), ERROR_DESCRIPTION);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), ERROR_URI);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_CODE), CODE);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), REFRESH_TOKEN);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ID_TOKEN), ID_TOKEN);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_GLEWLWYD_API_URL), GLEWLWYD_API_URL);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION), GLEWLWYD_COOKIE_SESSION);
 
   i_clean_session(&i_session);
 }
@@ -225,22 +374,25 @@ END_TEST
 
 static Suite *ulfius_suite(void)
 {
-	Suite *s;
-	TCase *tc_core;
+  Suite *s;
+  TCase *tc_core;
 
-	s = suite_create("Iddawc core function tests");
-	tc_core = tcase_create("test_iddawc_core");
-	tcase_add_test(tc_core, test_iddawc_init_session);
-	tcase_add_test(tc_core, test_iddawc_set_oauth2_parameter_response_type);
-	tcase_add_test(tc_core, test_iddawc_set_oauth2_parameter);
-	tcase_add_test(tc_core, test_iddawc_set_oauth2_parameter_additional_parameter);
-	tcase_add_test(tc_core, test_iddawc_get_oauth2_parameter);
-	tcase_add_test(tc_core, test_iddawc_get_response_type);
-	tcase_add_test(tc_core, test_iddawc_get_additional_parameter);
-	tcase_set_timeout(tc_core, 30);
-	suite_add_tcase(s, tc_core);
+  s = suite_create("Iddawc core function tests");
+  tc_core = tcase_create("test_iddawc_core");
+  tcase_add_test(tc_core, test_iddawc_init_session);
+  tcase_add_test(tc_core, test_iddawc_set_response_type);
+  tcase_add_test(tc_core, test_iddawc_set_result);
+  tcase_add_test(tc_core, test_iddawc_set_parameter);
+  tcase_add_test(tc_core, test_iddawc_set_additional_parameter);
+  tcase_add_test(tc_core, test_iddawc_get_parameter);
+  tcase_add_test(tc_core, test_iddawc_get_response_type);
+  tcase_add_test(tc_core, test_iddawc_get_result);
+  tcase_add_test(tc_core, test_iddawc_get_additional_parameter);
+  tcase_add_test(tc_core, test_iddawc_parameter_list);
+  tcase_set_timeout(tc_core, 30);
+  suite_add_tcase(s, tc_core);
 
-	return s;
+  return s;
 }
 
 int main(int argc, char *argv[])
@@ -257,5 +409,5 @@ int main(int argc, char *argv[])
   srunner_free(sr);
   
   y_close_logs();
-	return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+  return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

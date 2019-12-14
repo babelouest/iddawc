@@ -22,7 +22,6 @@
  */
 
 #include <orcania.h>
-#include <yder.h>
 #include <ulfius.h>
 
 #define I_OK                 0
@@ -48,21 +47,24 @@ enum _i_option {
   I_OPT_STATE                            = 4,
   I_OPT_NONCE                            = 5,
   I_OPT_REDIRECT_URI                     = 6,
-  I_OPT_CLIENT_ID                        = 7,
-  I_OPT_CLIENT_SECRET                    = 8,
-  I_OPT_ADDITIONAL_PARAMETER             = 9,
-  I_OPT_AUTH_ENDPOINT                    = 10,
-  I_OPT_TOKEN_ENDPOINT                   = 11,
-  I_OPT_OPENID_CONFIG_ENDPOINT           = 12,
-  I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT = 13,
-  I_OPT_RESULT                           = 14,
-  I_OPT_RESULT_MESSAGE                   = 15,
-  I_OPT_CODE                             = 16,
-  I_OPT_REFRESH_TOKEN                    = 17,
-  I_OPT_ACCESS_TOKEN                     = 18,
-  I_OPT_ID_TOKEN                         = 19,
-  I_OPT_GLEWLWYD_API_URL                 = 20,
-  I_OPT_GLEWLWYD_COOKIE_SESSION          = 21
+  I_OPT_REDIRECT_TO                      = 7,
+  I_OPT_CLIENT_ID                        = 8,
+  I_OPT_CLIENT_SECRET                    = 9,
+  I_OPT_ADDITIONAL_PARAMETER             = 10,
+  I_OPT_AUTH_ENDPOINT                    = 11,
+  I_OPT_TOKEN_ENDPOINT                   = 12,
+  I_OPT_OPENID_CONFIG_ENDPOINT           = 13,
+  I_OPT_ACCESS_TOKEN_VALIDATION_ENDPOINT = 14,
+  I_OPT_RESULT                           = 15,
+  I_OPT_ERROR                            = 16,
+  I_OPT_ERROR_DESCRIPTION                = 17,
+  I_OPT_ERROR_URI                        = 18,
+  I_OPT_CODE                             = 19,
+  I_OPT_REFRESH_TOKEN                    = 20,
+  I_OPT_ACCESS_TOKEN                     = 21,
+  I_OPT_ID_TOKEN                         = 22,
+  I_OPT_GLEWLWYD_API_URL                 = 23,
+  I_OPT_GLEWLWYD_COOKIE_SESSION          = 24
 };
 
 struct _i_session {
@@ -71,6 +73,7 @@ struct _i_session {
   char * state;
   char * nonce;
   char * redirect_url;
+  char * redirect_to;
   char * client_id;
   char * client_secret;
   struct _u_map additional_parameters;
@@ -80,7 +83,9 @@ struct _i_session {
   char * openid_config_endpoint;
   char * access_token_validation_endpoint;
   int    result;
-  char * result_message;
+  char * error;
+  char * error_description;
+  char * error_uri;
   char * code;
   char * refresh_token;
   char * access_token;
@@ -95,15 +100,21 @@ void i_clean_session(struct _i_session * i_session);
 
 int i_set_response_type(struct _i_session * i_session, uint i_value);
 
-int i_set_oauth2_parameter(struct _i_session * i_session, uint option, const char * s_value);
+int i_set_result(struct _i_session * i_session, uint i_value);
 
-int i_set_oidc_additional_parameter(struct _i_session * i_session, const char * s_key, const char * s_value);
+int i_set_parameter(struct _i_session * i_session, uint option, const char * s_value);
+
+int i_set_additional_parameter(struct _i_session * i_session, const char * s_key, const char * s_value);
 
 int i_get_response_type(struct _i_session * i_session);
 
-const char * i_get_oauth2_parameter(struct _i_session * i_session, uint option);
+int i_get_result(struct _i_session * i_session);
 
-const char * i_get_oidc_additional_parameter(struct _i_session * i_session, const char * s_key);
+const char * i_get_parameter(struct _i_session * i_session, uint option);
+
+const char * i_get_additional_parameter(struct _i_session * i_session, const char * s_key);
+
+int set_parameter_list(struct _i_session * i_session, ...);
 
 int i_run_config_endpoint(struct _i_session * i_session);
 
