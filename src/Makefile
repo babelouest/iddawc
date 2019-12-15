@@ -33,7 +33,7 @@ LIBS=-L$(DESTDIR)/lib -lc -lulfius -lorcania -ljwt $(LDFLAGS)
 SONAME=-soname
 OBJECTS=iddawc.o
 OUTPUT=libiddawc.so
-VERSION=0.2.0
+VERSION=0.3.0
 
 .PHONY: all clean
 
