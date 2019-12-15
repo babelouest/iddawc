@@ -39,6 +39,16 @@
 #define I_RESPONSE_TYPE_CLIENT_CREDENTIALS 0x00010000
 #define I_RESPONSE_TYPE_REFRESH_TOKEN      0x00100000
 
+#define I_AUTH_METHOD_GET  0
+#define I_AUTH_METHOD_POST 1
+
+#define I_AUTH_SIGN_ALG_MAX_LENGTH 8
+
+#define I_AUTH_SIGN_ALG_NONE  0
+#define I_AUTH_SIGN_ALG_RS256 1
+#define I_AUTH_SIGN_ALG_RS384 2
+#define I_AUTH_SIGN_ALG_RS512 3
+
 enum _i_option {
   I_OPT_NONE                             = 0,
   I_OPT_RESPONSE_TYPE                    = 1,
@@ -64,7 +74,11 @@ enum _i_option {
   I_OPT_ACCESS_TOKEN                     = 21,
   I_OPT_ID_TOKEN                         = 22,
   I_OPT_GLEWLWYD_API_URL                 = 23,
-  I_OPT_GLEWLWYD_COOKIE_SESSION          = 24
+  I_OPT_GLEWLWYD_COOKIE_SESSION          = 24,
+  I_OPT_AUTH_METHOD                      = 25,
+  I_OPT_AUTH_SIGN_ALG                    = 26,
+  I_OPT_TOKEN_TYPE                       = 27,
+  I_OPT_EXPIRES_IN                       = 28
 };
 
 struct _i_session {
@@ -89,9 +103,13 @@ struct _i_session {
   char * code;
   char * refresh_token;
   char * access_token;
+  char * token_type;
+  uint   expires_in;
   char * id_token;
   char * glewlwyd_api_url;
   char * glewlwyd_cookie_session;
+  uint   auth_method;
+  char   auth_sign_alg[I_AUTH_SIGN_ALG_MAX_LENGTH];
 };
 
 int i_init_session(struct _i_session * i_session);
@@ -118,7 +136,7 @@ const char * i_get_parameter(struct _i_session * i_session, uint option);
 
 const char * i_get_additional_parameter(struct _i_session * i_session, const char * s_key);
 
-int set_parameter_list(struct _i_session * i_session, ...);
+int i_set_parameter_list(struct _i_session * i_session, ...);
 
 int i_run_config_endpoint(struct _i_session * i_session);
 

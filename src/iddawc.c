@@ -87,28 +87,50 @@ static int extract_parameters(const char * url_params, struct _u_map * map) {
   return ret;
 }
 
-static void parse_redirect_url_parameters(struct _i_session * i_session, struct _u_map * map) {
+static int parse_redirect_url_parameters(struct _i_session * i_session, struct _u_map * map) {
   const char ** keys = u_map_enum_keys(map);
   size_t i;
+  int ret = I_OK;
   
-  for (i=0; keys[i] != NULL; i++) {
+  for (i=0; keys[i] != NULL && ret == I_OK; i++) {
     if (0 == o_strcasecmp(keys[i], "code")) {
-      i_set_parameter(i_session, I_OPT_CODE, u_map_get(map, keys[i]));
+      if ((i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE) && o_strlen(u_map_get(map, keys[i]))) {
+        ret = i_set_parameter(i_session, I_OPT_CODE, u_map_get(map, keys[i]));
+      } else {
+        ret = I_ERROR_SERVER;
+      }
     } else if (0 == o_strcasecmp(keys[i], "id_token")) {
-      i_set_parameter(i_session, I_OPT_ID_TOKEN, u_map_get(map, keys[i]));
+      if ((i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN) && o_strlen(u_map_get(map, keys[i]))) {
+        ret = i_set_parameter(i_session, I_OPT_ID_TOKEN, u_map_get(map, keys[i]));
+      } else {
+        ret = I_ERROR_SERVER;
+      }
     } else if (0 == o_strcasecmp(keys[i], "access_token")) {
-      i_set_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, keys[i]));
+      if (u_map_has_key_case(map, "token_type") && o_strlen(u_map_get_case(map, "token_type"))) {
+        if ((i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN) && o_strlen(u_map_get(map, keys[i]))) {
+          ret = i_set_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, keys[i]));
+        } else {
+          ret = I_ERROR_SERVER;
+        }
+      } else {
+        ret = I_ERROR_SERVER;
+      }
+    } else if (0 == o_strcasecmp(keys[i], "token_type")) {
+      ret = i_set_parameter(i_session, I_OPT_TOKEN_TYPE, u_map_get(map, keys[i]));
+    } else if (0 == o_strcasecmp(keys[i], "expires_in")) {
+      i_set_flag_parameter(i_session, I_OPT_EXPIRES_IN, (uint)strtol(u_map_get(map, keys[i]), NULL, 10));
     } else if (0 == o_strcasecmp(keys[i], "error")) {
       i_set_result(i_session, I_ERROR_UNAUTHORIZED);
-      i_set_parameter(i_session, I_OPT_ERROR, u_map_get(map, keys[i]));
+      ret = i_set_parameter(i_session, I_OPT_ERROR, u_map_get(map, keys[i]));
     } else if (0 == o_strcasecmp(keys[i], "error_description")) {
       i_set_result(i_session, I_ERROR_UNAUTHORIZED);
-      i_set_parameter(i_session, I_OPT_ERROR_DESCRIPTION, u_map_get(map, keys[i]));
+      ret = i_set_parameter(i_session, I_OPT_ERROR_DESCRIPTION, u_map_get(map, keys[i]));
     } else if (0 == o_strcasecmp(keys[i], "error_uri")) {
       i_set_result(i_session, I_ERROR_UNAUTHORIZED);
-      i_set_parameter(i_session, I_OPT_ERROR_URI, u_map_get(map, keys[i]));
+      ret = i_set_parameter(i_session, I_OPT_ERROR_URI, u_map_get(map, keys[i]));
     }
   }
+  return ret;
 }
 
 int i_init_session(struct _i_session * i_session) {
@@ -129,16 +151,18 @@ int i_init_session(struct _i_session * i_session) {
     i_session->access_token_validation_endpoint = NULL;
     i_session->refresh_token = NULL;
     i_session->access_token = NULL;
+    i_session->token_type = NULL;
+    i_session->expires_in = 0;
+    i_session->id_token = NULL;
     i_session->code = NULL;
     i_session->result = I_OK;
     i_session->error = NULL;
     i_session->error_description = NULL;
     i_session->error_uri = NULL;
-    i_session->refresh_token = NULL;
-    i_session->access_token = NULL;
-    i_session->id_token = NULL;
     i_session->glewlwyd_api_url = NULL;
     i_session->glewlwyd_cookie_session = NULL;
+    i_session->auth_method = I_AUTH_METHOD_GET;
+    o_strcpy(i_session->auth_sign_alg, "");
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       return I_OK;
     } else if (res == U_ERROR_MEMORY) {
@@ -169,9 +193,11 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->error_uri);
     o_free(i_session->refresh_token);
     o_free(i_session->access_token);
+    o_free(i_session->token_type);
     o_free(i_session->id_token);
     o_free(i_session->glewlwyd_api_url);
     o_free(i_session->glewlwyd_cookie_session);
+    o_free(i_session->access_token_validation_endpoint);
     u_map_clean(&i_session->additional_parameters);
   }
 }
@@ -198,6 +224,7 @@ int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_valu
           case I_RESPONSE_TYPE_REFRESH_TOKEN:
           case I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_ID_TOKEN:
           case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN:
+          case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_CODE:
           case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_ID_TOKEN:
             i_session->response_type = i_value;
             break;
@@ -218,6 +245,40 @@ int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_valu
           default:
             ret = I_ERROR_PARAM;
             break;
+        }
+        break;
+      case I_OPT_AUTH_METHOD:
+        switch (i_value) {
+          case I_AUTH_METHOD_GET:
+          case I_AUTH_METHOD_POST:
+            i_session->auth_method = i_value;
+            break;
+          default:
+            ret = I_ERROR_PARAM;
+            break;
+        }
+        break;
+      case I_OPT_AUTH_SIGN_ALG:
+        switch (i_value) {
+          case I_AUTH_SIGN_ALG_RS256:
+            o_strcpy(i_session->auth_sign_alg, "RS256");
+            break;
+          case I_AUTH_SIGN_ALG_RS384:
+            o_strcpy(i_session->auth_sign_alg, "RS384");
+            break;
+          case I_AUTH_SIGN_ALG_RS512:
+            o_strcpy(i_session->auth_sign_alg, "RS512");
+            break;
+          default:
+            ret = I_ERROR_PARAM;
+            break;
+        }
+        break;
+      case I_OPT_EXPIRES_IN:
+        if (i_value) {
+          i_session->expires_in = i_value;
+        } else {
+          ret = I_ERROR_PARAM;
         }
         break;
       default:
@@ -406,6 +467,14 @@ int i_set_parameter(struct _i_session * i_session, uint option, const char * s_v
           i_session->glewlwyd_cookie_session = NULL;
         }
         break;
+      case I_OPT_TOKEN_TYPE:
+        o_free(i_session->token_type);
+        if (o_strlen(s_value)) {
+          i_session->token_type = o_strdup(s_value);
+        } else {
+          i_session->token_type = NULL;
+        }
+        break;
       default:
         ret = I_ERROR_PARAM;
         break;
@@ -428,7 +497,7 @@ int i_set_additional_parameter(struct _i_session * i_session, const char * s_key
   return ret;
 }
 
-int set_parameter_list(struct _i_session * i_session, ...) {
+int i_set_parameter_list(struct _i_session * i_session, ...) {
   uint option, i_value, ret = I_OK;
   const char * str_key, * str_value;
   va_list vl;
@@ -437,13 +506,12 @@ int set_parameter_list(struct _i_session * i_session, ...) {
   for (option = va_arg(vl, uint); option != I_OPT_NONE && ret == I_OK; option = va_arg(vl, uint)) {
     switch (option) {
       case I_OPT_RESPONSE_TYPE:
-        i_value = va_arg(vl, uint);
-      ret = i_set_response_type(i_session, i_value);
-      break;
       case I_OPT_RESULT:
+      case I_OPT_AUTH_METHOD:
+      case I_OPT_EXPIRES_IN:
         i_value = va_arg(vl, uint);
-      ret = i_set_result(i_session, i_value);
-      break;
+        ret = i_set_flag_parameter(i_session, option, i_value);
+        break;
       case I_OPT_SCOPE:
       case I_OPT_STATE:
       case I_OPT_NONCE:
@@ -464,17 +532,18 @@ int set_parameter_list(struct _i_session * i_session, ...) {
       case I_OPT_ID_TOKEN:
       case I_OPT_GLEWLWYD_API_URL:
       case I_OPT_GLEWLWYD_COOKIE_SESSION:
+      case I_OPT_TOKEN_TYPE:
         str_value = va_arg(vl, const char *);
-      ret = i_set_parameter(i_session, option, str_value);
-      break;
+        ret = i_set_parameter(i_session, option, str_value);
+        break;
       case I_OPT_ADDITIONAL_PARAMETER:
         str_key = va_arg(vl, const char *);
         str_value = va_arg(vl, const char *);
-      ret = i_set_additional_parameter(i_session, str_key, str_value);
-      break;
+        ret = i_set_additional_parameter(i_session, str_key, str_value);
+        break;
       default:
         ret = I_ERROR_PARAM;
-      break;
+        break;
     }
   }
   va_end(vl);
@@ -496,6 +565,24 @@ uint i_get_flag_parameter(struct _i_session * i_session, uint option) {
         return i_session->response_type;
         break;
       case I_OPT_RESULT:
+        return i_session->result;
+        break;
+      case I_OPT_AUTH_METHOD:
+        return i_session->auth_method;
+        break;
+      case I_OPT_EXPIRES_IN:
+        return i_session->expires_in;
+        break;
+      case I_OPT_AUTH_SIGN_ALG:
+        if (o_strncmp(i_session->auth_sign_alg, "RS256", I_AUTH_SIGN_ALG_MAX_LENGTH)) {
+          return I_AUTH_SIGN_ALG_RS256;
+        } else if (o_strncmp(i_session->auth_sign_alg, "RS384", I_AUTH_SIGN_ALG_MAX_LENGTH)) {
+          return I_AUTH_SIGN_ALG_RS384;
+        } else if (o_strncmp(i_session->auth_sign_alg, "RS512", I_AUTH_SIGN_ALG_MAX_LENGTH)) {
+          return I_AUTH_SIGN_ALG_RS512;
+        } else {
+          return I_AUTH_SIGN_ALG_NONE;
+        }
         return i_session->result;
         break;
       default:
@@ -571,6 +658,9 @@ const char * i_get_parameter(struct _i_session * i_session, uint option) {
       case I_OPT_GLEWLWYD_COOKIE_SESSION:
         result = (const char *)i_session->glewlwyd_cookie_session;
         break;
+      case I_OPT_TOKEN_TYPE:
+        result = (const char *)i_session->token_type;
+        break;
       default:
         break;
     }
@@ -590,7 +680,7 @@ int i_run_auth_request(struct _i_session * i_session) {
   int ret = I_OK;
   struct _u_request request;
   struct _u_response response;
-  char * url = NULL, * escaped = NULL;
+  char * url = NULL, * escaped = NULL, * redirect_to = NULL;
   const char ** keys = NULL, * fragment = NULL, * query = NULL;
   uint i;
   struct _u_map map;
@@ -606,81 +696,115 @@ int i_run_auth_request(struct _i_session * i_session) {
     if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
       ret = I_ERROR;
     } else {
-      escaped = ulfius_url_encode(i_session->redirect_url);
-      url = msprintf("%s?redirect_url=%s&response_type=%s", i_session->authorization_endpoint, escaped, get_response_type(i_session->response_type));
-      o_free(escaped);
-      
-      escaped = ulfius_url_encode(i_session->client_id);
-      url = mstrcatf(url, "&client_id=%s", escaped);
-      o_free(escaped);
-      
-      if (i_session->state != NULL) {
-        escaped = ulfius_url_encode(i_session->state);
-        url = mstrcatf(url, "&state=%s", escaped);
+      if (i_session->auth_method == I_AUTH_METHOD_GET) {
+        escaped = ulfius_url_encode(i_session->redirect_url);
+        url = msprintf("%s?redirect_url=%s&response_type=%s", i_session->authorization_endpoint, escaped, get_response_type(i_session->response_type));
         o_free(escaped);
+        
+        escaped = ulfius_url_encode(i_session->client_id);
+        url = mstrcatf(url, "&client_id=%s", escaped);
+        o_free(escaped);
+        
+        if (i_session->state != NULL) {
+          escaped = ulfius_url_encode(i_session->state);
+          url = mstrcatf(url, "&state=%s", escaped);
+          o_free(escaped);
+        }
+        
+        if (i_session->scope != NULL) {
+          escaped = ulfius_url_encode(i_session->scope);
+          url = mstrcatf(url, "&scope=%s", escaped);
+          o_free(escaped);
+        }
+        
+        if (i_session->nonce != NULL) {
+          escaped = ulfius_url_encode(i_session->nonce);
+          url = mstrcatf(url, "&nonce=%s", escaped);
+          o_free(escaped);
+        }
+        
+        keys = u_map_enum_keys(&i_session->additional_parameters);
+        
+        for (i=0; keys[i] != NULL; i++) {
+          escaped = ulfius_url_encode(u_map_get(&i_session->additional_parameters, keys[i]));
+          url = mstrcatf(url, "&%s=%s", keys[i], escaped);
+          o_free(escaped);
+        }
+        
+        request.http_verb = o_strdup("GET");
+        request.http_url = url;
+      } else if (i_session->auth_method == I_AUTH_METHOD_POST) {
+        request.http_verb = o_strdup("POST");
+        request.http_url = o_strdup(i_session->authorization_endpoint);
+        u_map_put(request.map_post_body, "redirect_url", i_session->redirect_url);
+        u_map_put(request.map_post_body, "response_type", get_response_type(i_session->response_type));
+        u_map_put(request.map_post_body, "client_id", i_session->client_id);
+        if (i_session->state != NULL) {
+          u_map_put(request.map_post_body, "state", i_session->state);
+        }
+        if (i_session->scope != NULL) {
+          u_map_put(request.map_post_body, "scope", i_session->scope);
+        }
+        if (i_session->nonce != NULL) {
+          u_map_put(request.map_post_body, "nonce", i_session->nonce);
+        }
+        
+        keys = u_map_enum_keys(&i_session->additional_parameters);
+        
+        for (i=0; keys[i] != NULL; i++) {
+          u_map_put(request.map_post_body, keys[i], u_map_get(&i_session->additional_parameters, keys[i]));
+        }
       }
       
-      if (i_session->scope != NULL) {
-        escaped = ulfius_url_encode(i_session->scope);
-        url = mstrcatf(url, "&scope=%s", escaped);
-        o_free(escaped);
+      if (i_get_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION) != NULL) {
+        u_map_put(request.map_header, "Cookie", i_get_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION));
       }
       
-      if (i_session->nonce != NULL) {
-        escaped = ulfius_url_encode(i_session->nonce);
-        url = mstrcatf(url, "&nonce=%s", escaped);
-        o_free(escaped);
-      }
-      
-      keys = u_map_enum_keys(&i_session->additional_parameters);
-      
-      for (i=0; keys[i] != NULL; i++) {
-        escaped = ulfius_url_encode(u_map_get(&i_session->additional_parameters, keys[i]));
-        url = mstrcatf(url, "&%s=%s", keys[i], escaped);
-        o_free(escaped);
-      }
-      
-      request.http_url = url;
-      
-      if (ulfius_send_http_request(&request, &response) == U_OK) {
-        if (response.status == 302) {
-          i_set_parameter(i_session, I_OPT_REDIRECT_TO, u_map_get_case(response.map_header, "Location"));
-          if (o_strncmp(u_map_get_case(response.map_header, "Location"), i_session->redirect_url, o_strlen(i_session->redirect_url)) == 0) {
-            // Parse redirect url to extract data
-            
-            // Extract fragment
-            if ((fragment = o_strnchr(i_get_parameter(i_session, I_OPT_REDIRECT_TO), o_strlen(i_get_parameter(i_session, I_OPT_REDIRECT_TO)), '#')) != NULL) {
-              u_map_init(&map);
-              fragment++;
-              if (extract_parameters(fragment, &map) == I_OK) {
-                parse_redirect_url_parameters(i_session, &map);
-                if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
-                  ret = I_ERROR_SERVER;
+      if (ret == I_OK) {
+        if (ulfius_send_http_request(&request, &response) == U_OK) {
+          if (response.status == 302) {
+            redirect_to = o_strdup(u_map_get_case(response.map_header, "Location"));
+            i_set_parameter(i_session, I_OPT_REDIRECT_TO, redirect_to);
+            if (o_strncmp(redirect_to, i_session->redirect_url, o_strlen(i_session->redirect_url)) == 0) {
+              // Parse redirect url to extract data
+              
+              // Extract fragment if response_type has id_token or token
+              if ((i_session->response_type & I_RESPONSE_TYPE_TOKEN || i_session->response_type & I_RESPONSE_TYPE_ID_TOKEN) && (fragment = o_strnchr(redirect_to, o_strlen(redirect_to), '#')) != NULL) {
+                u_map_init(&map);
+                fragment++;
+                if (extract_parameters(fragment, &map) == I_OK) {
+                  if ((ret = parse_redirect_url_parameters(i_session, &map)) == I_OK) {
+                    if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
+                      ret = I_ERROR_SERVER;
+                    }
+                  }
                 }
+                u_map_clean(&map);
               }
-              u_map_clean(&map);
-            }
-            
-            // Extract query without fragment
-            if ((query = o_strnchr(i_get_parameter(i_session, I_OPT_REDIRECT_TO), fragment!=NULL?(size_t)(i_get_parameter(i_session, I_OPT_REDIRECT_TO)-fragment):o_strlen(i_get_parameter(i_session, I_OPT_REDIRECT_TO)), '?')) != NULL) {
-              u_map_init(&map);
-              query++;
-              if (extract_parameters(query, &map) == I_OK) {
-                parse_redirect_url_parameters(i_session, &map);
-                if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
-                  ret = I_ERROR_SERVER;
+              
+              // Extract query without fragment if response_type is code
+              if (i_session->response_type == I_RESPONSE_TYPE_CODE && (query = o_strnchr(redirect_to, fragment!=NULL?(size_t)(redirect_to-fragment):o_strlen(redirect_to), '?')) != NULL) {
+                u_map_init(&map);
+                query++;
+                if (extract_parameters(query, &map) == I_OK) {
+                  if ((ret = parse_redirect_url_parameters(i_session, &map)) == I_OK) {
+                    if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
+                      ret = I_ERROR_SERVER;
+                    }
+                  }
                 }
+                u_map_clean(&map);
               }
-              u_map_clean(&map);
             }
+            o_free(redirect_to);
+          } else if (response.status == 400) {
+            ret = I_ERROR_PARAM;
+          } else {
+            ret = I_ERROR;
           }
-        } else if (response.status == 400) {
-          ret = I_ERROR_PARAM;
         } else {
           ret = I_ERROR;
         }
-      } else {
-        ret = I_ERROR;
       }
       ulfius_clean_request(&request);
       ulfius_clean_response(&response);

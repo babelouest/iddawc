@@ -24,6 +24,8 @@
 #define CODE "codeXyz1234"
 #define REFRESH_TOKEN "refreshXyz1234"
 #define ACCESS_TOKEN "accessXyz1234"
+#define TOKEN_TYPE "typeXyz1234"
+#define EXPIRES_IN 3600
 #define ID_TOKEN "idTokenXyz1234"
 #define ERROR "errorXyz1234"
 #define ERROR_DESCRIPTION "errorDescriptionXyz1234"
@@ -147,6 +149,9 @@ START_TEST(test_iddawc_set_parameter)
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ACCESS_TOKEN, NULL), I_OK);
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN), I_OK);
 
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_TOKEN_TYPE, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_TOKEN_TYPE, TOKEN_TYPE), I_OK);
+
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ID_TOKEN, NULL), I_OK);
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ID_TOKEN, ID_TOKEN), I_OK);
 
@@ -155,6 +160,21 @@ START_TEST(test_iddawc_set_parameter)
 
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION, NULL), I_OK);
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION), I_OK);
+
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_set_flag_parameter)
+{
+  struct _i_session i_session;
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  ck_assert_int_eq(i_set_flag_parameter(&i_session, I_OPT_AUTH_METHOD, 666), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_flag_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET), I_OK);
+  ck_assert_int_eq(i_set_flag_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST), I_OK);
+  ck_assert_int_eq(i_set_flag_parameter(&i_session, I_OPT_EXPIRES_IN, EXPIRES_IN), I_OK);
 
   i_clean_session(&i_session);
 }
@@ -218,6 +238,9 @@ START_TEST(test_iddawc_get_parameter)
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN), I_OK);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
 
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_TOKEN_TYPE, TOKEN_TYPE), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), TOKEN_TYPE);
+
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ID_TOKEN, ID_TOKEN), I_OK);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ID_TOKEN), ID_TOKEN);
 
@@ -226,6 +249,23 @@ START_TEST(test_iddawc_get_parameter)
 
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION), I_OK);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION), GLEWLWYD_COOKIE_SESSION);
+
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_get_flag_parameter)
+{
+  struct _i_session i_session;
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  ck_assert_int_eq(i_set_flag_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET), I_OK);
+  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
+  ck_assert_int_eq(i_set_flag_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST), I_OK);
+  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_AUTH_METHOD), I_AUTH_METHOD_POST);
+  ck_assert_int_eq(i_set_flag_parameter(&i_session, I_OPT_EXPIRES_IN, EXPIRES_IN), I_OK);
+  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), EXPIRES_IN);
 
   i_clean_session(&i_session);
 }
@@ -316,13 +356,13 @@ START_TEST(test_iddawc_parameter_list)
   struct _i_session i_session;
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   
-  ck_assert_int_eq(set_parameter_list(&i_session, 666, "error", I_OPT_NONE), I_ERROR_PARAM);
-  ck_assert_int_eq(set_parameter_list(&i_session, I_OPT_SCOPE_APPEND, "error", I_OPT_NONE), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, 666, "error", I_OPT_NONE), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_SCOPE_APPEND, "error", I_OPT_NONE), I_ERROR_PARAM);
   ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_STATE), NULL);
-  ck_assert_int_eq(set_parameter_list(&i_session, I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_NONE), I_OK);
   ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_STATE), NULL);
   
-  ck_assert_int_eq(set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                   I_OPT_SCOPE, SCOPE_LIST,
                                                   I_OPT_STATE, STATE,
                                                   I_OPT_NONCE, NONCE,
@@ -342,6 +382,8 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_CODE, CODE,
                                                   I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
                                                   I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                  I_OPT_TOKEN_TYPE, TOKEN_TYPE,
+                                                  I_OPT_EXPIRES_IN, EXPIRES_IN,
                                                   I_OPT_ID_TOKEN, ID_TOKEN,
                                                   I_OPT_GLEWLWYD_API_URL, GLEWLWYD_API_URL,
                                                   I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION,
@@ -364,6 +406,8 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_CODE), CODE);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), REFRESH_TOKEN);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), TOKEN_TYPE);
+  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), EXPIRES_IN);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ID_TOKEN), ID_TOKEN);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_GLEWLWYD_API_URL), GLEWLWYD_API_URL);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_GLEWLWYD_COOKIE_SESSION), GLEWLWYD_COOKIE_SESSION);
@@ -383,8 +427,10 @@ static Suite *ulfius_suite(void)
   tcase_add_test(tc_core, test_iddawc_set_response_type);
   tcase_add_test(tc_core, test_iddawc_set_result);
   tcase_add_test(tc_core, test_iddawc_set_parameter);
+  tcase_add_test(tc_core, test_iddawc_set_flag_parameter);
   tcase_add_test(tc_core, test_iddawc_set_additional_parameter);
   tcase_add_test(tc_core, test_iddawc_get_parameter);
+  tcase_add_test(tc_core, test_iddawc_get_flag_parameter);
   tcase_add_test(tc_core, test_iddawc_get_response_type);
   tcase_add_test(tc_core, test_iddawc_get_result);
   tcase_add_test(tc_core, test_iddawc_get_additional_parameter);

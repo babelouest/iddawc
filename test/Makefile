@@ -26,7 +26,9 @@ CC=gcc
 CFLAGS+=-Wall -D_REENTRANT -I$(IDDAWC_INCLUDE) -DDEBUG -g -O0 $(CPPFLAGS)
 LDFLAGS=-lc -lorcania -lulfius -liddawc -L$(IDDAWC_LOCATION) -lyder $(shell pkg-config --libs check)
 VALGRIND_COMMAND=valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all
-TARGET=core oauth2
+TARGET=core implicit
+TARGET_TEST=test_core test_implicit
+MEMCHECK=0
 
 all: test
 
@@ -40,12 +42,14 @@ $(IDDAWC_LIBRARY):
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_%: %
-	LD_LIBRARY_PATH=$(IDDAWC_LOCATION):${LD_LIBRARY_PATH} ./$^
+	@if [ "$(MEMCHECK)" = "0" ]; then \
+	  LD_LIBRARY_PATH=$(IDDAWC_LOCATION):$(LD_LIBRARY_PATH) ./$^ ; \
+	else \
+	  CK_FORK=no LD_LIBRARY_PATH=$(IDDAWC_LOCATION):$(LD_LIBRARY_PATH) $(VALGRIND_COMMAND) ./$^ 2>valgrind-$@.txt; \
+	fi
 
-test: $(IDDAWC_LIBRARY) $(TARGET)
+test: $(IDDAWC_LIBRARY) $(TARGET_TEST)
 
 check: test
 
-memcheck: $(IDDAWC_LIBRARY) $(TARGET)
-	-CK_FORK=no LD_LIBRARY_PATH=$(IDDAWC_LOCATION):${LD_LIBRARY_PATH} $(VALGRIND_COMMAND) ./core 2>valgrind-core.txt
-	-CK_FORK=no LD_LIBRARY_PATH=$(IDDAWC_LOCATION):${LD_LIBRARY_PATH} $(VALGRIND_COMMAND) ./oauth2 2>valgrind-oauth2.txt
+test: $(TARGET)
