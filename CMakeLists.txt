@@ -75,6 +75,16 @@ set(LIB_SRC
 set(PKGCONF_REQ "")
 set(PKGCONF_REQ_PRIVATE "")
 
+# shared library
+
+add_library(iddawc SHARED ${LIB_SRC})
+set_target_properties(iddawc PROPERTIES
+        COMPILE_OPTIONS -Wextra
+        PUBLIC_HEADER "${INC_DIR}/iddawc.h"
+        VERSION "${LIBRARY_VERSION}"
+        SOVERSION "${LIBRARY_SOVERSION}")
+target_link_libraries(iddawc ${LIBS})
+
 set(Orcania_FIND_QUIETLY ON) # force to find Orcania quietly
 include(FindOrcania)
 find_package(Orcania ${ORCANIA_VERSION_REQUIRED} QUIET) # try to find orcania
@@ -132,16 +142,6 @@ if (NOT ULFIUS_FOUND)
 	include_directories(${ulfius_BINARY_DIR})
 endif ()
 set(LIBS ${LIBS} ${ULFIUS_LIBRARIES})
-
-# shared library
-
-add_library(iddawc SHARED ${LIB_SRC})
-set_target_properties(iddawc PROPERTIES
-        COMPILE_OPTIONS -Wextra
-        PUBLIC_HEADER "${INC_DIR}/iddawc.h"
-        VERSION "${LIBRARY_VERSION}"
-        SOVERSION "${LIBRARY_SOVERSION}")
-target_link_libraries(iddawc ${LIBS})
 
 # tests
 
