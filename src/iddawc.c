@@ -63,6 +63,54 @@ static const char * get_response_type(uint response_type) {
   return result;
 }
 
+static int extract_parameters(const char * url_params, struct _u_map * map) {
+  char ** unescaped_parameters = NULL, * key, * value;
+  size_t offset = 0;
+  int ret = I_OK;
+  
+  if (split_string(url_params, "&", &unescaped_parameters)) {
+    for (offset = 0; unescaped_parameters[offset] != NULL; offset++) {
+      if (o_strchr(unescaped_parameters[offset], '=') != NULL) {
+        key = o_strndup(unescaped_parameters[offset], o_strchr(unescaped_parameters[offset], '=') - unescaped_parameters[offset]);
+        value = ulfius_url_decode(o_strchr(unescaped_parameters[offset], '=')+1);
+        u_map_put(map, key, value);
+        o_free(key);
+        o_free(value);
+      } else {
+        u_map_put(map, unescaped_parameters[offset], NULL);
+      }
+    }
+    free_string_array(unescaped_parameters);
+  } else {
+    ret = I_ERROR;
+  }
+  return ret;
+}
+
+static void parse_redirect_url_parameters(struct _i_session * i_session, struct _u_map * map) {
+  const char ** keys = u_map_enum_keys(map);
+  size_t i;
+  
+  for (i=0; keys[i] != NULL; i++) {
+    if (0 == o_strcasecmp(keys[i], "code")) {
+      i_set_parameter(i_session, I_OPT_CODE, u_map_get(map, keys[i]));
+    } else if (0 == o_strcasecmp(keys[i], "id_token")) {
+      i_set_parameter(i_session, I_OPT_ID_TOKEN, u_map_get(map, keys[i]));
+    } else if (0 == o_strcasecmp(keys[i], "access_token")) {
+      i_set_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, keys[i]));
+    } else if (0 == o_strcasecmp(keys[i], "error")) {
+      i_set_result(i_session, I_ERROR_UNAUTHORIZED);
+      i_set_parameter(i_session, I_OPT_ERROR, u_map_get(map, keys[i]));
+    } else if (0 == o_strcasecmp(keys[i], "error_description")) {
+      i_set_result(i_session, I_ERROR_UNAUTHORIZED);
+      i_set_parameter(i_session, I_OPT_ERROR_DESCRIPTION, u_map_get(map, keys[i]));
+    } else if (0 == o_strcasecmp(keys[i], "error_uri")) {
+      i_set_result(i_session, I_ERROR_UNAUTHORIZED);
+      i_set_parameter(i_session, I_OPT_ERROR_URI, u_map_get(map, keys[i]));
+    }
+  }
+}
+
 int i_init_session(struct _i_session * i_session) {
   int res;
   
@@ -129,40 +177,48 @@ void i_clean_session(struct _i_session * i_session) {
 }
 
 int i_set_response_type(struct _i_session * i_session, uint i_value) {
-  int ret = I_OK;
-  if (i_session != NULL) {
-    switch (i_value) {
-      case I_RESPONSE_TYPE_CODE:
-      case I_RESPONSE_TYPE_TOKEN:
-      case I_RESPONSE_TYPE_ID_TOKEN:
-      case I_RESPONSE_TYPE_PASSWORD:
-      case I_RESPONSE_TYPE_CLIENT_CREDENTIALS:
-      case I_RESPONSE_TYPE_REFRESH_TOKEN:
-      case I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_ID_TOKEN:
-      case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN:
-      case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_ID_TOKEN:
-        i_session->response_type = i_value;
-        break;
-      default:
-        ret = I_ERROR_PARAM;
-        break;
-    }
-  } else {
-    ret = I_ERROR_PARAM;
-  }
-  return ret;
+  return i_set_flag_parameter(i_session, I_OPT_RESPONSE_TYPE, i_value);
 }
 
 int i_set_result(struct _i_session * i_session, uint i_value) {
+  return i_set_flag_parameter(i_session, I_OPT_RESULT, i_value);
+}
+
+int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_value) {
   int ret = I_OK;
   if (i_session != NULL) {
-    switch (i_value) {
-      case I_OK:
-      case I_ERROR:
-      case I_ERROR_PARAM:
-      case I_ERROR_UNAUTHORIZED:
-      case I_ERROR_SERVER:
-        i_session->result = i_value;
+    switch (option) {
+      case I_OPT_RESPONSE_TYPE:
+        switch (i_value) {
+          case I_RESPONSE_TYPE_CODE:
+          case I_RESPONSE_TYPE_TOKEN:
+          case I_RESPONSE_TYPE_ID_TOKEN:
+          case I_RESPONSE_TYPE_PASSWORD:
+          case I_RESPONSE_TYPE_CLIENT_CREDENTIALS:
+          case I_RESPONSE_TYPE_REFRESH_TOKEN:
+          case I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_ID_TOKEN:
+          case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN:
+          case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_ID_TOKEN:
+            i_session->response_type = i_value;
+            break;
+          default:
+            ret = I_ERROR_PARAM;
+            break;
+        }
+        break;
+      case I_OPT_RESULT:
+        switch (i_value) {
+          case I_OK:
+          case I_ERROR:
+          case I_ERROR_PARAM:
+          case I_ERROR_UNAUTHORIZED:
+          case I_ERROR_SERVER:
+            i_session->result = i_value;
+            break;
+          default:
+            ret = I_ERROR_PARAM;
+            break;
+        }
         break;
       default:
         ret = I_ERROR_PARAM;
@@ -425,20 +481,29 @@ int set_parameter_list(struct _i_session * i_session, ...) {
   return ret;
 }
 
-int i_get_response_type(struct _i_session * i_session) {
-  if (i_session != NULL) {
-    return i_session->response_type;
-  } else {
-    return I_RESPONSE_TYPE_NONE;
-  }
+uint i_get_response_type(struct _i_session * i_session) {
+  return i_get_flag_parameter(i_session, I_OPT_RESPONSE_TYPE);
 }
 
-int i_get_result(struct _i_session * i_session) {
+uint i_get_result(struct _i_session * i_session) {
+  return i_get_flag_parameter(i_session, I_OPT_RESULT);
+}
+
+uint i_get_flag_parameter(struct _i_session * i_session, uint option) {
   if (i_session != NULL) {
-    return i_session->result;
-  } else {
-    return I_RESPONSE_TYPE_NONE;
+    switch (option) {
+      case I_OPT_RESPONSE_TYPE:
+        return i_session->response_type;
+        break;
+      case I_OPT_RESULT:
+        return i_session->result;
+        break;
+      default:
+        return 0;
+        break;
+    }
   }
+  return 0;
 }
 
 const char * i_get_parameter(struct _i_session * i_session, uint option) {
@@ -522,14 +587,22 @@ const char * i_get_additional_parameter(struct _i_session * i_session, const cha
 }
 
 int i_run_auth_request(struct _i_session * i_session) {
-  int ret;
+  int ret = I_OK;
   struct _u_request request;
   struct _u_response response;
   char * url = NULL, * escaped = NULL;
-  const char ** keys = NULL;
+  const char ** keys = NULL, * fragment = NULL, * query = NULL;
   uint i;
+  struct _u_map map;
   
-  if (i_session != NULL && i_session->response_type != I_RESPONSE_TYPE_NONE && i_session->response_type != I_RESPONSE_TYPE_PASSWORD && i_session->response_type != I_RESPONSE_TYPE_CLIENT_CREDENTIALS && i_session->response_type != I_RESPONSE_TYPE_REFRESH_TOKEN && i_session->redirect_url != NULL && i_session->client_id != NULL && i_session->authorization_endpoint != NULL) {
+  if (i_session != NULL && 
+      i_session->response_type != I_RESPONSE_TYPE_NONE && 
+      i_session->response_type != I_RESPONSE_TYPE_PASSWORD && 
+      i_session->response_type != I_RESPONSE_TYPE_CLIENT_CREDENTIALS && 
+      i_session->response_type != I_RESPONSE_TYPE_REFRESH_TOKEN && 
+      i_session->redirect_url != NULL && 
+      i_session->client_id != NULL && 
+      i_session->authorization_endpoint != NULL) {
     if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
       ret = I_ERROR;
     } else {
@@ -572,6 +645,37 @@ int i_run_auth_request(struct _i_session * i_session) {
       if (ulfius_send_http_request(&request, &response) == U_OK) {
         if (response.status == 302) {
           i_set_parameter(i_session, I_OPT_REDIRECT_TO, u_map_get_case(response.map_header, "Location"));
+          if (o_strncmp(u_map_get_case(response.map_header, "Location"), i_session->redirect_url, o_strlen(i_session->redirect_url)) == 0) {
+            // Parse redirect url to extract data
+            
+            // Extract fragment
+            if ((fragment = o_strnchr(i_get_parameter(i_session, I_OPT_REDIRECT_TO), o_strlen(i_get_parameter(i_session, I_OPT_REDIRECT_TO)), '#')) != NULL) {
+              u_map_init(&map);
+              fragment++;
+              if (extract_parameters(fragment, &map) == I_OK) {
+                parse_redirect_url_parameters(i_session, &map);
+                if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
+                  ret = I_ERROR_SERVER;
+                }
+              }
+              u_map_clean(&map);
+            }
+            
+            // Extract query without fragment
+            if ((query = o_strnchr(i_get_parameter(i_session, I_OPT_REDIRECT_TO), fragment!=NULL?(size_t)(i_get_parameter(i_session, I_OPT_REDIRECT_TO)-fragment):o_strlen(i_get_parameter(i_session, I_OPT_REDIRECT_TO)), '?')) != NULL) {
+              u_map_init(&map);
+              query++;
+              if (extract_parameters(query, &map) == I_OK) {
+                parse_redirect_url_parameters(i_session, &map);
+                if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
+                  ret = I_ERROR_SERVER;
+                }
+              }
+              u_map_clean(&map);
+            }
+          }
+        } else if (response.status == 400) {
+          ret = I_ERROR_PARAM;
         } else {
           ret = I_ERROR;
         }

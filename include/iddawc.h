@@ -68,7 +68,7 @@ enum _i_option {
 };
 
 struct _i_session {
-  int    response_type;
+  uint   response_type;
   char * scope;
   char * state;
   char * nonce;
@@ -82,7 +82,7 @@ struct _i_session {
   char * token_endpoint;
   char * openid_config_endpoint;
   char * access_token_validation_endpoint;
-  int    result;
+  uint   result;
   char * error;
   char * error_description;
   char * error_uri;
@@ -102,13 +102,17 @@ int i_set_response_type(struct _i_session * i_session, uint i_value);
 
 int i_set_result(struct _i_session * i_session, uint i_value);
 
+int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_value);
+
 int i_set_parameter(struct _i_session * i_session, uint option, const char * s_value);
 
 int i_set_additional_parameter(struct _i_session * i_session, const char * s_key, const char * s_value);
 
-int i_get_response_type(struct _i_session * i_session);
+uint i_get_response_type(struct _i_session * i_session);
 
-int i_get_result(struct _i_session * i_session);
+uint i_get_result(struct _i_session * i_session);
+
+uint i_get_flag_parameter(struct _i_session * i_session, uint option);
 
 const char * i_get_parameter(struct _i_session * i_session, uint option);
 
