@@ -1,0 +1,42 @@
+# travis configuration file
+# Copyright 2018 Ilya Shipitsin <chipitsine@gmail.com>
+#           2019 Nicolas Mora <mail@babelouest.org>
+sudo: required
+
+language: c
+
+dist: xenial
+addons:
+  apt:
+    packages: [ libgnutls28-dev, libjansson-dev, libcurl4-gnutls-dev, check, libsubunit-dev, libsystemd-dev, cppcheck ]
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+    - os: linux
+      compiler: clang
+    - env: LABEL=cppcheck
+      os: linux
+      script:
+        - cppcheck --force --enable=warning,missingInclude --error-exitcode=1 . >build.log 2>&1 || (cat build.log && exit 1)
+
+install:
+- wget https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.63.tar.gz
+- mkdir libmicrohttpd && tar xf libmicrohttpd-0.9.63.tar.gz -C libmicrohttpd --strip-components 1
+- pushd libmicrohttpd && ./configure && make && sudo make install && popd
+- rm -rf libmicrohttpd
+- popd
+
+script:
+  - mkdir build
+  - pushd build
+  - cmake -DBUILD_IDDAWC_TESTING=on ..
+  - make test || (cat Testing/Temporary/LastTest.log && false)
+  - make package
+  - popd
+
+# run tests with Makefile
+  - pushd test
+  - make test
+

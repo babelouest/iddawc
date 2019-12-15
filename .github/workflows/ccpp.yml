@@ -1,0 +1,23 @@
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake pkg-config check libsubunit-dev cppcheck doxygen
+    - name: cppcheck
+      run: cppcheck --force --enable=warning,missingInclude --error-exitcode=1 .
+    - name: build
+      run: |
+        mkdir build
+        cd build
+        cmake -DBUILD_IDDAWC_TESTING=on ..
+        make test package
+        cd ../test
+        make test
