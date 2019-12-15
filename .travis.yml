@@ -24,19 +24,17 @@ matrix:
 install:
 - wget https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.63.tar.gz
 - mkdir libmicrohttpd && tar xf libmicrohttpd-0.9.63.tar.gz -C libmicrohttpd --strip-components 1
-- pushd libmicrohttpd && ./configure && make && sudo make install && popd
+- cd libmicrohttpd && ./configure && make && sudo make install && popd
 - rm -rf libmicrohttpd
-- popd
 
 script:
   - mkdir build
-  - pushd build
+  - cd build
   - cmake -DBUILD_IDDAWC_TESTING=on ..
   - make test || (cat Testing/Temporary/LastTest.log && false)
   - make package
-  - popd
 
 # run tests with Makefile
-  - pushd test
+  - cd ../test
   - make test
 
