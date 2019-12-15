@@ -24,7 +24,7 @@ matrix:
 install:
 - wget https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.63.tar.gz
 - mkdir libmicrohttpd && tar xf libmicrohttpd-0.9.63.tar.gz -C libmicrohttpd --strip-components 1
-- cd libmicrohttpd && ./configure && make && sudo make install && popd
+- cd libmicrohttpd && ./configure && make && sudo make install && cd ..
 - rm -rf libmicrohttpd
 
 script:
