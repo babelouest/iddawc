@@ -18,7 +18,7 @@ jobs:
         mkdir build
         cd build
         cmake -DBUILD_IDDAWC_TESTING=on ..
-        mkdir -p /usr/local/lib/pkgconfig/
-        make test package install
+        make test package
+        sudo make install
         cd ../test
         make test

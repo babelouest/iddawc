@@ -32,7 +32,6 @@ script:
   - cd build
   - cmake -DBUILD_IDDAWC_TESTING=on ..
   - make test || (cat Testing/Temporary/LastTest.log && false)
-  - mkdir -p /usr/local/lib/pkgconfig/
   - make package install
 
 # run tests with Makefile
