@@ -20,5 +20,6 @@ jobs:
         cmake -DBUILD_IDDAWC_TESTING=on ..
         make test package
         sudo make install
+        sudo ldconfig
         cd ../test
         make test
