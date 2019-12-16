@@ -17,7 +17,8 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -DBUILD_IDDAWC_TESTING=on -DCMAKE_INSTALL_PREFIX=/usr ..
+        cmake -DBUILD_IDDAWC_TESTING=on ..
+        mkdir -p /usr/local/lib/pkgconfig/
         make test package install
         cd ../test
         make test

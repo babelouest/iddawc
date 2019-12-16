@@ -30,8 +30,9 @@ install:
 script:
   - mkdir build
   - cd build
-  - cmake -DBUILD_IDDAWC_TESTING=on -DCMAKE_INSTALL_PREFIX=/usr ..
+  - cmake -DBUILD_IDDAWC_TESTING=on ..
   - make test || (cat Testing/Temporary/LastTest.log && false)
+  - mkdir -p /usr/local/lib/pkgconfig/
   - make package install
 
 # run tests with Makefile
