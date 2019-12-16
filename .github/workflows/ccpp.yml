@@ -18,6 +18,6 @@ jobs:
         mkdir build
         cd build
         cmake -DBUILD_IDDAWC_TESTING=on ..
-        make test package
+        make test package install
         cd ../test
         make test
