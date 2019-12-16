@@ -32,9 +32,5 @@ script:
   - cd build
   - cmake -DBUILD_IDDAWC_TESTING=on ..
   - make test || (cat Testing/Temporary/LastTest.log && false)
-  - make package install
-
-# run tests with Makefile
-  - cd ../test
-  - make test
+  - make package
 
