@@ -31,9 +31,9 @@ set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/iddawc/issues")
 set(LIBRARY_VERSION_MAJOR "0")
 set(LIBRARY_VERSION_MINOR "3")
 set(LIBRARY_VERSION_PATCH "0")
-set(ORCANIA_VERSION_REQUIRED "2.0.1")
+set(ORCANIA_VERSION_REQUIRED "2.1.0")
 set(YDER_VERSION_REQUIRED "1.4.8")
-set(ULFIUS_VERSION_REQUIRED "2.6.4")
+set(ULFIUS_VERSION_REQUIRED "2.6.5")
 
 set(PROJECT_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
 set(LIBRARY_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
@@ -85,6 +85,10 @@ set_target_properties(iddawc PROPERTIES
         SOVERSION "${LIBRARY_SOVERSION}")
 target_link_libraries(iddawc ${LIBS})
 
+set(SEARCH_ORCANIA OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during yder search and download
+set(SEARCH_ORCANIA_U OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during ulfius search and download
+set(SEARCH_YDER OFF CACHE BOOL "Force to false") # Avoid to search and download yder during ulfius and hoel search and download
+
 set(Orcania_FIND_QUIETLY ON) # force to find Orcania quietly
 include(FindOrcania)
 find_package(Orcania ${ORCANIA_VERSION_REQUIRED} QUIET) # try to find orcania
@@ -127,7 +131,7 @@ find_package(Ulfius ${ULFIUS_VERSION_REQUIRED} QUIET)
 if (NOT ULFIUS_FOUND)
 	include(DownloadProject)
 	option(WITH_WEBSOCKET "specific param" off)
-	option(INSTALL_HEADER "specific param" off)
+	option(CHECK_ORCANIA "specific param" off)
 	option(CHECK_YDER "specific param" off)
 	message(STATUS "Download Ulfius ${ULFIUS_VERSION_REQUIRED}")
 	download_project(PROJ ulfius
@@ -259,9 +263,6 @@ set(CPACK_SOURCE_PACKAGE_FILE_NAME ${PACKAGE_FILE_NAME})
 set(CPACK_SOURCE_IGNORE_FILES ${PACKAGE_IGNORED_FILES})
 
 include(CPack)
-
-add_custom_target(dist_o
-        COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 
 message(STATUS "Build testing tree: ${BUILD_IDDAWC_TESTING}")
 message(STATUS "Install the header files: ${INSTALL_HEADER}")
