@@ -20,7 +20,6 @@
 #define AUTH_ENDPOINT "https://isp.tld/auth"
 #define TOKEN_ENDPOINT "https://isp.tld/token"
 #define OPENID_CONFIG_ENDPOINT "https://isp.tld/.well-known/openid-configuration"
-#define USERINFO_ENDPOINT "https://isp.tld/profile"
 #define CODE "codeXyz1234"
 #define REFRESH_TOKEN "refreshXyz1234"
 #define ACCESS_TOKEN "accessXyz1234"
