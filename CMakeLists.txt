@@ -35,6 +35,7 @@ set(ORCANIA_VERSION_REQUIRED "2.1.0")
 set(YDER_VERSION_REQUIRED "1.4.9")
 set(ULFIUS_VERSION_REQUIRED "2.6.5")
 set(RHONABWY_VERSION_REQUIRED "0.9.0")
+set(LIBJWT_VERSION_REQUIRED "1.11.0")
 
 set(PROJECT_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
 set(LIBRARY_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
@@ -85,6 +86,21 @@ set_target_properties(iddawc PROPERTIES
         VERSION "${LIBRARY_VERSION}"
         SOVERSION "${LIBRARY_SOVERSION}")
 target_link_libraries(iddawc ${LIBS})
+
+include(FindLibJWT)
+find_package(LibJWT ${LIBJWT_VERSION_REQUIRED} REQUIRED)
+if (LIBJWT_FOUND)
+        set(LIBS ${LIBS} ${LIBJWT_LIBRARIES})
+        include_directories(${LIBJWT_INCLUDE_DIRS})
+endif ()
+
+include(FindJansson)
+set(JANSSON_MIN_VERSION 2.4)
+find_package(Jansson ${JANSSON_MIN_VERSION} REQUIRED)
+if (JANSSON_FOUND)
+	set(LIBS ${LIBS} ${JANSSON_LIBRARIES})
+	include_directories(${JANSSON_INCLUDE_DIRS})
+endif ()
 
 set(SEARCH_ORCANIA OFF CACHE BOOL "Force to false") # Avoid to search and download orcania
 set(SEARCH_ORCANIA_U OFF CACHE BOOL "Force to false") # Avoid to search and download orcania
