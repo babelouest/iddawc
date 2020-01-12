@@ -15,8 +15,6 @@
 #define CLIENT_ID "clientXyz1234"
 #define CLIENT_SECRET "secretXyx1234"
 #define AUTH_ENDPOINT "http://localhost:8080/auth"
-#define TOKEN_ENDPOINT "https://isp.tld/token"
-#define ACCESS_TOKEN_VALIDATION_ENDPOINT "https://isp.tld/profile"
 #define CODE "codeXyz1234"
 #define REFRESH_TOKEN "refreshXyz1234"
 #define ACCESS_TOKEN "accessXyz1234"
@@ -556,7 +554,7 @@ START_TEST(test_iddawc_code_valid_post)
 }
 END_TEST
 
-static Suite *ulfius_suite(void)
+static Suite *iddawc_suite(void)
 {
   Suite *s;
   TCase *tc_core;
@@ -591,7 +589,7 @@ int main(int argc, char *argv[])
   Suite *s;
   SRunner *sr;
   y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc OAuth2 flow tests");
-  s = ulfius_suite();
+  s = iddawc_suite();
   sr = srunner_create(s);
 
   srunner_run_all(sr, CK_VERBOSE);
