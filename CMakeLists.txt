@@ -29,10 +29,10 @@ set(PROJECT_DESCRIPTION "Handle the flow of OAuth2 and OpenID Connect authentica
 set(PROJECT_HOMEPAGE_URL "https://github.com/babelouest/iddawc/")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/iddawc/issues")
 set(LIBRARY_VERSION_MAJOR "0")
-set(LIBRARY_VERSION_MINOR "3")
+set(LIBRARY_VERSION_MINOR "7")
 set(LIBRARY_VERSION_PATCH "0")
 set(ORCANIA_VERSION_REQUIRED "2.1.0")
-set(YDER_VERSION_REQUIRED "1.4.8")
+set(YDER_VERSION_REQUIRED "1.4.9")
 set(ULFIUS_VERSION_REQUIRED "2.6.5")
 
 set(PROJECT_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
@@ -147,6 +147,28 @@ if (NOT ULFIUS_FOUND)
 endif ()
 set(LIBS ${LIBS} ${ULFIUS_LIBRARIES})
 
+# documentation
+
+option(BUILD_IDDAWC_DOCUMENTATION "Build the documentation." OFF)
+if (BUILD_IDDAWC_DOCUMENTATION)
+    find_package(Doxygen)
+    if (DOXYGEN_FOUND)
+        set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen.cfg)
+        set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/doxyfile)
+        
+        configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+        
+        add_custom_target(doc
+                          COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile_in}
+                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                          COMMENT "Generating documentation with Doxygen"
+                          VERBATIM)
+
+    else ()
+        message(FATAL_ERROR "Doxygen is needed to build the documentation.")
+    endif ()
+endif ()
+
 # tests
 
 option(BUILD_IDDAWC_TESTING "Build the testing tree." OFF) # because we do not use include(CTest)
@@ -168,7 +190,10 @@ if (BUILD_IDDAWC_TESTING)
 
         set(TESTS
             core
-            implicit)
+            implicit
+            id_token
+            token
+            load_config)
 
         configure_file(
                 "${CMAKE_MODULE_PATH}/CTestCustom.cmake.in"
@@ -264,6 +289,7 @@ set(CPACK_SOURCE_IGNORE_FILES ${PACKAGE_IGNORED_FILES})
 
 include(CPack)
 
-message(STATUS "Build testing tree: ${BUILD_IDDAWC_TESTING}")
+message(STATUS "Build testing tree:       ${BUILD_IDDAWC_TESTING}")
 message(STATUS "Install the header files: ${INSTALL_HEADER}")
-message(STATUS "Build RPM package: ${BUILD_RPM}")
+message(STATUS "Build RPM package:        ${BUILD_RPM}")
+message(STATUS "Build documentation:      ${BUILD_IDDAWC_DOCUMENTATION}")
