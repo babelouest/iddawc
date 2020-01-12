@@ -153,9 +153,9 @@ include(FindRhonabwy)
 find_package(Rhonabwy ${RHONABWY_VERSION_REQUIRED} QUIET)
 if (NOT RHONABWY_FOUND)
 	include(DownloadProject)
-	option(WITH_WEBSOCKET "specific param" off)
 	option(CHECK_ORCANIA "specific param" off)
 	option(CHECK_YDER "specific param" off)
+	option(CHECK_ULFIUS "specific param" off)
 	message(STATUS "Download Rhonabwy ${RHONABWY_VERSION_REQUIRED}")
 	download_project(PROJ rhonabwy
 			URL "https://github.com/babelouest/rhonabwy/archive/v${RHONABWY_VERSION_REQUIRED}.tar.gz"
