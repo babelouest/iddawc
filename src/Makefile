@@ -3,7 +3,7 @@
 #
 # Makefile used to build the software
 #
-# Copyright 2019 Nicolas Mora <mail@babelouest.org>
+# Copyright 2019-2020 Nicolas Mora <mail@babelouest.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public License
@@ -29,11 +29,11 @@ PKGCONFIG_TEMPLATE=../libiddawc.pc.in
 DESTDIR=/usr/local
 CC=gcc
 CFLAGS+=-c -pedantic -std=gnu99 -fPIC -Wall -Werror -Wextra -D_REENTRANT -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS)
-LIBS=-L$(DESTDIR)/lib -lc -lulfius -lorcania $(LDFLAGS)
+LIBS=-L$(DESTDIR)/lib -lc -lulfius -lorcania -lrhonabwy -ljwt $(LDFLAGS)
 SONAME=-soname
 OBJECTS=iddawc.o
 OUTPUT=libiddawc.so
-VERSION=0.3.0
+VERSION=0.7.0
 
 .PHONY: all clean
 
@@ -73,12 +73,6 @@ install: all $(PKGCONFIG_FILE)
 	install -m644 $(IDDAWC_INCLUDE)/iddawc.h $(DESTDIR)/include
 	install -m644 $(CONFIG_FILE) $(DESTDIR)/include
 	-ldconfig $(DESTDIR)/lib
-
-static-install: static
-	install libiddawc.a $(DESTDIR)/lib
-	install -m644 $(PKGCONFIG_FILE) $(DESTDIR)/lib/pkgconfig
-	install -m644 $(IDDAWC_INCLUDE)/iddawc.h $(DESTDIR)/include
-	install -m644 $(CONFIG_FILE) $(DESTDIR)/include
 
 uninstall:
 	rm -f $(DESTDIR)/lib/$(OUTPUT) $(DESTDIR)/lib/libiddawc.a
