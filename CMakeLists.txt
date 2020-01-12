@@ -34,6 +34,7 @@ set(LIBRARY_VERSION_PATCH "0")
 set(ORCANIA_VERSION_REQUIRED "2.1.0")
 set(YDER_VERSION_REQUIRED "1.4.9")
 set(ULFIUS_VERSION_REQUIRED "2.6.5")
+set(RHONABWY_VERSION_REQUIRED "0.9.0")
 
 set(PROJECT_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
 set(LIBRARY_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
@@ -146,6 +147,29 @@ if (NOT ULFIUS_FOUND)
 	include_directories(${ulfius_BINARY_DIR})
 endif ()
 set(LIBS ${LIBS} ${ULFIUS_LIBRARIES})
+
+set(Rhonabwy_FIND_QUIETLY ON)
+include(FindRhonabwy)
+find_package(Rhonabwy ${RHONABWY_VERSION_REQUIRED} QUIET)
+if (NOT RHONABWY_FOUND)
+	include(DownloadProject)
+	option(WITH_WEBSOCKET "specific param" off)
+	option(CHECK_ORCANIA "specific param" off)
+	option(CHECK_YDER "specific param" off)
+	message(STATUS "Download Rhonabwy ${RHONABWY_VERSION_REQUIRED}")
+	download_project(PROJ rhonabwy
+			URL "https://github.com/babelouest/rhonabwy/archive/v${RHONABWY_VERSION_REQUIRED}.tar.gz"
+			QUIET)
+	add_subdirectory(${rhonabwy_SOURCE_DIR} ${rhonabwy_BINARY_DIR})
+	include_directories(${yder_SOURCE_DIR}/include)
+	include_directories(${orcania_SOURCE_DIR}/include)
+	include_directories(${ulfius_SOURCE_DIR}/include)
+	include_directories(${rhonabwy_SOURCE_DIR}/include)
+	add_dependencies(iddawc rhonabwy)
+	set(RHONABWY_LIBRARIES rhonabwy)
+	include_directories(${rhonabwy_BINARY_DIR})
+endif ()
+set(LIBS ${LIBS} ${RHONABWY_LIBRARIES})
 
 # documentation
 
