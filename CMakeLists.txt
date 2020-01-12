@@ -86,9 +86,12 @@ set_target_properties(iddawc PROPERTIES
         SOVERSION "${LIBRARY_SOVERSION}")
 target_link_libraries(iddawc ${LIBS})
 
-set(SEARCH_ORCANIA OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during yder search and download
-set(SEARCH_ORCANIA_U OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during ulfius search and download
-set(SEARCH_YDER OFF CACHE BOOL "Force to false") # Avoid to search and download yder during ulfius and hoel search and download
+set(SEARCH_ORCANIA OFF CACHE BOOL "Force to false") # Avoid to search and download orcania
+set(SEARCH_ORCANIA_U OFF CACHE BOOL "Force to false") # Avoid to search and download orcania
+set(SEARCH_YDER OFF CACHE BOOL "Force to false") # Avoid to search and download yder during
+set(SEARCH_ORCANIA_R OFF CACHE BOOL "Force to false") # Avoid to search and download orcania during
+set(SEARCH_YDER_R OFF CACHE BOOL "Force to false") # Avoid to search and download yder during
+set(SEARCH_ULFIUS_R OFF CACHE BOOL "Force to false") # Avoid to search and download ulfius during
 
 set(Orcania_FIND_QUIETLY ON) # force to find Orcania quietly
 include(FindOrcania)
