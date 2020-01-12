@@ -971,7 +971,6 @@ int i_load_userinfo(struct _i_session * i_session) {
   int ret;
   struct _u_request request;
   struct _u_response response;
-  size_t len = 0;
   
   if (i_session != NULL && i_session->userinfo_endpoint != NULL) {
     ulfius_init_request(&request);
@@ -981,7 +980,7 @@ int i_load_userinfo(struct _i_session * i_session) {
     if (ulfius_send_http_request(&request, &response) == U_OK) {
       if (response.status == 200) {
         o_free(i_session->userinfo);
-        if (ulfius_get_body_from_response(&response, i_session->userinfo, &len) == U_OK) {
+        if ((i_session->userinfo = o_strndup(response.binary_body, response.binary_body_length)) != NULL) {
           json_decref(i_session->j_userinfo);
           i_session->j_userinfo = json_loads(i_session->userinfo, JSON_DECODE_ANY, NULL);
           ret = I_OK;
