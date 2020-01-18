@@ -216,13 +216,13 @@ START_TEST(test_iddawc_token_flow)
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/userinfo", 0, &callback_userinfo_valid_json, NULL), U_OK);
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_TOKEN,
-                                                  I_OPT_CLIENT_ID, CLIENT_ID,
-                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
-                                                  I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
-                                                  I_OPT_STATE, STATE,
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_NONE), I_OK);
   ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   
   // First step: get redirection to login page
@@ -237,7 +237,6 @@ START_TEST(test_iddawc_token_flow)
   
   // And finally we load user info using the access token
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_USERINFO), userinfo_json);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   
   json_decref(j_userinfo);
@@ -261,14 +260,14 @@ START_TEST(test_iddawc_code_flow)
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_ok, NULL), U_OK);
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_CLIENT_ID, CLIENT_ID,
-                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
-                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
-                                                  I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
-                                                  I_OPT_STATE, STATE,
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_NONE), I_OK);
   ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
   ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
@@ -288,7 +287,6 @@ START_TEST(test_iddawc_code_flow)
   
   // And finally we load user info using the access token
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_USERINFO), userinfo_json);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   
   json_decref(j_userinfo);
