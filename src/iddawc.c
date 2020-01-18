@@ -1549,28 +1549,18 @@ int i_verify_id_token(struct _i_session * i_session, int token_type) {
   gnutls_datum_t hash_data;
   
   if (i_session != NULL && i_session->id_token != NULL && r_jwks_size(i_session->jwks)) {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "grut 0");
     for (i=0; i<r_jwks_size(i_session->jwks); i++) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "grut 1");
       jwk = r_jwks_get_at(i_session->jwks, i);
       if (jwk != NULL) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "grut 2");
         if (r_jwk_export_to_pem_der(jwk, R_FORMAT_PEM, NULL, &len, i_session->x5u_flags) == RHN_ERROR_PARAM && len) {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "grut 3");
           if ((pem = o_malloc(len)) != NULL) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "grut 4");
             if (r_jwk_export_to_pem_der(jwk, R_FORMAT_PEM, pem, &len, i_session->x5u_flags) == RHN_OK) {
-              y_log_message(Y_LOG_LEVEL_DEBUG, "grut 5");
               if (!jwt_decode(&jwt, i_session->id_token, pem, len)) {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "grut 6");
                 json_decref(i_session->id_token_payload);
                 i_session->id_token_payload = NULL;
                 if ((jwt_str = jwt_dump_str(jwt, 0)) != NULL) {
-                  y_log_message(Y_LOG_LEVEL_DEBUG, "grut 7");
                   if ((j_tmp = json_loads(jwt_str, JSON_DECODE_ANY|JSON_DISABLE_EOF_CHECK, &j_error)) != NULL) {
-                    y_log_message(Y_LOG_LEVEL_DEBUG, "grut 8");
                     if (r_jwk_import_from_json_t(i_session->id_token_header, j_tmp) == RHN_OK) {
-                      y_log_message(Y_LOG_LEVEL_DEBUG, "grut 9");
                       if ((i_session->id_token_payload = json_loads(jwt_str+j_error.position+1, JSON_DECODE_ANY, NULL)) != NULL) {
                         ret = I_OK;
                         if (token_type & I_HAS_ACCESS_TOKEN) {
@@ -1595,23 +1585,23 @@ int i_verify_id_token(struct _i_session * i_session, int token_type) {
                               if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
                                 if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
                                   if (o_strcmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "at_hash"))) != 0) {
-                                    y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - at_hash invalid");
+                                    y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - at_hash invalid");
                                     ret = I_ERROR_PARAM;
                                   }
                                 } else {
-                                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error o_base64url_encode at_hash");
+                                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error o_base64url_encode at_hash");
                                   ret = I_ERROR;
                                 }
                               } else {
-                                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error gnutls_fingerprint at_hash");
+                                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error gnutls_fingerprint at_hash");
                                 ret = I_ERROR;
                               }
                             } else {
-                              y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - Invalid alg");
+                              y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - Invalid alg");
                               ret = I_ERROR_PARAM;
                             }
                           } else {
-                            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - missing input");
+                            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - missing input");
                             ret = I_ERROR_PARAM;
                           }
                         }
@@ -1635,38 +1625,38 @@ int i_verify_id_token(struct _i_session * i_session, int token_type) {
                                     ret = I_ERROR_PARAM;
                                   }
                                 } else {
-                                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error o_base64url_encode c_hash");
+                                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error o_base64url_encode c_hash");
                                   ret = I_ERROR;
                                 }
                               } else {
-                                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error gnutls_fingerprint c_hash");
+                                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error gnutls_fingerprint c_hash");
                                 ret = I_ERROR;
                               }
                             } else {
-                              y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - unknown alg");
+                              y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - unknown alg");
                               ret = I_ERROR_PARAM;
                             }
                           } else {
-                            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - missing input");
+                            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - missing input");
                             ret = I_ERROR_PARAM;
                           }
                         }
                       } else {
-                        y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error json_loads id_token_payload");
+                        y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error json_loads id_token_payload");
                         ret = I_ERROR;
                       }
                     } else {
-                      y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error r_jwk_import_from_json_t");
+                      y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error r_jwk_import_from_json_t");
                       ret = I_ERROR;
                     }
                     json_decref(j_tmp);
                   } else {
-                    y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error json_loads id_token_header");
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error json_loads id_token_header");
                     ret = I_ERROR;
                   }
                   o_free(jwt_str);
                 } else {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error jwt_dump_str");
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error jwt_dump_str");
                   ret = I_ERROR;
                 }
                 jwt_free(jwt);
