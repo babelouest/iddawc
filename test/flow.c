@@ -337,7 +337,6 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   // And finally we load user info using the access token
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_USERINFO), userinfo_json);
-  ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   
   json_decref(j_userinfo);
   ulfius_stop_framework(&instance);
