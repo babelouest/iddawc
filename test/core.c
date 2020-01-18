@@ -252,8 +252,8 @@ START_TEST(test_iddawc_set_parameter)
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ISSUER, NULL), I_OK);
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ISSUER, ISSUER), I_OK);
 
-  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ISSUER, NULL), I_OK);
-  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ISSUER, ISSUER), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_USERINFO, NULL), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_USERINFO, USERINFO), I_OK);
 
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_OPENID_CONFIG, NULL), I_OK);
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_OPENID_CONFIG, openid_configuration_valid), I_OK);
@@ -357,6 +357,9 @@ START_TEST(test_iddawc_get_parameter)
 
   ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_ISSUER, ISSUER), I_OK);
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ISSUER), ISSUER);
+
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_USERINFO, USERINFO), I_OK);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_USERINFO), USERINFO);
 
   i_clean_session(&i_session);
 }
@@ -503,6 +506,11 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_STATE), NULL);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_NONE), I_OK);
   ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_STATE), NULL);
+
+  ck_assert_int_eq(i_set_parameter_list(NULL, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                              I_OPT_SCOPE, SCOPE_LIST,
+                                              I_OPT_STATE, STATE,
+                                              I_OPT_NONE), I_ERROR_PARAM);
   
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                   I_OPT_SCOPE, SCOPE_LIST,

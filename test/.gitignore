@@ -3,3 +3,5 @@ implicit
 id_token
 token
 load_config
+load_userinfo
+flow

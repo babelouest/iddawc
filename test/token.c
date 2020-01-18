@@ -15,7 +15,7 @@
 #define CLIENT_ID "clientXyz1234"
 #define CLIENT_SECRET "secretXyx1234"
 #define TOKEN_ENDPOINT "http://localhost:8080/token"
-#define USERINFO_ENDPOINT "https://isp.tld/profile"
+#define ACCESS_TOKEN_VALIDATION_ENDPOINT "https://isp.tld/profile"
 #define CODE "codeXyz1234"
 #define REFRESH_TOKEN "refreshXyz1234"
 #define ACCESS_TOKEN "accessXyz1234"
@@ -612,40 +612,6 @@ START_TEST(test_iddawc_token_password_client_ok)
 }
 END_TEST
 
-START_TEST(test_iddawc_token_client_credentials_invalid_parameters)
-{
-  struct _i_session i_session;
-  
-  ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CLIENT_CREDENTIALS,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_CLIENT_SECRET, CLIENT_SECRET,
-                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
-                                                  I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  i_clean_session(&i_session);
-
-  ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CLIENT_CREDENTIALS,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_CLIENT_ID, CLIENT_ID,
-                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
-                                                  I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  i_clean_session(&i_session);
-
-  ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CLIENT_CREDENTIALS,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_CLIENT_ID, CLIENT_ID,
-                                                  I_OPT_CLIENT_SECRET, CLIENT_SECRET,
-                                                  I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  i_clean_session(&i_session);
-
-}
-END_TEST
-
 START_TEST(test_iddawc_token_client_credentials_client_invalid_client)
 {
   struct _i_session i_session;
@@ -882,7 +848,6 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_token_password_client_invalid_client);
   tcase_add_test(tc_core, test_iddawc_token_password_noclient_unauthorized_client);
   tcase_add_test(tc_core, test_iddawc_token_password_client_ok);
-  tcase_add_test(tc_core, test_iddawc_token_client_credentials_invalid_parameters);
   tcase_add_test(tc_core, test_iddawc_token_client_credentials_client_invalid_client);
   tcase_add_test(tc_core, test_iddawc_token_client_credentials_client_unauthorized_client);
   tcase_add_test(tc_core, test_iddawc_token_client_credentials_client_ok);

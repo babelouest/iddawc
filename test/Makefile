@@ -26,8 +26,8 @@ CC=gcc
 CFLAGS+=-Wall -D_REENTRANT -I$(IDDAWC_INCLUDE) -DDEBUG -g -O0 $(CPPFLAGS)
 LDFLAGS=-lc -lorcania -lulfius -liddawc -lrhonabwy -ljansson -L$(IDDAWC_LOCATION) -lyder $(shell pkg-config --libs check)
 VALGRIND_COMMAND=valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all
-TARGET=core implicit id_token token load_config
-TARGET_TEST=test_core test_implicit test_id_token test_token test_load_config
+TARGET=core implicit id_token token load_config load_userinfo flow
+TARGET_TEST=test_core test_implicit test_id_token test_token test_load_config test_load_userinfo test_flow
 MEMCHECK=0
 
 all: test

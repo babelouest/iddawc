@@ -12,6 +12,7 @@
 #define STATE "stateXyz1234"
 #define REDIRECT_URI "https://iddawc.tld"
 #define REDIRECT_TO "https://iddawc.tld#access_token=plop"
+#define REDIRECT_EXTERNAL_AUTH "https://iddawc.tld/login.html"
 #define CLIENT_ID "clientXyz1234"
 #define CLIENT_SECRET "secretXyx1234"
 #define AUTH_ENDPOINT "http://localhost:8080/auth"
@@ -85,6 +86,14 @@ int callback_oauth2_token_type_empty (const struct _u_request * request, struct 
 
 int callback_oauth2_expires_in_invalid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type=" TOKEN_TYPE "&expires_in=error&code&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  u_map_put(response->map_header, "Location", redirect);
+  response->status = 302;
+  o_free(redirect);
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_oauth2_redirect_external_auth (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  char * redirect = msprintf(REDIRECT_EXTERNAL_AUTH "?redirect_uri=%s&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -362,6 +371,32 @@ START_TEST(test_iddawc_expires_in_invalid)
 }
 END_TEST
 
+START_TEST(test_iddawc_redirect_external_auth)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/auth", 0, &callback_oauth2_redirect_external_auth, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                  I_OPT_CLIENT_ID, CLIENT_ID,
+                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                  I_OPT_SCOPE, SCOPE_LIST,
+                                                  I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                  I_OPT_STATE, STATE,
+                                                  I_OPT_NONE), I_OK);
+  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_CODE), NULL);
+  ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
+  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_CODE), NULL);
+  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_code_valid)
 {
   struct _i_session i_session;
@@ -570,6 +605,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_access_token_empty);
   tcase_add_test(tc_core, test_iddawc_token_type_empty);
   tcase_add_test(tc_core, test_iddawc_expires_in_invalid);
+  tcase_add_test(tc_core, test_iddawc_redirect_external_auth);
   tcase_add_test(tc_core, test_iddawc_code_valid);
   tcase_add_test(tc_core, test_iddawc_access_token_valid);
   tcase_add_test(tc_core, test_iddawc_id_token_valid);
@@ -588,7 +624,7 @@ int main(int argc, char *argv[])
   int number_failed;
   Suite *s;
   SRunner *sr;
-  y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc OAuth2 flow tests");
+  y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc OAuth2 implicit flow tests");
   s = iddawc_suite();
   sr = srunner_create(s);
 
