@@ -11,7 +11,7 @@
 #define REDIRECT_URI "https://iddawc.tld"
 #define REDIRECT_ACCESS_TOKEN "https://iddawc.tld#access_token="
 #define REDIRECT_CODE "https://iddawc.tld?code="
-#define REDIRECT_ID_TOKEN "https://iddawc.tld#id_token="
+#define REDIRECT_ID_TOKEN "https://iddawc.tld#id_token=%s"
 #define REDIRECT_EXTERNAL_AUTH "https://iddawc.tld/login.html"
 #define CLIENT_ID "clientXyz1234"
 #define CLIENT_SECRET "secretXyx1234"
@@ -92,11 +92,66 @@ const char openid_configuration_valid[] = "{\
   \"subject_types_supported\":[\"" SUBJECT_TYPE "\"]\
 }";
 
-const char jwks_pubkey_rsa_str[] =
-"{\"keys\":[{\"kty\":\"RSA\",\"n\":\"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRX"
-"jBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6"
-"qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw\""
-",\"e\":\"AQAB\",\"alg\":\"RS256\",\"kid\":\"2011-04-29\"}]}";
+const char public_key[] = 
+"-----BEGIN PUBLIC KEY-----\n"
+"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnzyis1ZjfNB0bBgKFMSv\n"
+"vkTtwlvBsaJq7S5wA+kzeVOVpVWwkWdVha4s38XM/pa/yr47av7+z3VTmvDRyAHc\n"
+"aT92whREFpLv9cj5lTeJSibyr/Mrm/YtjCZVWgaOYIhwrXwKLqPr/11inWsAkfIy\n"
+"tvHWTxZYEcXLgAXFuUuaS3uF9gEiNQwzGTU1v0FqkqTBr4B8nW3HCN47XUu0t8Y0\n"
+"e+lf4s4OxQawWD79J9/5d3Ry0vbV3Am1FtGJiJvOwRsIfVChDpYStTcHTCMqtvWb\n"
+"V6L11BWkpzGXSW4Hv43qa+GSYOD2QU68Mb59oSk2OB+BtOLpJofmbGEGgvmwyCI9\n"
+"MwIDAQAB\n"
+"-----END PUBLIC KEY-----\n";
+
+const char id_token_valid_sig_no_hash[] = 
+"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbXIiOlsicGFzc3dvcmQiXSw"
+"iYXVkIjoiY2xpZW50MV9pZCIsImF1dGhfdGltZSI6MTU3ODIzMTExNywiYXpwIjo"
+"iY2xpZW50MV9pZCIsImV4cCI6MTU3ODIzNDcyMSwiaWF0IjoxNTc4MjMxMTIxLCJ"
+"pc3MiOiJodHRwczovL2dsZXdsd3lkLnRsZCIsIm5vbmNlIjoiYWJjMTIzNCIsInN"
+"1YiI6IndSTmFQVDFVQkl3NENsOWVvM3lPem9IN3ZFODFQaGZ1In0.JDaE508TDbC"
+"jJLRGV2V0zHxuH3mFxmkJdV8S-jLfe7NrP9MW84i1IoCcGV-Z9dm3Jo1u4TkBHcx"
+"kOd1b7VdhHy1SxNdEmZ0As8NHUL4K6sH1Dxlj4JQEDhJTkbyvofsopHOB3WVML3V"
+"Og-qc5vk3Q4i0vJlSZUa4KOseUf-uzAlkjIVsb09zdD75_OopKU5nSHepvopx4Tw"
+"3QKOPaWfd875KKU5f-VrusQ02O5mn2YEn0ile7fo1yf6_7VXRQG5BHM1fTW97kvY"
+"3E4JL3kZVnTsqFqgHW3JrB-33qxSIVsvW52nT4faiLxwkGeZIqMaObxHSp6Us_5t"
+"CPq-f2pyq5w";
+const char id_token_valid_sig_c_hash[] = 
+"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbXIiOlsicGFzc3dvcmQiXSw"
+"iY19oYXNoIjoieFRySDRzSURUMURJREtFbUFmRUQxZyIsImF1ZCI6ImNsaWVudDF"
+"faWQiLCJhdXRoX3RpbWUiOjE1NzgyMzExMTcsImF6cCI6ImNsaWVudDFfaWQiLCJ"
+"leHAiOjE1NzgyMzQ3MjEsImlhdCI6MTU3ODIzMTEyMSwiaXNzIjoiaHR0cHM6Ly9"
+"nbGV3bHd5ZC50bGQiLCJub25jZSI6ImFiYzEyMzQiLCJzdWIiOiJ3Uk5hUFQxVUJ"
+"JdzRDbDllbzN5T3pvSDd2RTgxUGhmdSJ9.jyp-YusI9IwsrlPgOgsspD5i3A7Nqc"
+"MgFgeJ2kxQM6FRb5xvA6MZ5ayc6yOplYKCm0PD9KJRMEOWKx_tUKEt7MQIVZ-q95"
+"AYQ3cNxjHdEzOY3MVMkPO8oj0OYJYpcTXRWgiqsnoFSqWLSXyZWmondW5PwvJNl8"
+"P6eSsFswXe8a_t2LBz0TJDy34l9rCWwAbvLIV48D0wqkR_n4AiovmFwjd0Vk4dqv"
+"5fUEAfd9Th8MaZfcKG4cwq962Msyp6rXXrAHKLbk-MfhUaqXkahHmJtIE904EDnl"
+"cWVL1IcnNgwjEeDK9_aaxI_6PlnvzfPYDY0zcMt0sB8Lu4Yt7HF2GN0Q";
+const char id_token_valid_sig_at_hash[] = 
+"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbXIiOlsicGFzc3dvcmQiXSw"
+"iYXRfaGFzaCI6IjJmOFpLeks4TzdTQVVrVHBSMjlaX3ciLCJhdWQiOiJjbGllbnQ"
+"xX2lkIiwiYXV0aF90aW1lIjoxNTc4MjMxMTE3LCJhenAiOiJjbGllbnQxX2lkIiw"
+"iZXhwIjoxNTc4MjM0NzIxLCJpYXQiOjE1NzgyMzExMjEsImlzcyI6Imh0dHBzOi8"
+"vZ2xld2x3eWQudGxkIiwibm9uY2UiOiJhYmMxMjM0Iiwic3ViIjoid1JOYVBUMVV"
+"CSXc0Q2w5ZW8zeU96b0g3dkU4MVBoZnUifQ.cgf3Y5hOSlBz4IzPUlt_Z5I2Sbix"
+"uvwcKOqN-EykgZlof_8Jyr6ZctTciiqx6zP785pSjslnqvTQR7W_D22g-01RUUsT"
+"K5vunXbP0Z2Pe5HX_q2uUJ2chw91DAUzwZRcyM3HPI39_PdmyttpcZIpPLi7YEqW"
+"IsaORdWUrghy8B_6ZJ7FhhJmAHyxu28xCVN3dsVXG5SIam2kpo84qVSb23ZaYtjj"
+"P8V1kMZEIJpo_IGCmFZalzi2OfPnRctFMM7rUGWlu1i6d5d3vqdZf9oi1mNQKwtZ"
+"o3c9v3CJyhc6V3S2-2BT6GIp10zFWr-hB9a95D4rKA_sp2suvRY7nw1aAA";
+const char id_token_valid_sig_c_hash_at_hash[] = 
+"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbXIiOlsicGFzc3dvcmQiXSw"
+"iY19oYXNoIjoieFRySDRzSURUMURJREtFbUFmRUQxZyIsImF0X2hhc2giOiIyZjh"
+"aS3pLOE83U0FVa1RwUjI5Wl93IiwiYXVkIjoiY2xpZW50MV9pZCIsImF1dGhfdGl"
+"tZSI6MTU3ODIzMTExNywiYXpwIjoiY2xpZW50MV9pZCIsImV4cCI6MTU3ODIzNDc"
+"yMSwiaWF0IjoxNTc4MjMxMTIxLCJpc3MiOiJodHRwczovL2dsZXdsd3lkLnRsZCI"
+"sIm5vbmNlIjoiYWJjMTIzNCIsInN1YiI6IndSTmFQVDFVQkl3NENsOWVvM3lPem9"
+"IN3ZFODFQaGZ1In0.AO-81_CMVPGh7NidjKFqacXpIAc22P6lWQZ3MrbBllIvRFa"
+"VJ_WQVRCkfS_RDTI6LaZ8ZanJ1ZbZmzR1WRU140Guuj8MNfK4BemqXgC0qsMQ6ib"
+"YNuM1nAwi35WOXT9AtAWUXJTH1f-7gAZErU-CmJwlctd7O5AhNpqW3ktdwq-GqE0"
+"AjXSVNpFd6jTFVGbyW0Z-qyglbDLtbTZuhry7eLXmZyOMcl6dDR8Ux29JriuSDO4"
+"D2VlSTQJmadPhm2_Pwp6ViLLd4JfmYHYzXjfI1xoaw3TV6hasLVf8Q8uAI9UWVYL"
+"6cUjP73Mfy8K89jnbZRjFAX25KzWhXRQCIKk42A";
 
 int callback_oauth2_redirect_external_auth (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf(REDIRECT_EXTERNAL_AUTH "?redirect_uri=%s&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
@@ -132,8 +187,19 @@ int callback_openid_configuration_valid (const struct _u_request * request, stru
 }
 
 int callback_openid_jwks_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  json_t * j_response = json_loads(jwks_pubkey_rsa_str, JSON_DECODE_ANY, NULL);
+  jwk_t * jwk;
+  jwks_t * jwks;
+  json_t * j_response;
+  
+  r_init_jwk(&jwk);
+  r_init_jwks(&jwks);
+  r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key));
+  r_jwks_append_jwk(jwks, jwk);
+  j_response = r_jwks_export_to_json_t(jwks);
   ulfius_set_json_body_response(response, 200, j_response);
+  
+  r_free_jwk(jwk);
+  r_free_jwks(jwks);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
 }
@@ -237,6 +303,7 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   struct _i_session i_session;
   struct _u_instance instance;
   json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
+  char * redirect_to = msprintf(REDIRECT_ID_TOKEN "&access_token=" ACCESS_TOKEN "&state=" STATE "&token_type=bearer", id_token_valid_sig_at_hash);
 
   ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
@@ -261,7 +328,7 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
-  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_ID_TOKEN ID_TOKEN "&access_token=" ACCESS_TOKEN "&state=" STATE "&token_type=bearer"), I_OK);
+  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
@@ -276,6 +343,7 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   ulfius_stop_framework(&instance);
   ulfius_clean_instance(&instance);
   i_clean_session(&i_session);
+  o_free(redirect_to);
 }
 END_TEST
 
