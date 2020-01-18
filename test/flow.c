@@ -314,12 +314,12 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
-                                                  I_OPT_CLIENT_ID, CLIENT_ID,
-                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_STATE, STATE,
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_load_openid_config(&i_session), I_OK);
   
   // First step: get redirection to login page
@@ -336,7 +336,7 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   
   // And finally we load user info using the access token
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_USERINFO), userinfo_json);
+  ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   
   json_decref(j_userinfo);
   ulfius_stop_framework(&instance);
