@@ -7,7 +7,7 @@ var indexSectionsWithContent =
   4: "acegijnorstux",
   5: "_",
   6: "i",
-  7: "i",
+  7: "cegs",
   8: "i"
 };
 
@@ -20,7 +20,7 @@ var indexSectionNames =
   4: "variables",
   5: "enums",
   6: "enumvalues",
-  7: "defines",
+  7: "groups",
   8: "pages"
 };
 
@@ -33,7 +33,7 @@ var indexSectionLabels =
   4: "Variables",
   5: "Enumerations",
   6: "Enumerator",
-  7: "Macros",
+  7: "Modules",
   8: "Pages"
 };
 

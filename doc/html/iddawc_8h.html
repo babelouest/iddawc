@@ -86,1220 +86,161 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:ac3e719888cb77e5de100927c5697a4ec"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ac3e719888cb77e5de100927c5697a4ec">I_OK</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:ac3e719888cb77e5de100927c5697a4ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21a35dd645c24cb573260f1864cb94e3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a21a35dd645c24cb573260f1864cb94e3">I_ERROR</a>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:a21a35dd645c24cb573260f1864cb94e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f47f1e0f878f57a15f125c6cb5ab0ec"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a0f47f1e0f878f57a15f125c6cb5ab0ec">I_ERROR_PARAM</a>&#160;&#160;&#160;2</td></tr>
-<tr class="separator:a0f47f1e0f878f57a15f125c6cb5ab0ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54e53dec845188fb483d5f33c721a045"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a54e53dec845188fb483d5f33c721a045">I_ERROR_MEMORY</a>&#160;&#160;&#160;3</td></tr>
-<tr class="separator:a54e53dec845188fb483d5f33c721a045"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03ab31088ff2d473d022470f8db99227"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a03ab31088ff2d473d022470f8db99227">I_ERROR_UNAUTHORIZED</a>&#160;&#160;&#160;4</td></tr>
-<tr class="separator:a03ab31088ff2d473d022470f8db99227"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a865a0ccb8a6f586a9dc21dcb3ab38295"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a865a0ccb8a6f586a9dc21dcb3ab38295">I_ERROR_SERVER</a>&#160;&#160;&#160;5</td></tr>
-<tr class="separator:a865a0ccb8a6f586a9dc21dcb3ab38295"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9284e78d80f6a65a0d63c9b5854345df"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a9284e78d80f6a65a0d63c9b5854345df">I_RESPONSE_TYPE_NONE</a>&#160;&#160;&#160;0x00000000</td></tr>
-<tr class="separator:a9284e78d80f6a65a0d63c9b5854345df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a46910e72294f8c5da83564a34a678605"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a46910e72294f8c5da83564a34a678605">I_RESPONSE_TYPE_CODE</a>&#160;&#160;&#160;0x00000001</td></tr>
-<tr class="separator:a46910e72294f8c5da83564a34a678605"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a94bae21721b529af356e3c313163ca47"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a94bae21721b529af356e3c313163ca47">I_RESPONSE_TYPE_TOKEN</a>&#160;&#160;&#160;0x00000010</td></tr>
-<tr class="separator:a94bae21721b529af356e3c313163ca47"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a02bd6006b9e1af5f0bc894cbd9363a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a1a02bd6006b9e1af5f0bc894cbd9363a">I_RESPONSE_TYPE_ID_TOKEN</a>&#160;&#160;&#160;0x00000100</td></tr>
-<tr class="separator:a1a02bd6006b9e1af5f0bc894cbd9363a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4b2bf679e3d69b0f7cab18336d9ad62"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ad4b2bf679e3d69b0f7cab18336d9ad62">I_RESPONSE_TYPE_PASSWORD</a>&#160;&#160;&#160;0x00001000</td></tr>
-<tr class="separator:ad4b2bf679e3d69b0f7cab18336d9ad62"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a298e1585f5a8232bba2b87168d1ef5c1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a298e1585f5a8232bba2b87168d1ef5c1">I_RESPONSE_TYPE_CLIENT_CREDENTIALS</a>&#160;&#160;&#160;0x00010000</td></tr>
-<tr class="separator:a298e1585f5a8232bba2b87168d1ef5c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae605879f560cff134d4047ea0eae449c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ae605879f560cff134d4047ea0eae449c">I_RESPONSE_TYPE_REFRESH_TOKEN</a>&#160;&#160;&#160;0x00100000</td></tr>
-<tr class="separator:ae605879f560cff134d4047ea0eae449c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f8a3c9b8661484b01651c0fee55e133"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a7f8a3c9b8661484b01651c0fee55e133">I_HAS_NONE</a>&#160;&#160;&#160;<a class="el" href="iddawc_8h.html#a9284e78d80f6a65a0d63c9b5854345df">I_RESPONSE_TYPE_NONE</a></td></tr>
-<tr class="separator:a7f8a3c9b8661484b01651c0fee55e133"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43c8f0ee9dedf6e9459306331cc5f23e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a43c8f0ee9dedf6e9459306331cc5f23e">I_HAS_ACCESS_TOKEN</a>&#160;&#160;&#160;<a class="el" href="iddawc_8h.html#a94bae21721b529af356e3c313163ca47">I_RESPONSE_TYPE_TOKEN</a></td></tr>
-<tr class="separator:a43c8f0ee9dedf6e9459306331cc5f23e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45f3752286bcd4f1d4438a2e423cf66d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a45f3752286bcd4f1d4438a2e423cf66d">I_HAS_CODE</a>&#160;&#160;&#160;<a class="el" href="iddawc_8h.html#a46910e72294f8c5da83564a34a678605">I_RESPONSE_TYPE_CODE</a></td></tr>
-<tr class="separator:a45f3752286bcd4f1d4438a2e423cf66d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a324601c3e9a1f0212d34341e125ef4bc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a324601c3e9a1f0212d34341e125ef4bc">I_AUTH_METHOD_GET</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:a324601c3e9a1f0212d34341e125ef4bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab26b347fd648e803babe686d77d9b551"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ab26b347fd648e803babe686d77d9b551">I_AUTH_METHOD_POST</a>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:ab26b347fd648e803babe686d77d9b551"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a709282ef4107f8e96ba857d213f9c704"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a709282ef4107f8e96ba857d213f9c704">I_STRICT_NO</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:a709282ef4107f8e96ba857d213f9c704"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a883c307abcb55fb0240a0bb71330231f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a883c307abcb55fb0240a0bb71330231f">I_STRICT_YES</a>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:a883c307abcb55fb0240a0bb71330231f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4f00a53de1797f759065d4b815a5985"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ad4f00a53de1797f759065d4b815a5985">I_AUTH_SIGN_ALG_MAX_LENGTH</a>&#160;&#160;&#160;8</td></tr>
-<tr class="separator:ad4f00a53de1797f759065d4b815a5985"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c6f7ea2080277732ce5aa8e331e2550"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a7c6f7ea2080277732ce5aa8e331e2550">I_AUTH_SIGN_ALG_NONE</a>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:a7c6f7ea2080277732ce5aa8e331e2550"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e17221ab9a41fd2090a7aaaf6340aae"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a1e17221ab9a41fd2090a7aaaf6340aae">I_AUTH_SIGN_ALG_RS256</a>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:a1e17221ab9a41fd2090a7aaaf6340aae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7d99c6d00ef7f9d9833b0d99dfef59e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ab7d99c6d00ef7f9d9833b0d99dfef59e">I_AUTH_SIGN_ALG_RS384</a>&#160;&#160;&#160;2</td></tr>
-<tr class="separator:ab7d99c6d00ef7f9d9833b0d99dfef59e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf94e1f34a2be2f16d3074f8fb93e5b7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#abf94e1f34a2be2f16d3074f8fb93e5b7">I_AUTH_SIGN_ALG_RS512</a>&#160;&#160;&#160;3</td></tr>
-<tr class="separator:abf94e1f34a2be2f16d3074f8fb93e5b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac3e719888cb77e5de100927c5697a4ec"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gac3e719888cb77e5de100927c5697a4ec">I_OK</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:gac3e719888cb77e5de100927c5697a4ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga21a35dd645c24cb573260f1864cb94e3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga21a35dd645c24cb573260f1864cb94e3">I_ERROR</a>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:ga21a35dd645c24cb573260f1864cb94e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0f47f1e0f878f57a15f125c6cb5ab0ec"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga0f47f1e0f878f57a15f125c6cb5ab0ec">I_ERROR_PARAM</a>&#160;&#160;&#160;2</td></tr>
+<tr class="separator:ga0f47f1e0f878f57a15f125c6cb5ab0ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga54e53dec845188fb483d5f33c721a045"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga54e53dec845188fb483d5f33c721a045">I_ERROR_MEMORY</a>&#160;&#160;&#160;3</td></tr>
+<tr class="separator:ga54e53dec845188fb483d5f33c721a045"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga03ab31088ff2d473d022470f8db99227"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga03ab31088ff2d473d022470f8db99227">I_ERROR_UNAUTHORIZED</a>&#160;&#160;&#160;4</td></tr>
+<tr class="separator:ga03ab31088ff2d473d022470f8db99227"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga865a0ccb8a6f586a9dc21dcb3ab38295"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga865a0ccb8a6f586a9dc21dcb3ab38295">I_ERROR_SERVER</a>&#160;&#160;&#160;5</td></tr>
+<tr class="separator:ga865a0ccb8a6f586a9dc21dcb3ab38295"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9284e78d80f6a65a0d63c9b5854345df"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga9284e78d80f6a65a0d63c9b5854345df">I_RESPONSE_TYPE_NONE</a>&#160;&#160;&#160;0x00000000</td></tr>
+<tr class="separator:ga9284e78d80f6a65a0d63c9b5854345df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga46910e72294f8c5da83564a34a678605"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga46910e72294f8c5da83564a34a678605">I_RESPONSE_TYPE_CODE</a>&#160;&#160;&#160;0x00000001</td></tr>
+<tr class="separator:ga46910e72294f8c5da83564a34a678605"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga94bae21721b529af356e3c313163ca47"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga94bae21721b529af356e3c313163ca47">I_RESPONSE_TYPE_TOKEN</a>&#160;&#160;&#160;0x00000010</td></tr>
+<tr class="separator:ga94bae21721b529af356e3c313163ca47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1a02bd6006b9e1af5f0bc894cbd9363a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga1a02bd6006b9e1af5f0bc894cbd9363a">I_RESPONSE_TYPE_ID_TOKEN</a>&#160;&#160;&#160;0x00000100</td></tr>
+<tr class="separator:ga1a02bd6006b9e1af5f0bc894cbd9363a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad4b2bf679e3d69b0f7cab18336d9ad62"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gad4b2bf679e3d69b0f7cab18336d9ad62">I_RESPONSE_TYPE_PASSWORD</a>&#160;&#160;&#160;0x00001000</td></tr>
+<tr class="separator:gad4b2bf679e3d69b0f7cab18336d9ad62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga298e1585f5a8232bba2b87168d1ef5c1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga298e1585f5a8232bba2b87168d1ef5c1">I_RESPONSE_TYPE_CLIENT_CREDENTIALS</a>&#160;&#160;&#160;0x00010000</td></tr>
+<tr class="separator:ga298e1585f5a8232bba2b87168d1ef5c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae605879f560cff134d4047ea0eae449c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gae605879f560cff134d4047ea0eae449c">I_RESPONSE_TYPE_REFRESH_TOKEN</a>&#160;&#160;&#160;0x00100000</td></tr>
+<tr class="separator:gae605879f560cff134d4047ea0eae449c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7f8a3c9b8661484b01651c0fee55e133"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga7f8a3c9b8661484b01651c0fee55e133">I_HAS_NONE</a>&#160;&#160;&#160;<a class="el" href="group__const.html#ga9284e78d80f6a65a0d63c9b5854345df">I_RESPONSE_TYPE_NONE</a></td></tr>
+<tr class="separator:ga7f8a3c9b8661484b01651c0fee55e133"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga43c8f0ee9dedf6e9459306331cc5f23e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga43c8f0ee9dedf6e9459306331cc5f23e">I_HAS_ACCESS_TOKEN</a>&#160;&#160;&#160;<a class="el" href="group__const.html#ga94bae21721b529af356e3c313163ca47">I_RESPONSE_TYPE_TOKEN</a></td></tr>
+<tr class="separator:ga43c8f0ee9dedf6e9459306331cc5f23e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga45f3752286bcd4f1d4438a2e423cf66d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga45f3752286bcd4f1d4438a2e423cf66d">I_HAS_CODE</a>&#160;&#160;&#160;<a class="el" href="group__const.html#ga46910e72294f8c5da83564a34a678605">I_RESPONSE_TYPE_CODE</a></td></tr>
+<tr class="separator:ga45f3752286bcd4f1d4438a2e423cf66d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga324601c3e9a1f0212d34341e125ef4bc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga324601c3e9a1f0212d34341e125ef4bc">I_AUTH_METHOD_GET</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:ga324601c3e9a1f0212d34341e125ef4bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab26b347fd648e803babe686d77d9b551"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gab26b347fd648e803babe686d77d9b551">I_AUTH_METHOD_POST</a>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:gab26b347fd648e803babe686d77d9b551"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga709282ef4107f8e96ba857d213f9c704"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga709282ef4107f8e96ba857d213f9c704">I_STRICT_NO</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:ga709282ef4107f8e96ba857d213f9c704"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga883c307abcb55fb0240a0bb71330231f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga883c307abcb55fb0240a0bb71330231f">I_STRICT_YES</a>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:ga883c307abcb55fb0240a0bb71330231f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad4f00a53de1797f759065d4b815a5985"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gad4f00a53de1797f759065d4b815a5985">I_AUTH_SIGN_ALG_MAX_LENGTH</a>&#160;&#160;&#160;8</td></tr>
+<tr class="separator:gad4f00a53de1797f759065d4b815a5985"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7c6f7ea2080277732ce5aa8e331e2550"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga7c6f7ea2080277732ce5aa8e331e2550">I_AUTH_SIGN_ALG_NONE</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:ga7c6f7ea2080277732ce5aa8e331e2550"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1e17221ab9a41fd2090a7aaaf6340aae"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga1e17221ab9a41fd2090a7aaaf6340aae">I_AUTH_SIGN_ALG_RS256</a>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:ga1e17221ab9a41fd2090a7aaaf6340aae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab7d99c6d00ef7f9d9833b0d99dfef59e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gab7d99c6d00ef7f9d9833b0d99dfef59e">I_AUTH_SIGN_ALG_RS384</a>&#160;&#160;&#160;2</td></tr>
+<tr class="separator:gab7d99c6d00ef7f9d9833b0d99dfef59e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabf94e1f34a2be2f16d3074f8fb93e5b7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gabf94e1f34a2be2f16d3074f8fb93e5b7">I_AUTH_SIGN_ALG_RS512</a>&#160;&#160;&#160;3</td></tr>
+<tr class="separator:gabf94e1f34a2be2f16d3074f8fb93e5b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:a354b1fe8a1449635c2f818219f612706"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706">_i_option</a> { <br />
-&#160;&#160;<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a72d26a750fcc218aac5e3981e0b8fc22">I_OPT_NONE</a> = 0, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ad784b2e55cb95f331bd67212418b3323">I_OPT_RESPONSE_TYPE</a> = 1, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706aee9b0f29db48b158568705694b73a1f9">I_OPT_SCOPE</a> = 2, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706accb332d3b1cc2f1a9c7bca0f0dc17f50">I_OPT_SCOPE_APPEND</a> = 3, 
+<tr class="memitem:ga354b1fe8a1449635c2f818219f612706"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga354b1fe8a1449635c2f818219f612706">_i_option</a> { <br />
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a72d26a750fcc218aac5e3981e0b8fc22">I_OPT_NONE</a> = 0, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ad784b2e55cb95f331bd67212418b3323">I_OPT_RESPONSE_TYPE</a> = 1, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706aee9b0f29db48b158568705694b73a1f9">I_OPT_SCOPE</a> = 2, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706accb332d3b1cc2f1a9c7bca0f0dc17f50">I_OPT_SCOPE_APPEND</a> = 3, 
 <br />
-&#160;&#160;<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ae84a589d04c6012e2a86fa46112db5c2">I_OPT_STATE</a> = 4, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706aaa84a1c47ad8f23387311e226e8fd329">I_OPT_NONCE</a> = 5, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a84c02139d19ad119ecb860eb863d112c">I_OPT_REDIRECT_URI</a> = 6, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a950c80f34e5c27496ef2c3c7da8e9655">I_OPT_REDIRECT_TO</a> = 7, 
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ae84a589d04c6012e2a86fa46112db5c2">I_OPT_STATE</a> = 4, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706aaa84a1c47ad8f23387311e226e8fd329">I_OPT_NONCE</a> = 5, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a84c02139d19ad119ecb860eb863d112c">I_OPT_REDIRECT_URI</a> = 6, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a950c80f34e5c27496ef2c3c7da8e9655">I_OPT_REDIRECT_TO</a> = 7, 
 <br />
-&#160;&#160;<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ad555d67cfd0d1d15c50f73f308ff4b40">I_OPT_CLIENT_ID</a> = 8, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ac593baf31db5c21299aedd709b44fa1c">I_OPT_CLIENT_SECRET</a> = 9, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706af597f1009a2fec6e41969fca1fd4db5a">I_OPT_ADDITIONAL_PARAMETER</a> = 10, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706aa85a173b0c20406e317394ba3727b020">I_OPT_ADDITIONAL_RESPONSE</a> = 11, 
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ad555d67cfd0d1d15c50f73f308ff4b40">I_OPT_CLIENT_ID</a> = 8, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ac593baf31db5c21299aedd709b44fa1c">I_OPT_CLIENT_SECRET</a> = 9, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706af597f1009a2fec6e41969fca1fd4db5a">I_OPT_ADDITIONAL_PARAMETER</a> = 10, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706aa85a173b0c20406e317394ba3727b020">I_OPT_ADDITIONAL_RESPONSE</a> = 11, 
 <br />
-&#160;&#160;<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706aea86f09b5fb025a16147c8e91af3cf84">I_OPT_AUTH_ENDPOINT</a> = 12, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ac0fabe609e28596f239c9c98b6f4b0df">I_OPT_TOKEN_ENDPOINT</a> = 13, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a5dcda0d36970e7080d685e62ab9a867c">I_OPT_OPENID_CONFIG_ENDPOINT</a> = 14, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a6bda4c31aabde084b3d057e94aac8597">I_OPT_OPENID_CONFIG</a> = 15, 
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706aea86f09b5fb025a16147c8e91af3cf84">I_OPT_AUTH_ENDPOINT</a> = 12, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ac0fabe609e28596f239c9c98b6f4b0df">I_OPT_TOKEN_ENDPOINT</a> = 13, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a5dcda0d36970e7080d685e62ab9a867c">I_OPT_OPENID_CONFIG_ENDPOINT</a> = 14, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a6bda4c31aabde084b3d057e94aac8597">I_OPT_OPENID_CONFIG</a> = 15, 
 <br />
-&#160;&#160;<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706aec9285d3ce421e6ebfb8be8eda5cfb11">I_OPT_OPENID_CONFIG_STRICT</a> = 16, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ae46510a219e8df62de2437f4803c8365">I_OPT_USERINFO_ENDPOINT</a> = 17, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706afad428d9a1ffb4d1b4a943a3a764c116">I_OPT_RESULT</a> = 18, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ae45d46186edb515d99e727c0e31d520e">I_OPT_ERROR</a> = 19, 
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706aec9285d3ce421e6ebfb8be8eda5cfb11">I_OPT_OPENID_CONFIG_STRICT</a> = 16, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ae46510a219e8df62de2437f4803c8365">I_OPT_USERINFO_ENDPOINT</a> = 17, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706afad428d9a1ffb4d1b4a943a3a764c116">I_OPT_RESULT</a> = 18, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ae45d46186edb515d99e727c0e31d520e">I_OPT_ERROR</a> = 19, 
 <br />
-&#160;&#160;<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ad9637eae38970709e703970e1e2bdfaa">I_OPT_ERROR_DESCRIPTION</a> = 20, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a86b5a4b30141fe7451330ed1afc6f327">I_OPT_ERROR_URI</a> = 21, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a50b4c3d8ed8ada53b873add4e2ef0fa0">I_OPT_CODE</a> = 22, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ac11ee422e2dab3dbdc2950cdaa5df7fc">I_OPT_REFRESH_TOKEN</a> = 23, 
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ad9637eae38970709e703970e1e2bdfaa">I_OPT_ERROR_DESCRIPTION</a> = 20, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a86b5a4b30141fe7451330ed1afc6f327">I_OPT_ERROR_URI</a> = 21, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a50b4c3d8ed8ada53b873add4e2ef0fa0">I_OPT_CODE</a> = 22, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ac11ee422e2dab3dbdc2950cdaa5df7fc">I_OPT_REFRESH_TOKEN</a> = 23, 
 <br />
-&#160;&#160;<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a0ba75c44f6fa803dd68e2ce33d0a7d2d">I_OPT_ACCESS_TOKEN</a> = 24, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a609319f69112236095a64cafcb365871">I_OPT_ID_TOKEN</a> = 25, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a3d8409cb8ad6b5cabc9d2d996bf8f7d5">I_OPT_GLEWLWYD_API_URL</a> = 26, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ab07f198f1de88c7b3d072488b1fc00fe">I_OPT_GLEWLWYD_COOKIE_SESSION</a> = 27, 
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a0ba75c44f6fa803dd68e2ce33d0a7d2d">I_OPT_ACCESS_TOKEN</a> = 24, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a609319f69112236095a64cafcb365871">I_OPT_ID_TOKEN</a> = 25, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a3d8409cb8ad6b5cabc9d2d996bf8f7d5">I_OPT_GLEWLWYD_API_URL</a> = 26, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ab07f198f1de88c7b3d072488b1fc00fe">I_OPT_GLEWLWYD_COOKIE_SESSION</a> = 27, 
 <br />
-&#160;&#160;<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706adaa64fb80bda1ea21bf0f412a38254fb">I_OPT_AUTH_METHOD</a> = 28, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a9daeab27381383d8f85b7393ddbfaaae">I_OPT_AUTH_SIGN_ALG</a> = 29, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a00b9ee83228522517a266479492c8b8f">I_OPT_TOKEN_TYPE</a> = 30, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ad5396a5af59f49a536af48c80a7fb978">I_OPT_EXPIRES_IN</a> = 31, 
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706adaa64fb80bda1ea21bf0f412a38254fb">I_OPT_AUTH_METHOD</a> = 28, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a9daeab27381383d8f85b7393ddbfaaae">I_OPT_AUTH_SIGN_ALG</a> = 29, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a00b9ee83228522517a266479492c8b8f">I_OPT_TOKEN_TYPE</a> = 30, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ad5396a5af59f49a536af48c80a7fb978">I_OPT_EXPIRES_IN</a> = 31, 
 <br />
-&#160;&#160;<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706aeb529ceff5bbf28aed23cbd685fb54d3">I_OPT_USERNAME</a> = 32, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706ab849cbb176bca0f9316a0c6f2880811f">I_OPT_USER_PASSWORD</a> = 33, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706a092b19a4e52c22e06745f45f543e43d2">I_OPT_ISSUER</a> = 34, 
-<a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706af38b0c0c9deffb15855c035130068ce9">I_OPT_USERINFO</a> = 35
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706aeb529ceff5bbf28aed23cbd685fb54d3">I_OPT_USERNAME</a> = 32, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ab849cbb176bca0f9316a0c6f2880811f">I_OPT_USER_PASSWORD</a> = 33, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a092b19a4e52c22e06745f45f543e43d2">I_OPT_ISSUER</a> = 34, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706af38b0c0c9deffb15855c035130068ce9">I_OPT_USERINFO</a> = 35
 <br />
  }</td></tr>
-<tr class="separator:a354b1fe8a1449635c2f818219f612706"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ga354b1fe8a1449635c2f818219f612706"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a43fa354058e5ebc2c4d02ef3e9e62687"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a43fa354058e5ebc2c4d02ef3e9e62687">i_init_session</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:a43fa354058e5ebc2c4d02ef3e9e62687"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a2fefde91c578c8c2f6b0297e3ee058"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a6a2fefde91c578c8c2f6b0297e3ee058">i_clean_session</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:a6a2fefde91c578c8c2f6b0297e3ee058"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac73af3a30935b4443af9e86abb1d9fcf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ac73af3a30935b4443af9e86abb1d9fcf">i_set_response_type</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint i_value)</td></tr>
-<tr class="separator:ac73af3a30935b4443af9e86abb1d9fcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6acf44054500b1feb50f42dc55ea6bbb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a6acf44054500b1feb50f42dc55ea6bbb">i_set_result</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint i_value)</td></tr>
-<tr class="separator:a6acf44054500b1feb50f42dc55ea6bbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad83e36a4c22b58b67fccf6046f1ab9af"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ad83e36a4c22b58b67fccf6046f1ab9af">i_set_flag_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint option, uint i_value)</td></tr>
-<tr class="separator:ad83e36a4c22b58b67fccf6046f1ab9af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b6c6b91cde823382ef9b9818d60ca14"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a8b6c6b91cde823382ef9b9818d60ca14">i_set_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint option, const char *s_value)</td></tr>
-<tr class="separator:a8b6c6b91cde823382ef9b9818d60ca14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ae5ceaf789edcc3826b94d22460ea36"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a1ae5ceaf789edcc3826b94d22460ea36">i_set_additional_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key, const char *s_value)</td></tr>
-<tr class="separator:a1ae5ceaf789edcc3826b94d22460ea36"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae80f8aac03211943b854c3aede3fee6b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ae80f8aac03211943b854c3aede3fee6b">i_set_additional_response</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key, const char *s_value)</td></tr>
-<tr class="separator:ae80f8aac03211943b854c3aede3fee6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ec512e6c051ca609bb506be8e0646bc"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a8ec512e6c051ca609bb506be8e0646bc">i_get_response_type</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:a8ec512e6c051ca609bb506be8e0646bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a110fe3fcde671327f9c787049208a3f2"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a110fe3fcde671327f9c787049208a3f2">i_get_result</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:a110fe3fcde671327f9c787049208a3f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6dd87cdef1a1bb67b5a5c3c880e015ab"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a6dd87cdef1a1bb67b5a5c3c880e015ab">i_get_flag_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint option)</td></tr>
-<tr class="separator:a6dd87cdef1a1bb67b5a5c3c880e015ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c1898e664f32eafe6f926fb0d6d3265"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a0c1898e664f32eafe6f926fb0d6d3265">i_get_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint option)</td></tr>
-<tr class="separator:a0c1898e664f32eafe6f926fb0d6d3265"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66e2e3a7c63f92eb6bd60553ebe5f0c9"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a66e2e3a7c63f92eb6bd60553ebe5f0c9">i_get_additional_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key)</td></tr>
-<tr class="separator:a66e2e3a7c63f92eb6bd60553ebe5f0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72f1f165ce3101bb70be9cb007a6f6ad"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a72f1f165ce3101bb70be9cb007a6f6ad">i_get_additional_response</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key)</td></tr>
-<tr class="separator:a72f1f165ce3101bb70be9cb007a6f6ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a74f0a21ec2933521d50a93062a2ff522"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a74f0a21ec2933521d50a93062a2ff522">i_set_parameter_list</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session,...)</td></tr>
-<tr class="separator:a74f0a21ec2933521d50a93062a2ff522"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af719b590f20f10e11ecf36d803f0ac6f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#af719b590f20f10e11ecf36d803f0ac6f">i_load_openid_config</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:af719b590f20f10e11ecf36d803f0ac6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71428e3bcc19f2ae742c8fe36e5428b7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a71428e3bcc19f2ae742c8fe36e5428b7">i_load_userinfo</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:a71428e3bcc19f2ae742c8fe36e5428b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a07ded29917a24ac0e244bfc908a88c41"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a07ded29917a24ac0e244bfc908a88c41">i_run_config_endpoint</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:a07ded29917a24ac0e244bfc908a88c41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2db60e3de3bb62e5cbfc114f1c8449db"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a2db60e3de3bb62e5cbfc114f1c8449db">i_run_auth_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:a2db60e3de3bb62e5cbfc114f1c8449db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af251643a2384c854091a2df0314aac8e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#af251643a2384c854091a2df0314aac8e">i_run_token_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:af251643a2384c854091a2df0314aac8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7441a54dd473255eda38c3a28e47fa3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#ab7441a54dd473255eda38c3a28e47fa3">i_run_access_token_validation_endpoint</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:ab7441a54dd473255eda38c3a28e47fa3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00dbffa0277edac5073c7b8b40aec84d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a00dbffa0277edac5073c7b8b40aec84d">i_verify_id_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, int token_type)</td></tr>
-<tr class="separator:a00dbffa0277edac5073c7b8b40aec84d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f79e97ece660c0379dd07e12dbe9f23"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a0f79e97ece660c0379dd07e12dbe9f23">igc_auth_password</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *username, const char *password)</td></tr>
-<tr class="separator:a0f79e97ece660c0379dd07e12dbe9f23"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6bd7d333ebbf80f9ad4f0a401444d1c4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a6bd7d333ebbf80f9ad4f0a401444d1c4">igc_auth_scheme</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *scheme_mod, const char *scheme_name, const char *username, const char *json_value)</td></tr>
-<tr class="separator:a6bd7d333ebbf80f9ad4f0a401444d1c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b8d715685e249ba66f86552d799f410"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8h.html#a8b8d715685e249ba66f86552d799f410">igc_get_scope_auth_status</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *username)</td></tr>
-<tr class="separator:a8b8d715685e249ba66f86552d799f410"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga43fa354058e5ebc2c4d02ef3e9e62687"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#ga43fa354058e5ebc2c4d02ef3e9e62687">i_init_session</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga43fa354058e5ebc2c4d02ef3e9e62687"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6a2fefde91c578c8c2f6b0297e3ee058"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#ga6a2fefde91c578c8c2f6b0297e3ee058">i_clean_session</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga6a2fefde91c578c8c2f6b0297e3ee058"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac73af3a30935b4443af9e86abb1d9fcf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gac73af3a30935b4443af9e86abb1d9fcf">i_set_response_type</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint i_value)</td></tr>
+<tr class="separator:gac73af3a30935b4443af9e86abb1d9fcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6acf44054500b1feb50f42dc55ea6bbb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga6acf44054500b1feb50f42dc55ea6bbb">i_set_result</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint i_value)</td></tr>
+<tr class="separator:ga6acf44054500b1feb50f42dc55ea6bbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad83e36a4c22b58b67fccf6046f1ab9af"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gad83e36a4c22b58b67fccf6046f1ab9af">i_set_flag_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint option, uint i_value)</td></tr>
+<tr class="separator:gad83e36a4c22b58b67fccf6046f1ab9af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8b6c6b91cde823382ef9b9818d60ca14"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga8b6c6b91cde823382ef9b9818d60ca14">i_set_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint option, const char *s_value)</td></tr>
+<tr class="separator:ga8b6c6b91cde823382ef9b9818d60ca14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1ae5ceaf789edcc3826b94d22460ea36"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga1ae5ceaf789edcc3826b94d22460ea36">i_set_additional_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key, const char *s_value)</td></tr>
+<tr class="separator:ga1ae5ceaf789edcc3826b94d22460ea36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae80f8aac03211943b854c3aede3fee6b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gae80f8aac03211943b854c3aede3fee6b">i_set_additional_response</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key, const char *s_value)</td></tr>
+<tr class="separator:gae80f8aac03211943b854c3aede3fee6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8ec512e6c051ca609bb506be8e0646bc"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga8ec512e6c051ca609bb506be8e0646bc">i_get_response_type</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga8ec512e6c051ca609bb506be8e0646bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga110fe3fcde671327f9c787049208a3f2"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga110fe3fcde671327f9c787049208a3f2">i_get_result</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga110fe3fcde671327f9c787049208a3f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6dd87cdef1a1bb67b5a5c3c880e015ab"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga6dd87cdef1a1bb67b5a5c3c880e015ab">i_get_flag_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint option)</td></tr>
+<tr class="separator:ga6dd87cdef1a1bb67b5a5c3c880e015ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0c1898e664f32eafe6f926fb0d6d3265"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga0c1898e664f32eafe6f926fb0d6d3265">i_get_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, uint option)</td></tr>
+<tr class="separator:ga0c1898e664f32eafe6f926fb0d6d3265"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga66e2e3a7c63f92eb6bd60553ebe5f0c9"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga66e2e3a7c63f92eb6bd60553ebe5f0c9">i_get_additional_parameter</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key)</td></tr>
+<tr class="separator:ga66e2e3a7c63f92eb6bd60553ebe5f0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga72f1f165ce3101bb70be9cb007a6f6ad"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga72f1f165ce3101bb70be9cb007a6f6ad">i_get_additional_response</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key)</td></tr>
+<tr class="separator:ga72f1f165ce3101bb70be9cb007a6f6ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab1b1b471252ea5d5e5311edc75e0cd6f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gab1b1b471252ea5d5e5311edc75e0cd6f">i_parse_redirect_to</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:gab1b1b471252ea5d5e5311edc75e0cd6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga74f0a21ec2933521d50a93062a2ff522"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga74f0a21ec2933521d50a93062a2ff522">i_set_parameter_list</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session,...)</td></tr>
+<tr class="separator:ga74f0a21ec2933521d50a93062a2ff522"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf719b590f20f10e11ecf36d803f0ac6f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gaf719b590f20f10e11ecf36d803f0ac6f">i_load_openid_config</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:gaf719b590f20f10e11ecf36d803f0ac6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga71428e3bcc19f2ae742c8fe36e5428b7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga71428e3bcc19f2ae742c8fe36e5428b7">i_load_userinfo</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga71428e3bcc19f2ae742c8fe36e5428b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2db60e3de3bb62e5cbfc114f1c8449db"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga2db60e3de3bb62e5cbfc114f1c8449db">i_run_auth_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga2db60e3de3bb62e5cbfc114f1c8449db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf251643a2384c854091a2df0314aac8e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gaf251643a2384c854091a2df0314aac8e">i_run_token_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:gaf251643a2384c854091a2df0314aac8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga00dbffa0277edac5073c7b8b40aec84d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga00dbffa0277edac5073c7b8b40aec84d">i_verify_id_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, int token_type)</td></tr>
+<tr class="separator:ga00dbffa0277edac5073c7b8b40aec84d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0f79e97ece660c0379dd07e12dbe9f23"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__glewlwyd.html#ga0f79e97ece660c0379dd07e12dbe9f23">igc_auth_password</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *username, const char *password)</td></tr>
+<tr class="separator:ga0f79e97ece660c0379dd07e12dbe9f23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8f12a474afb546f52a5202fbb35727b1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__glewlwyd.html#ga8f12a474afb546f52a5202fbb35727b1">igc_trigger_scheme</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *username, const char *scheme_mod, const char *scheme_name)</td></tr>
+<tr class="separator:ga8f12a474afb546f52a5202fbb35727b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga34faf155aa7882242d0ffb737c1b4f2f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__glewlwyd.html#ga34faf155aa7882242d0ffb737c1b4f2f">igc_auth_scheme</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *scheme_mod, const char *username, const char *scheme_name, json_t *json_value)</td></tr>
+<tr class="separator:ga34faf155aa7882242d0ffb737c1b4f2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8b8d715685e249ba66f86552d799f410"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__glewlwyd.html#ga8b8d715685e249ba66f86552d799f410">igc_get_scope_auth_status</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *username)</td></tr>
+<tr class="separator:ga8b8d715685e249ba66f86552d799f410"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="ac3e719888cb77e5de100927c5697a4ec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac3e719888cb77e5de100927c5697a4ec">&#9670;&nbsp;</a></span>I_OK</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_OK&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Iddawc OAuth2 client library</p>
-<p><a class="el" href="iddawc_8h.html">iddawc.h</a>: structures and functions declarations</p>
-<p>Copyright 2019 Nicolas Mora <a href="#" onclick="location.href='mai'+'lto:'+'mai'+'l@'+'bab'+'el'+'oue'+'st'+'.or'+'g'; return false;">mail@<span style="display: none;">.nosp@m.</span>babe<span style="display: none;">.nosp@m.</span>loues<span style="display: none;">.nosp@m.</span>t.or<span style="display: none;">.nosp@m.</span>g</a></p>
-<p>This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; version 2.1 of the License.</p>
-<p>This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GENERAL PUBLIC LICENSE for more details.</p>
-<p>You should have received a copy of the GNU General Public License along with this library. If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>. </p>
-
-</div>
-</div>
-<a id="a21a35dd645c24cb573260f1864cb94e3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a21a35dd645c24cb573260f1864cb94e3">&#9670;&nbsp;</a></span>I_ERROR</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_ERROR&#160;&#160;&#160;1</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a0f47f1e0f878f57a15f125c6cb5ab0ec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0f47f1e0f878f57a15f125c6cb5ab0ec">&#9670;&nbsp;</a></span>I_ERROR_PARAM</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_ERROR_PARAM&#160;&#160;&#160;2</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a54e53dec845188fb483d5f33c721a045"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a54e53dec845188fb483d5f33c721a045">&#9670;&nbsp;</a></span>I_ERROR_MEMORY</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_ERROR_MEMORY&#160;&#160;&#160;3</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a03ab31088ff2d473d022470f8db99227"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a03ab31088ff2d473d022470f8db99227">&#9670;&nbsp;</a></span>I_ERROR_UNAUTHORIZED</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_ERROR_UNAUTHORIZED&#160;&#160;&#160;4</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a865a0ccb8a6f586a9dc21dcb3ab38295"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a865a0ccb8a6f586a9dc21dcb3ab38295">&#9670;&nbsp;</a></span>I_ERROR_SERVER</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_ERROR_SERVER&#160;&#160;&#160;5</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a9284e78d80f6a65a0d63c9b5854345df"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9284e78d80f6a65a0d63c9b5854345df">&#9670;&nbsp;</a></span>I_RESPONSE_TYPE_NONE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_RESPONSE_TYPE_NONE&#160;&#160;&#160;0x00000000</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a46910e72294f8c5da83564a34a678605"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a46910e72294f8c5da83564a34a678605">&#9670;&nbsp;</a></span>I_RESPONSE_TYPE_CODE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_RESPONSE_TYPE_CODE&#160;&#160;&#160;0x00000001</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a94bae21721b529af356e3c313163ca47"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a94bae21721b529af356e3c313163ca47">&#9670;&nbsp;</a></span>I_RESPONSE_TYPE_TOKEN</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_RESPONSE_TYPE_TOKEN&#160;&#160;&#160;0x00000010</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a1a02bd6006b9e1af5f0bc894cbd9363a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1a02bd6006b9e1af5f0bc894cbd9363a">&#9670;&nbsp;</a></span>I_RESPONSE_TYPE_ID_TOKEN</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_RESPONSE_TYPE_ID_TOKEN&#160;&#160;&#160;0x00000100</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ad4b2bf679e3d69b0f7cab18336d9ad62"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad4b2bf679e3d69b0f7cab18336d9ad62">&#9670;&nbsp;</a></span>I_RESPONSE_TYPE_PASSWORD</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_RESPONSE_TYPE_PASSWORD&#160;&#160;&#160;0x00001000</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a298e1585f5a8232bba2b87168d1ef5c1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a298e1585f5a8232bba2b87168d1ef5c1">&#9670;&nbsp;</a></span>I_RESPONSE_TYPE_CLIENT_CREDENTIALS</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_RESPONSE_TYPE_CLIENT_CREDENTIALS&#160;&#160;&#160;0x00010000</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ae605879f560cff134d4047ea0eae449c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae605879f560cff134d4047ea0eae449c">&#9670;&nbsp;</a></span>I_RESPONSE_TYPE_REFRESH_TOKEN</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_RESPONSE_TYPE_REFRESH_TOKEN&#160;&#160;&#160;0x00100000</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a7f8a3c9b8661484b01651c0fee55e133"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7f8a3c9b8661484b01651c0fee55e133">&#9670;&nbsp;</a></span>I_HAS_NONE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_HAS_NONE&#160;&#160;&#160;<a class="el" href="iddawc_8h.html#a9284e78d80f6a65a0d63c9b5854345df">I_RESPONSE_TYPE_NONE</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a43c8f0ee9dedf6e9459306331cc5f23e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a43c8f0ee9dedf6e9459306331cc5f23e">&#9670;&nbsp;</a></span>I_HAS_ACCESS_TOKEN</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_HAS_ACCESS_TOKEN&#160;&#160;&#160;<a class="el" href="iddawc_8h.html#a94bae21721b529af356e3c313163ca47">I_RESPONSE_TYPE_TOKEN</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a45f3752286bcd4f1d4438a2e423cf66d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a45f3752286bcd4f1d4438a2e423cf66d">&#9670;&nbsp;</a></span>I_HAS_CODE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_HAS_CODE&#160;&#160;&#160;<a class="el" href="iddawc_8h.html#a46910e72294f8c5da83564a34a678605">I_RESPONSE_TYPE_CODE</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a324601c3e9a1f0212d34341e125ef4bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a324601c3e9a1f0212d34341e125ef4bc">&#9670;&nbsp;</a></span>I_AUTH_METHOD_GET</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_AUTH_METHOD_GET&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ab26b347fd648e803babe686d77d9b551"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab26b347fd648e803babe686d77d9b551">&#9670;&nbsp;</a></span>I_AUTH_METHOD_POST</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_AUTH_METHOD_POST&#160;&#160;&#160;1</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a709282ef4107f8e96ba857d213f9c704"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a709282ef4107f8e96ba857d213f9c704">&#9670;&nbsp;</a></span>I_STRICT_NO</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_STRICT_NO&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a883c307abcb55fb0240a0bb71330231f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a883c307abcb55fb0240a0bb71330231f">&#9670;&nbsp;</a></span>I_STRICT_YES</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_STRICT_YES&#160;&#160;&#160;1</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ad4f00a53de1797f759065d4b815a5985"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad4f00a53de1797f759065d4b815a5985">&#9670;&nbsp;</a></span>I_AUTH_SIGN_ALG_MAX_LENGTH</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_AUTH_SIGN_ALG_MAX_LENGTH&#160;&#160;&#160;8</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a7c6f7ea2080277732ce5aa8e331e2550"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7c6f7ea2080277732ce5aa8e331e2550">&#9670;&nbsp;</a></span>I_AUTH_SIGN_ALG_NONE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_AUTH_SIGN_ALG_NONE&#160;&#160;&#160;0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a1e17221ab9a41fd2090a7aaaf6340aae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1e17221ab9a41fd2090a7aaaf6340aae">&#9670;&nbsp;</a></span>I_AUTH_SIGN_ALG_RS256</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_AUTH_SIGN_ALG_RS256&#160;&#160;&#160;1</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ab7d99c6d00ef7f9d9833b0d99dfef59e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab7d99c6d00ef7f9d9833b0d99dfef59e">&#9670;&nbsp;</a></span>I_AUTH_SIGN_ALG_RS384</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_AUTH_SIGN_ALG_RS384&#160;&#160;&#160;2</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="abf94e1f34a2be2f16d3074f8fb93e5b7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abf94e1f34a2be2f16d3074f8fb93e5b7">&#9670;&nbsp;</a></span>I_AUTH_SIGN_ALG_RS512</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_AUTH_SIGN_ALG_RS512&#160;&#160;&#160;3</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<h2 class="groupheader">Enumeration Type Documentation</h2>
-<a id="a354b1fe8a1449635c2f818219f612706"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a354b1fe8a1449635c2f818219f612706">&#9670;&nbsp;</a></span>_i_option</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="iddawc_8h.html#a354b1fe8a1449635c2f818219f612706">_i_option</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a72d26a750fcc218aac5e3981e0b8fc22"></a>I_OPT_NONE&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ad784b2e55cb95f331bd67212418b3323"></a>I_OPT_RESPONSE_TYPE&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706aee9b0f29db48b158568705694b73a1f9"></a>I_OPT_SCOPE&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706accb332d3b1cc2f1a9c7bca0f0dc17f50"></a>I_OPT_SCOPE_APPEND&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ae84a589d04c6012e2a86fa46112db5c2"></a>I_OPT_STATE&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706aaa84a1c47ad8f23387311e226e8fd329"></a>I_OPT_NONCE&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a84c02139d19ad119ecb860eb863d112c"></a>I_OPT_REDIRECT_URI&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a950c80f34e5c27496ef2c3c7da8e9655"></a>I_OPT_REDIRECT_TO&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ad555d67cfd0d1d15c50f73f308ff4b40"></a>I_OPT_CLIENT_ID&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ac593baf31db5c21299aedd709b44fa1c"></a>I_OPT_CLIENT_SECRET&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706af597f1009a2fec6e41969fca1fd4db5a"></a>I_OPT_ADDITIONAL_PARAMETER&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706aa85a173b0c20406e317394ba3727b020"></a>I_OPT_ADDITIONAL_RESPONSE&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706aea86f09b5fb025a16147c8e91af3cf84"></a>I_OPT_AUTH_ENDPOINT&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ac0fabe609e28596f239c9c98b6f4b0df"></a>I_OPT_TOKEN_ENDPOINT&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a5dcda0d36970e7080d685e62ab9a867c"></a>I_OPT_OPENID_CONFIG_ENDPOINT&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a6bda4c31aabde084b3d057e94aac8597"></a>I_OPT_OPENID_CONFIG&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706aec9285d3ce421e6ebfb8be8eda5cfb11"></a>I_OPT_OPENID_CONFIG_STRICT&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ae46510a219e8df62de2437f4803c8365"></a>I_OPT_USERINFO_ENDPOINT&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706afad428d9a1ffb4d1b4a943a3a764c116"></a>I_OPT_RESULT&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ae45d46186edb515d99e727c0e31d520e"></a>I_OPT_ERROR&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ad9637eae38970709e703970e1e2bdfaa"></a>I_OPT_ERROR_DESCRIPTION&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a86b5a4b30141fe7451330ed1afc6f327"></a>I_OPT_ERROR_URI&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a50b4c3d8ed8ada53b873add4e2ef0fa0"></a>I_OPT_CODE&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ac11ee422e2dab3dbdc2950cdaa5df7fc"></a>I_OPT_REFRESH_TOKEN&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a0ba75c44f6fa803dd68e2ce33d0a7d2d"></a>I_OPT_ACCESS_TOKEN&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a609319f69112236095a64cafcb365871"></a>I_OPT_ID_TOKEN&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a3d8409cb8ad6b5cabc9d2d996bf8f7d5"></a>I_OPT_GLEWLWYD_API_URL&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ab07f198f1de88c7b3d072488b1fc00fe"></a>I_OPT_GLEWLWYD_COOKIE_SESSION&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706adaa64fb80bda1ea21bf0f412a38254fb"></a>I_OPT_AUTH_METHOD&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a9daeab27381383d8f85b7393ddbfaaae"></a>I_OPT_AUTH_SIGN_ALG&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a00b9ee83228522517a266479492c8b8f"></a>I_OPT_TOKEN_TYPE&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ad5396a5af59f49a536af48c80a7fb978"></a>I_OPT_EXPIRES_IN&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706aeb529ceff5bbf28aed23cbd685fb54d3"></a>I_OPT_USERNAME&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706ab849cbb176bca0f9316a0c6f2880811f"></a>I_OPT_USER_PASSWORD&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706a092b19a4e52c22e06745f45f543e43d2"></a>I_OPT_ISSUER&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a354b1fe8a1449635c2f818219f612706af38b0c0c9deffb15855c035130068ce9"></a>I_OPT_USERINFO&#160;</td><td class="fielddoc"></td></tr>
-</table>
-
-</div>
-</div>
-<h2 class="groupheader">Function Documentation</h2>
-<a id="a43fa354058e5ebc2c4d02ef3e9e62687"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a43fa354058e5ebc2c4d02ef3e9e62687">&#9670;&nbsp;</a></span>i_init_session()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_init_session </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a6a2fefde91c578c8c2f6b0297e3ee058"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6a2fefde91c578c8c2f6b0297e3ee058">&#9670;&nbsp;</a></span>i_clean_session()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void i_clean_session </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ac73af3a30935b4443af9e86abb1d9fcf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac73af3a30935b4443af9e86abb1d9fcf">&#9670;&nbsp;</a></span>i_set_response_type()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_set_response_type </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint&#160;</td>
-          <td class="paramname"><em>i_value</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a6acf44054500b1feb50f42dc55ea6bbb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6acf44054500b1feb50f42dc55ea6bbb">&#9670;&nbsp;</a></span>i_set_result()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_set_result </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint&#160;</td>
-          <td class="paramname"><em>i_value</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ad83e36a4c22b58b67fccf6046f1ab9af"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad83e36a4c22b58b67fccf6046f1ab9af">&#9670;&nbsp;</a></span>i_set_flag_parameter()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_set_flag_parameter </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint&#160;</td>
-          <td class="paramname"><em>option</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint&#160;</td>
-          <td class="paramname"><em>i_value</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a8b6c6b91cde823382ef9b9818d60ca14"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8b6c6b91cde823382ef9b9818d60ca14">&#9670;&nbsp;</a></span>i_set_parameter()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_set_parameter </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint&#160;</td>
-          <td class="paramname"><em>option</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>s_value</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a1ae5ceaf789edcc3826b94d22460ea36"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1ae5ceaf789edcc3826b94d22460ea36">&#9670;&nbsp;</a></span>i_set_additional_parameter()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_set_additional_parameter </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>s_key</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>s_value</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ae80f8aac03211943b854c3aede3fee6b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae80f8aac03211943b854c3aede3fee6b">&#9670;&nbsp;</a></span>i_set_additional_response()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_set_additional_response </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>s_key</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>s_value</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a8ec512e6c051ca609bb506be8e0646bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8ec512e6c051ca609bb506be8e0646bc">&#9670;&nbsp;</a></span>i_get_response_type()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint i_get_response_type </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a110fe3fcde671327f9c787049208a3f2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a110fe3fcde671327f9c787049208a3f2">&#9670;&nbsp;</a></span>i_get_result()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint i_get_result </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a6dd87cdef1a1bb67b5a5c3c880e015ab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6dd87cdef1a1bb67b5a5c3c880e015ab">&#9670;&nbsp;</a></span>i_get_flag_parameter()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint i_get_flag_parameter </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint&#160;</td>
-          <td class="paramname"><em>option</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a0c1898e664f32eafe6f926fb0d6d3265"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0c1898e664f32eafe6f926fb0d6d3265">&#9670;&nbsp;</a></span>i_get_parameter()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* i_get_parameter </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint&#160;</td>
-          <td class="paramname"><em>option</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a66e2e3a7c63f92eb6bd60553ebe5f0c9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a66e2e3a7c63f92eb6bd60553ebe5f0c9">&#9670;&nbsp;</a></span>i_get_additional_parameter()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* i_get_additional_parameter </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>s_key</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a72f1f165ce3101bb70be9cb007a6f6ad"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a72f1f165ce3101bb70be9cb007a6f6ad">&#9670;&nbsp;</a></span>i_get_additional_response()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">const char* i_get_additional_response </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>s_key</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a74f0a21ec2933521d50a93062a2ff522"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a74f0a21ec2933521d50a93062a2ff522">&#9670;&nbsp;</a></span>i_set_parameter_list()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_set_parameter_list </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af719b590f20f10e11ecf36d803f0ac6f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af719b590f20f10e11ecf36d803f0ac6f">&#9670;&nbsp;</a></span>i_load_openid_config()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_load_openid_config </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a71428e3bcc19f2ae742c8fe36e5428b7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a71428e3bcc19f2ae742c8fe36e5428b7">&#9670;&nbsp;</a></span>i_load_userinfo()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_load_userinfo </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a07ded29917a24ac0e244bfc908a88c41"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a07ded29917a24ac0e244bfc908a88c41">&#9670;&nbsp;</a></span>i_run_config_endpoint()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_run_config_endpoint </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a2db60e3de3bb62e5cbfc114f1c8449db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2db60e3de3bb62e5cbfc114f1c8449db">&#9670;&nbsp;</a></span>i_run_auth_request()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_run_auth_request </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af251643a2384c854091a2df0314aac8e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af251643a2384c854091a2df0314aac8e">&#9670;&nbsp;</a></span>i_run_token_request()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_run_token_request </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ab7441a54dd473255eda38c3a28e47fa3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab7441a54dd473255eda38c3a28e47fa3">&#9670;&nbsp;</a></span>i_run_access_token_validation_endpoint()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_run_access_token_validation_endpoint </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a00dbffa0277edac5073c7b8b40aec84d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a00dbffa0277edac5073c7b8b40aec84d">&#9670;&nbsp;</a></span>i_verify_id_token()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int i_verify_id_token </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>token_type</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a0f79e97ece660c0379dd07e12dbe9f23"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0f79e97ece660c0379dd07e12dbe9f23">&#9670;&nbsp;</a></span>igc_auth_password()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int igc_auth_password </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>username</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>password</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a6bd7d333ebbf80f9ad4f0a401444d1c4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6bd7d333ebbf80f9ad4f0a401444d1c4">&#9670;&nbsp;</a></span>igc_auth_scheme()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int igc_auth_scheme </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>scheme_mod</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>scheme_name</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>username</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>json_value</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a8b8d715685e249ba66f86552d799f410"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8b8d715685e249ba66f86552d799f410">&#9670;&nbsp;</a></span>igc_get_scope_auth_status()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">char* igc_get_scope_auth_status </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>username</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
