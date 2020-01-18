@@ -34,6 +34,15 @@ extern "C"
 #include <ulfius.h>
 #include <rhonabwy.h>
 
+/**
+ * @defgroup const Constants and properties
+ * Constant values used as input or output
+ * @{
+ */
+
+/**
+ * Return values
+ */
 #define I_OK                 0
 #define I_ERROR              1
 #define I_ERROR_PARAM        2
@@ -41,6 +50,9 @@ extern "C"
 #define I_ERROR_UNAUTHORIZED 4
 #define I_ERROR_SERVER       5
 
+/**
+ * Stackable response type values
+ */
 #define I_RESPONSE_TYPE_NONE               0x00000000
 #define I_RESPONSE_TYPE_CODE               0x00000001
 #define I_RESPONSE_TYPE_TOKEN              0x00000010
@@ -49,23 +61,40 @@ extern "C"
 #define I_RESPONSE_TYPE_CLIENT_CREDENTIALS 0x00010000
 #define I_RESPONSE_TYPE_REFRESH_TOKEN      0x00100000
 
+/**
+ * i_verify_id_token token_type parameter values
+ */
 #define I_HAS_NONE         I_RESPONSE_TYPE_NONE
 #define I_HAS_ACCESS_TOKEN I_RESPONSE_TYPE_TOKEN
 #define I_HAS_CODE         I_RESPONSE_TYPE_CODE
 
+/**
+ * i_set_response_type i_values parameter values
+ */
 #define I_AUTH_METHOD_GET  0
 #define I_AUTH_METHOD_POST 1
 
+/**
+ * I_OPT_OPENID_CONFIG_STRICT values available
+ */
 #define I_STRICT_NO  0
 #define I_STRICT_YES 1
 
 #define I_AUTH_SIGN_ALG_MAX_LENGTH 8
 
+/**
+ * I_OPT_AUTH_SIGN_ALG values available
+ */
 #define I_AUTH_SIGN_ALG_NONE  0
 #define I_AUTH_SIGN_ALG_RS256 1
 #define I_AUTH_SIGN_ALG_RS384 2
 #define I_AUTH_SIGN_ALG_RS512 3
 
+/**
+ * Options available to set or get properties using
+ * i_set_flag_parameter, i_set_parameter,
+ * i_get_flag_parameter or i_get_parameter
+ */
 enum _i_option {
   I_OPT_NONE                             = 0,
   I_OPT_RESPONSE_TYPE                    = 1,
@@ -105,97 +134,349 @@ enum _i_option {
   I_OPT_USERINFO                         = 35
 };
 
+/**
+ * @}
+ */
+
+/**
+ * @defgroup struct struct _i_session definition
+ * Heart structure of the library
+ * @{
+ */
+
 struct _i_session {
-  uint     response_type;
-  char *   scope;
-  char *   state;
-  char *   nonce;
-  char *   redirect_url;
-  char *   redirect_to;
-  char *   client_id;
-  char *   client_secret;
-  char *   username;
-  char *   user_password;
+  uint          response_type;
+  char        * scope;
+  char        * state;
+  char        * nonce;
+  char        * redirect_url;
+  char        * redirect_to;
+  char        * client_id;
+  char        * client_secret;
+  char        * username;
+  char        * user_password;
   struct _u_map additional_parameters;
   struct _u_map additional_response;
-  char *   authorization_endpoint;
-  char *   token_endpoint;
-  char *   openid_config_endpoint;
-  char *   userinfo_endpoint;
-  uint     result;
-  char *   error;
-  char *   error_description;
-  char *   error_uri;
-  char *   code;
-  char *   refresh_token;
-  char *   access_token;
-  char *   token_type;
-  uint     expires_in;
-  char *   id_token;
-  json_t * id_token_payload;
-  jwk_t  * id_token_header;
-  char *   glewlwyd_api_url;
-  char *   glewlwyd_cookie_session;
-  uint     auth_method;
-  char     auth_sign_alg[I_AUTH_SIGN_ALG_MAX_LENGTH];
-  jwks_t * jwks;
-  int      x5u_flags;
-  json_t * openid_config;
-  int      openid_config_strict;
-  char *   issuer;
-  char *   userinfo;
-  json_t * j_userinfo;
+  char        * authorization_endpoint;
+  char        * token_endpoint;
+  char        * openid_config_endpoint;
+  char        * userinfo_endpoint;
+  uint          result;
+  char        * error;
+  char        * error_description;
+  char        * error_uri;
+  char        * code;
+  char        * refresh_token;
+  char        * access_token;
+  char        * token_type;
+  uint          expires_in;
+  char        * id_token;
+  json_t *      id_token_payload;
+  jwk_t  *      id_token_header;
+  char        * glewlwyd_api_url;
+  char        * glewlwyd_cookie_session;
+  uint          auth_method;
+  char          auth_sign_alg[I_AUTH_SIGN_ALG_MAX_LENGTH];
+  jwks_t *      jwks;
+  int           x5u_flags;
+  json_t *      openid_config;
+  int           openid_config_strict;
+  char        * issuer;
+  char        * userinfo;
+  json_t *      j_userinfo;
 };
 
+/**
+ * @}
+ */
+
+/**
+ * @defgroup core Core functions
+ * Core functions used to initialize or free struct _i_session
+ * @{
+ */
+
+/**
+ * Initialize a struct _i_session
+ * @param i_session: a reference to a struct _i_session * to initialize
+ * @return I_OK on success, an error value on error
+ */
 int i_init_session(struct _i_session * i_session);
 
+/**
+ * Cleanup a struct _i_session
+ * @param i_session: a reference to a struct _i_session * to initialize
+ */
 void i_clean_session(struct _i_session * i_session);
 
+/**
+ * @}
+ */
+
+/**
+ * @defgroup properties Get or set struct _i_session properties
+ * Manipulates inner data of the session
+ * @{
+ */
+
+/**
+ * Sets response type of a session
+ * @param i_session: a reference to a struct _i_session *
+ * @param i_value: the response type
+ * values available are I_RESPONSE_TYPE_NONE, I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, 
+ * I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS
+ * and I_RESPONSE_TYPE_REFRESH_TOKEN
+ * Values I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN and I_RESPONSE_TYPE_ID_TOKEN can be 
+ * stacked if using hybrid flow, example: 
+ * I_RESPONSE_TYPE_CODE | I_RESPONSE_TYPE_TOKEN | I_RESPONSE_TYPE_ID_TOKEN
+ * @return I_OK on success, an error value on error
+ */
 int i_set_response_type(struct _i_session * i_session, uint i_value);
 
+/**
+ * Sets the result of a request
+ * @param i_session: a reference to a struct _i_session *
+ * @param i_value: the result value
+ * Values available are I_OK, I_ERROR, I_ERROR_PARAM, 
+ * I_ERROR_MEMORY, I_ERROR_UNAUTHORIZED orI_ERROR_SERVER
+ * @return I_OK on success, an error value on error
+ */
 int i_set_result(struct _i_session * i_session, uint i_value);
 
+/**
+ * Sets an integer property value
+ * @param i_session: a reference to a struct _i_session *
+ * @param option: the option to set
+ * options availble are I_OPT_RESPONSE_TYPE, I_OPT_RESULT, I_OPT_AUTH_METHOD
+ * I_OPT_AUTH_SIGN_ALG, I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
+ * @param i_value: The integer value to set
+ * @return I_OK on success, an error value on error
+ */
 int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_value);
 
+/**
+ * Sets a char * property value
+ * @param i_session: a reference to a struct _i_session *
+ * @param option: the option to set
+ * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE
+ * I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID,
+ * I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT,
+ * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR,
+ * I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN,
+ * I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_GLEWLWYD_API_URL,
+ * I_OPT_GLEWLWYD_COOKIE_SESSION, I_OPT_TOKEN_TYPE, I_OPT_USERNAME,
+ * I_OPT_USER_PASSWORD, I_OPT_OPENID_CONFIG, I_OPT_ISSUER
+ * @param s_value: The char * value to set
+ * @return I_OK on success, an error value on error
+ */
 int i_set_parameter(struct _i_session * i_session, uint option, const char * s_value);
 
+/**
+ * Sets an additional parameter for auth or token requests
+ * @param i_session: a reference to a struct _i_session *
+ * @param s_key: the key to set
+ * @param s_value: the value to set
+ * @return I_OK on success, an error value on error
+ */
 int i_set_additional_parameter(struct _i_session * i_session, const char * s_key, const char * s_value);
 
+/**
+ * Sets an additional response value
+ * @param i_session: a reference to a struct _i_session *
+ * @param s_key: the key to set
+ * @param s_value: the value to set
+ * @return I_OK on success, an error value on error
+ */
 int i_set_additional_response(struct _i_session * i_session, const char * s_key, const char * s_value);
 
+/**
+ * Returns the response type of the current session
+ * @param i_session: a reference to a struct _i_session *
+ * @return a value among the following:
+ * I_RESPONSE_TYPE_NONE, I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, 
+ * I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS
+ * and I_RESPONSE_TYPE_REFRESH_TOKEN
+ * Values I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN and I_RESPONSE_TYPE_ID_TOKEN can be 
+ * stacked if using hybrid flow, example: 
+ * I_RESPONSE_TYPE_CODE | I_RESPONSE_TYPE_TOKEN | I_RESPONSE_TYPE_ID_TOKEN
+ */
 uint i_get_response_type(struct _i_session * i_session);
 
+/**
+ * Returns the result of the last oauth2 request
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
 uint i_get_result(struct _i_session * i_session);
 
+/**
+ * Returns the integer value of an option
+ * @param i_session: a reference to a struct _i_session *
+ * @param option: the option to get
+ * options availble are I_OPT_RESPONSE_TYPE, I_OPT_RESULT, I_OPT_AUTH_METHOD
+ * I_OPT_AUTH_SIGN_ALG, I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
+ * @return the option value
+ */
 uint i_get_flag_parameter(struct _i_session * i_session, uint option);
 
+/**
+ * Returns the char * value of an option
+ * @param i_session: a reference to a struct _i_session *
+ * @param option: the option to get
+ * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE
+ * I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID,
+ * I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT,
+ * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR,
+ * I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN,
+ * I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_GLEWLWYD_API_URL,
+ * I_OPT_GLEWLWYD_COOKIE_SESSION, I_OPT_TOKEN_TYPE, I_OPT_USERNAME,
+ * I_OPT_USER_PASSWORD, I_OPT_OPENID_CONFIG, I_OPT_ISSUER
+ * @return the char * value of the option, NULL if no value set
+ */
 const char * i_get_parameter(struct _i_session * i_session, uint option);
 
+/**
+ * Gets an additional parameter for auth or token requests
+ * @param i_session: a reference to a struct _i_session *
+ * @param s_key: the key to get
+ * @return the value
+ */
 const char * i_get_additional_parameter(struct _i_session * i_session, const char * s_key);
 
+/**
+ * Gets an additional response from auth or token requests
+ * @param i_session: a reference to a struct _i_session *
+ * @param s_key: the key to get
+ * @return the value
+ */
 const char * i_get_additional_response(struct _i_session * i_session, const char * s_key);
 
+/**
+ * Parses the redirect_url given by the oauth2 server in the implicit flow
+ * The redirect_url may contain a code, a token, an id_token, or an error
+ * Fills the session parameters with the values given in the redirect_url
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_parse_redirect_to(struct _i_session * i_session);
+
+/**
+ * Sets a list of parameters to a session
+ * @param i_session: a reference to a struct _i_session *
+ * the list of parameters to set
+ * Uses a variable-length parameter list
+ * the syntax is the option followed by the value(s) required by the option
+ * The list must be ended by a I_OPT_NONE
+ * Example:
+ * i_set_parameter_list(i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE, 
+ * I_OPT_SCOPE, "scope1", I_OPT_STATE, "abcd", I_OPT_CLIENT_ID, "client1", 
+ * I_OPT_AUTH_ENDPOINT, "https://auth2.tld/auth", I_OPT_NONE);
+ * @return I_OK on success, an error value on error
+ */
 int i_set_parameter_list(struct _i_session * i_session, ...);
 
+/**
+ * Loads and parse the openid_config endpoint, and sets the parameter values accordingly
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
 int i_load_openid_config(struct _i_session * i_session);
 
+/**
+ * @}
+ */
+
+/**
+ * @defgroup run Executes oauth2 or oidc requests
+ * Run auth, token or userinfo requests
+ * @{
+ */
+
+/**
+ * Loads the userinfo endpoint using the access_token
+ * sets the result to i_session->userinfo as char *
+ * and i_session->j_userinfo as json_t * if the result is in JSON format
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
 int i_load_userinfo(struct _i_session * i_session);
 
-int i_run_config_endpoint(struct _i_session * i_session);
-
+/**
+ * Executes an auth request using the implicit endpoint
+ * and sets the result values in the session variables
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
 int i_run_auth_request(struct _i_session * i_session);
 
+/**
+ * Executes a token request using the implicit endpoint
+ * and sets the result values in the session variables
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
 int i_run_token_request(struct _i_session * i_session);
 
-int i_run_access_token_validation_endpoint(struct _i_session * i_session);
-
+/**
+ * Validates the id_token signature and content if necessary
+ * @param i_session: a reference to a struct _i_session *
+ * @param token_type: flag to specify if the access_token hash and the code must be verified
+ * values available are I_HAS_ACCESS_TOKEN, I_HAS_CODE and can be stacked
+ * @return I_OK on success, an error value on error
+ */
 int i_verify_id_token(struct _i_session * i_session, int token_type);
 
+/**
+ * @}
+ */
+
+/**
+ * @defgroup glewlwyd Executes Glewlwyd specific commands
+ * Authenticates a user and keeps the Glewlwyd session cookie
+ * @{
+ */
+
+/**
+ * 
+ * @param i_session a reference to a struct _i_session *
+ * @param username the username
+ * @param password the password
+ * @return I_OK on success, an error value on error
+ */
 int igc_auth_password(struct _i_session * i_session, const char * username, const char * password);
 
-int igc_auth_scheme(struct _i_session * i_session, const char * scheme_mod, const char * scheme_name, const char * username, const char * json_value);
+/**
+ * 
+ * @param i_session: a reference to a struct _i_session *
+ * @param username the username
+ * @param scheme_mod the scheme module type
+ * @param scheme_name the scheme module instance name
+ * @return I_OK on success, an error value on error
+ */
+int igc_trigger_scheme(struct _i_session * i_session, const char * username, const char * scheme_mod, const char * scheme_name);
 
+/**
+ * 
+ * @param i_session: a reference to a struct _i_session *
+ * @param username the username
+ * @param scheme_mod the scheme module type
+ * @param scheme_name the scheme module instance name
+ * @param json_value the scheme auth value
+ * @return I_OK on success, an error value on error
+ */
+int igc_auth_scheme(struct _i_session * i_session, const char * scheme_mod, const char * username, const char * scheme_name, json_t * json_value);
+
+/**
+ * 
+ * @param i_session: a reference to a struct _i_session *
+ * @param username the username
+ * @return I_OK on success, an error value on error
+ */
 char * igc_get_scope_auth_status(struct _i_session * i_session, const char * username);
+
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }
