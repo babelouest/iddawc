@@ -26,6 +26,8 @@ PKGCONF_REQ_PRIVATE=
 IDDAWC_INCLUDE=../include
 PKGCONFIG_FILE=../libiddawc.pc
 PKGCONFIG_TEMPLATE=../libiddawc.pc.in
+CONFIG_FILE=$(IDDAWC_INCLUDE)/iddawc-cfg.h
+CONFIG_TEMPLATE=$(IDDAWC_INCLUDE)/iddawc-cfg.h.in
 DESTDIR=/usr/local
 CC=gcc
 CFLAGS+=-c -pedantic -std=gnu99 -fPIC -Wall -Werror -Wextra -D_REENTRANT -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS)
@@ -33,11 +35,22 @@ LIBS=-L$(DESTDIR)/lib -lc -lulfius -lorcania -lrhonabwy -ljwt $(LDFLAGS)
 SONAME=-soname
 OBJECTS=iddawc.o
 OUTPUT=libiddawc.so
-VERSION=0.7.0
+VERSION_MAJOR=0
+VERSION_MINOR=7
+VERSION_PATCH=0
 
 .PHONY: all clean
 
 all: release
+
+$(CONFIG_FILE):
+	@cp $(CONFIG_TEMPLATE) $(CONFIG_FILE)
+	@echo Config file $(CONFIG_FILE) generated
+	@sed -i -e 's/$${PROJECT_VERSION}/$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)/g' $(CONFIG_FILE)        
+	@sed -i -e 's/$${PROJECT_VERSION_MAJOR}/$(VERSION_MAJOR)/g' $(CONFIG_FILE)        
+	@sed -i -e 's/$${PROJECT_VERSION_MINOR}/$(VERSION_MINOR)/g' $(CONFIG_FILE)        
+	@sed -i -e 's/$${PROJECT_VERSION_PATCH}/$(VERSION_PATCH)/g' $(CONFIG_FILE)        
+	@sed -i -e 's/$${PROJECT_VERSION_NUMBER}/$(shell printf '%02d' $(VERSION_MAJOR))$(shell printf '%02d' $(VERSION_MINOR))$(shell printf '%02d' $(VERSION_PATCH))/g' $(CONFIG_FILE)        
 
 $(PKGCONFIG_FILE):
 	@cp $(PKGCONFIG_TEMPLATE) $(PKGCONFIG_FILE)
@@ -48,7 +61,7 @@ $(PKGCONFIG_FILE):
 	@sed -i -e 's/@PROJECT_NAME@/$(PROJECT_NAME)/g' $(PKGCONFIG_FILE)
 	@sed -i -e 's/@PROJECT_DESCRIPTION@/$(PROJECT_DESCRIPTION)/g' $(PKGCONFIG_FILE)
 	@sed -i -e 's|@PROJECT_BUGREPORT_PATH@|$(PROJECT_BUGREPORT_PATH)|g' $(PKGCONFIG_FILE)
-	@sed -i -e 's/@LIBRARY_VERSION@/$(VERSION)/g' $(PKGCONFIG_FILE)
+	@sed -i -e 's/@LIBRARY_VERSION@/$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)/g' $(PKGCONFIG_FILE)
 	@sed -i -e 's/@PKGCONF_REQ@/$(PKGCONF_REQ)/g' $(PKGCONFIG_FILE)
 	@sed -i -e 's/@PKGCONF_REQ_PRIVATE@/$(PKGCONF_REQ_PRIVATE)/g' $(PKGCONFIG_FILE)
 
@@ -57,18 +70,15 @@ target: $(OBJECTS)
 %.o: %.c $(CONFIG_FILE) $(IDDAWC_INCLUDE)/iddawc.h
 	$(CC) $(CFLAGS) $<
 
-libiddawc.so: $(OBJECTS)
-	$(CC) -shared -fPIC -Wl,$(SONAME),$(OUTPUT) -o $(OUTPUT).$(VERSION) $(OBJECTS) $(LIBS) $(LYDER) $(LJANSSON) $(LCURL) $(LGNUTLS)
-	ln -sf $(OUTPUT).$(VERSION) $(OUTPUT)
-
-libiddawc.a: $(OBJECTS)
-	ar rcs libiddawc.a $(OBJECTS)
+libiddawc.so: $(CONFIG_FILE) $(OBJECTS)
+	$(CC) -shared -fPIC -Wl,$(SONAME),$(OUTPUT) -o $(OUTPUT).$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH) $(OBJECTS) $(LIBS) $(LYDER) $(LJANSSON) $(LCURL) $(LGNUTLS)
+	ln -sf $(OUTPUT).$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH) $(OUTPUT)
 
 clean:
-	rm -f *.o *.so *.a $(OUTPUT) $(OUTPUT).* $(CONFIG_FILE) $(PKGCONFIG_FILE)
+	rm -f *.o *.so *.a $(OUTPUT) $(OUTPUT).* $(CONFIG_FILE) $(PKGCONFIG_FILE) $(CONFIG_FILE)
 
 install: all $(PKGCONFIG_FILE)
-	install $(OUTPUT).$(VERSION) $(DESTDIR)/lib
+	install $(OUTPUT).$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH) $(DESTDIR)/lib
 	install -m644 $(PKGCONFIG_FILE) $(DESTDIR)/lib/pkgconfig
 	install -m644 $(IDDAWC_INCLUDE)/iddawc.h $(DESTDIR)/include
 	install -m644 $(CONFIG_FILE) $(DESTDIR)/include
@@ -78,6 +88,7 @@ uninstall:
 	rm -f $(DESTDIR)/lib/$(OUTPUT) $(DESTDIR)/lib/libiddawc.a
 	rm -f $(DESTDIR)/lib/$(OUTPUT).*
 	rm -f $(DESTDIR)/include/iddawc.h
+	rm -f $(DESTDIR)/include/$(CONFIG_FILE)
 	rm -f $(DESTDIR)/lib/pkgconfig/$(PKGCONFIG_FILE)
 
 debug: ADDITIONALFLAGS=-DDEBUG -g -O0

@@ -89,7 +89,7 @@ static int extract_parameters(const char * url_params, struct _u_map * map) {
   return ret;
 }
 
-static int parse_redirect_url_parameters(struct _i_session * i_session, struct _u_map * map) {
+static int parse_redirect_to_parameters(struct _i_session * i_session, struct _u_map * map) {
   const char ** keys = u_map_enum_keys(map);
   size_t i;
   int ret = I_OK;
@@ -99,22 +99,26 @@ static int parse_redirect_url_parameters(struct _i_session * i_session, struct _
       if ((i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE) && o_strlen(u_map_get(map, keys[i]))) {
         ret = i_set_parameter(i_session, I_OPT_CODE, u_map_get(map, keys[i]));
       } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - Got paramter code where response_type doesn't have code");
         ret = I_ERROR_SERVER;
       }
     } else if (0 == o_strcasecmp(keys[i], "id_token")) {
       if ((i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN) && o_strlen(u_map_get(map, keys[i]))) {
         ret = i_set_parameter(i_session, I_OPT_ID_TOKEN, u_map_get(map, keys[i]));
       } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - Got paramter id_token where response_type doesn't have id_token");
         ret = I_ERROR_SERVER;
       }
     } else if (0 == o_strcasecmp(keys[i], "access_token")) {
       if (u_map_has_key_case(map, "token_type") && o_strlen(u_map_get_case(map, "token_type"))) {
         if ((i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN) && o_strlen(u_map_get(map, keys[i]))) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - Got paramter access_token where response_type doesn't have token");
           ret = i_set_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, keys[i]));
         } else {
           ret = I_ERROR_SERVER;
         }
       } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - Got paramter token but token_type is missing");
         ret = I_ERROR_SERVER;
       }
     } else if (0 == o_strcasecmp(keys[i], "token_type")) {
@@ -250,16 +254,16 @@ static int load_jwks_endpoint(struct _i_session * i_session) {
         if (r_jwks_import_from_json_t(i_session->jwks, j_jwks) == RHN_OK) {
           ret = I_OK;
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_load_openid_config - Error r_jwks_import_from_str");
+          y_log_message(Y_LOG_LEVEL_ERROR, "load_jwks_endpoint - Error r_jwks_import_from_str");
           ret = I_ERROR;
         }
         json_decref(j_jwks);
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "i_load_openid_config - Error invalid response status: %d", response.status);
+        y_log_message(Y_LOG_LEVEL_ERROR, "load_jwks_endpoint - Error invalid response status: %d", response.status);
         ret = I_ERROR;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "i_load_openid_config - Error getting config_endpoint");
+      y_log_message(Y_LOG_LEVEL_ERROR, "load_jwks_endpoint - Error getting config_endpoint");
       ret = I_ERROR;
     }
     ulfius_clean_request(&request);
@@ -448,6 +452,8 @@ int i_init_session(struct _i_session * i_session) {
     i_session->openid_config = NULL;
     i_session->openid_config_strict = I_STRICT_YES;
     i_session->issuer = NULL;
+    i_session->userinfo = NULL;
+    i_session->j_userinfo = NULL;
     o_strcpy(i_session->auth_sign_alg, "");
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
@@ -505,12 +511,14 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->glewlwyd_cookie_session);
     o_free(i_session->userinfo_endpoint);
     o_free(i_session->issuer);
+    o_free(i_session->userinfo);
     u_map_clean(&i_session->additional_parameters);
     u_map_clean(&i_session->additional_response);
     r_free_jwks(i_session->jwks);
     r_free_jwk(i_session->id_token_header);
     json_decref(i_session->id_token_payload);
     json_decref(i_session->openid_config);
+    json_decref(i_session->j_userinfo);
   }
 }
 
@@ -832,6 +840,14 @@ int i_set_parameter(struct _i_session * i_session, uint option, const char * s_v
           i_session->issuer = NULL;
         }
         break;
+      case I_OPT_USERINFO:
+        o_free(i_session->userinfo);
+        if (o_strlen(s_value)) {
+          i_session->userinfo = o_strdup(s_value);
+        } else {
+          i_session->userinfo = NULL;
+        }
+        break;
       default:
         ret = I_ERROR_PARAM;
         break;
@@ -871,60 +887,64 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
   const char * str_key, * str_value;
   va_list vl;
   
-  va_start(vl, i_session);
-  for (option = va_arg(vl, uint); option != I_OPT_NONE && ret == I_OK; option = va_arg(vl, uint)) {
-    switch (option) {
-      case I_OPT_RESPONSE_TYPE:
-      case I_OPT_RESULT:
-      case I_OPT_AUTH_METHOD:
-      case I_OPT_EXPIRES_IN:
-        i_value = va_arg(vl, uint);
-        ret = i_set_flag_parameter(i_session, option, i_value);
-        break;
-      case I_OPT_SCOPE:
-      case I_OPT_STATE:
-      case I_OPT_NONCE:
-      case I_OPT_REDIRECT_URI:
-      case I_OPT_REDIRECT_TO:
-      case I_OPT_CLIENT_ID:
-      case I_OPT_CLIENT_SECRET:
-      case I_OPT_AUTH_ENDPOINT:
-      case I_OPT_TOKEN_ENDPOINT:
-      case I_OPT_OPENID_CONFIG_ENDPOINT:
-      case I_OPT_OPENID_CONFIG:
-      case I_OPT_USERINFO_ENDPOINT:
-      case I_OPT_ERROR:
-      case I_OPT_ERROR_DESCRIPTION:
-      case I_OPT_ERROR_URI:
-      case I_OPT_CODE:
-      case I_OPT_REFRESH_TOKEN:
-      case I_OPT_ACCESS_TOKEN:
-      case I_OPT_ID_TOKEN:
-      case I_OPT_GLEWLWYD_API_URL:
-      case I_OPT_GLEWLWYD_COOKIE_SESSION:
-      case I_OPT_TOKEN_TYPE:
-      case I_OPT_USERNAME:
-      case I_OPT_USER_PASSWORD:
-      case I_OPT_ISSUER:
-        str_value = va_arg(vl, const char *);
-        ret = i_set_parameter(i_session, option, str_value);
-        break;
-      case I_OPT_ADDITIONAL_PARAMETER:
-        str_key = va_arg(vl, const char *);
-        str_value = va_arg(vl, const char *);
-        ret = i_set_additional_parameter(i_session, str_key, str_value);
-        break;
-      case I_OPT_ADDITIONAL_RESPONSE:
-        str_key = va_arg(vl, const char *);
-        str_value = va_arg(vl, const char *);
-        ret = i_set_additional_response(i_session, str_key, str_value);
-        break;
-      default:
-        ret = I_ERROR_PARAM;
-        break;
+  if (i_session != NULL) {
+    va_start(vl, i_session);
+    for (option = va_arg(vl, uint); option != I_OPT_NONE && ret == I_OK; option = va_arg(vl, uint)) {
+      switch (option) {
+        case I_OPT_RESPONSE_TYPE:
+        case I_OPT_RESULT:
+        case I_OPT_AUTH_METHOD:
+        case I_OPT_EXPIRES_IN:
+          i_value = va_arg(vl, uint);
+          ret = i_set_flag_parameter(i_session, option, i_value);
+          break;
+        case I_OPT_SCOPE:
+        case I_OPT_STATE:
+        case I_OPT_NONCE:
+        case I_OPT_REDIRECT_URI:
+        case I_OPT_REDIRECT_TO:
+        case I_OPT_CLIENT_ID:
+        case I_OPT_CLIENT_SECRET:
+        case I_OPT_AUTH_ENDPOINT:
+        case I_OPT_TOKEN_ENDPOINT:
+        case I_OPT_OPENID_CONFIG_ENDPOINT:
+        case I_OPT_OPENID_CONFIG:
+        case I_OPT_USERINFO_ENDPOINT:
+        case I_OPT_ERROR:
+        case I_OPT_ERROR_DESCRIPTION:
+        case I_OPT_ERROR_URI:
+        case I_OPT_CODE:
+        case I_OPT_REFRESH_TOKEN:
+        case I_OPT_ACCESS_TOKEN:
+        case I_OPT_ID_TOKEN:
+        case I_OPT_GLEWLWYD_API_URL:
+        case I_OPT_GLEWLWYD_COOKIE_SESSION:
+        case I_OPT_TOKEN_TYPE:
+        case I_OPT_USERNAME:
+        case I_OPT_USER_PASSWORD:
+        case I_OPT_ISSUER:
+          str_value = va_arg(vl, const char *);
+          ret = i_set_parameter(i_session, option, str_value);
+          break;
+        case I_OPT_ADDITIONAL_PARAMETER:
+          str_key = va_arg(vl, const char *);
+          str_value = va_arg(vl, const char *);
+          ret = i_set_additional_parameter(i_session, str_key, str_value);
+          break;
+        case I_OPT_ADDITIONAL_RESPONSE:
+          str_key = va_arg(vl, const char *);
+          str_value = va_arg(vl, const char *);
+          ret = i_set_additional_response(i_session, str_key, str_value);
+          break;
+        default:
+          ret = I_ERROR_PARAM;
+          break;
+      }
     }
+    va_end(vl);
+  } else {
+    ret = I_ERROR_PARAM;
   }
-  va_end(vl);
   return ret;
 }
 
@@ -971,31 +991,41 @@ int i_load_userinfo(struct _i_session * i_session) {
   int ret;
   struct _u_request request;
   struct _u_response response;
+  char * bearer = NULL;
   
-  if (i_session != NULL && i_session->userinfo_endpoint != NULL) {
+  if (i_session != NULL && i_session->userinfo_endpoint != NULL && i_session->access_token != NULL) {
     ulfius_init_request(&request);
     ulfius_init_response(&response);
     
     request.http_url = o_strdup(i_session->userinfo_endpoint);
-    if (ulfius_send_http_request(&request, &response) == U_OK) {
-      if (response.status == 200) {
-        o_free(i_session->userinfo);
-        if ((i_session->userinfo = o_strndup(response.binary_body, response.binary_body_length)) != NULL) {
-          json_decref(i_session->j_userinfo);
-          i_session->j_userinfo = json_loads(i_session->userinfo, JSON_DECODE_ANY, NULL);
-          ret = I_OK;
+    bearer = msprintf("Bearer %s", i_session->access_token);
+    if (u_map_put(request.map_header, "Authorization", bearer) == U_OK) {
+      if (ulfius_send_http_request(&request, &response) == U_OK) {
+        if (response.status == 200) {
+          o_free(i_session->userinfo);
+          if ((i_session->userinfo = o_strndup(response.binary_body, response.binary_body_length)) != NULL) {
+            json_decref(i_session->j_userinfo);
+            i_session->j_userinfo = json_loads(i_session->userinfo, JSON_DECODE_ANY, NULL);
+            ret = I_OK;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_load_userinfo - Error getting response");
+            ret = I_ERROR;
+          }
+        } else if (response.status == 401 || response.status == 403) {
+          ret = I_ERROR_UNAUTHORIZED;
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_load_userinfo - Error getting response");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_load_userinfo - Error invalid response status: %d", response.status);
           ret = I_ERROR;
         }
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "i_load_userinfo - Error invalid response status: %d", response.status);
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_load_userinfo - Error getting userinfo_endpoint");
         ret = I_ERROR;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "i_load_userinfo - Error getting userinfo_endpoint");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_load_userinfo - Error u_map_put");
       ret = I_ERROR;
     }
+    o_free(bearer);
     ulfius_clean_request(&request);
     ulfius_clean_response(&response);
   } else {
@@ -1045,6 +1075,51 @@ uint i_get_flag_parameter(struct _i_session * i_session, uint option) {
     }
   }
   return 0;
+}
+
+int i_parse_redirect_to(struct _i_session * i_session) {
+  int ret = I_OK;
+  struct _u_map map;
+  const char * fragment = NULL, * query = NULL, * redirect_to = i_get_parameter(i_session, I_OPT_REDIRECT_TO);
+  
+  if (o_strncmp(redirect_to, i_session->redirect_url, o_strlen(i_session->redirect_url)) == 0) {
+    // Extract fragment if response_type has id_token or token
+    if ((i_session->response_type & I_RESPONSE_TYPE_TOKEN || i_session->response_type & I_RESPONSE_TYPE_ID_TOKEN) && (fragment = o_strnchr(redirect_to, o_strlen(redirect_to), '#')) != NULL && has_openid_config_parameter_value(i_session, "response_modes_supported", "fragment")) {
+      u_map_init(&map);
+      fragment++;
+      if (extract_parameters(fragment, &map) == I_OK) {
+        if ((ret = parse_redirect_to_parameters(i_session, &map)) == I_OK) {
+          if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to fragment - Error state");
+            ret = I_ERROR_SERVER;
+          } else if (i_session->id_token != NULL && r_jwks_size(i_session->jwks) && i_verify_id_token(i_session, i_session->response_type) != I_OK) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to fragment - Error id_token invalid");
+            ret = I_ERROR_SERVER;
+          }
+        }
+      }
+      u_map_clean(&map);
+    }
+    
+    // Extract query without fragment if response_type is code only
+    if (i_session->response_type == I_RESPONSE_TYPE_CODE && has_openid_config_parameter_value(i_session, "response_modes_supported", "code") && (query = o_strnchr(redirect_to, fragment!=NULL?(size_t)(redirect_to-fragment):o_strlen(redirect_to), '?')) != NULL) {
+      u_map_init(&map);
+      query++;
+      if (extract_parameters(query, &map) == I_OK) {
+        if ((ret = parse_redirect_to_parameters(i_session, &map)) == I_OK) {
+          if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error state");
+            ret = I_ERROR_SERVER;
+          } else if (i_session->id_token != NULL && r_jwks_size(i_session->jwks) && i_verify_id_token(i_session, i_session->response_type) != I_OK) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error id_token invalid");
+            ret = I_ERROR_SERVER;
+          }
+        }
+      }
+      u_map_clean(&map);
+    }
+  }
+  return ret;
 }
 
 const char * i_get_parameter(struct _i_session * i_session, uint option) {
@@ -1124,6 +1199,9 @@ const char * i_get_parameter(struct _i_session * i_session, uint option) {
       case I_OPT_ISSUER:
         result = (const char *)i_session->issuer;
         break;
+      case I_OPT_USERINFO:
+        result = (const char *)i_session->userinfo;
+        break;
       default:
         break;
     }
@@ -1152,9 +1230,8 @@ int i_run_auth_request(struct _i_session * i_session) {
   struct _u_request request;
   struct _u_response response;
   char * url = NULL, * escaped = NULL, * redirect_to = NULL;
-  const char ** keys = NULL, * fragment = NULL, * query = NULL;
+  const char ** keys = NULL;
   uint i;
-  struct _u_map map;
   
   if (i_session != NULL && 
       i_session->response_type != I_RESPONSE_TYPE_NONE && 
@@ -1238,47 +1315,12 @@ int i_run_auth_request(struct _i_session * i_session) {
       
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
-          if (response.status == 302) {
+          if (response.status == 302 && o_strlen(u_map_get_case(response.map_header, "Location"))) {
             redirect_to = o_strdup(u_map_get_case(response.map_header, "Location"));
-            i_set_parameter(i_session, I_OPT_REDIRECT_TO, redirect_to);
-            if (o_strncmp(redirect_to, i_session->redirect_url, o_strlen(i_session->redirect_url)) == 0) {
-              // Parse redirect url to extract data
-              
-              // Extract fragment if response_type has id_token or token
-              if ((i_session->response_type & I_RESPONSE_TYPE_TOKEN || i_session->response_type & I_RESPONSE_TYPE_ID_TOKEN) && (fragment = o_strnchr(redirect_to, o_strlen(redirect_to), '#')) != NULL && has_openid_config_parameter_value(i_session, "response_modes_supported", "fragment")) {
-                u_map_init(&map);
-                fragment++;
-                if (extract_parameters(fragment, &map) == I_OK) {
-                  if ((ret = parse_redirect_url_parameters(i_session, &map)) == I_OK) {
-                    if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
-                      y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Error state");
-                      ret = I_ERROR_SERVER;
-                    } else if (i_session->id_token != NULL && r_jwks_size(i_session->jwks) && i_verify_id_token(i_session, i_session->response_type) != I_OK) {
-                      y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Error id_token invalid");
-                      ret = I_ERROR_SERVER;
-                    }
-                  }
-                }
-                u_map_clean(&map);
-              }
-              
-              // Extract query without fragment if response_type is code only
-              if (i_session->response_type == I_RESPONSE_TYPE_CODE && has_openid_config_parameter_value(i_session, "response_modes_supported", "code") && (query = o_strnchr(redirect_to, fragment!=NULL?(size_t)(redirect_to-fragment):o_strlen(redirect_to), '?')) != NULL) {
-                u_map_init(&map);
-                query++;
-                if (extract_parameters(query, &map) == I_OK) {
-                  if ((ret = parse_redirect_url_parameters(i_session, &map)) == I_OK) {
-                    if ((i_get_parameter(i_session, I_OPT_STATE) != NULL || u_map_get(&map, "state") != NULL) && o_strcmp(i_get_parameter(i_session, I_OPT_STATE), u_map_get(&map, "state"))) {
-                      y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Error state");
-                      ret = I_ERROR_SERVER;
-                    } else if (i_session->id_token != NULL && r_jwks_size(i_session->jwks) && i_verify_id_token(i_session, i_session->response_type) != I_OK) {
-                      y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Error id_token invalid");
-                      ret = I_ERROR_SERVER;
-                    }
-                  }
-                }
-                u_map_clean(&map);
-              }
+            if (i_set_parameter(i_session, I_OPT_REDIRECT_TO, redirect_to) == I_OK) {
+              ret = i_parse_redirect_to(i_session);
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error setting redirect url");
             }
             o_free(redirect_to);
           } else if (response.status == 400) {
@@ -1294,6 +1336,7 @@ int i_run_auth_request(struct _i_session * i_session) {
       ulfius_clean_response(&response);
     }
   } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "plop");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -1506,18 +1549,28 @@ int i_verify_id_token(struct _i_session * i_session, int token_type) {
   gnutls_datum_t hash_data;
   
   if (i_session != NULL && i_session->id_token != NULL && r_jwks_size(i_session->jwks)) {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "grut 0");
     for (i=0; i<r_jwks_size(i_session->jwks); i++) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "grut 1");
       jwk = r_jwks_get_at(i_session->jwks, i);
       if (jwk != NULL) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "grut 2");
         if (r_jwk_export_to_pem_der(jwk, R_FORMAT_PEM, NULL, &len, i_session->x5u_flags) == RHN_ERROR_PARAM && len) {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "grut 3");
           if ((pem = o_malloc(len)) != NULL) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "grut 4");
             if (r_jwk_export_to_pem_der(jwk, R_FORMAT_PEM, pem, &len, i_session->x5u_flags) == RHN_OK) {
+              y_log_message(Y_LOG_LEVEL_DEBUG, "grut 5");
               if (!jwt_decode(&jwt, i_session->id_token, pem, len)) {
+                y_log_message(Y_LOG_LEVEL_DEBUG, "grut 6");
                 json_decref(i_session->id_token_payload);
                 i_session->id_token_payload = NULL;
                 if ((jwt_str = jwt_dump_str(jwt, 0)) != NULL) {
+                  y_log_message(Y_LOG_LEVEL_DEBUG, "grut 7");
                   if ((j_tmp = json_loads(jwt_str, JSON_DECODE_ANY|JSON_DISABLE_EOF_CHECK, &j_error)) != NULL) {
+                    y_log_message(Y_LOG_LEVEL_DEBUG, "grut 8");
                     if (r_jwk_import_from_json_t(i_session->id_token_header, j_tmp) == RHN_OK) {
+                      y_log_message(Y_LOG_LEVEL_DEBUG, "grut 9");
                       if ((i_session->id_token_payload = json_loads(jwt_str+j_error.position+1, JSON_DECODE_ANY, NULL)) != NULL) {
                         ret = I_OK;
                         if (token_type & I_HAS_ACCESS_TOKEN) {
