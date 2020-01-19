@@ -5,6 +5,7 @@
 #include <check.h>
 #include <yder.h>
 #include <iddawc.h>
+#include <jwt.h>
 
 #define SCOPE_LIST "openid g_profile"
 #define STATE "stateXyz1234"
@@ -62,6 +63,19 @@
 #define REQUIRE_REQUEST_REGIS "false"
 #define SUBJECT_TYPE "public"
 
+const char id_token_pattern[] =
+"{\"amr\":[\"password\"],\"aud\":\"%s\",\"auth_time\":%ld"
+",\"azp\":\"%s\",\"exp\":%lld,\"iat\":%lld,\"iss\":\"%s\""
+",\"nonce\":\"abc1234\",\"sub\":\"wRNaPT1UBIw4Cl9eo3yOzoH"
+"7vE81Phfu\"}";
+#define EXPIRES_IN 3600
+
+const char code[] = "codeXyz1234";
+const char c_hash[] = "xTrH4sIDT1DIDKEmAfED1g";
+
+const char access_token[] =  "accessXyz1234";
+const char at_hash[] =  "2f8ZKzK8O7SAUkTpR29Z_w";
+
 static char userinfo_json[] = "{"\
   "\"name\":\"" USERINFO_NAME "\","\
   "\"aud\":\"" USERINFO_AUD "\","\
@@ -103,55 +117,34 @@ const char public_key[] =
 "MwIDAQAB\n"
 "-----END PUBLIC KEY-----\n";
 
-const char id_token_valid_sig_no_hash[] = 
-"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbXIiOlsicGFzc3dvcmQiXSw"
-"iYXVkIjoiY2xpZW50MV9pZCIsImF1dGhfdGltZSI6MTU3ODIzMTExNywiYXpwIjo"
-"iY2xpZW50MV9pZCIsImV4cCI6MTU3ODIzNDcyMSwiaWF0IjoxNTc4MjMxMTIxLCJ"
-"pc3MiOiJodHRwczovL2dsZXdsd3lkLnRsZCIsIm5vbmNlIjoiYWJjMTIzNCIsInN"
-"1YiI6IndSTmFQVDFVQkl3NENsOWVvM3lPem9IN3ZFODFQaGZ1In0.JDaE508TDbC"
-"jJLRGV2V0zHxuH3mFxmkJdV8S-jLfe7NrP9MW84i1IoCcGV-Z9dm3Jo1u4TkBHcx"
-"kOd1b7VdhHy1SxNdEmZ0As8NHUL4K6sH1Dxlj4JQEDhJTkbyvofsopHOB3WVML3V"
-"Og-qc5vk3Q4i0vJlSZUa4KOseUf-uzAlkjIVsb09zdD75_OopKU5nSHepvopx4Tw"
-"3QKOPaWfd875KKU5f-VrusQ02O5mn2YEn0ile7fo1yf6_7VXRQG5BHM1fTW97kvY"
-"3E4JL3kZVnTsqFqgHW3JrB-33qxSIVsvW52nT4faiLxwkGeZIqMaObxHSp6Us_5t"
-"CPq-f2pyq5w";
-const char id_token_valid_sig_c_hash[] = 
-"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbXIiOlsicGFzc3dvcmQiXSw"
-"iY19oYXNoIjoieFRySDRzSURUMURJREtFbUFmRUQxZyIsImF1ZCI6ImNsaWVudDF"
-"faWQiLCJhdXRoX3RpbWUiOjE1NzgyMzExMTcsImF6cCI6ImNsaWVudDFfaWQiLCJ"
-"leHAiOjE1NzgyMzQ3MjEsImlhdCI6MTU3ODIzMTEyMSwiaXNzIjoiaHR0cHM6Ly9"
-"nbGV3bHd5ZC50bGQiLCJub25jZSI6ImFiYzEyMzQiLCJzdWIiOiJ3Uk5hUFQxVUJ"
-"JdzRDbDllbzN5T3pvSDd2RTgxUGhmdSJ9.jyp-YusI9IwsrlPgOgsspD5i3A7Nqc"
-"MgFgeJ2kxQM6FRb5xvA6MZ5ayc6yOplYKCm0PD9KJRMEOWKx_tUKEt7MQIVZ-q95"
-"AYQ3cNxjHdEzOY3MVMkPO8oj0OYJYpcTXRWgiqsnoFSqWLSXyZWmondW5PwvJNl8"
-"P6eSsFswXe8a_t2LBz0TJDy34l9rCWwAbvLIV48D0wqkR_n4AiovmFwjd0Vk4dqv"
-"5fUEAfd9Th8MaZfcKG4cwq962Msyp6rXXrAHKLbk-MfhUaqXkahHmJtIE904EDnl"
-"cWVL1IcnNgwjEeDK9_aaxI_6PlnvzfPYDY0zcMt0sB8Lu4Yt7HF2GN0Q";
-const char id_token_valid_sig_at_hash[] = 
-"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbXIiOlsicGFzc3dvcmQiXSw"
-"iYXRfaGFzaCI6IjJmOFpLeks4TzdTQVVrVHBSMjlaX3ciLCJhdWQiOiJjbGllbnQ"
-"xX2lkIiwiYXV0aF90aW1lIjoxNTc4MjMxMTE3LCJhenAiOiJjbGllbnQxX2lkIiw"
-"iZXhwIjoxNTc4MjM0NzIxLCJpYXQiOjE1NzgyMzExMjEsImlzcyI6Imh0dHBzOi8"
-"vZ2xld2x3eWQudGxkIiwibm9uY2UiOiJhYmMxMjM0Iiwic3ViIjoid1JOYVBUMVV"
-"CSXc0Q2w5ZW8zeU96b0g3dkU4MVBoZnUifQ.cgf3Y5hOSlBz4IzPUlt_Z5I2Sbix"
-"uvwcKOqN-EykgZlof_8Jyr6ZctTciiqx6zP785pSjslnqvTQR7W_D22g-01RUUsT"
-"K5vunXbP0Z2Pe5HX_q2uUJ2chw91DAUzwZRcyM3HPI39_PdmyttpcZIpPLi7YEqW"
-"IsaORdWUrghy8B_6ZJ7FhhJmAHyxu28xCVN3dsVXG5SIam2kpo84qVSb23ZaYtjj"
-"P8V1kMZEIJpo_IGCmFZalzi2OfPnRctFMM7rUGWlu1i6d5d3vqdZf9oi1mNQKwtZ"
-"o3c9v3CJyhc6V3S2-2BT6GIp10zFWr-hB9a95D4rKA_sp2suvRY7nw1aAA";
-const char id_token_valid_sig_c_hash_at_hash[] = 
-"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbXIiOlsicGFzc3dvcmQiXSw"
-"iY19oYXNoIjoieFRySDRzSURUMURJREtFbUFmRUQxZyIsImF0X2hhc2giOiIyZjh"
-"aS3pLOE83U0FVa1RwUjI5Wl93IiwiYXVkIjoiY2xpZW50MV9pZCIsImF1dGhfdGl"
-"tZSI6MTU3ODIzMTExNywiYXpwIjoiY2xpZW50MV9pZCIsImV4cCI6MTU3ODIzNDc"
-"yMSwiaWF0IjoxNTc4MjMxMTIxLCJpc3MiOiJodHRwczovL2dsZXdsd3lkLnRsZCI"
-"sIm5vbmNlIjoiYWJjMTIzNCIsInN1YiI6IndSTmFQVDFVQkl3NENsOWVvM3lPem9"
-"IN3ZFODFQaGZ1In0.AO-81_CMVPGh7NidjKFqacXpIAc22P6lWQZ3MrbBllIvRFa"
-"VJ_WQVRCkfS_RDTI6LaZ8ZanJ1ZbZmzR1WRU140Guuj8MNfK4BemqXgC0qsMQ6ib"
-"YNuM1nAwi35WOXT9AtAWUXJTH1f-7gAZErU-CmJwlctd7O5AhNpqW3ktdwq-GqE0"
-"AjXSVNpFd6jTFVGbyW0Z-qyglbDLtbTZuhry7eLXmZyOMcl6dDR8Ux29JriuSDO4"
-"D2VlSTQJmadPhm2_Pwp6ViLLd4JfmYHYzXjfI1xoaw3TV6hasLVf8Q8uAI9UWVYL"
-"6cUjP73Mfy8K89jnbZRjFAX25KzWhXRQCIKk42A";
+const unsigned char private_key[] =
+"-----BEGIN RSA PRIVATE KEY-----\n"
+"MIIEogIBAAKCAQEAnzyis1ZjfNB0bBgKFMSvvkTtwlvBsaJq7S5wA+kzeVOVpVWw\n"
+"kWdVha4s38XM/pa/yr47av7+z3VTmvDRyAHcaT92whREFpLv9cj5lTeJSibyr/Mr\n"
+"m/YtjCZVWgaOYIhwrXwKLqPr/11inWsAkfIytvHWTxZYEcXLgAXFuUuaS3uF9gEi\n"
+"NQwzGTU1v0FqkqTBr4B8nW3HCN47XUu0t8Y0e+lf4s4OxQawWD79J9/5d3Ry0vbV\n"
+"3Am1FtGJiJvOwRsIfVChDpYStTcHTCMqtvWbV6L11BWkpzGXSW4Hv43qa+GSYOD2\n"
+"QU68Mb59oSk2OB+BtOLpJofmbGEGgvmwyCI9MwIDAQABAoIBACiARq2wkltjtcjs\n"
+"kFvZ7w1JAORHbEufEO1Eu27zOIlqbgyAcAl7q+/1bip4Z/x1IVES84/yTaM8p0go\n"
+"amMhvgry/mS8vNi1BN2SAZEnb/7xSxbflb70bX9RHLJqKnp5GZe2jexw+wyXlwaM\n"
+"+bclUCrh9e1ltH7IvUrRrQnFJfh+is1fRon9Co9Li0GwoN0x0byrrngU8Ak3Y6D9\n"
+"D8GjQA4Elm94ST3izJv8iCOLSDBmzsPsXfcCUZfmTfZ5DbUDMbMxRnSo3nQeoKGC\n"
+"0Lj9FkWcfmLcpGlSXTO+Ww1L7EGq+PT3NtRae1FZPwjddQ1/4V905kyQFLamAA5Y\n"
+"lSpE2wkCgYEAy1OPLQcZt4NQnQzPz2SBJqQN2P5u3vXl+zNVKP8w4eBv0vWuJJF+\n"
+"hkGNnSxXQrTkvDOIUddSKOzHHgSg4nY6K02ecyT0PPm/UZvtRpWrnBjcEVtHEJNp\n"
+"bU9pLD5iZ0J9sbzPU/LxPmuAP2Bs8JmTn6aFRspFrP7W0s1Nmk2jsm0CgYEAyH0X\n"
+"+jpoqxj4efZfkUrg5GbSEhf+dZglf0tTOA5bVg8IYwtmNk/pniLG/zI7c+GlTc9B\n"
+"BwfMr59EzBq/eFMI7+LgXaVUsM/sS4Ry+yeK6SJx/otIMWtDfqxsLD8CPMCRvecC\n"
+"2Pip4uSgrl0MOebl9XKp57GoaUWRWRHqwV4Y6h8CgYAZhI4mh4qZtnhKjY4TKDjx\n"
+"QYufXSdLAi9v3FxmvchDwOgn4L+PRVdMwDNms2bsL0m5uPn104EzM6w1vzz1zwKz\n"
+"5pTpPI0OjgWN13Tq8+PKvm/4Ga2MjgOgPWQkslulO/oMcXbPwWC3hcRdr9tcQtn9\n"
+"Imf9n2spL/6EDFId+Hp/7QKBgAqlWdiXsWckdE1Fn91/NGHsc8syKvjjk1onDcw0\n"
+"NvVi5vcba9oGdElJX3e9mxqUKMrw7msJJv1MX8LWyMQC5L6YNYHDfbPF1q5L4i8j\n"
+"8mRex97UVokJQRRA452V2vCO6S5ETgpnad36de3MUxHgCOX3qL382Qx9/THVmbma\n"
+"3YfRAoGAUxL/Eu5yvMK8SAt/dJK6FedngcM3JEFNplmtLYVLWhkIlNRGDwkg3I5K\n"
+"y18Ae9n7dHVueyslrb6weq7dTkYDi3iOYRW8HRkIQh06wEdbxt0shTzAJvvCQfrB\n"
+"jg/3747WSsf/zBTcHihTRBdAv6OmdhV4/dD5YBfLAkLrd+mX7iE=\n"
+"-----END RSA PRIVATE KEY-----\n";
 
 int callback_oauth2_redirect_external_auth (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf(REDIRECT_EXTERNAL_AUTH "?redirect_uri=%s&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
@@ -180,14 +173,32 @@ int callback_oauth2_token_code_ok (const struct _u_request * request, struct _u_
 }
 
 int callback_oauth2_token_code_id_token_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  json_t * result = json_pack("{sssssissss}", 
-                             "access_token", ACCESS_TOKEN,
-                             "token_type", "bearer",
-                             "expires_in", 3600,
-                             "refresh_token", REFRESH_TOKEN,
-                             "id_token", id_token_valid_sig_c_hash_at_hash);
+  jwt_t * jwt;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  json_t * result;
+  
+  jwt_new(&jwt);
+  time(&now);
+  grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
+  jwt_add_grants_json(jwt, grants);
+  ck_assert_int_eq(jwt_add_grant(jwt, "at_hash", at_hash), 0);
+  ck_assert_int_eq(jwt_add_grant(jwt, "c_hash", c_hash), 0);
+  jwt_set_alg(jwt, JWT_ALG_RS256, private_key, o_strlen((const char *)private_key));
+  jwt_str = jwt_encode_str(jwt);
+  
+  result = json_pack("{sssssissss}", 
+                     "access_token", ACCESS_TOKEN,
+                     "token_type", "bearer",
+                     "expires_in", 3600,
+                     "refresh_token", REFRESH_TOKEN,
+                     "id_token", jwt_str);
   ulfius_set_json_body_response(response, 200, result);
+
   json_decref(result);
+  o_free(grants);
+  o_free(jwt_str);
+  jwt_free(jwt);
   return U_CALLBACK_CONTINUE;
 }
 
@@ -313,7 +324,21 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   struct _i_session i_session;
   struct _u_instance instance;
   json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
-  char * redirect_to = msprintf(REDIRECT_ID_TOKEN "&access_token=" ACCESS_TOKEN "&state=" STATE "&token_type=bearer", id_token_valid_sig_at_hash);
+  jwt_t * jwt;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  char * redirect_to;
+
+  ck_assert_int_eq(jwt_new(&jwt), 0);
+  time(&now);
+  grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(jwt_add_grants_json(jwt, grants), 0);
+  ck_assert_int_eq(jwt_add_grant(jwt, "at_hash", at_hash), 0);
+  ck_assert_int_eq(jwt_set_alg(jwt, JWT_ALG_RS256, private_key, o_strlen((const char *)private_key)), 0);
+  ck_assert_ptr_ne((jwt_str = jwt_encode_str(jwt)), NULL);
+  
+  redirect_to = msprintf(REDIRECT_ID_TOKEN "&access_token=" ACCESS_TOKEN "&state=" STATE "&token_type=bearer", jwt_str);
 
   ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
@@ -353,6 +378,9 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   ulfius_clean_instance(&instance);
   i_clean_session(&i_session);
   o_free(redirect_to);
+  o_free(grants);
+  o_free(jwt_str);
+  jwt_free(jwt);
 }
 END_TEST
 
@@ -415,7 +443,22 @@ START_TEST(test_iddawc_oidc_token_id_token_code_flow)
   struct _i_session i_session;
   struct _u_instance instance;
   json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
-  char * redirect_to = msprintf(REDIRECT_ID_TOKEN "&access_token=" ACCESS_TOKEN "&code=" CODE "&state=" STATE "&token_type=bearer", id_token_valid_sig_c_hash_at_hash);
+  jwt_t * jwt;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  char * redirect_to;
+
+  ck_assert_int_eq(jwt_new(&jwt), 0);
+  time(&now);
+  grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(jwt_add_grants_json(jwt, grants), 0);
+  ck_assert_int_eq(jwt_add_grant(jwt, "at_hash", at_hash), 0);
+  ck_assert_int_eq(jwt_add_grant(jwt, "c_hash", c_hash), 0);
+  ck_assert_int_eq(jwt_set_alg(jwt, JWT_ALG_RS256, private_key, o_strlen((const char *)private_key)), 0);
+  ck_assert_ptr_ne((jwt_str = jwt_encode_str(jwt)), NULL);
+  
+  redirect_to = msprintf(REDIRECT_ID_TOKEN "&access_token=" ACCESS_TOKEN "&code=" CODE "&state=" STATE "&token_type=bearer", jwt_str);
 
   ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
@@ -462,6 +505,9 @@ START_TEST(test_iddawc_oidc_token_id_token_code_flow)
   ulfius_clean_instance(&instance);
   i_clean_session(&i_session);
   o_free(redirect_to);
+  o_free(grants);
+  o_free(jwt_str);
+  jwt_free(jwt);
 }
 END_TEST
 
