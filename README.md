@@ -5,5 +5,39 @@
 Handles the flow of OAuth2 and OpenID Connect authentication process from the client side.
 - Genrates requests based on input parameters
 - Parses response
+- Validates response values
 
-Work in progress.
+Simple example for code and id_token flow on an OpenID Connect server.
+
+```C
+int main() {
+  struct _i_session i_session;
+
+  i_init_session(&i_session);
+  i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_ID_TOKEN|I_RESPONSE_TYPE_CODE,
+                                                        I_OPT_OPENID_CONFIG_ENDPOINT, "https://oidc.tld/.well-known/openid-configuration",
+                                                        I_OPT_CLIENT_ID, "client1",
+                                                        I_OPT_CIENT_SECRET, "mySecret",
+                                                        I_OPT_REDIRECT_URI, "https://my-client.tld",
+                                                        I_OPT_SCOPE, "tokenid",
+                                                        I_OPT_STATE, "myState1234",
+                                                        I_OPT_NONE);
+  i_load_openid_config(&i_session), I_OK);
+  
+  // First step: get redirection to login page
+  i_run_auth_request(&i_session), I_OK);
+  
+  // When the user has loggined in the external application, gets redirected with a result, we parse the result
+  i_set_parameter(&i_session, I_OPT_REDIRECT_TO, "https://https://my-client.tld#code=xyz1234&id_token=tokenXYZ1234");
+  i_parse_redirect_to(&i_session);
+  
+  // Run the token request, get the refresh and access tokens
+  ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
+  
+  // And finally we load user info using the access token
+  ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
+  
+  // Cleanup session
+  i_clean_session(&i_session);
+}
+```
