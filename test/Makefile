@@ -35,10 +35,10 @@ all: test
 clean:
 	rm -f *.o $(TARGET) valgrind-*.txt
 
-$(IDDAWC_LIBRARY):
+$(IDDAWC_LIBRARY): $(IDDAWC_INCLUDE)/iddawc.h $(IDDAWC_LOCATION)/iddawc.c
 	cd $(IDDAWC_LOCATION) && $(MAKE) debug
 
-%: %.c
+%: $(IDDAWC_LIBRARY) %.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 test_%: %
@@ -48,6 +48,6 @@ test_%: %
 	  CK_FORK=no LD_LIBRARY_PATH=$(IDDAWC_LOCATION):$(LD_LIBRARY_PATH) $(VALGRIND_COMMAND) ./$^ 2>valgrind-$@.txt; \
 	fi
 
-test: $(IDDAWC_LIBRARY) $(TARGET) $(TARGET_TEST)
+test: $(TARGET) $(TARGET_TEST)
 
 check: test
