@@ -32,10 +32,10 @@ int main() {
   i_parse_redirect_to(&i_session);
   
   // Run the token request, get the refresh and access tokens
-  ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
+  i_run_token_request(&i_session);
   
   // And finally we load user info using the access token
-  ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
+  i_load_userinfo(&i_session);
   
   // Cleanup session
   i_clean_session(&i_session);
