@@ -166,7 +166,6 @@ START_TEST(test_iddawc_userinfo_response_json)
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_USERINFO), userinfo_json);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   i_clean_session(&i_session);
   json_decref(j_userinfo);
