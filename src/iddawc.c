@@ -401,6 +401,7 @@ static int check_strict_parameters(struct _i_session * i_session) {
       if (split_string(i_session->scope, " ", &str_array)) {
         for (i=0; str_array[i]!=NULL; i++) {
           if (!has_openid_config_parameter_value(i_session, "scopes_supported", str_array[i])) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "scope %s not supported", str_array[i]);
             ret = 0;
           }
         }
@@ -408,6 +409,7 @@ static int check_strict_parameters(struct _i_session * i_session) {
       free_string_array(str_array);
     }
     if (!has_openid_config_parameter_value(i_session, "response_types_supported", get_response_type(i_session->response_type))) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "response_type %s not supported", get_response_type(i_session->response_type));
       ret = 0;
     }
   } else {
@@ -1336,7 +1338,6 @@ int i_run_auth_request(struct _i_session * i_session) {
       ulfius_clean_response(&response);
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "plop");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -1394,6 +1395,16 @@ int i_run_token_request(struct _i_session * i_session) {
           ulfius_clean_request(&request);
           ulfius_clean_response(&response);
         } else {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - Error input parameters");
+          if (i_session->redirect_url == NULL) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "redirect_url NULL");
+          }
+          if (i_session->client_id == NULL) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "client_id NULL");
+          }
+          if (i_session->code == NULL) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "code NULL");
+          }
           ret = I_ERROR_PARAM;
         }
         break;
