@@ -1350,196 +1350,197 @@ int i_run_token_request(struct _i_session * i_session) {
   json_t * j_response;
   
   if (i_session != NULL && i_session->token_endpoint != NULL) {
-    switch (i_session->response_type) {
-      case I_RESPONSE_TYPE_CODE:
-        if (i_session->redirect_url != NULL && 
-            i_session->client_id != NULL && 
-            i_session->code != NULL &&
-            check_strict_parameters(i_session) &&
-            has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) {
-          ulfius_init_request(&request);
-          ulfius_init_response(&response);
-          request.http_verb = o_strdup("POST");
-          request.http_url = o_strdup(i_session->token_endpoint);
-          u_map_put(request.map_post_body, "grant_type", "authorization_code");
-          u_map_put(request.map_post_body, "code", i_session->code);
-          u_map_put(request.map_post_body, "redirect_uri", i_session->redirect_url);
-          u_map_put(request.map_post_body, "client_id", i_session->client_id);
-          if (i_session->client_secret != NULL) {
-            request.auth_basic_user = o_strdup(i_session->client_id);
-            request.auth_basic_password = o_strdup(i_session->client_secret);
-          }
-          if (ulfius_send_http_request(&request, &response) == U_OK) {
-            if (response.status == 200 || response.status == 400) {
-              j_response = ulfius_get_json_body_response(&response, NULL);
-              if (j_response != NULL) {
-                if (parse_token_response(i_session, response.status, j_response) == I_OK) {
-                  ret = response.status == 200?I_OK:I_ERROR_PARAM;
-                } else {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error parse_token_response");
-                  ret = I_ERROR_PARAM;
-                }
-              } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error parsing JSON response");
-                ret = I_ERROR;
-              }
-              json_decref(j_response);
-            } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Invalid response status");
-              ret = I_ERROR;
-            }
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error sending token request");
-            ret = I_ERROR;
-          }
-          ulfius_clean_request(&request);
-          ulfius_clean_response(&response);
-        } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - Error input parameters");
-          if (i_session->redirect_url == NULL) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "redirect_url NULL");
-          }
-          if (i_session->client_id == NULL) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "client_id NULL");
-          }
-          if (i_session->code == NULL) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "code NULL");
-          }
-          ret = I_ERROR_PARAM;
-        }
-        break;
-      case I_RESPONSE_TYPE_PASSWORD:
-        if (i_session->username != NULL && i_session->user_password != NULL) {
-          ulfius_init_request(&request);
-          ulfius_init_response(&response);
-          request.http_verb = o_strdup("POST");
-          request.http_url = o_strdup(i_session->token_endpoint);
-          u_map_put(request.map_post_body, "grant_type", "password");
-          u_map_put(request.map_post_body, "username", i_session->username);
-          u_map_put(request.map_post_body, "password", i_session->user_password);
-          if (i_session->client_secret != NULL) {
-            request.auth_basic_user = o_strdup(i_session->client_id);
-            request.auth_basic_password = o_strdup(i_session->client_secret);
-          }
-          if (i_session->scope != NULL) {
-            u_map_put(request.map_post_body, "scope", i_session->scope);
-          }
-          if (ulfius_send_http_request(&request, &response) == U_OK) {
-            if (response.status == 200 || response.status == 400) {
-              j_response = ulfius_get_json_body_response(&response, NULL);
-              if (j_response != NULL) {
-                if (parse_token_response(i_session, response.status, j_response) == I_OK) {
-                  ret = response.status == 200?I_OK:I_ERROR_PARAM;
-                } else {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error parse_token_response");
-                  ret = I_ERROR_PARAM;
-                }
-              } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error parsing JSON response");
-                ret = I_ERROR;
-              }
-              json_decref(j_response);
-            } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Invalid response status");
-              ret = I_ERROR;
-            }
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error sending token request");
-            ret = I_ERROR;
-          }
-          ulfius_clean_request(&request);
-          ulfius_clean_response(&response);
-        } else {
-          ret = I_ERROR_PARAM;
-        }
-        break;
-      case I_RESPONSE_TYPE_CLIENT_CREDENTIALS:
-        if (i_session->client_id != NULL && i_session->client_secret != NULL) {
-          ulfius_init_request(&request);
-          ulfius_init_response(&response);
-          request.http_verb = o_strdup("POST");
-          request.http_url = o_strdup(i_session->token_endpoint);
-          u_map_put(request.map_post_body, "grant_type", "client_credentials");
+    if (i_session->response_type & I_RESPONSE_TYPE_CODE) {
+      if (i_session->redirect_url != NULL && 
+          i_session->client_id != NULL && 
+          i_session->code != NULL &&
+          check_strict_parameters(i_session) &&
+          has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) {
+        ulfius_init_request(&request);
+        ulfius_init_response(&response);
+        request.http_verb = o_strdup("POST");
+        request.http_url = o_strdup(i_session->token_endpoint);
+        u_map_put(request.map_post_body, "grant_type", "authorization_code");
+        u_map_put(request.map_post_body, "code", i_session->code);
+        u_map_put(request.map_post_body, "redirect_uri", i_session->redirect_url);
+        u_map_put(request.map_post_body, "client_id", i_session->client_id);
+        if (i_session->client_secret != NULL) {
           request.auth_basic_user = o_strdup(i_session->client_id);
           request.auth_basic_password = o_strdup(i_session->client_secret);
-          if (i_session->scope != NULL) {
-            u_map_put(request.map_post_body, "scope", i_session->scope);
-          }
-          if (ulfius_send_http_request(&request, &response) == U_OK) {
-            if (response.status == 200 || response.status == 400) {
-              j_response = ulfius_get_json_body_response(&response, NULL);
-              if (j_response != NULL) {
-                if (parse_token_response(i_session, response.status, j_response) == I_OK) {
-                  ret = response.status == 200?I_OK:I_ERROR_PARAM;
-                } else {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error parse_token_response");
-                  ret = I_ERROR_PARAM;
-                }
+        }
+        if (ulfius_send_http_request(&request, &response) == U_OK) {
+          if (response.status == 200 || response.status == 400) {
+            j_response = ulfius_get_json_body_response(&response, NULL);
+            if (j_response != NULL) {
+              if (parse_token_response(i_session, response.status, j_response) == I_OK) {
+                ret = response.status == 200?I_OK:I_ERROR_PARAM;
               } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error parsing JSON response");
-                ret = I_ERROR;
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error parse_token_response");
+                ret = I_ERROR_PARAM;
               }
-              json_decref(j_response);
             } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Invalid response status");
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error parsing JSON response");
               ret = I_ERROR;
             }
+            json_decref(j_response);
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error sending token request");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Invalid response status");
             ret = I_ERROR;
           }
-          ulfius_clean_request(&request);
-          ulfius_clean_response(&response);
         } else {
-          ret = I_ERROR_PARAM;
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error sending token request");
+          ret = I_ERROR;
         }
-        break;
-      case I_RESPONSE_TYPE_REFRESH_TOKEN:
-        if (i_session->refresh_token != NULL) {
-          ulfius_init_request(&request);
-          ulfius_init_response(&response);
-          request.http_verb = o_strdup("POST");
-          request.http_url = o_strdup(i_session->token_endpoint);
-          u_map_put(request.map_post_body, "grant_type", "refresh_token");
+        ulfius_clean_request(&request);
+        ulfius_clean_response(&response);
+      } else {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - Error input parameters");
+        if (i_session->redirect_url == NULL) {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "redirect_url NULL");
+        }
+        if (i_session->client_id == NULL) {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "client_id NULL");
+        }
+        if (i_session->code == NULL) {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "code NULL");
+        }
+        ret = I_ERROR_PARAM;
+      }
+    } else {
+      switch (i_session->response_type) {
+        case I_RESPONSE_TYPE_PASSWORD:
+          if (i_session->username != NULL && i_session->user_password != NULL) {
+            ulfius_init_request(&request);
+            ulfius_init_response(&response);
+            request.http_verb = o_strdup("POST");
+            request.http_url = o_strdup(i_session->token_endpoint);
+            u_map_put(request.map_post_body, "grant_type", "password");
+            u_map_put(request.map_post_body, "username", i_session->username);
+            u_map_put(request.map_post_body, "password", i_session->user_password);
+            if (i_session->client_secret != NULL) {
+              request.auth_basic_user = o_strdup(i_session->client_id);
+              request.auth_basic_password = o_strdup(i_session->client_secret);
+            }
+            if (i_session->scope != NULL) {
+              u_map_put(request.map_post_body, "scope", i_session->scope);
+            }
+            if (ulfius_send_http_request(&request, &response) == U_OK) {
+              if (response.status == 200 || response.status == 400) {
+                j_response = ulfius_get_json_body_response(&response, NULL);
+                if (j_response != NULL) {
+                  if (parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    ret = response.status == 200?I_OK:I_ERROR_PARAM;
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Error parse_token_response");
+                    ret = I_ERROR_PARAM;
+                  }
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Error parsing JSON response");
+                  ret = I_ERROR;
+                }
+                json_decref(j_response);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Invalid response status");
+                ret = I_ERROR;
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Error sending token request");
+              ret = I_ERROR;
+            }
+            ulfius_clean_request(&request);
+            ulfius_clean_response(&response);
+          } else {
+            ret = I_ERROR_PARAM;
+          }
+          break;
+        case I_RESPONSE_TYPE_CLIENT_CREDENTIALS:
           if (i_session->client_id != NULL && i_session->client_secret != NULL) {
+            ulfius_init_request(&request);
+            ulfius_init_response(&response);
+            request.http_verb = o_strdup("POST");
+            request.http_url = o_strdup(i_session->token_endpoint);
+            u_map_put(request.map_post_body, "grant_type", "client_credentials");
             request.auth_basic_user = o_strdup(i_session->client_id);
             request.auth_basic_password = o_strdup(i_session->client_secret);
-          }
-          if (i_session->scope != NULL) {
-            u_map_put(request.map_post_body, "scope", i_session->scope);
-          }
-          if (ulfius_send_http_request(&request, &response) == U_OK) {
-            if (response.status == 200 || response.status == 400) {
-              j_response = ulfius_get_json_body_response(&response, NULL);
-              if (j_response != NULL) {
-                if (parse_token_response(i_session, response.status, j_response) == I_OK) {
-                  ret = response.status == 200?I_OK:I_ERROR_PARAM;
+            if (i_session->scope != NULL) {
+              u_map_put(request.map_post_body, "scope", i_session->scope);
+            }
+            if (ulfius_send_http_request(&request, &response) == U_OK) {
+              if (response.status == 200 || response.status == 400) {
+                j_response = ulfius_get_json_body_response(&response, NULL);
+                if (j_response != NULL) {
+                  if (parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    ret = response.status == 200?I_OK:I_ERROR_PARAM;
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error parse_token_response");
+                    ret = I_ERROR_PARAM;
+                  }
                 } else {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error parse_token_response");
-                  ret = I_ERROR_PARAM;
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error parsing JSON response");
+                  ret = I_ERROR;
                 }
+                json_decref(j_response);
               } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error parsing JSON response");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Invalid response status");
                 ret = I_ERROR;
               }
-              json_decref(j_response);
             } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Invalid response status");
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error sending token request");
               ret = I_ERROR;
             }
+            ulfius_clean_request(&request);
+            ulfius_clean_response(&response);
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request - Error sending token request");
-            ret = I_ERROR;
+            ret = I_ERROR_PARAM;
           }
-          ulfius_clean_request(&request);
-          ulfius_clean_response(&response);
-        } else {
+          break;
+        case I_RESPONSE_TYPE_REFRESH_TOKEN:
+          if (i_session->refresh_token != NULL) {
+            ulfius_init_request(&request);
+            ulfius_init_response(&response);
+            request.http_verb = o_strdup("POST");
+            request.http_url = o_strdup(i_session->token_endpoint);
+            u_map_put(request.map_post_body, "grant_type", "refresh_token");
+            if (i_session->client_id != NULL && i_session->client_secret != NULL) {
+              request.auth_basic_user = o_strdup(i_session->client_id);
+              request.auth_basic_password = o_strdup(i_session->client_secret);
+            }
+            if (i_session->scope != NULL) {
+              u_map_put(request.map_post_body, "scope", i_session->scope);
+            }
+            if (ulfius_send_http_request(&request, &response) == U_OK) {
+              if (response.status == 200 || response.status == 400) {
+                j_response = ulfius_get_json_body_response(&response, NULL);
+                if (j_response != NULL) {
+                  if (parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    ret = response.status == 200?I_OK:I_ERROR_PARAM;
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Error parse_token_response");
+                    ret = I_ERROR_PARAM;
+                  }
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Error parsing JSON response");
+                  ret = I_ERROR;
+                }
+                json_decref(j_response);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Invalid response status");
+                ret = I_ERROR;
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Error sending token request");
+              ret = I_ERROR;
+            }
+            ulfius_clean_request(&request);
+            ulfius_clean_response(&response);
+          } else {
+            ret = I_ERROR_PARAM;
+          }
+          break;
+        default:
           ret = I_ERROR_PARAM;
-        }
-        break;
-      default:
-        ret = I_ERROR_PARAM;
-        break;
+          break;
+      }
     }
   } else {
     ret = I_ERROR_PARAM;
