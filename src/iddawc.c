@@ -1573,6 +1573,7 @@ int i_verify_id_token(struct _i_session * i_session, int token_type) {
   json_error_t j_error;
   int alg = GNUTLS_DIG_UNKNOWN;
   gnutls_datum_t hash_data;
+  time_t now = 0;
   
   if (i_session != NULL && i_session->id_token != NULL && r_jwks_size(i_session->jwks)) {
     for (i=0; i<r_jwks_size(i_session->jwks); i++) {
@@ -1588,83 +1589,104 @@ int i_verify_id_token(struct _i_session * i_session, int token_type) {
                   if ((j_tmp = json_loads(jwt_str, JSON_DECODE_ANY|JSON_DISABLE_EOF_CHECK, &j_error)) != NULL) {
                     if (r_jwk_import_from_json_t(i_session->id_token_header, j_tmp) == RHN_OK) {
                       if ((i_session->id_token_payload = json_loads(jwt_str+j_error.position+1, JSON_DECODE_ANY, NULL)) != NULL) {
-                        ret = I_OK;
-                        if (token_type & I_HAS_ACCESS_TOKEN) {
-                          if (json_object_get(i_session->id_token_payload, "at_hash") != NULL && i_session->access_token != NULL) {
-                            alg = GNUTLS_DIG_UNKNOWN;
-                            if ((jwt_get_alg(jwt) == JWT_ALG_HS256 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS256")) || 
-                            (jwt_get_alg(jwt) == JWT_ALG_RS256 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "RS256")) || 
-                            (jwt_get_alg(jwt) == JWT_ALG_ES256 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "ES256"))) {
-                              alg = GNUTLS_DIG_SHA256;
-                            } else if ((jwt_get_alg(jwt) == JWT_ALG_HS384 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS384")) || 
-                            (jwt_get_alg(jwt) == JWT_ALG_RS384 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "RS384")) || 
-                            (jwt_get_alg(jwt) == JWT_ALG_ES384 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "ES384"))) {
-                              alg = GNUTLS_DIG_SHA384;
-                            } else if ((jwt_get_alg(jwt) == JWT_ALG_HS512 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS512")) || 
-                            (jwt_get_alg(jwt) == JWT_ALG_RS512 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "RS512")) || 
-                            (jwt_get_alg(jwt) == JWT_ALG_ES512 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "ES512"))) {
-                              alg = GNUTLS_DIG_SHA384;
-                            }
-                            if (alg != GNUTLS_DIG_UNKNOWN) {
-                              hash_data.data = (unsigned char*)i_session->access_token;
-                              hash_data.size = o_strlen(i_session->access_token);
-                              if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
-                                if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
-                                  if (o_strcmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "at_hash"))) != 0) {
-                                    y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - at_hash invalid");
-                                    ret = I_ERROR_PARAM;
+                        time(&now);
+                        if (json_object_get(i_session->id_token_payload, "iat") == NULL || json_integer_value(json_object_get(i_session->id_token_payload, "iat")) > now) {
+                          y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - invalid iat value");
+                          ret = I_ERROR_PARAM;
+                        } else if (json_object_get(i_session->id_token_payload, "exp") == NULL || json_integer_value(json_object_get(i_session->id_token_payload, "exp")) < now) {
+                          y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - invalid exp value");
+                          ret = I_ERROR_PARAM;
+                        } else if (!json_string_length(json_object_get(i_session->id_token_payload, "iss"))) {
+                          y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - required value iss missing");
+                          ret = I_ERROR_PARAM;
+                        } else if (i_session->issuer != NULL && 0 != o_strcmp(i_session->issuer, json_string_value(json_object_get(i_session->id_token_payload, "iss")))) {
+                          y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - invalid iss");
+                          ret = I_ERROR_PARAM;
+                        } else if (!json_string_length(json_object_get(i_session->id_token_payload, "sub"))) {
+                          y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - required value sub missing");
+                          ret = I_ERROR_PARAM;
+                        } else if (!json_string_length(json_object_get(i_session->id_token_payload, "aud"))) {
+                          y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - required value aud missing");
+                          ret = I_ERROR_PARAM;
+                        } else {
+                          ret = I_OK;
+                          if (token_type & I_HAS_ACCESS_TOKEN) {
+                            if (json_object_get(i_session->id_token_payload, "at_hash") != NULL && i_session->access_token != NULL) {
+                              alg = GNUTLS_DIG_UNKNOWN;
+                              if ((jwt_get_alg(jwt) == JWT_ALG_HS256 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS256")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_RS256 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "RS256")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_ES256 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "ES256"))) {
+                                alg = GNUTLS_DIG_SHA256;
+                              } else if ((jwt_get_alg(jwt) == JWT_ALG_HS384 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS384")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_RS384 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "RS384")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_ES384 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "ES384"))) {
+                                alg = GNUTLS_DIG_SHA384;
+                              } else if ((jwt_get_alg(jwt) == JWT_ALG_HS512 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS512")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_RS512 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "RS512")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_ES512 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "ES512"))) {
+                                alg = GNUTLS_DIG_SHA384;
+                              }
+                              if (alg != GNUTLS_DIG_UNKNOWN) {
+                                hash_data.data = (unsigned char*)i_session->access_token;
+                                hash_data.size = o_strlen(i_session->access_token);
+                                if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
+                                  if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
+                                    if (o_strcmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "at_hash"))) != 0) {
+                                      y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - at_hash invalid");
+                                      ret = I_ERROR_PARAM;
+                                    }
+                                  } else {
+                                    y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error o_base64url_encode at_hash");
+                                    ret = I_ERROR;
                                   }
                                 } else {
-                                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error o_base64url_encode at_hash");
+                                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error gnutls_fingerprint at_hash");
                                   ret = I_ERROR;
                                 }
                               } else {
-                                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error gnutls_fingerprint at_hash");
-                                ret = I_ERROR;
+                                y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - Invalid alg");
+                                ret = I_ERROR_PARAM;
                               }
                             } else {
-                              y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - Invalid alg");
+                              y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - missing input");
                               ret = I_ERROR_PARAM;
                             }
-                          } else {
-                            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - missing input");
-                            ret = I_ERROR_PARAM;
                           }
-                        }
-                        if (token_type & I_HAS_CODE) {
-                          if (json_object_get(i_session->id_token_payload, "c_hash") != NULL && i_session->code != NULL) {
-                            alg = GNUTLS_DIG_UNKNOWN;
-                            if (jwt_get_alg(jwt) == JWT_ALG_HS256 || jwt_get_alg(jwt) == JWT_ALG_RS256 || jwt_get_alg(jwt) == JWT_ALG_ES256) {
-                              alg = GNUTLS_DIG_SHA256;
-                            } else if (jwt_get_alg(jwt) == JWT_ALG_HS384 || jwt_get_alg(jwt) == JWT_ALG_RS384 || jwt_get_alg(jwt) == JWT_ALG_ES384) {
-                              alg = GNUTLS_DIG_SHA384;
-                            } else if (jwt_get_alg(jwt) == JWT_ALG_HS512 || jwt_get_alg(jwt) == JWT_ALG_RS512 || jwt_get_alg(jwt) == JWT_ALG_ES512) {
-                              alg = GNUTLS_DIG_SHA384;
-                            }
-                            if (alg != GNUTLS_DIG_UNKNOWN) {
-                              hash_data.data = (unsigned char*)i_session->code;
-                              hash_data.size = o_strlen(i_session->code);
-                              if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
-                                if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
-                                  if (o_strcmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "c_hash"))) != 0) {
-                                    y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - c_hash invalid");
-                                    ret = I_ERROR_PARAM;
+                          if (token_type & I_HAS_CODE) {
+                            if (json_object_get(i_session->id_token_payload, "c_hash") != NULL && i_session->code != NULL) {
+                              alg = GNUTLS_DIG_UNKNOWN;
+                              if (jwt_get_alg(jwt) == JWT_ALG_HS256 || jwt_get_alg(jwt) == JWT_ALG_RS256 || jwt_get_alg(jwt) == JWT_ALG_ES256) {
+                                alg = GNUTLS_DIG_SHA256;
+                              } else if (jwt_get_alg(jwt) == JWT_ALG_HS384 || jwt_get_alg(jwt) == JWT_ALG_RS384 || jwt_get_alg(jwt) == JWT_ALG_ES384) {
+                                alg = GNUTLS_DIG_SHA384;
+                              } else if (jwt_get_alg(jwt) == JWT_ALG_HS512 || jwt_get_alg(jwt) == JWT_ALG_RS512 || jwt_get_alg(jwt) == JWT_ALG_ES512) {
+                                alg = GNUTLS_DIG_SHA384;
+                              }
+                              if (alg != GNUTLS_DIG_UNKNOWN) {
+                                hash_data.data = (unsigned char*)i_session->code;
+                                hash_data.size = o_strlen(i_session->code);
+                                if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
+                                  if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
+                                    if (o_strcmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "c_hash"))) != 0) {
+                                      y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - c_hash invalid");
+                                      ret = I_ERROR_PARAM;
+                                    }
+                                  } else {
+                                    y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error o_base64url_encode c_hash");
+                                    ret = I_ERROR;
                                   }
                                 } else {
-                                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error o_base64url_encode c_hash");
+                                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error gnutls_fingerprint c_hash");
                                   ret = I_ERROR;
                                 }
                               } else {
-                                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Error gnutls_fingerprint c_hash");
-                                ret = I_ERROR;
+                                y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - unknown alg");
+                                ret = I_ERROR_PARAM;
                               }
                             } else {
-                              y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - unknown alg");
+                              y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - missing input");
                               ret = I_ERROR_PARAM;
                             }
-                          } else {
-                            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - missing input");
-                            ret = I_ERROR_PARAM;
                           }
                         }
                       } else {
