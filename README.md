@@ -26,13 +26,13 @@ int main() {
                                                         I_OPT_CLIENT_ID, "client1",
                                                         I_OPT_CIENT_SECRET, "mySecret",
                                                         I_OPT_REDIRECT_URI, "https://my-client.tld",
-                                                        I_OPT_SCOPE, "tokenid",
+                                                        I_OPT_SCOPE, "openid",
                                                         I_OPT_STATE, "myState1234",
                                                         I_OPT_NONE);
-  i_load_openid_config(&i_session), I_OK);
+  i_load_openid_config(&i_session);
   
   // First step: get redirection to login page
-  i_run_auth_request(&i_session), I_OK);
+  i_run_auth_request(&i_session);
   printf("Redirect to: %s\n", i_get_parameter(&i_session, I_OPT_REDIRECT_TO));
   
   // When the user has loggined in the external application, gets redirected with a result, we parse the result
