@@ -430,7 +430,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->response_type = I_RESPONSE_TYPE_NONE;
     i_session->scope = NULL;
     i_session->nonce = NULL;
-    i_session->redirect_url = NULL;
+    i_session->redirect_uri = NULL;
     i_session->redirect_to = NULL;
     i_session->state = NULL;
     i_session->client_id = NULL;
@@ -496,7 +496,7 @@ void i_clean_session(struct _i_session * i_session) {
   if (i_session != NULL) {
     o_free(i_session->scope);
     o_free(i_session->nonce);
-    o_free(i_session->redirect_url);
+    o_free(i_session->redirect_uri);
     o_free(i_session->redirect_to);
     o_free(i_session->state);
     o_free(i_session->client_id);
@@ -662,11 +662,11 @@ int i_set_parameter(struct _i_session * i_session, uint option, const char * s_v
         }
         break;
       case I_OPT_REDIRECT_URI:
-        o_free(i_session->redirect_url);
+        o_free(i_session->redirect_uri);
         if (o_strlen(s_value)) {
-          i_session->redirect_url = o_strdup(s_value);
+          i_session->redirect_uri = o_strdup(s_value);
         } else {
-          i_session->redirect_url = NULL;
+          i_session->redirect_uri = NULL;
         }
         break;
       case I_OPT_REDIRECT_TO:
@@ -1090,7 +1090,7 @@ int i_parse_redirect_to(struct _i_session * i_session) {
   const char * fragment = NULL, * query = NULL, * redirect_to = i_get_parameter(i_session, I_OPT_REDIRECT_TO);
   char * state = NULL;
   
-  if (o_strncmp(redirect_to, i_session->redirect_url, o_strlen(i_session->redirect_url)) == 0) {
+  if (o_strncmp(redirect_to, i_session->redirect_uri, o_strlen(i_session->redirect_uri)) == 0) {
     // Extract fragment if response_type has id_token or token
     if ((i_session->response_type & I_RESPONSE_TYPE_TOKEN || i_session->response_type & I_RESPONSE_TYPE_ID_TOKEN) && (fragment = o_strnchr(redirect_to, o_strlen(redirect_to), '#')) != NULL && has_openid_config_parameter_value(i_session, "response_modes_supported", "fragment")) {
       u_map_init(&map);
@@ -1153,7 +1153,7 @@ const char * i_get_parameter(struct _i_session * i_session, uint option) {
         result = (const char *)i_session->nonce;
         break;
       case I_OPT_REDIRECT_URI:
-        result = (const char *)i_session->redirect_url;
+        result = (const char *)i_session->redirect_uri;
         break;
       case I_OPT_REDIRECT_TO:
         result = (const char *)i_session->redirect_to;
@@ -1254,17 +1254,23 @@ int i_run_auth_request(struct _i_session * i_session) {
       i_session->response_type != I_RESPONSE_TYPE_PASSWORD && 
       i_session->response_type != I_RESPONSE_TYPE_CLIENT_CREDENTIALS && 
       i_session->response_type != I_RESPONSE_TYPE_REFRESH_TOKEN && 
-      i_session->redirect_url != NULL && 
+      i_session->redirect_uri != NULL && 
       i_session->client_id != NULL && 
       i_session->authorization_endpoint != NULL &&
       check_strict_parameters(i_session) &&
       has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit")) {
     if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error initializing request or response");
       ret = I_ERROR;
     } else {
+      u_map_put(request.map_header, "User-Agent", "Iddawc runtime");
       if (i_session->auth_method == I_AUTH_METHOD_GET) {
-        escaped = ulfius_url_encode(i_session->redirect_url);
-        url = msprintf("%s?redirect_url=%s&response_type=%s", i_session->authorization_endpoint, escaped, get_response_type(i_session->response_type));
+        escaped = ulfius_url_encode(i_session->redirect_uri);
+        url = msprintf("%s?redirect_uri=%s", i_session->authorization_endpoint, escaped);
+        o_free(escaped);
+
+        escaped = ulfius_url_encode(get_response_type(i_session->response_type));
+        url = mstrcatf(url, "&response_type=%s", escaped);
         o_free(escaped);
         
         escaped = ulfius_url_encode(i_session->client_id);
@@ -1302,7 +1308,7 @@ int i_run_auth_request(struct _i_session * i_session) {
       } else if (i_session->auth_method == I_AUTH_METHOD_POST) {
         request.http_verb = o_strdup("POST");
         request.http_url = o_strdup(i_session->authorization_endpoint);
-        u_map_put(request.map_post_body, "redirect_url", i_session->redirect_url);
+        u_map_put(request.map_post_body, "redirect_uri", i_session->redirect_uri);
         u_map_put(request.map_post_body, "response_type", get_response_type(i_session->response_type));
         u_map_put(request.map_post_body, "client_id", i_session->client_id);
         if (i_session->state != NULL) {
@@ -1322,6 +1328,7 @@ int i_run_auth_request(struct _i_session * i_session) {
         }
       } else {
         // Unsupported auth_method
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Unsupported auth_method");
         ret = I_ERROR_PARAM;
       }
       
@@ -1340,6 +1347,7 @@ int i_run_auth_request(struct _i_session * i_session) {
             }
             o_free(redirect_to);
           } else if (response.status == 400) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Server response 400: %.*s", response.binary_body_length, response.binary_body);
             ret = I_ERROR_PARAM;
           } else {
             ret = I_ERROR;
@@ -1352,6 +1360,7 @@ int i_run_auth_request(struct _i_session * i_session) {
       ulfius_clean_response(&response);
     }
   } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Invalid input parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -1365,7 +1374,7 @@ int i_run_token_request(struct _i_session * i_session) {
   
   if (i_session != NULL && i_session->token_endpoint != NULL) {
     if (i_session->response_type & I_RESPONSE_TYPE_CODE) {
-      if (i_session->redirect_url != NULL && 
+      if (i_session->redirect_uri != NULL && 
           i_session->client_id != NULL && 
           i_session->code != NULL &&
           check_strict_parameters(i_session) &&
@@ -1376,7 +1385,7 @@ int i_run_token_request(struct _i_session * i_session) {
         request.http_url = o_strdup(i_session->token_endpoint);
         u_map_put(request.map_post_body, "grant_type", "authorization_code");
         u_map_put(request.map_post_body, "code", i_session->code);
-        u_map_put(request.map_post_body, "redirect_uri", i_session->redirect_url);
+        u_map_put(request.map_post_body, "redirect_uri", i_session->redirect_uri);
         u_map_put(request.map_post_body, "client_id", i_session->client_id);
         if (i_session->client_secret != NULL) {
           request.auth_basic_user = o_strdup(i_session->client_id);
@@ -1398,7 +1407,7 @@ int i_run_token_request(struct _i_session * i_session) {
             }
             json_decref(j_response);
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Invalid response status");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Invalid response status: %d", response.status);
             ret = I_ERROR;
           }
         } else {
@@ -1409,8 +1418,8 @@ int i_run_token_request(struct _i_session * i_session) {
         ulfius_clean_response(&response);
       } else {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - Error input parameters");
-        if (i_session->redirect_url == NULL) {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "redirect_url NULL");
+        if (i_session->redirect_uri == NULL) {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "redirect_uri NULL");
         }
         if (i_session->client_id == NULL) {
           y_log_message(Y_LOG_LEVEL_DEBUG, "client_id NULL");
