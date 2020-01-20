@@ -10,6 +10,13 @@ Handles the flow of OAuth2 and OpenID Connect authentication process from the cl
 Simple example for code and id_token flow on an OpenID Connect server.
 
 ```C
+/**
+ * Compile with
+ * gcc -o test_iddawc test_iddawc.c -liddawc
+ */
+#include <stdio.h>
+#include <iddawc.h>
+
 int main() {
   struct _i_session i_session;
 
@@ -26,6 +33,7 @@ int main() {
   
   // First step: get redirection to login page
   i_run_auth_request(&i_session), I_OK);
+  printf("Redirect to: %s\n", i_get_parameter(&i_session, I_OPT_REDIRECT_TO));
   
   // When the user has loggined in the external application, gets redirected with a result, we parse the result
   i_set_parameter(&i_session, I_OPT_REDIRECT_TO, "https://https://my-client.tld#code=xyz1234&id_token=tokenXYZ1234");
@@ -36,6 +44,7 @@ int main() {
   
   // And finally we load user info using the access token
   i_load_userinfo(&i_session);
+  printf("userinfo: %s\n", i_get_parameter(&i_session, I_OPT_USERINFO));
   
   // Cleanup session
   i_clean_session(&i_session);
