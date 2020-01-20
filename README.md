@@ -7,7 +7,7 @@ Handles the flow of OAuth2 and OpenID Connect authentication process from the cl
 - Parses response
 - Validates response values
 
-Simple example for code and id_token flow on an OpenID Connect server.
+Example for code and id_token flow on an OpenID Connect server.
 
 ```C
 /**
@@ -50,3 +50,18 @@ int main() {
   i_clean_session(&i_session);
 }
 ```
+
+## Install
+
+- Using Cmake
+
+```shell
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make && sudo make install
+```
+
+## API Documentation
+
+Read the [online documentation](https://babelouest.github.io/iddawc/doc/html/).
