@@ -33,6 +33,7 @@ extern "C"
 #include <orcania.h>
 #include <ulfius.h>
 #include <rhonabwy.h>
+#include "iddawc-cfg.h"
 
 /**
  * @defgroup const Constants and properties
@@ -149,7 +150,7 @@ struct _i_session {
   char        * scope;
   char        * state;
   char        * nonce;
-  char        * redirect_url;
+  char        * redirect_uri;
   char        * redirect_to;
   char        * client_id;
   char        * client_secret;
@@ -352,9 +353,9 @@ const char * i_get_additional_parameter(struct _i_session * i_session, const cha
 const char * i_get_additional_response(struct _i_session * i_session, const char * s_key);
 
 /**
- * Parses the redirect_url given by the oauth2 server in the implicit flow
- * The redirect_url may contain a code, a token, an id_token, or an error
- * Fills the session parameters with the values given in the redirect_url
+ * Parses the redirect_uri given by the oauth2 server in the implicit flow
+ * The redirect_uri may contain a code, a token, an id_token, or an error
+ * Fills the session parameters with the values given in the redirect_uri
  * @param i_session: a reference to a struct _i_session *
  * @return I_OK on success, an error value on error
  */
