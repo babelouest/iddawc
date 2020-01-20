@@ -64,7 +64,7 @@
 #define SUBJECT_TYPE "public"
 
 const char id_token_pattern[] =
-"{\"amr\":[\"password\"],\"aud\":\"%s\",\"auth_time\":%ld"
+"{\"amr\":[\"password\"],\"aud\":\"%s\",\"auth_time\":%lld"
 ",\"azp\":\"%s\",\"exp\":%lld,\"iat\":%lld,\"iss\":\"%s\""
 ",\"nonce\":\"abc1234\",\"sub\":\"wRNaPT1UBIw4Cl9eo3yOzoH"
 "7vE81Phfu\"}";
@@ -147,7 +147,7 @@ const unsigned char private_key[] =
 "-----END RSA PRIVATE KEY-----\n";
 
 int callback_oauth2_redirect_external_auth (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf(REDIRECT_EXTERNAL_AUTH "?redirect_uri=%s&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf(REDIRECT_EXTERNAL_AUTH "?redirect_uri=%s&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);

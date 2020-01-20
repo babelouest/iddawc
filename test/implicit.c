@@ -29,7 +29,7 @@
 #define GLEWLWYD_COOKIE_SESSION "cookieXyz1234"
 
 int callback_oauth2_unauthorized_public_client (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s?error=unauthorized_client&error_description=Invalid+client_id&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s?error=unauthorized_client&error_description=Invalid+client_id&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -37,7 +37,7 @@ int callback_oauth2_unauthorized_public_client (const struct _u_request * reques
 }
 
 int callback_oauth2_invalid_scope (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s?error=invalid_scope&error_description=Scope+missing&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s?error=invalid_scope&error_description=Scope+missing&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -45,7 +45,7 @@ int callback_oauth2_invalid_scope (const struct _u_request * request, struct _u_
 }
 
 int callback_oauth2_invalid_response_type (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s?error=invalid_request&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s?error=invalid_request&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -53,7 +53,7 @@ int callback_oauth2_invalid_response_type (const struct _u_request * request, st
 }
 
 int callback_oauth2_invalid_state (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s?code=xyz&state=error%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s?code=xyz&state=error%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -61,7 +61,7 @@ int callback_oauth2_invalid_state (const struct _u_request * request, struct _u_
 }
 
 int callback_oauth2_code_empty (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s?code&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s?code&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -69,7 +69,7 @@ int callback_oauth2_code_empty (const struct _u_request * request, struct _u_res
 }
 
 int callback_oauth2_access_token_empty (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s#access_token&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s#access_token&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -77,7 +77,7 @@ int callback_oauth2_access_token_empty (const struct _u_request * request, struc
 }
 
 int callback_oauth2_token_type_empty (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type&code&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type&code&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -85,7 +85,7 @@ int callback_oauth2_token_type_empty (const struct _u_request * request, struct 
 }
 
 int callback_oauth2_expires_in_invalid (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type=" TOKEN_TYPE "&expires_in=error&code&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type=" TOKEN_TYPE "&expires_in=error&code&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -93,7 +93,7 @@ int callback_oauth2_expires_in_invalid (const struct _u_request * request, struc
 }
 
 int callback_oauth2_redirect_external_auth (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf(REDIRECT_EXTERNAL_AUTH "?redirect_uri=%s&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf(REDIRECT_EXTERNAL_AUTH "?redirect_uri=%s&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -101,7 +101,7 @@ int callback_oauth2_redirect_external_auth (const struct _u_request * request, s
 }
 
 int callback_oauth2_code_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s?code=" CODE "&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s?code=" CODE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -109,7 +109,7 @@ int callback_oauth2_code_valid (const struct _u_request * request, struct _u_res
 }
 
 int callback_oauth2_access_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -117,7 +117,7 @@ int callback_oauth2_access_token_valid (const struct _u_request * request, struc
 }
 
 int callback_oauth2_id_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s#id_token=" ID_TOKEN "&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s#id_token=" ID_TOKEN "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -125,7 +125,7 @@ int callback_oauth2_id_token_valid (const struct _u_request * request, struct _u
 }
 
 int callback_oauth2_access_token_id_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&id_token=" ID_TOKEN "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&id_token=" ID_TOKEN "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -133,7 +133,7 @@ int callback_oauth2_access_token_id_token_valid (const struct _u_request * reque
 }
 
 int callback_oauth2_access_token_code_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&code=" CODE "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&code=" CODE "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -141,7 +141,7 @@ int callback_oauth2_access_token_code_valid (const struct _u_request * request, 
 }
 
 int callback_oauth2_access_token_code_id_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&id_token=" ID_TOKEN "&code=" CODE "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_url"), u_map_get(request->map_url, "state"));
+  char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&id_token=" ID_TOKEN "&code=" CODE "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -149,7 +149,7 @@ int callback_oauth2_access_token_code_id_token_valid (const struct _u_request * 
 }
 
 int callback_oauth2_code_valid_post (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  char * redirect = msprintf("%s?code=" CODE "&state=%s", u_map_get(request->map_post_body, "redirect_url"), u_map_get(request->map_post_body, "state"));
+  char * redirect = msprintf("%s?code=" CODE "&state=%s", u_map_get(request->map_post_body, "redirect_uri"), u_map_get(request->map_post_body, "state"));
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);

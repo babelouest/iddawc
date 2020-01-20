@@ -8,7 +8,7 @@
 #include <jwt.h>
 
 const char id_token_pattern[] =
-"{\"amr\":[\"password\"],\"aud\":\"%s\",\"auth_time\":%ld"
+"{\"amr\":[\"password\"],\"aud\":\"%s\",\"auth_time\":%lld"
 ",\"azp\":\"%s\",\"exp\":%lld,\"iat\":%lld,\"iss\":\"%s\""
 ",\"nonce\":\"abc1234\",\"sub\":\"wRNaPT1UBIw4Cl9eo3yOzoH"
 "7vE81Phfu\"}";
