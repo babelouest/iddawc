@@ -433,54 +433,6 @@ int i_verify_id_token(struct _i_session * i_session);
  * @}
  */
 
-/**
- * @defgroup glewlwyd Executes Glewlwyd specific commands
- * Authenticates a user and keeps the Glewlwyd session cookie
- * @{
- */
-
-/**
- * 
- * @param i_session a reference to a struct _i_session *
- * @param username the username
- * @param password the password
- * @return I_OK on success, an error value on error
- */
-int igc_auth_password(struct _i_session * i_session, const char * username, const char * password);
-
-/**
- * 
- * @param i_session: a reference to a struct _i_session *
- * @param username the username
- * @param scheme_mod the scheme module type
- * @param scheme_name the scheme module instance name
- * @return I_OK on success, an error value on error
- */
-int igc_trigger_scheme(struct _i_session * i_session, const char * username, const char * scheme_mod, const char * scheme_name);
-
-/**
- * 
- * @param i_session: a reference to a struct _i_session *
- * @param username the username
- * @param scheme_mod the scheme module type
- * @param scheme_name the scheme module instance name
- * @param json_value the scheme auth value
- * @return I_OK on success, an error value on error
- */
-int igc_auth_scheme(struct _i_session * i_session, const char * scheme_mod, const char * username, const char * scheme_name, json_t * json_value);
-
-/**
- * 
- * @param i_session: a reference to a struct _i_session *
- * @param username the username
- * @return I_OK on success, an error value on error
- */
-char * igc_get_scope_auth_status(struct _i_session * i_session, const char * username);
-
-/**
- * @}
- */
-
 #ifdef __cplusplus
 }
 #endif
