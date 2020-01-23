@@ -63,13 +63,6 @@ extern "C"
 #define I_RESPONSE_TYPE_REFRESH_TOKEN      0x00100000
 
 /**
- * i_verify_id_token token_type parameter values
- */
-#define I_HAS_NONE         I_RESPONSE_TYPE_NONE
-#define I_HAS_ACCESS_TOKEN I_RESPONSE_TYPE_TOKEN
-#define I_HAS_CODE         I_RESPONSE_TYPE_CODE
-
-/**
  * i_set_response_type i_values parameter values
  */
 #define I_AUTH_METHOD_GET  0
@@ -132,7 +125,10 @@ enum _i_option {
   I_OPT_USERNAME                         = 32,
   I_OPT_USER_PASSWORD                    = 33,
   I_OPT_ISSUER                           = 34,
-  I_OPT_USERINFO                         = 35
+  I_OPT_USERINFO                         = 35,
+  I_OPT_NONCE_GENERATE                   = 36,
+  I_OPT_STATE_GENERATE                   = 37,
+
 };
 
 /**
@@ -403,6 +399,14 @@ int i_load_openid_config(struct _i_session * i_session);
 int i_load_userinfo(struct _i_session * i_session);
 
 /**
+ * Builds the url to GET the auth endpoint
+ * sets the result to parameter I_OPT_REDIRECT_TO
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_build_auth_url_get(struct _i_session * i_session);
+
+/**
  * Executes an auth request using the implicit endpoint
  * and sets the result values in the session variables
  * @param i_session: a reference to a struct _i_session *
@@ -421,11 +425,9 @@ int i_run_token_request(struct _i_session * i_session);
 /**
  * Validates the id_token signature and content if necessary
  * @param i_session: a reference to a struct _i_session *
- * @param token_type: flag to specify if the access_token hash and the code must be verified
- * values available are I_HAS_ACCESS_TOKEN, I_HAS_CODE and can be stacked
  * @return I_OK on success, an error value on error
  */
-int i_verify_id_token(struct _i_session * i_session, int token_type);
+int i_verify_id_token(struct _i_session * i_session);
 
 /**
  * @}
