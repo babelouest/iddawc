@@ -123,6 +123,20 @@ if (JANSSON_FOUND)
 	include_directories(${JANSSON_INCLUDE_DIRS})
 endif ()
 
+include(FindGnuTLS)
+find_package(GnuTLS REQUIRED)
+if (GNUTLS_FOUND)
+	set(LIBS ${LIBS} ${GNUTLS_LIBRARIES})
+	include_directories(${GNUTLS_INCLUDE_DIRS})
+endif ()
+
+include(FindNettle)
+find_package(Nettle REQUIRED)
+if (NETTLE_FOUND)
+	set(LIBS ${LIBS} ${NETTLE_LIBRARIES})
+	include_directories(${NETTLE_INCLUDE_DIRS})
+endif ()
+
 set(SEARCH_ORCANIA OFF CACHE BOOL "Force to false") # Avoid to search and download orcania
 set(SEARCH_ORCANIA_U OFF CACHE BOOL "Force to false") # Avoid to search and download orcania
 set(SEARCH_YDER OFF CACHE BOOL "Force to false") # Avoid to search and download yder during
