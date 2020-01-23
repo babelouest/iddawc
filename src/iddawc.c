@@ -22,6 +22,7 @@
  */
 
 #include <stdarg.h>
+#include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 #include <yder.h>
 #include <rhonabwy.h>
@@ -29,9 +30,46 @@
 
 #include "iddawc.h"
 
-static unsigned char random_at_most(unsigned char max, int nonce) {unsigned char num_bins = (unsigned char) max + 1,num_rand = (unsigned char) 0xff,bin_size = num_rand / num_bins,defect   = num_rand % num_bins;unsigned char x[1];do {gnutls_rnd(nonce?GNUTLS_RND_NONCE:GNUTLS_RND_KEY, x, sizeof(x));}while (num_rand - defect <= (unsigned char)x[0]);return x[0]/bin_size;}
+/**
+ *
+ * Generates a random long integer between 0 and max
+ *
+ */
+unsigned char random_at_most(unsigned char max, int nonce) {
+  unsigned char
+  num_bins = (unsigned char) max + 1,
+  num_rand = (unsigned char) 0xff,
+  bin_size = num_rand / num_bins,
+  defect   = num_rand % num_bins;
 
-static char * rand_string_nonce(char * str, size_t str_size) {const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";size_t n;if (str_size && str != NULL) {for (n = 0; n < str_size; n++) {str[n] = charset[random_at_most((sizeof(charset)) - 2, 1)];}str[str_size] = '\0';return str;} else {return NULL;}}
+  unsigned char x[1];
+  do {
+    gnutls_rnd(nonce?GNUTLS_RND_NONCE:GNUTLS_RND_KEY, x, sizeof(x));
+  }
+  // This is carefully written not to overflow
+  while (num_rand - defect <= (unsigned char)x[0]);
+
+  // Truncated division is intentional
+  return x[0]/bin_size;
+}
+
+/**
+ * Generates a random string used as nonce and store it in str
+ */
+char * rand_string_nonce(char * str, size_t str_size) {
+  const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  size_t n;
+  
+  if (str_size && str != NULL) {
+    for (n = 0; n < str_size; n++) {
+      str[n] = charset[random_at_most((sizeof(charset)) - 2, 1)];
+    }
+    str[str_size] = '\0';
+    return str;
+  } else {
+    return NULL;
+  }
+}
 
 static const char * get_response_type(uint response_type) {
   static char result[32] = {0};
