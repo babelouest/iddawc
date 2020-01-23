@@ -31,7 +31,7 @@ CONFIG_TEMPLATE=$(IDDAWC_INCLUDE)/iddawc-cfg.h.in
 DESTDIR=/usr/local
 CC=gcc
 CFLAGS+=-c -pedantic -std=gnu99 -fPIC -Wall -Werror -Wextra -D_REENTRANT -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS)
-LIBS=-L$(DESTDIR)/lib -lc -lulfius -lorcania -lrhonabwy -ljwt $(LDFLAGS)
+LIBS=-L$(DESTDIR)/lib -lc -lulfius -lorcania -lrhonabwy -ljwt -lgnutls $(LDFLAGS)
 SONAME=-soname
 OBJECTS=iddawc.o
 OUTPUT=libiddawc.so
