@@ -94,10 +94,6 @@ var searchData=
   ['iddawc_5fversion_5fnumber',['IDDAWC_VERSION_NUMBER',['../iddawc-cfg_8h.html#afe34273e2d2018eb50f4d622317420a8',1,'iddawc-cfg.h']]],
   ['iddawc_5fversion_5fpatch',['IDDAWC_VERSION_PATCH',['../iddawc-cfg_8h.html#a3f52ca1e6c04bac9c5e34a3197d897d9',1,'iddawc-cfg.h']]],
   ['iddawc_5fversion_5fstr',['IDDAWC_VERSION_STR',['../iddawc-cfg_8h.html#abb224518d70d44359778c2e65a9e6b05',1,'iddawc-cfg.h']]],
-  ['igc_5fauth_5fpassword',['igc_auth_password',['../group__glewlwyd.html#ga0f79e97ece660c0379dd07e12dbe9f23',1,'iddawc.h']]],
-  ['igc_5fauth_5fscheme',['igc_auth_scheme',['../group__glewlwyd.html#ga34faf155aa7882242d0ffb737c1b4f2f',1,'iddawc.h']]],
-  ['igc_5fget_5fscope_5fauth_5fstatus',['igc_get_scope_auth_status',['../group__glewlwyd.html#ga8b8d715685e249ba66f86552d799f410',1,'iddawc.h']]],
-  ['igc_5ftrigger_5fscheme',['igc_trigger_scheme',['../group__glewlwyd.html#ga8f12a474afb546f52a5202fbb35727b1',1,'iddawc.h']]],
   ['iddawc_20_2d_20oauth2_20client_20library',['Iddawc - OAuth2 client library',['../index.html',1,'']]],
   ['issuer',['issuer',['../struct__i__session.html#ab552594aad0d857ad200caaec4d107b8',1,'_i_session']]]
 ];

@@ -21,9 +21,5 @@ var searchData=
   ['i_5fset_5fparameter_5flist',['i_set_parameter_list',['../group__properties.html#ga74f0a21ec2933521d50a93062a2ff522',1,'i_set_parameter_list(struct _i_session *i_session,...):&#160;iddawc.c'],['../group__properties.html#ga74f0a21ec2933521d50a93062a2ff522',1,'i_set_parameter_list(struct _i_session *i_session,...):&#160;iddawc.c']]],
   ['i_5fset_5fresponse_5ftype',['i_set_response_type',['../group__properties.html#gac73af3a30935b4443af9e86abb1d9fcf',1,'i_set_response_type(struct _i_session *i_session, uint i_value):&#160;iddawc.c'],['../group__properties.html#gac73af3a30935b4443af9e86abb1d9fcf',1,'i_set_response_type(struct _i_session *i_session, uint i_value):&#160;iddawc.c']]],
   ['i_5fset_5fresult',['i_set_result',['../group__properties.html#ga6acf44054500b1feb50f42dc55ea6bbb',1,'i_set_result(struct _i_session *i_session, uint i_value):&#160;iddawc.c'],['../group__properties.html#ga6acf44054500b1feb50f42dc55ea6bbb',1,'i_set_result(struct _i_session *i_session, uint i_value):&#160;iddawc.c']]],
-  ['i_5fverify_5fid_5ftoken',['i_verify_id_token',['../group__run.html#ga625e48c5675c530f8612bd91526a1847',1,'i_verify_id_token(struct _i_session *i_session):&#160;iddawc.c'],['../group__run.html#ga625e48c5675c530f8612bd91526a1847',1,'i_verify_id_token(struct _i_session *i_session):&#160;iddawc.c']]],
-  ['igc_5fauth_5fpassword',['igc_auth_password',['../group__glewlwyd.html#ga0f79e97ece660c0379dd07e12dbe9f23',1,'iddawc.h']]],
-  ['igc_5fauth_5fscheme',['igc_auth_scheme',['../group__glewlwyd.html#ga34faf155aa7882242d0ffb737c1b4f2f',1,'iddawc.h']]],
-  ['igc_5fget_5fscope_5fauth_5fstatus',['igc_get_scope_auth_status',['../group__glewlwyd.html#ga8b8d715685e249ba66f86552d799f410',1,'iddawc.h']]],
-  ['igc_5ftrigger_5fscheme',['igc_trigger_scheme',['../group__glewlwyd.html#ga8f12a474afb546f52a5202fbb35727b1',1,'iddawc.h']]]
+  ['i_5fverify_5fid_5ftoken',['i_verify_id_token',['../group__run.html#ga625e48c5675c530f8612bd91526a1847',1,'i_verify_id_token(struct _i_session *i_session):&#160;iddawc.c'],['../group__run.html#ga625e48c5675c530f8612bd91526a1847',1,'i_verify_id_token(struct _i_session *i_session):&#160;iddawc.c']]]
 ];
