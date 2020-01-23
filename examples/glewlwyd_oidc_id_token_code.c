@@ -15,6 +15,7 @@
 
 /**
  * This is a sample config value for Glewlwyd OIDC API
+ * Update with the glewlwyd OIDC instance you want to use
  */
 #define CONFIG_ENDPOINT "https://glewlwyd.tld/api/oidc/.well-known/openid-configuration"
 
@@ -32,7 +33,7 @@ int main() {
   int ret;
   char redirect_to[4097] = {0}, * id_token_payload;
 
-  y_init_logs("iddawc tests", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Start Iddawc tests");
+  y_init_logs("iddawc tests", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Glewlwyd OIDC example");
 
   i_init_session(&i_session);
   i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_ID_TOKEN|I_RESPONSE_TYPE_CODE,

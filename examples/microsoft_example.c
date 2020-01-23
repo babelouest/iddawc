@@ -34,7 +34,7 @@ int main() {
   int ret;
   char redirect_to[4097] = {0};
 
-  y_init_logs("iddawc tests", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Start Iddawc tests");
+  y_init_logs("iddawc tests", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Microsoft OIDC example");
 
   i_init_session(&i_session);
   i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
