@@ -95,12 +95,6 @@ Macros</h2></td></tr>
 <tr class="separator:ga298e1585f5a8232bba2b87168d1ef5c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae605879f560cff134d4047ea0eae449c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gae605879f560cff134d4047ea0eae449c">I_RESPONSE_TYPE_REFRESH_TOKEN</a>&#160;&#160;&#160;0x00100000</td></tr>
 <tr class="separator:gae605879f560cff134d4047ea0eae449c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga7f8a3c9b8661484b01651c0fee55e133"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga7f8a3c9b8661484b01651c0fee55e133">I_HAS_NONE</a>&#160;&#160;&#160;<a class="el" href="group__const.html#ga9284e78d80f6a65a0d63c9b5854345df">I_RESPONSE_TYPE_NONE</a></td></tr>
-<tr class="separator:ga7f8a3c9b8661484b01651c0fee55e133"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga43c8f0ee9dedf6e9459306331cc5f23e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga43c8f0ee9dedf6e9459306331cc5f23e">I_HAS_ACCESS_TOKEN</a>&#160;&#160;&#160;<a class="el" href="group__const.html#ga94bae21721b529af356e3c313163ca47">I_RESPONSE_TYPE_TOKEN</a></td></tr>
-<tr class="separator:ga43c8f0ee9dedf6e9459306331cc5f23e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga45f3752286bcd4f1d4438a2e423cf66d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga45f3752286bcd4f1d4438a2e423cf66d">I_HAS_CODE</a>&#160;&#160;&#160;<a class="el" href="group__const.html#ga46910e72294f8c5da83564a34a678605">I_RESPONSE_TYPE_CODE</a></td></tr>
-<tr class="separator:ga45f3752286bcd4f1d4438a2e423cf66d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga324601c3e9a1f0212d34341e125ef4bc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga324601c3e9a1f0212d34341e125ef4bc">I_AUTH_METHOD_GET</a>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:ga324601c3e9a1f0212d34341e125ef4bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab26b347fd648e803babe686d77d9b551"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gab26b347fd648e803babe686d77d9b551">I_AUTH_METHOD_POST</a>&#160;&#160;&#160;1</td></tr>
@@ -166,7 +160,10 @@ Enumerations</h2></td></tr>
 &#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706aeb529ceff5bbf28aed23cbd685fb54d3">I_OPT_USERNAME</a> = 32, 
 <a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ab849cbb176bca0f9316a0c6f2880811f">I_OPT_USER_PASSWORD</a> = 33, 
 <a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706a092b19a4e52c22e06745f45f543e43d2">I_OPT_ISSUER</a> = 34, 
-<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706af38b0c0c9deffb15855c035130068ce9">I_OPT_USERINFO</a> = 35
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706af38b0c0c9deffb15855c035130068ce9">I_OPT_USERINFO</a> = 35, 
+<br />
+&#160;&#160;<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706af04663bc99cdb72a8e11a0a7743d161d">I_OPT_NONCE_GENERATE</a> = 36, 
+<a class="el" href="group__const.html#gga354b1fe8a1449635c2f818219f612706ac4a9e236a3a626179f89e30a49a68961">I_OPT_STATE_GENERATE</a> = 37
 <br />
  }</td></tr>
 <tr class="separator:ga354b1fe8a1449635c2f818219f612706"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -364,49 +361,6 @@ Enumerations</h2></td></tr>
 
 </div>
 </div>
-<a id="ga7f8a3c9b8661484b01651c0fee55e133"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga7f8a3c9b8661484b01651c0fee55e133">&#9670;&nbsp;</a></span>I_HAS_NONE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_HAS_NONE&#160;&#160;&#160;<a class="el" href="group__const.html#ga9284e78d80f6a65a0d63c9b5854345df">I_RESPONSE_TYPE_NONE</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>i_verify_id_token token_type parameter values </p>
-
-</div>
-</div>
-<a id="ga43c8f0ee9dedf6e9459306331cc5f23e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga43c8f0ee9dedf6e9459306331cc5f23e">&#9670;&nbsp;</a></span>I_HAS_ACCESS_TOKEN</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_HAS_ACCESS_TOKEN&#160;&#160;&#160;<a class="el" href="group__const.html#ga94bae21721b529af356e3c313163ca47">I_RESPONSE_TYPE_TOKEN</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ga45f3752286bcd4f1d4438a2e423cf66d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga45f3752286bcd4f1d4438a2e423cf66d">&#9670;&nbsp;</a></span>I_HAS_CODE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define I_HAS_CODE&#160;&#160;&#160;<a class="el" href="group__const.html#ga46910e72294f8c5da83564a34a678605">I_RESPONSE_TYPE_CODE</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="ga324601c3e9a1f0212d34341e125ef4bc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga324601c3e9a1f0212d34341e125ef4bc">&#9670;&nbsp;</a></span>I_AUTH_METHOD_GET</h2>
 
@@ -586,6 +540,8 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><a id="gga354b1fe8a1449635c2f818219f612706ab849cbb176bca0f9316a0c6f2880811f"></a>I_OPT_USER_PASSWORD&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="gga354b1fe8a1449635c2f818219f612706a092b19a4e52c22e06745f45f543e43d2"></a>I_OPT_ISSUER&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="gga354b1fe8a1449635c2f818219f612706af38b0c0c9deffb15855c035130068ce9"></a>I_OPT_USERINFO&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="gga354b1fe8a1449635c2f818219f612706af04663bc99cdb72a8e11a0a7743d161d"></a>I_OPT_NONCE_GENERATE&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="gga354b1fe8a1449635c2f818219f612706ac4a9e236a3a626179f89e30a49a68961"></a>I_OPT_STATE_GENERATE&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 </div>
