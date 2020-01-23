@@ -365,13 +365,17 @@ static int parse_openid_config(struct _i_session * i_session, int get_jwks) {
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "parse_openid_config - Error invalid JSON response");
-    y_log_message(Y_LOG_LEVEL_ERROR, "issuer: %s", json_string_length(json_object_get(i_session->openid_config, "issuer"))?"valid":"invalid");
-    y_log_message(Y_LOG_LEVEL_ERROR, "authorization_endpoint: %s", json_string_length(json_object_get(i_session->openid_config, "authorization_endpoint"))?"valid":"invalid");
-    y_log_message(Y_LOG_LEVEL_ERROR, "jwks_uri: %s", json_string_length(json_object_get(i_session->openid_config, "jwks_uri"))?"valid":"invalid");
-    y_log_message(Y_LOG_LEVEL_ERROR, "response_types_supported: %s", json_is_array(json_object_get(i_session->openid_config, "response_types_supported"))?"valid":"invalid");
-    y_log_message(Y_LOG_LEVEL_ERROR, "subject_types_supported: %s", json_is_array(json_object_get(i_session->openid_config, "subject_types_supported"))?"valid":"invalid");
-    y_log_message(Y_LOG_LEVEL_ERROR, "id_token_signing_alg_values_supported: %s", json_is_array(json_object_get(i_session->openid_config, "id_token_signing_alg_values_supported"))?"valid":"invalid");
-    ret = I_ERROR;
+    if (i_session != NULL) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "issuer: %s", json_string_length(json_object_get(i_session->openid_config, "issuer"))?"valid":"invalid");
+      y_log_message(Y_LOG_LEVEL_ERROR, "authorization_endpoint: %s", json_string_length(json_object_get(i_session->openid_config, "authorization_endpoint"))?"valid":"invalid");
+      y_log_message(Y_LOG_LEVEL_ERROR, "jwks_uri: %s", json_string_length(json_object_get(i_session->openid_config, "jwks_uri"))?"valid":"invalid");
+      y_log_message(Y_LOG_LEVEL_ERROR, "response_types_supported: %s", json_is_array(json_object_get(i_session->openid_config, "response_types_supported"))?"valid":"invalid");
+      y_log_message(Y_LOG_LEVEL_ERROR, "subject_types_supported: %s", json_is_array(json_object_get(i_session->openid_config, "subject_types_supported"))?"valid":"invalid");
+      y_log_message(Y_LOG_LEVEL_ERROR, "id_token_signing_alg_values_supported: %s", json_is_array(json_object_get(i_session->openid_config, "id_token_signing_alg_values_supported"))?"valid":"invalid");
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_session is NULL");
+    }
+    ret = I_ERROR_PARAM;
   }
   return ret;
 }
