@@ -89,7 +89,7 @@ const char openid_configuration_valid[] = "{\
   \"userinfo_endpoint\":\"" USERINFO_ENDPOINT "\",\
   \"jwks_uri\":\"" JWKS_URI "\",\
   \"token_endpoint_auth_methods_supported\":[\"" AUTH_METHOD_1 "\",\"" AUTH_METHOD_2 "\"],\
-  \"token_endpoint_auth_signing_alg_values_supported\":[\"" ALG_VALUE_1 "\",\"" ALG_VALUE_2 "\"],\
+  \"id_token_signing_alg_values_supported\":[\"" ALG_VALUE_1 "\",\"" ALG_VALUE_2 "\"],\
   \"scopes_supported\":[\"" SCOPE_1 "\",\"" SCOPE_2 "\"],\
   \"response_types_supported\":[\"" RESP_TYPE_1 "\",\"" RESP_TYPE_2 "\",\"" RESP_TYPE_3 "\",\"" RESP_TYPE_1 " " RESP_TYPE_2 "\",\"" RESP_TYPE_2 " " RESP_TYPE_3 "\",\"" RESP_TYPE_1 " " RESP_TYPE_2" " RESP_TYPE_3 "\",\"" RESP_TYPE_4 "\",\"" RESP_TYPE_5 "\"],\
   \"response_modes_supported\":[\"" MODE_1 "\",\"" MODE_2 "\"],\
@@ -367,7 +367,7 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
-  ck_assert_int_eq(i_verify_id_token(&i_session, I_HAS_ACCESS_TOKEN), I_OK);
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);
   
   // And finally we load user info using the access token
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);

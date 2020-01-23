@@ -75,7 +75,7 @@ const char openid_configuration_valid[] = "{\
   \"userinfo_endpoint\":\"" USERINFO_ENDPOINT "\",\
   \"jwks_uri\":\"" JWKS_URI "\",\
   \"token_endpoint_auth_methods_supported\":[\"" AUTH_METHOD_1 "\",\"" AUTH_METHOD_2 "\"],\
-  \"token_endpoint_auth_signing_alg_values_supported\":[\"" ALG_VALUE_1 "\",\"" ALG_VALUE_2 "\"],\
+  \"id_token_signing_alg_values_supported\":[\"" ALG_VALUE_1 "\",\"" ALG_VALUE_2 "\"],\
   \"scopes_supported\":[\"" SCOPE_1 "\",\"" SCOPE_2 "\"],\
   \"response_types_supported\":[\"" RESP_TYPE_1 "\",\"" RESP_TYPE_2 "\",\"" RESP_TYPE_3 "\",\"" RESP_TYPE_1 " " RESP_TYPE_2 "\",\"" RESP_TYPE_3 " " RESP_TYPE_2 "\",\"" RESP_TYPE_1 " " RESP_TYPE_2" " RESP_TYPE_3 "\",\"" RESP_TYPE_4 "\",\"" RESP_TYPE_5 "\"],\
   \"response_modes_supported\":[\"" MODE_1 "\",\"" MODE_2 "\"],\
@@ -98,7 +98,7 @@ const char openid_configuration_invalid_issuer[] = "{\
   \"userinfo_endpoint\":\"" USERINFO_ENDPOINT "\",\
   \"jwks_uri\":\"" JWKS_URI "\",\
   \"token_endpoint_auth_methods_supported\":[\"" AUTH_METHOD_1 "\",\"" AUTH_METHOD_2 "\"],\
-  \"token_endpoint_auth_signing_alg_values_supported\":[\"" ALG_VALUE_1 "\",\"" ALG_VALUE_2 "\"],\
+  \"id_token_signing_alg_values_supported\":[\"" ALG_VALUE_1 "\",\"" ALG_VALUE_2 "\"],\
   \"scopes_supported\":[\"" SCOPE_1 "\",\"" SCOPE_2 "\"],\
   \"response_types_supported\":[\"" RESP_TYPE_1 "\",\"" RESP_TYPE_2 "\",\"" RESP_TYPE_3 "\",\"" RESP_TYPE_1 " " RESP_TYPE_2 "\",\"" RESP_TYPE_3 " " RESP_TYPE_2 "\",\"" RESP_TYPE_1 " " RESP_TYPE_2" " RESP_TYPE_3 "\",\"" RESP_TYPE_4 "\",\"" RESP_TYPE_5 "\"],\
   \"response_modes_supported\":[\"" MODE_1 "\",\"" MODE_2 "\"],\
