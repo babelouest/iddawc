@@ -399,7 +399,7 @@ START_TEST(test_iddawc_oidc_code_flow)
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN|I_RESPONSE_TYPE_CODE,
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,
