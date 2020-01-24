@@ -133,50 +133,51 @@ static int extract_parameters(const char * url_params, struct _u_map * map) {
 }
 
 static int parse_redirect_to_parameters(struct _i_session * i_session, struct _u_map * map) {
-  const char ** keys = u_map_enum_keys(map);
+  const char ** keys = u_map_enum_keys(map), * key = NULL;
   size_t i;
-  int ret = I_OK;
+  int ret = I_OK, c_ret;
   
-  for (i=0; keys[i] != NULL && ret == I_OK; i++) {
-    if (0 == o_strcasecmp(keys[i], "code")) {
-      if ((i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE) && o_strlen(u_map_get(map, keys[i]))) {
-        ret = i_set_parameter(i_session, I_OPT_CODE, u_map_get(map, keys[i]));
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - Got paramter code where response_type doesn't have code");
-        ret = I_ERROR_SERVER;
-      }
-    } else if (0 == o_strcasecmp(keys[i], "id_token")) {
-      if ((i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN) && o_strlen(u_map_get(map, keys[i]))) {
-        ret = i_set_parameter(i_session, I_OPT_ID_TOKEN, u_map_get(map, keys[i]));
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - Got paramter id_token where response_type doesn't have id_token");
-        ret = I_ERROR_SERVER;
-      }
-    } else if (0 == o_strcasecmp(keys[i], "access_token")) {
-      if (u_map_has_key_case(map, "token_type") && o_strlen(u_map_get_case(map, "token_type"))) {
-        if ((i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN) && o_strlen(u_map_get(map, keys[i]))) {
-          ret = i_set_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, keys[i]));
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - Got paramter access_token where response_type doesn't have token");
-          ret = I_ERROR_SERVER;
-        }
-      } else {
+  for (i=0; keys[i] != NULL; i++) {
+    key = keys[i];
+    if (0 == o_strcasecmp(key, "code") && (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE) && o_strlen(u_map_get(map, key))) {
+      c_ret = i_set_parameter(i_session, I_OPT_CODE, u_map_get(map, key));
+      ret = ret!=I_OK?ret:c_ret;
+    } else if (0 == o_strcasecmp(key, "id_token") && i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN && o_strlen(u_map_get(map, key))) {
+      c_ret = i_set_parameter(i_session, I_OPT_ID_TOKEN, u_map_get(map, key));
+      ret = ret!=I_OK?ret:c_ret;
+    } else if (0 == o_strcasecmp(key, "access_token") && (i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN) && o_strlen(u_map_get(map, key))) {
+      c_ret = i_set_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, key));
+      ret = ret!=I_OK?ret:c_ret;
+      if (!o_strlen(u_map_get_case(map, "token_type"))) {
         y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - Got paramter token but token_type is missing");
-        ret = I_ERROR_SERVER;
+        ret = ret!=I_OK?ret:I_ERROR_SERVER;
       }
-    } else if (0 == o_strcasecmp(keys[i], "token_type")) {
-      ret = i_set_parameter(i_session, I_OPT_TOKEN_TYPE, u_map_get(map, keys[i]));
-    } else if (0 == o_strcasecmp(keys[i], "expires_in")) {
-      i_set_flag_parameter(i_session, I_OPT_EXPIRES_IN, (uint)strtol(u_map_get(map, keys[i]), NULL, 10));
-    } else if (0 == o_strcasecmp(keys[i], "error")) {
-      i_set_result(i_session, I_ERROR_UNAUTHORIZED);
-      ret = i_set_parameter(i_session, I_OPT_ERROR, u_map_get(map, keys[i]));
-    } else if (0 == o_strcasecmp(keys[i], "error_description")) {
-      i_set_result(i_session, I_ERROR_UNAUTHORIZED);
-      ret = i_set_parameter(i_session, I_OPT_ERROR_DESCRIPTION, u_map_get(map, keys[i]));
-    } else if (0 == o_strcasecmp(keys[i], "error_uri")) {
-      i_set_result(i_session, I_ERROR_UNAUTHORIZED);
-      ret = i_set_parameter(i_session, I_OPT_ERROR_URI, u_map_get(map, keys[i]));
+    } else if (0 == o_strcasecmp(key, "token_type")) {
+      c_ret = i_set_parameter(i_session, I_OPT_TOKEN_TYPE, u_map_get(map, key));
+      ret = ret!=I_OK?ret:c_ret;
+    } else if (0 == o_strcasecmp(key, "expires_in")) {
+      if (i_set_flag_parameter(i_session, I_OPT_EXPIRES_IN, (uint)strtol(u_map_get(map, key), NULL, 10)) != I_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - expires_in invalid");
+        ret = ret!=I_OK?ret:I_ERROR_SERVER;
+      }
+    } else if (0 == o_strcasecmp(key, "error")) {
+      c_ret = i_set_result(i_session, I_ERROR_UNAUTHORIZED);
+      ret = ret!=I_OK?ret:c_ret;
+      c_ret = i_set_parameter(i_session, I_OPT_ERROR, u_map_get(map, key));
+      ret = ret!=I_OK?ret:c_ret;
+    } else if (0 == o_strcasecmp(key, "error_description")) {
+      c_ret = i_set_result(i_session, I_ERROR_UNAUTHORIZED);
+      ret = ret!=I_OK?ret:c_ret;
+      c_ret = i_set_parameter(i_session, I_OPT_ERROR_DESCRIPTION, u_map_get(map, key));
+      ret = ret!=I_OK?ret:c_ret;
+    } else if (0 == o_strcasecmp(key, "error_uri")) {
+      c_ret = i_set_result(i_session, I_ERROR_UNAUTHORIZED);
+      ret = ret!=I_OK?ret:c_ret;
+      c_ret = i_set_parameter(i_session, I_OPT_ERROR_URI, u_map_get(map, key));
+      ret = ret!=I_OK?ret:c_ret;
+    } else {
+      c_ret = i_set_additional_response(i_session, key, u_map_get(map, key));
+      ret = ret!=I_OK?ret:c_ret;
     }
   }
   return ret;
@@ -1176,10 +1177,9 @@ int i_parse_redirect_to(struct _i_session * i_session) {
   if (o_strncmp(redirect_to, i_session->redirect_uri, o_strlen(i_session->redirect_uri)) == 0) {
     // Extract fragment if response_type has id_token or token
     fragment = o_strnchr(redirect_to, o_strlen(redirect_to), '#');
-    if ((i_session->response_type & I_RESPONSE_TYPE_TOKEN || i_session->response_type & I_RESPONSE_TYPE_ID_TOKEN) && (fragment) != NULL && has_openid_config_parameter_value(i_session, "response_modes_supported", "fragment")) {
+    if ((i_session->response_type & I_RESPONSE_TYPE_TOKEN || i_session->response_type & I_RESPONSE_TYPE_ID_TOKEN) && fragment != NULL && has_openid_config_parameter_value(i_session, "response_modes_supported", "fragment")) {
       u_map_init(&map);
-      fragment++;
-      if (extract_parameters(fragment, &map) == I_OK) {
+      if (extract_parameters(fragment+1, &map) == I_OK) {
         if ((ret = parse_redirect_to_parameters(i_session, &map)) == I_OK) {
           if (i_session->id_token != NULL && r_jwks_size(i_session->jwks) && i_verify_id_token(i_session) != I_OK) {
             y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to fragment - Error id_token invalid");
@@ -1220,6 +1220,21 @@ int i_parse_redirect_to(struct _i_session * i_session) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "'%s' - '%s'", i_get_parameter(i_session, I_OPT_STATE), state);
         ret = I_ERROR_SERVER;
       }
+    }
+    
+    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE && i_get_parameter(i_session, I_OPT_ERROR) == NULL && i_get_parameter(i_session, I_OPT_CODE) == NULL) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected code");
+      ret = I_ERROR_SERVER;
+    }
+    
+    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN && i_get_parameter(i_session, I_OPT_ERROR) == NULL && i_get_parameter(i_session, I_OPT_ACCESS_TOKEN) == NULL) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected access_token");
+      ret = I_ERROR_SERVER;
+    }
+    
+    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN && i_get_parameter(i_session, I_OPT_ERROR) == NULL && i_get_parameter(i_session, I_OPT_ID_TOKEN) == NULL) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected id_token");
+      ret = I_ERROR_SERVER;
     }
     o_free(state);
   }
@@ -1396,7 +1411,6 @@ int i_run_auth_request(struct _i_session * i_session) {
   int ret = I_OK;
   struct _u_request request;
   struct _u_response response;
-  char * redirect_to = NULL;
   const char ** keys = NULL;
   uint i;
   
@@ -1454,15 +1468,14 @@ int i_run_auth_request(struct _i_session * i_session) {
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
           if (response.status == 302 && o_strlen(u_map_get_case(response.map_header, "Location"))) {
-            redirect_to = o_strdup(u_map_get_case(response.map_header, "Location"));
-            if (i_set_parameter(i_session, I_OPT_REDIRECT_TO, redirect_to) == I_OK) {
+            if (i_set_parameter(i_session, I_OPT_REDIRECT_TO, u_map_get_case(response.map_header, "Location")) == I_OK) {
               ret = i_parse_redirect_to(i_session);
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error setting redirect url");
             }
-            o_free(redirect_to);
           } else if (response.status == 400) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Server response 400: %.*s", response.binary_body_length, response.binary_body);
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Server response 400");
+            y_log_message(Y_LOG_LEVEL_DEBUG, "%.*s", response.binary_body_length, response.binary_body);
             ret = I_ERROR_PARAM;
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error http request: %d", response.status);
