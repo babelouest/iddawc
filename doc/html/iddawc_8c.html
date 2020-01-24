@@ -70,6 +70,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;stdarg.h&gt;</code><br />
+<code>#include &lt;gnutls/gnutls.h&gt;</code><br />
 <code>#include &lt;gnutls/crypto.h&gt;</code><br />
 <code>#include &lt;yder.h&gt;</code><br />
 <code>#include &lt;rhonabwy.h&gt;</code><br />
@@ -78,6 +79,10 @@ $(function() {
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:afca11f3d5e92b5b9f23c90d79f6a3d45"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8c.html#afca11f3d5e92b5b9f23c90d79f6a3d45">random_at_most</a> (unsigned char max, int nonce)</td></tr>
+<tr class="separator:afca11f3d5e92b5b9f23c90d79f6a3d45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef6f7548408806417e9b75fe8544103f"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8c.html#aef6f7548408806417e9b75fe8544103f">rand_string_nonce</a> (char *str, size_t str_size)</td></tr>
+<tr class="separator:aef6f7548408806417e9b75fe8544103f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga43fa354058e5ebc2c4d02ef3e9e62687"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#ga43fa354058e5ebc2c4d02ef3e9e62687">i_init_session</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga43fa354058e5ebc2c4d02ef3e9e62687"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6a2fefde91c578c8c2f6b0297e3ee058"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#ga6a2fefde91c578c8c2f6b0297e3ee058">i_clean_session</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
@@ -123,6 +128,71 @@ Functions</h2></td></tr>
 <tr class="memitem:ga625e48c5675c530f8612bd91526a1847"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga625e48c5675c530f8612bd91526a1847">i_verify_id_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga625e48c5675c530f8612bd91526a1847"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="afca11f3d5e92b5b9f23c90d79f6a3d45"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afca11f3d5e92b5b9f23c90d79f6a3d45">&#9670;&nbsp;</a></span>random_at_most()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned char random_at_most </td>
+          <td>(</td>
+          <td class="paramtype">unsigned char&#160;</td>
+          <td class="paramname"><em>max</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nonce</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Iddawc OAuth2 client library</p>
+<p><a class="el" href="iddawc_8h.html">iddawc.h</a>: structures and functions declarations</p>
+<p>Copyright 2019-2020 Nicolas Mora <a href="#" onclick="location.href='mai'+'lto:'+'mai'+'l@'+'bab'+'el'+'oue'+'st'+'.or'+'g'; return false;">mail@<span style="display: none;">.nosp@m.</span>babe<span style="display: none;">.nosp@m.</span>loues<span style="display: none;">.nosp@m.</span>t.or<span style="display: none;">.nosp@m.</span>g</a></p>
+<p>This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; version 2.1 of the License.</p>
+<p>This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GENERAL PUBLIC LICENSE for more details.</p>
+<p>You should have received a copy of the GNU General Public License along with this library. If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
+<p>Generates a random long integer between 0 and max </p>
+
+</div>
+</div>
+<a id="aef6f7548408806417e9b75fe8544103f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aef6f7548408806417e9b75fe8544103f">&#9670;&nbsp;</a></span>rand_string_nonce()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char* rand_string_nonce </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>str</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>str_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Generates a random string used as nonce and store it in str </p>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

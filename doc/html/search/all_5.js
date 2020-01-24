@@ -85,15 +85,8 @@ var searchData=
   ['id_5ftoken',['id_token',['../struct__i__session.html#ae174a49b3480755a11bbef18fdd8e1d4',1,'_i_session']]],
   ['id_5ftoken_5fheader',['id_token_header',['../struct__i__session.html#a8f1ef25c0ddac96414f0715a24ef22ad',1,'_i_session']]],
   ['id_5ftoken_5fpayload',['id_token_payload',['../struct__i__session.html#a7c02462f4d96514b8ded5e198de12d95',1,'_i_session']]],
-  ['iddawc_2dcfg_2eh',['iddawc-cfg.h',['../iddawc-cfg_8h.html',1,'']]],
   ['iddawc_2ec',['iddawc.c',['../iddawc_8c.html',1,'']]],
   ['iddawc_2eh',['iddawc.h',['../iddawc_8h.html',1,'']]],
-  ['iddawc_5fversion',['IDDAWC_VERSION',['../iddawc-cfg_8h.html#a722a968fd791e804fb66edc78bfb205d',1,'iddawc-cfg.h']]],
-  ['iddawc_5fversion_5fmajor',['IDDAWC_VERSION_MAJOR',['../iddawc-cfg_8h.html#a77317e82c33c1ae0f275f3c4852ec8df',1,'iddawc-cfg.h']]],
-  ['iddawc_5fversion_5fminor',['IDDAWC_VERSION_MINOR',['../iddawc-cfg_8h.html#a8f7161e244c5160f7f4835e8886cee30',1,'iddawc-cfg.h']]],
-  ['iddawc_5fversion_5fnumber',['IDDAWC_VERSION_NUMBER',['../iddawc-cfg_8h.html#afe34273e2d2018eb50f4d622317420a8',1,'iddawc-cfg.h']]],
-  ['iddawc_5fversion_5fpatch',['IDDAWC_VERSION_PATCH',['../iddawc-cfg_8h.html#a3f52ca1e6c04bac9c5e34a3197d897d9',1,'iddawc-cfg.h']]],
-  ['iddawc_5fversion_5fstr',['IDDAWC_VERSION_STR',['../iddawc-cfg_8h.html#abb224518d70d44359778c2e65a9e6b05',1,'iddawc-cfg.h']]],
   ['iddawc_20_2d_20oauth2_20client_20library',['Iddawc - OAuth2 client library',['../index.html',1,'']]],
   ['issuer',['issuer',['../struct__i__session.html#ab552594aad0d857ad200caaec4d107b8',1,'_i_session']]]
 ];

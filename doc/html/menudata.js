@@ -38,9 +38,11 @@ var menudata={children:[
 {text:"Globals",url:"globals.html",children:[
 {text:"All",url:"globals.html",children:[
 {text:"_",url:"globals.html#index__"},
-{text:"i",url:"globals.html#index_i"}]},
+{text:"i",url:"globals.html#index_i"},
+{text:"r",url:"globals.html#index_r"}]},
 {text:"Functions",url:"globals_func.html",children:[
-{text:"i",url:"globals_func.html#index_i"}]},
+{text:"i",url:"globals_func.html#index_i"},
+{text:"r",url:"globals_func.html#index_r"}]},
 {text:"Enumerations",url:"globals_enum.html"},
 {text:"Enumerator",url:"globals_eval.html",children:[
 {text:"i",url:"globals_eval.html#index_i"}]},
