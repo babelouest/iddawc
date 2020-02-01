@@ -116,7 +116,7 @@ if (LIBJWT_FOUND)
 endif ()
 
 include(FindJansson)
-set(JANSSON_MIN_VERSION 2.4)
+set(JANSSON_MIN_VERSION 2.11)
 find_package(Jansson ${JANSSON_MIN_VERSION} REQUIRED)
 if (JANSSON_FOUND)
 	set(LIBS ${LIBS} ${JANSSON_LIBRARIES})
