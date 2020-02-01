@@ -1177,11 +1177,11 @@ uint i_get_flag_parameter(struct _i_session * i_session, uint option) {
         return i_session->expires_in;
         break;
       case I_OPT_AUTH_SIGN_ALG:
-        if (o_strncmp(i_session->auth_sign_alg, "RS256", I_AUTH_SIGN_ALG_MAX_LENGTH)) {
+        if (o_strncmp(i_session->auth_sign_alg, "RS256", I_AUTH_SIGN_ALG_MAX_LENGTH) == 0) {
           return I_AUTH_SIGN_ALG_RS256;
-        } else if (o_strncmp(i_session->auth_sign_alg, "RS384", I_AUTH_SIGN_ALG_MAX_LENGTH)) {
+        } else if (o_strncmp(i_session->auth_sign_alg, "RS384", I_AUTH_SIGN_ALG_MAX_LENGTH) == 0) {
           return I_AUTH_SIGN_ALG_RS384;
-        } else if (o_strncmp(i_session->auth_sign_alg, "RS512", I_AUTH_SIGN_ALG_MAX_LENGTH)) {
+        } else if (o_strncmp(i_session->auth_sign_alg, "RS512", I_AUTH_SIGN_ALG_MAX_LENGTH) == 0) {
           return I_AUTH_SIGN_ALG_RS512;
         } else {
           return I_AUTH_SIGN_ALG_NONE;
@@ -1920,7 +1920,7 @@ int i_verify_id_token(struct _i_session * i_session) {
 json_t * i_export_session(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  ss* sO* so* ss* ss*  ss* ss* so* si sO*  si ss* ss* sO* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  ss* sO* so* ss* ss*  si si so* si sO*  si ss* ss* }",
                          "response_type", i_get_flag_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_parameter(i_session, I_OPT_STATE),
@@ -1957,26 +1957,87 @@ json_t * i_export_session(struct _i_session * i_session) {
                          "glewlwyd_api_url", i_get_parameter(i_session, I_OPT_GLEWLWYD_API_URL),
                          "glewlwyd_cookie_session", i_get_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION),
                          
-                         "auth_method", i_get_parameter(i_session, I_OPT_AUTH_METHOD),
-                         "auth_sign_alg", i_session->auth_sign_alg,
+                         "auth_method", i_get_flag_parameter(i_session, I_OPT_AUTH_METHOD),
+                         "auth_sign_alg", i_get_flag_parameter(i_session, I_OPT_AUTH_SIGN_ALG),
                          "jwks", r_jwks_export_to_json_t(i_session->jwks),
                          "x5u_flags", i_get_flag_parameter(i_session, I_OPT_X5U_FLAGS),
                          "openid_config", i_session->openid_config,
                          
                          "openid_config_strict", i_get_flag_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT),
                          "issuer", i_get_parameter(i_session, I_OPT_ISSUER),
-                         "userinfo", i_get_parameter(i_session, I_OPT_USERINFO),
-                         "j_userinfo", i_session->j_userinfo);
+                         "userinfo", i_get_parameter(i_session, I_OPT_USERINFO));
   }
   return j_return;
 }
 
 int i_import_session(struct _i_session * i_session, json_t * j_import) {
   int ret;
+  const char * key = NULL;
+  json_t * j_value = NULL;
+  char * tmp;
+  
   if (i_session != NULL && json_is_object(j_import)) {
-    //ret = i_set_parameter_list(i_session,
-    //                           ""
-    ret = I_ERROR;
+    if ((ret = i_set_parameter_list(i_session,
+                               I_OPT_RESPONSE_TYPE, json_integer_value(json_object_get(j_import, "response_type")),
+                               I_OPT_SCOPE, json_string_value(json_object_get(j_import, "scope")),
+                               I_OPT_STATE, json_string_value(json_object_get(j_import, "state")),
+                               I_OPT_NONCE, json_string_value(json_object_get(j_import, "nonce")),
+                               I_OPT_REDIRECT_URI, json_string_value(json_object_get(j_import, "redirect_uri")),
+                               I_OPT_REDIRECT_TO, json_string_value(json_object_get(j_import, "redirect_to")),
+                               I_OPT_CLIENT_ID, json_string_value(json_object_get(j_import, "client_id")),
+                               I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_import, "client_secret")),
+                               I_OPT_AUTH_ENDPOINT, json_string_value(json_object_get(j_import, "authorization_endpoint")),
+                               I_OPT_TOKEN_ENDPOINT, json_string_value(json_object_get(j_import, "token_endpoint")),
+                               I_OPT_OPENID_CONFIG_ENDPOINT, json_string_value(json_object_get(j_import, "openid_config_endpoint")),
+                               I_OPT_USERINFO_ENDPOINT, json_string_value(json_object_get(j_import, "userinfo_endpoint")),
+                               I_OPT_RESULT, json_integer_value(json_object_get(j_import, "result")),
+                               I_OPT_ERROR, json_string_value(json_object_get(j_import, "error")),
+                               I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_import, "error_description")),
+                               I_OPT_ERROR_URI, json_string_value(json_object_get(j_import, "error_uri")),
+                               I_OPT_CODE, json_string_value(json_object_get(j_import, "code")),
+                               I_OPT_REFRESH_TOKEN, json_string_value(json_object_get(j_import, "refresh_token")),
+                               I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_import, "access_token")),
+                               I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_import, "token_type")),
+                               I_OPT_AUTH_SIGN_ALG, json_integer_value(json_object_get(j_import, "auth_sign_alg")),
+                               I_OPT_EXPIRES_IN, json_integer_value(json_object_get(j_import, "expires_in")),
+                               I_OPT_ID_TOKEN, json_string_value(json_object_get(j_import, "id_token")),
+                               I_OPT_GLEWLWYD_API_URL, json_string_value(json_object_get(j_import, "glewlwyd_api_url")),
+                               I_OPT_GLEWLWYD_COOKIE_SESSION, json_string_value(json_object_get(j_import, "glewlwyd_cookie_session")),
+                               I_OPT_USERNAME, json_string_value(json_object_get(j_import, "username")),
+                               I_OPT_AUTH_METHOD, json_integer_value(json_object_get(j_import, "auth_method")),
+                               I_OPT_USER_PASSWORD, json_string_value(json_object_get(j_import, "user_password")),
+                               I_OPT_X5U_FLAGS, json_integer_value(json_object_get(j_import, "x5u_flags")),
+                               I_OPT_OPENID_CONFIG_STRICT, json_integer_value(json_object_get(j_import, "openid_config_strict")),
+                               I_OPT_ISSUER, json_string_value(json_object_get(j_import, "issuer")),
+                               I_OPT_USERINFO, json_string_value(json_object_get(j_import, "userinfo")),
+                               I_OPT_NONE)) == I_OK) {
+      json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
+        if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
+          tmp = json_dumps(j_value, JSON_COMPACT);
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session - Error importing additional_parameters '%s' / '%s'", key, tmp);
+          o_free(tmp);
+          return ret;
+        }
+      }
+      json_object_foreach(json_object_get(j_import, "additional_response"), key, j_value) {
+        if ((ret = i_set_additional_response(i_session, key, json_string_value(j_value))) != I_OK) {
+          tmp = json_dumps(j_value, JSON_COMPACT);
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session - Error importing additional_response '%s' / '%s'", key, tmp);
+          o_free(tmp);
+          return ret;
+        }
+      }
+      i_session->id_token_payload = json_deep_copy(json_object_get(j_import, "id_token_payload"));
+      i_session->openid_config = json_deep_copy(json_object_get(j_import, "openid_config"));
+      if (json_object_get(j_import, "id_token_header") != NULL && r_jwk_import_from_json_t(i_session->id_token_header, json_object_get(j_import, "id_token_header")) != RHN_OK) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session - Error r_jwk_import_from_json_t");
+        ret = I_ERROR;
+      }
+      if (r_jwks_import_from_json_t(i_session->jwks, json_object_get(j_import, "jwks")) != RHN_OK) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session - Error r_jwks_import_from_json_t");
+        ret = I_ERROR;
+      }
+    }
   } else {
     ret = I_ERROR_PARAM;
   }
