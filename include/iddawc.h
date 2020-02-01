@@ -429,8 +429,20 @@ int i_run_token_request(struct _i_session * i_session);
  */
 int i_verify_id_token(struct _i_session * i_session);
 
+/**
+ * Exports a _i_session * into a json_t * object
+ * @param i_session: a reference to a struct _i_session *
+ * @return a json_t * object containing all data set in the session
+ */
 json_t * i_export_session(struct _i_session * i_session);
 
+/**
+ * Imports a _i_session * from a json_t * object
+ * Imported data will overwrite existing data in i_session
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_import: a json_t * object in i_export_session format
+ * @return I_OK on success, an error value on error
+ */
 int i_import_session(struct _i_session * i_session, json_t * j_import);
 
 /**
