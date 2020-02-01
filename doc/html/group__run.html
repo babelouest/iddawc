@@ -205,6 +205,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Exports a <a class="el" href="struct__i__session.html">_i_session</a> * into a json_t * object </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a json_t * object containing all data set in the session </dd></dl>
 
 </div>
 </div>
@@ -233,6 +240,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Imports a <a class="el" href="struct__i__session.html">_i_session</a> * from a json_t * object Imported data will overwrite existing data in i_session </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">j_import</td><td>a json_t * object in i_export_session format </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
 
 </div>
 </div>
