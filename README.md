@@ -1,6 +1,7 @@
 # Iddawc - OAuth2 client library
 
 [![Build Status](https://travis-ci.com/babelouest/iddawc.svg?branch=master)](https://travis-ci.com/babelouest/iddawc)
+![.github/workflows/ccpp.yml](https://github.com/babelouest/iddawc/workflows/.github/workflows/ccpp.yml/badge.svg)
 
 Handles the flow of OAuth2 and OpenID Connect authentication process from the client side.
 - Genrates requests based on input parameters
