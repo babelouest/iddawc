@@ -114,6 +114,7 @@ const char openid_configuration_invalid_issuer[] = "{\
   \"require_request_uri_registration\":" REQUIRE_REQUEST_REGIS ",\
   \"subject_types_supported\":[\"" SUBJECT_TYPE "\"]\
 }";
+const char jwk_simple_hmac[] = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
 
 START_TEST(test_iddawc_init_session)
 {
@@ -574,6 +575,152 @@ START_TEST(test_iddawc_parameter_list)
 }
 END_TEST
 
+START_TEST(test_iddawc_export)
+{
+  struct _i_session i_session;
+  json_t * j_export, * j_additional = json_pack("{ss}", ADDITIONAL_KEY, ADDITIONAL_VALUE), * j_additional_empty = json_object(), * jwks_empty = json_pack("{s[]}", "keys"), * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_userinfo = json_loads(USERINFO, JSON_DECODE_ANY, NULL), * jwks = NULL;
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  j_export = i_export_session(&i_session);
+  ck_assert_ptr_ne(j_export, NULL);
+  //y_log_message(Y_LOG_LEVEL_DEBUG, "export %s", json_dumps(j_export, JSON_ENCODE_ANY));
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "response_type")), I_RESPONSE_TYPE_NONE);
+  ck_assert_ptr_eq(json_object_get(j_export, "scope"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "nonce"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "state"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "redirect_uri"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "redirect_to"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "client_id"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "client_secret"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "username"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "user_password"), NULL);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "additional_parameters"), j_additional_empty), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "additional_response"), j_additional_empty), 1);
+  ck_assert_ptr_eq(json_object_get(j_export, "authorization_endpoint"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "token_endpoint"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "openid_config_endpoint"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "userinfo_endpoint"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "result")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "error"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "error_description"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "error_uri"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "code"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "refresh_token"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "access_token"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "token_type"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "expires_in")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "id_token"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "id_token_payload"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "id_token_header"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "glewlwyd_api_url"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "glewlwyd_cookie_session"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "auth_method"), NULL);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "auth_sign_alg")), "");
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "jwks"), jwks_empty), 1);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "x5u_flags")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "openid_config"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "openid_config_strict")), I_STRICT_YES);
+  ck_assert_ptr_eq(json_object_get(j_export, "issuer"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "userinfo"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "j_userinfo"), NULL);
+  json_decref(j_export);
+
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
+                                                  I_OPT_SCOPE, SCOPE_LIST,
+                                                  I_OPT_STATE, STATE,
+                                                  I_OPT_NONCE, NONCE,
+                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                  I_OPT_REDIRECT_TO, REDIRECT_TO,
+                                                  I_OPT_CLIENT_ID, CLIENT_ID,
+                                                  I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                  I_OPT_ADDITIONAL_PARAMETER, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                  I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                  I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT,
+                                                  I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                                  I_OPT_RESULT, I_ERROR_UNAUTHORIZED,
+                                                  I_OPT_ERROR, ERROR,
+                                                  I_OPT_ERROR_DESCRIPTION, ERROR_DESCRIPTION,
+                                                  I_OPT_ERROR_URI, ERROR_URI,
+                                                  I_OPT_CODE, CODE,
+                                                  I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
+                                                  I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                  I_OPT_TOKEN_TYPE, TOKEN_TYPE,
+                                                  I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                  I_OPT_ID_TOKEN, ID_TOKEN,
+                                                  I_OPT_AUTH_SIGN_ALG, I_AUTH_SIGN_ALG_RS256,
+                                                  I_OPT_GLEWLWYD_API_URL, GLEWLWYD_API_URL,
+                                                  I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION,
+                                                  I_OPT_USERNAME, USERNAME,
+                                                  I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
+                                                  I_OPT_USER_PASSWORD, USER_PASSWORD,
+                                                  I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                  I_OPT_X5U_FLAGS, R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT,
+                                                  I_OPT_OPENID_CONFIG, openid_configuration_valid,
+                                                  I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
+                                                  I_OPT_ISSUER, ISSUER,
+                                                  I_OPT_USERINFO, USERINFO,
+                                                  I_OPT_NONE), I_OK);
+  i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
+  ck_assert_int_eq(r_jwk_import_from_json_str(i_session.id_token_header, jwk_simple_hmac), RHN_OK);
+  jwks = json_pack("{s[O]}", "keys", i_session.id_token_header);
+  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.jwks, jwks), RHN_OK);
+  
+  j_export = i_export_session(&i_session);
+  ck_assert_ptr_ne(j_export, NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "response_type")), I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "scope")), SCOPE_LIST);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "nonce")), NONCE);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "state")), STATE);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "redirect_uri")), REDIRECT_URI);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "redirect_to")), REDIRECT_TO);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "client_id")), CLIENT_ID);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "client_secret")), CLIENT_SECRET);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "username")), USERNAME);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "user_password")), USER_PASSWORD);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "additional_parameters"), j_additional), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "additional_response"), j_additional), 1);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "authorization_endpoint")), AUTH_ENDPOINT);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "token_endpoint")), TOKEN_ENDPOINT);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "openid_config_endpoint")), OPENID_CONFIG_ENDPOINT);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "userinfo_endpoint")), USERINFO_ENDPOINT);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "result")), I_ERROR_UNAUTHORIZED);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "error")), ERROR);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "error_description")), ERROR_DESCRIPTION);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "error_uri")), ERROR_URI);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "code")), CODE);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "refresh_token")), REFRESH_TOKEN);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "access_token")), ACCESS_TOKEN);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "token_type")), TOKEN_TYPE);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "expires_in")), EXPIRES_IN);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "id_token")), ID_TOKEN);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "id_token_payload"), i_session.id_token_payload), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "id_token_header"), i_session.id_token_header), 1);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "glewlwyd_api_url")), GLEWLWYD_API_URL);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "glewlwyd_cookie_session")), GLEWLWYD_COOKIE_SESSION);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "auth_method")), I_AUTH_METHOD_GET);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "jwks"), i_session.jwks), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "id_token_header"), i_session.id_token_header), 1);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "auth_sign_alg")), "RS256");
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "x5u_flags")), R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "openid_config"), j_config), 1);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "openid_config_strict")), I_STRICT_NO);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "issuer")), ISSUER);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "userinfo")), USERINFO);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "j_userinfo"), j_userinfo), 1);
+  json_decref(j_export);
+
+  json_decref(j_additional);
+  json_decref(j_additional_empty);
+  json_decref(jwks_empty);
+  json_decref(j_config);
+  json_decref(j_userinfo);
+  json_decref(jwks);
+  i_clean_session(&i_session);
+}
+END_TEST
+
 static Suite *iddawc_suite(void)
 {
   Suite *s;
@@ -595,6 +742,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_get_additional_parameter);
   tcase_add_test(tc_core, test_iddawc_get_additional_response);
   tcase_add_test(tc_core, test_iddawc_parameter_list);
+  tcase_add_test(tc_core, test_iddawc_export);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
 
