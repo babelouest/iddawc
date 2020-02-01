@@ -302,6 +302,8 @@ static int load_jwks_endpoint(struct _i_session * i_session) {
     if (ulfius_send_http_request(&request, &response) == U_OK) {
       if (response.status == 200) {
         j_jwks = ulfius_get_json_body_response(&response, NULL);
+        r_free_jwks(i_session->jwks);
+        r_init_jwks(&i_session->jwks);
         if (r_jwks_import_from_json_t(i_session->jwks, j_jwks) == RHN_OK) {
           ret = I_OK;
         } else {
@@ -477,6 +479,23 @@ static int check_strict_parameters(struct _i_session * i_session) {
     ret = 0;
   }
   return ret;
+}
+
+static json_t * export_u_map(struct _u_map * map) {
+  json_t * j_return = NULL;
+  const char ** keys;
+  size_t i;
+  if (map != NULL) {
+    if ((j_return = json_object()) != NULL) {
+      keys = u_map_enum_keys(map);
+      for (i=0; keys[i]!=NULL; i++) {
+        json_object_set_new(j_return, keys[i], json_string(u_map_get(map, keys[i])));
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "export_u_map - Error allocating resources for j_return");
+    }
+  }
+  return j_return;
 }
 
 int i_init_session(struct _i_session * i_session) {
@@ -688,6 +707,9 @@ int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_valu
         } else {
           ret = I_ERROR_PARAM;
         }
+        break;
+      case I_OPT_X5U_FLAGS:
+        i_session->x5u_flags = i_value;
         break;
       default:
         ret = I_ERROR_PARAM;
@@ -929,6 +951,8 @@ int i_set_parameter(struct _i_session * i_session, uint option, const char * s_v
         o_free(i_session->userinfo);
         if (o_strlen(s_value)) {
           i_session->userinfo = o_strdup(s_value);
+          json_decref(i_session->j_userinfo);
+          i_session->j_userinfo = json_loads(s_value, JSON_DECODE_ANY, NULL);
         } else {
           i_session->userinfo = NULL;
         }
@@ -982,6 +1006,9 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_EXPIRES_IN:
         case I_OPT_STATE_GENERATE:
         case I_OPT_NONCE_GENERATE:
+        case I_OPT_AUTH_SIGN_ALG:
+        case I_OPT_X5U_FLAGS:
+        case I_OPT_OPENID_CONFIG_STRICT:
           i_value = va_arg(vl, uint);
           ret = i_set_flag_parameter(i_session, option, i_value);
           break;
@@ -1010,6 +1037,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_USERNAME:
         case I_OPT_USER_PASSWORD:
         case I_OPT_ISSUER:
+        case I_OPT_USERINFO:
           str_value = va_arg(vl, const char *);
           ret = i_set_parameter(i_session, option, str_value);
           break;
@@ -1159,6 +1187,12 @@ uint i_get_flag_parameter(struct _i_session * i_session, uint option) {
           return I_AUTH_SIGN_ALG_NONE;
         }
         return i_session->result;
+        break;
+      case I_OPT_X5U_FLAGS:
+        return i_session->x5u_flags;
+        break;
+      case I_OPT_OPENID_CONFIG_STRICT:
+        return i_session->openid_config_strict;
         break;
       default:
         return 0;
@@ -1880,5 +1914,71 @@ int i_verify_id_token(struct _i_session * i_session) {
     ret = I_ERROR_PARAM;
   }
   
+  return ret;
+}
+
+json_t * i_export_session(struct _i_session * i_session) {
+  json_t * j_return = NULL;
+  if (i_session != NULL) {
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  ss* sO* so* ss* ss*  ss* ss* so* si sO*  si ss* ss* sO* }",
+                         "response_type", i_get_flag_parameter(i_session, I_OPT_RESPONSE_TYPE),
+                         "scope", i_get_parameter(i_session, I_OPT_SCOPE),
+                         "state", i_get_parameter(i_session, I_OPT_STATE),
+                         "nonce", i_get_parameter(i_session, I_OPT_NONCE),
+                         "redirect_uri", i_get_parameter(i_session, I_OPT_REDIRECT_URI),
+                         
+                         "redirect_to", i_get_parameter(i_session, I_OPT_REDIRECT_TO),
+                         "client_id", i_get_parameter(i_session, I_OPT_CLIENT_ID),
+                         "client_secret", i_get_parameter(i_session, I_OPT_CLIENT_SECRET),
+                         "username", i_get_parameter(i_session, I_OPT_USERNAME),
+                         "user_password", i_get_parameter(i_session, I_OPT_USER_PASSWORD),
+                         
+                         "additional_parameters", export_u_map(&i_session->additional_parameters),
+                         "additional_response", export_u_map(&i_session->additional_response),
+                         "authorization_endpoint", i_get_parameter(i_session, I_OPT_AUTH_ENDPOINT),
+                         "token_endpoint", i_get_parameter(i_session, I_OPT_TOKEN_ENDPOINT),
+                         "openid_config_endpoint", i_get_parameter(i_session, I_OPT_OPENID_CONFIG_ENDPOINT),
+                         
+                         "userinfo_endpoint", i_get_parameter(i_session, I_OPT_USERINFO_ENDPOINT),
+                         "result", i_get_flag_parameter(i_session, I_OPT_RESULT),
+                         "error", i_get_parameter(i_session, I_OPT_ERROR),
+                         "error_description", i_get_parameter(i_session, I_OPT_ERROR_DESCRIPTION),
+                         "error_uri", i_get_parameter(i_session, I_OPT_ERROR_URI),
+                         
+                         "code", i_get_parameter(i_session, I_OPT_CODE),
+                         "refresh_token", i_get_parameter(i_session, I_OPT_REFRESH_TOKEN),
+                         "access_token", i_get_parameter(i_session, I_OPT_ACCESS_TOKEN),
+                         "token_type", i_get_parameter(i_session, I_OPT_TOKEN_TYPE),
+                         "expires_in", i_get_flag_parameter(i_session, I_OPT_EXPIRES_IN),
+                         
+                         "id_token", i_get_parameter(i_session, I_OPT_ID_TOKEN),
+                         "id_token_payload", i_session->id_token_payload,
+                         "id_token_header", r_jwk_export_to_json_t(i_session->id_token_header),
+                         "glewlwyd_api_url", i_get_parameter(i_session, I_OPT_GLEWLWYD_API_URL),
+                         "glewlwyd_cookie_session", i_get_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION),
+                         
+                         "auth_method", i_get_parameter(i_session, I_OPT_AUTH_METHOD),
+                         "auth_sign_alg", i_session->auth_sign_alg,
+                         "jwks", r_jwks_export_to_json_t(i_session->jwks),
+                         "x5u_flags", i_get_flag_parameter(i_session, I_OPT_X5U_FLAGS),
+                         "openid_config", i_session->openid_config,
+                         
+                         "openid_config_strict", i_get_flag_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT),
+                         "issuer", i_get_parameter(i_session, I_OPT_ISSUER),
+                         "userinfo", i_get_parameter(i_session, I_OPT_USERINFO),
+                         "j_userinfo", i_session->j_userinfo);
+  }
+  return j_return;
+}
+
+int i_import_session(struct _i_session * i_session, json_t * j_import) {
+  int ret;
+  if (i_session != NULL && json_is_object(j_import)) {
+    //ret = i_set_parameter_list(i_session,
+    //                           ""
+    ret = I_ERROR;
+  } else {
+    ret = I_ERROR_PARAM;
+  }
   return ret;
 }

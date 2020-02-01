@@ -128,7 +128,7 @@ enum _i_option {
   I_OPT_USERINFO                         = 35,
   I_OPT_NONCE_GENERATE                   = 36,
   I_OPT_STATE_GENERATE                   = 37,
-
+  I_OPT_X5U_FLAGS                        = 38
 };
 
 /**
@@ -428,6 +428,10 @@ int i_run_token_request(struct _i_session * i_session);
  * @return I_OK on success, an error value on error
  */
 int i_verify_id_token(struct _i_session * i_session);
+
+json_t * i_export_session(struct _i_session * i_session);
+
+int i_import_session(struct _i_session * i_session, json_t * j_import);
 
 /**
  * @}
