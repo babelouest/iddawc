@@ -20,11 +20,12 @@ jobs:
       run: cppcheck --force --enable=warning,missingInclude --error-exitcode=1 .
     - name: build
       run: |
+        cd test
+        make test
+        cd ..
         mkdir build
         cd build
         cmake -DBUILD_IDDAWC_TESTING=on ..
         make test package
         sudo make install
         sudo ldconfig
-        cd ../test
-        make test
