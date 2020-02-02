@@ -24,7 +24,7 @@ IDDAWC_LOCATION=../src
 IDDAWC_LIBRARY=$(IDDAWC_LOCATION)/libiddawc.so
 CC=gcc
 CFLAGS+=-Wall -D_REENTRANT -I$(IDDAWC_INCLUDE) -DDEBUG -g -O0 $(CPPFLAGS)
-LDFLAGS=-lc -lorcania -lulfius -liddawc -lrhonabwy -ljansson -ljwt -L$(IDDAWC_LOCATION) -lyder $(shell pkg-config --libs check)
+LDFLAGS=-lc -lorcania -liddawc -lrhonabwy -ljansson -ljwt -L$(IDDAWC_LOCATION) -lyder $(shell pkg-config --libs check) -lulfius
 VALGRIND_COMMAND=valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all
 TARGET=core implicit id_token token load_config load_userinfo flow
 TARGET_TEST=test_core test_implicit test_id_token test_token test_load_config test_load_userinfo test_flow
