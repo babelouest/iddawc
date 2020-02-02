@@ -103,7 +103,7 @@ set(PKGCONF_REQ_PRIVATE "")
 add_library(iddawc SHARED ${LIB_SRC})
 set_target_properties(iddawc PROPERTIES
         COMPILE_OPTIONS -Wextra
-        PUBLIC_HEADER "${INC_DIR}/iddawc.h"
+        PUBLIC_HEADER "${INC_DIR}/iddawc.h;${PROJECT_BINARY_DIR}/iddawc-cfg.h"
         VERSION "${LIBRARY_VERSION}"
         SOVERSION "${LIBRARY_SOVERSION}")
 target_link_libraries(iddawc ${LIBS})
