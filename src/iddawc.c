@@ -140,40 +140,40 @@ static int parse_redirect_to_parameters(struct _i_session * i_session, struct _u
   for (i=0; keys[i] != NULL; i++) {
     key = keys[i];
     if (0 == o_strcasecmp(key, "code") && (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE) && o_strlen(u_map_get(map, key))) {
-      c_ret = i_set_parameter(i_session, I_OPT_CODE, u_map_get(map, key));
+      c_ret = i_set_str_parameter(i_session, I_OPT_CODE, u_map_get(map, key));
       ret = ret!=I_OK?ret:c_ret;
     } else if (0 == o_strcasecmp(key, "id_token") && i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN && o_strlen(u_map_get(map, key))) {
-      c_ret = i_set_parameter(i_session, I_OPT_ID_TOKEN, u_map_get(map, key));
+      c_ret = i_set_str_parameter(i_session, I_OPT_ID_TOKEN, u_map_get(map, key));
       ret = ret!=I_OK?ret:c_ret;
     } else if (0 == o_strcasecmp(key, "access_token") && (i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN) && o_strlen(u_map_get(map, key))) {
-      c_ret = i_set_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, key));
+      c_ret = i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, key));
       ret = ret!=I_OK?ret:c_ret;
       if (!o_strlen(u_map_get_case(map, "token_type"))) {
         y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - Got paramter token but token_type is missing");
         ret = ret!=I_OK?ret:I_ERROR_SERVER;
       }
     } else if (0 == o_strcasecmp(key, "token_type")) {
-      c_ret = i_set_parameter(i_session, I_OPT_TOKEN_TYPE, u_map_get(map, key));
+      c_ret = i_set_str_parameter(i_session, I_OPT_TOKEN_TYPE, u_map_get(map, key));
       ret = ret!=I_OK?ret:c_ret;
     } else if (0 == o_strcasecmp(key, "expires_in")) {
-      if (i_set_flag_parameter(i_session, I_OPT_EXPIRES_IN, (uint)strtol(u_map_get(map, key), NULL, 10)) != I_OK) {
+      if (i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, (uint)strtol(u_map_get(map, key), NULL, 10)) != I_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - expires_in invalid");
         ret = ret!=I_OK?ret:I_ERROR_SERVER;
       }
     } else if (0 == o_strcasecmp(key, "error")) {
       c_ret = i_set_result(i_session, I_ERROR_UNAUTHORIZED);
       ret = ret!=I_OK?ret:c_ret;
-      c_ret = i_set_parameter(i_session, I_OPT_ERROR, u_map_get(map, key));
+      c_ret = i_set_str_parameter(i_session, I_OPT_ERROR, u_map_get(map, key));
       ret = ret!=I_OK?ret:c_ret;
     } else if (0 == o_strcasecmp(key, "error_description")) {
       c_ret = i_set_result(i_session, I_ERROR_UNAUTHORIZED);
       ret = ret!=I_OK?ret:c_ret;
-      c_ret = i_set_parameter(i_session, I_OPT_ERROR_DESCRIPTION, u_map_get(map, key));
+      c_ret = i_set_str_parameter(i_session, I_OPT_ERROR_DESCRIPTION, u_map_get(map, key));
       ret = ret!=I_OK?ret:c_ret;
     } else if (0 == o_strcasecmp(key, "error_uri")) {
       c_ret = i_set_result(i_session, I_ERROR_UNAUTHORIZED);
       ret = ret!=I_OK?ret:c_ret;
-      c_ret = i_set_parameter(i_session, I_OPT_ERROR_URI, u_map_get(map, key));
+      c_ret = i_set_str_parameter(i_session, I_OPT_ERROR_URI, u_map_get(map, key));
       ret = ret!=I_OK?ret:c_ret;
     } else {
       c_ret = i_set_additional_response(i_session, key, u_map_get(map, key));
@@ -193,18 +193,18 @@ static int parse_token_response(struct _i_session * i_session, int http_status, 
     if (http_status == 200) {
       if (json_string_length(json_object_get(j_response, "access_token")) &&
           json_string_length(json_object_get(j_response, "token_type"))) {
-        if (i_set_parameter(i_session, I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_response, "access_token"))) == I_OK &&
-            i_set_parameter(i_session, I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_response, "token_type"))) == I_OK) {
-          if (json_integer_value(json_object_get(j_response, "expires_in")) && i_set_flag_parameter(i_session, I_OPT_EXPIRES_IN, json_integer_value(json_object_get(j_response, "expires_in"))) != I_OK) {
+        if (i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_response, "access_token"))) == I_OK &&
+            i_set_str_parameter(i_session, I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_response, "token_type"))) == I_OK) {
+          if (json_integer_value(json_object_get(j_response, "expires_in")) && i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, json_integer_value(json_object_get(j_response, "expires_in"))) != I_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - Error setting expires_in");
             ret = I_ERROR;
           }
-          if (json_string_length(json_object_get(j_response, "refresh_token")) && i_set_parameter(i_session, I_OPT_REFRESH_TOKEN, json_string_value(json_object_get(j_response, "refresh_token"))) != I_OK) {
+          if (json_string_length(json_object_get(j_response, "refresh_token")) && i_set_str_parameter(i_session, I_OPT_REFRESH_TOKEN, json_string_value(json_object_get(j_response, "refresh_token"))) != I_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - Error setting refresh_token");
             ret = I_ERROR;
           }
           if (json_string_length(json_object_get(j_response, "id_token"))) {
-            if (i_set_parameter(i_session, I_OPT_ID_TOKEN, json_string_value(json_object_get(j_response, "id_token"))) != I_OK) {
+            if (i_set_str_parameter(i_session, I_OPT_ID_TOKEN, json_string_value(json_object_get(j_response, "id_token"))) != I_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - Error setting id_token");
               ret = I_ERROR;
             } else if (i_verify_id_token(i_session) != I_OK) {
@@ -243,12 +243,12 @@ static int parse_token_response(struct _i_session * i_session, int http_status, 
       }
     } else if (http_status == 400) {
       if (json_string_length(json_object_get(j_response, "error"))) {
-        if (i_set_parameter(i_session, I_OPT_ERROR, json_string_value(json_object_get(j_response, "error"))) == I_OK) {
-          if (json_string_length(json_object_get(j_response, "error_description")) && i_set_parameter(i_session, I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_response, "error_description"))) != I_OK) {
+        if (i_set_str_parameter(i_session, I_OPT_ERROR, json_string_value(json_object_get(j_response, "error"))) == I_OK) {
+          if (json_string_length(json_object_get(j_response, "error_description")) && i_set_str_parameter(i_session, I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_response, "error_description"))) != I_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - Error setting error_description");
             ret = I_ERROR;
           }
-          if (json_string_length(json_object_get(j_response, "error_uri")) && i_set_parameter(i_session, I_OPT_ERROR_URI, json_string_value(json_object_get(j_response, "error_uri"))) != I_OK) {
+          if (json_string_length(json_object_get(j_response, "error_uri")) && i_set_str_parameter(i_session, I_OPT_ERROR_URI, json_string_value(json_object_get(j_response, "error_uri"))) != I_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - Error setting error_uri");
             ret = I_ERROR;
           }
@@ -342,12 +342,12 @@ static int parse_openid_config(struct _i_session * i_session, int get_jwks) {
         json_is_array(json_object_get(i_session->openid_config, "id_token_signing_alg_values_supported"))) {
       ret = I_OK;
       do {
-        if (i_set_parameter(i_session, I_OPT_ISSUER, json_string_value(json_object_get(i_session->openid_config, "issuer"))) != I_OK) {
+        if (i_set_str_parameter(i_session, I_OPT_ISSUER, json_string_value(json_object_get(i_session->openid_config, "issuer"))) != I_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "parse_openid_config - Error setting issuer");
           ret = I_ERROR;
           break;
         }
-        if (i_set_parameter(i_session, I_OPT_AUTH_ENDPOINT, json_string_value(json_object_get(i_session->openid_config, "authorization_endpoint"))) != I_OK) {
+        if (i_set_str_parameter(i_session, I_OPT_AUTH_ENDPOINT, json_string_value(json_object_get(i_session->openid_config, "authorization_endpoint"))) != I_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "parse_openid_config - Error setting authorization_endpoint");
           ret = I_ERROR;
           break;
@@ -389,13 +389,13 @@ static int parse_openid_config(struct _i_session * i_session, int get_jwks) {
         }
       } while (0);
       if (json_string_length(json_object_get(i_session->openid_config, "token_endpoint"))) {
-        if (i_set_parameter(i_session, I_OPT_TOKEN_ENDPOINT, json_string_value(json_object_get(i_session->openid_config, "token_endpoint"))) != I_OK) {
+        if (i_set_str_parameter(i_session, I_OPT_TOKEN_ENDPOINT, json_string_value(json_object_get(i_session->openid_config, "token_endpoint"))) != I_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "parse_openid_config - Error setting token_endpoint");
           ret = I_ERROR;
         }
       }
       if (json_string_length(json_object_get(i_session->openid_config, "userinfo_endpoint"))) {
-        if (i_set_parameter(i_session, I_OPT_USERINFO_ENDPOINT, json_string_value(json_object_get(i_session->openid_config, "userinfo_endpoint"))) != I_OK) {
+        if (i_set_str_parameter(i_session, I_OPT_USERINFO_ENDPOINT, json_string_value(json_object_get(i_session->openid_config, "userinfo_endpoint"))) != I_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "parse_openid_config - Error setting userinfo_endpoint");
           ret = I_ERROR;
         }
@@ -605,14 +605,14 @@ void i_clean_session(struct _i_session * i_session) {
 }
 
 int i_set_response_type(struct _i_session * i_session, uint i_value) {
-  return i_set_flag_parameter(i_session, I_OPT_RESPONSE_TYPE, i_value);
+  return i_set_int_parameter(i_session, I_OPT_RESPONSE_TYPE, i_value);
 }
 
 int i_set_result(struct _i_session * i_session, uint i_value) {
-  return i_set_flag_parameter(i_session, I_OPT_RESULT, i_value);
+  return i_set_int_parameter(i_session, I_OPT_RESULT, i_value);
 }
 
-int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_value) {
+int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value) {
   int ret = I_OK;
   if (i_session != NULL) {
     switch (option) {
@@ -692,7 +692,7 @@ int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_valu
           value[0] = '\0';
           rand_string_nonce(value, i_value);
           value[i_value] = '\0';
-          ret = i_set_parameter(i_session, I_OPT_STATE, value);
+          ret = i_set_str_parameter(i_session, I_OPT_STATE, value);
         } else {
           ret = I_ERROR_PARAM;
         }
@@ -703,7 +703,7 @@ int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_valu
           value[0] = '\0';
           rand_string_nonce(value, i_value);
           value[i_value] = '\0';
-          ret = i_set_parameter(i_session, I_OPT_NONCE, value);
+          ret = i_set_str_parameter(i_session, I_OPT_NONCE, value);
         } else {
           ret = I_ERROR_PARAM;
         }
@@ -721,7 +721,7 @@ int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_valu
   return ret;
 }
 
-int i_set_parameter(struct _i_session * i_session, uint option, const char * s_value) {
+int i_set_str_parameter(struct _i_session * i_session, uint option, const char * s_value) {
   int ret = I_OK;
   if (i_session != NULL) {
     switch (option) {
@@ -1010,7 +1010,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_X5U_FLAGS:
         case I_OPT_OPENID_CONFIG_STRICT:
           i_value = va_arg(vl, uint);
-          ret = i_set_flag_parameter(i_session, option, i_value);
+          ret = i_set_int_parameter(i_session, option, i_value);
           break;
         case I_OPT_SCOPE:
         case I_OPT_STATE:
@@ -1039,7 +1039,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_ISSUER:
         case I_OPT_USERINFO:
           str_value = va_arg(vl, const char *);
-          ret = i_set_parameter(i_session, option, str_value);
+          ret = i_set_str_parameter(i_session, option, str_value);
           break;
         case I_OPT_ADDITIONAL_PARAMETER:
           str_key = va_arg(vl, const char *);
@@ -1432,7 +1432,7 @@ int i_build_auth_url_get(struct _i_session * i_session) {
       url = mstrcatf(url, "&%s=%s", keys[i], escaped);
       o_free(escaped);
     }
-    ret = i_set_parameter(i_session, I_OPT_REDIRECT_TO, url);
+    ret = i_set_str_parameter(i_session, I_OPT_REDIRECT_TO, url);
     o_free(url);
   } else {
     ret = I_ERROR_PARAM;
@@ -1502,7 +1502,7 @@ int i_run_auth_request(struct _i_session * i_session) {
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
           if (response.status == 302 && o_strlen(u_map_get_case(response.map_header, "Location"))) {
-            if (i_set_parameter(i_session, I_OPT_REDIRECT_TO, u_map_get_case(response.map_header, "Location")) == I_OK) {
+            if (i_set_str_parameter(i_session, I_OPT_REDIRECT_TO, u_map_get_case(response.map_header, "Location")) == I_OK) {
               ret = i_parse_redirect_to(i_session);
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error setting redirect url");

@@ -86,7 +86,7 @@ extern "C"
 
 /**
  * Options available to set or get properties using
- * i_set_flag_parameter, i_set_parameter,
+ * i_set_int_parameter, i_set_str_parameter,
  * i_get_flag_parameter or i_get_parameter
  */
 enum _i_option {
@@ -241,15 +241,15 @@ int i_set_response_type(struct _i_session * i_session, uint i_value);
 int i_set_result(struct _i_session * i_session, uint i_value);
 
 /**
- * Sets an integer property value
+ * Sets an unsigned integer property value
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to set
  * options availble are I_OPT_RESPONSE_TYPE, I_OPT_RESULT, I_OPT_AUTH_METHOD
  * I_OPT_AUTH_SIGN_ALG, I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
- * @param i_value: The integer value to set
+ * @param i_value: The unsigned integer value to set
  * @return I_OK on success, an error value on error
  */
-int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_value);
+int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value);
 
 /**
  * Sets a char * property value
@@ -266,7 +266,7 @@ int i_set_flag_parameter(struct _i_session * i_session, uint option, uint i_valu
  * @param s_value: The char * value to set
  * @return I_OK on success, an error value on error
  */
-int i_set_parameter(struct _i_session * i_session, uint option, const char * s_value);
+int i_set_str_parameter(struct _i_session * i_session, uint option, const char * s_value);
 
 /**
  * Sets an additional parameter for auth or token requests
