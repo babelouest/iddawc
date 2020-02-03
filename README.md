@@ -49,7 +49,7 @@ int main() {
   fprintf(stdout, "Enter redirect URL\n");
   fgets(redirect_to, 4096, stdin);
   redirect_to[strlen(redirect_to)-1] = '\0';
-  i_set_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to);
+  i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to);
   if (i_parse_redirect_to(&i_session) != I_OK) {
     fprintf(stderr, "Error parsing redirect_to url\n");
     i_clean_session(&i_session);
@@ -81,15 +81,62 @@ int main() {
 
 ## Install
 
-- Using Cmake
+## Pre-compiled packages
+
+You can install Iddawc with a pre-compiled package available in the [release pages](https://github.com/babelouest/iddawc/releases/latest/).
+
+## Manual install
+
+### Prerequisites
+
+You must install [liborcania](https://github.com/babelouest/orcania), [libyder](https://github.com/babelouest/yder), [libulfius](https://github.com/babelouest/ulfius), [librhonabwy](https://github.com/babelouest/rhonabwy), [jansson](http://www.digip.org/jansson/) (Minimum 2.11) and [GnuTLS](https://www.gnutls.org/) first before building libiddawc. Orcania, Yder, Ulfius and Rhonabwy will be automatically installed if missing and you're using cmake.
+
+### CMake - Multi architecture
+
+[CMake](https://cmake.org/download/) minimum 3.5 is required.
+
+Run the cmake script in a subdirectory, example:
 
 ```shell
+$ git clone https://github.com/babelouest/iddawc.git
+$ cd iddawc/
 $ mkdir build
 $ cd build
 $ cmake ..
 $ make && sudo make install
 ```
 
-## API Documentation
+The available options for cmake are:
+- `-DWITH_JOURNALD=[on|off]` (default `on`): Build with journald (SystemD) support
+- `-BUILD_IDDAWC_TESTING=[on|off]` (default `off`): Build unit tests
+- `-DINSTALL_HEADER=[on|off]` (default `on`): Install header file `iddawc.h`
+- `-DBUILD_RPM=[on|off]` (default `off`): Build RPM package when running `make package`
+- `-DCMAKE_BUILD_TYPE=[Debug|Release]` (default `Release`): Compile with debugging symbols or not
 
-Read the [online documentation](https://babelouest.github.io/iddawc/doc/html/).
+### Good ol' Makefile
+
+Download iddawc from github repository, compile and install.
+
+```shell
+$ git clone https://github.com/babelouest/iddawc.git
+$ cd iddawc/src
+$ make
+$ sudo make install
+```
+
+By default, the shared library and the header file will be installed in the `/usr/local` location. To change this setting, you can modify the `DESTDIR` value in the `src/Makefile`.
+
+Example: install iddawc in /tmp/lib directory
+
+```shell
+$ cd src
+$ make && make DESTDIR=/tmp install
+```
+
+You can install Iddawc without root permission if your user has write access to `$(DESTDIR)`.
+A `ldconfig` command is executed at the end of the install, it will probably fail if you don't have root permission, but this is harmless.
+If you choose to install Iddawc in another directory, you must set your environment variable `LD_LIBRARY_PATH` properly.
+
+# API Documentation
+
+Documentation is available in the documentation page: [https://babelouest.github.io/iddawc/doc/html/](https://babelouest.github.io/iddawc/doc/html/)
