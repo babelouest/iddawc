@@ -254,7 +254,7 @@ START_TEST(test_iddawc_token_flow)
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
-  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_ACCESS_TOKEN ACCESS_TOKEN "&state=" STATE "&token_type=bearer"), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_ACCESS_TOKEN ACCESS_TOKEN "&state=" STATE "&token_type=bearer"), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   
@@ -297,7 +297,7 @@ START_TEST(test_iddawc_code_flow)
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
-  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_CODE CODE "&state=" STATE), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_CODE CODE "&state=" STATE), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_CODE), NULL);
   
@@ -363,7 +363,7 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
-  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
@@ -414,7 +414,7 @@ START_TEST(test_iddawc_oidc_code_flow)
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
-  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_CODE CODE "&state=" STATE), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_CODE CODE "&state=" STATE), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
   ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
@@ -484,7 +484,7 @@ START_TEST(test_iddawc_oidc_token_id_token_code_flow)
   ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
-  ck_assert_int_eq(i_set_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
