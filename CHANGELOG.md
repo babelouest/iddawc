@@ -1,6 +1,6 @@
 # Iddawc Changelog
 
-## 0.9.1
+## 0.9.2
 
 - First release
 - Implement oauth2 and oidc client
