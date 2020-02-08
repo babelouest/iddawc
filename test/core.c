@@ -575,14 +575,14 @@ START_TEST(test_iddawc_parameter_list)
 }
 END_TEST
 
-START_TEST(test_iddawc_export)
+START_TEST(test_iddawc_export_json_t)
 {
   struct _i_session i_session;
   json_t * j_export, * j_additional = json_pack("{ss}", ADDITIONAL_KEY, ADDITIONAL_VALUE), * j_additional_empty = json_object(), * jwks_empty = json_pack("{s[]}", "keys"), * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * jwks = NULL;
 
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   
-  j_export = i_export_session(&i_session);
+  j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "response_type")), I_RESPONSE_TYPE_NONE);
   ck_assert_ptr_eq(json_object_get(j_export, "scope"), NULL);
@@ -665,7 +665,7 @@ START_TEST(test_iddawc_export)
   jwks = json_pack("{s[O]}", "keys", i_session.id_token_header);
   ck_assert_int_eq(r_jwks_import_from_json_t(i_session.jwks, jwks), RHN_OK);
   
-  j_export = i_export_session(&i_session);
+  j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "response_type")), I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "scope")), SCOPE_LIST);
@@ -717,7 +717,7 @@ START_TEST(test_iddawc_export)
 }
 END_TEST
 
-START_TEST(test_iddawc_import)
+START_TEST(test_iddawc_import_json_t)
 {
   struct _i_session i_session, i_session_import;
   json_t * j_export = NULL, * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_userinfo = json_loads(USERINFO, JSON_DECODE_ANY, NULL), * jwks = NULL;
@@ -766,9 +766,9 @@ START_TEST(test_iddawc_import)
   jwks = json_pack("{s[O]}", "keys", i_session.id_token_header);
   ck_assert_int_eq(r_jwks_import_from_json_t(i_session.jwks, jwks), RHN_OK);
   
-  j_export = i_export_session(&i_session);
+  j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
-  ck_assert_int_eq(i_import_session(&i_session_import, j_export), I_OK);
+  ck_assert_int_eq(i_import_session_json_t(&i_session_import, j_export), I_OK);
   ck_assert_int_eq(i_get_response_type(&i_session_import), I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_SCOPE), SCOPE_LIST);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_NONCE), NONCE);
@@ -818,6 +818,174 @@ START_TEST(test_iddawc_import)
 }
 END_TEST
 
+START_TEST(test_iddawc_export_str)
+{
+  struct _i_session i_session;
+  json_t * j_additional = json_pack("{ss}", ADDITIONAL_KEY, ADDITIONAL_VALUE), * j_additional_empty = json_object(), * jwks_empty = json_pack("{s[]}", "keys"), * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * jwks = NULL;
+  char * str_export;
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  str_export = i_export_session_str(&i_session);
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"auth_method\":0,\"auth_sign_alg\":0,\"jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":1}");
+  o_free(str_export);
+
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
+                                                  I_OPT_SCOPE, SCOPE_LIST,
+                                                  I_OPT_STATE, STATE,
+                                                  I_OPT_NONCE, NONCE,
+                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                  I_OPT_REDIRECT_TO, REDIRECT_TO,
+                                                  I_OPT_CLIENT_ID, CLIENT_ID,
+                                                  I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                  I_OPT_ADDITIONAL_PARAMETER, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                  I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                  I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT,
+                                                  I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                                  I_OPT_RESULT, I_ERROR_UNAUTHORIZED,
+                                                  I_OPT_ERROR, ERROR,
+                                                  I_OPT_ERROR_DESCRIPTION, ERROR_DESCRIPTION,
+                                                  I_OPT_ERROR_URI, ERROR_URI,
+                                                  I_OPT_CODE, CODE,
+                                                  I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
+                                                  I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                  I_OPT_TOKEN_TYPE, TOKEN_TYPE,
+                                                  I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                  I_OPT_ID_TOKEN, ID_TOKEN,
+                                                  I_OPT_AUTH_SIGN_ALG, I_AUTH_SIGN_ALG_RS256,
+                                                  I_OPT_GLEWLWYD_API_URL, GLEWLWYD_API_URL,
+                                                  I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION,
+                                                  I_OPT_USERNAME, USERNAME,
+                                                  I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
+                                                  I_OPT_USER_PASSWORD, USER_PASSWORD,
+                                                  I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                  I_OPT_X5U_FLAGS, R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT,
+                                                  I_OPT_OPENID_CONFIG, openid_configuration_valid,
+                                                  I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
+                                                  I_OPT_ISSUER, ISSUER,
+                                                  I_OPT_USERINFO, USERINFO,
+                                                  I_OPT_NONE), I_OK);
+  i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
+  ck_assert_int_eq(r_jwk_import_from_json_str(i_session.id_token_header, jwk_simple_hmac), RHN_OK);
+  jwks = json_pack("{s[O]}", "keys", i_session.id_token_header);
+  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.jwks, jwks), RHN_OK);
+  
+  str_export = i_export_session_str(&i_session);
+  ck_assert_str_eq(str_export, "{\"response_type\":273,\"scope\":\"scope1 scope2\",\"state\":\"stateXyz1234\",\"nonce\":\"nonceXyz1234\",\"redirect_uri\":\"https://iddawc.tld\",\"redirect_to\":\"https://iddawc.tld#access_token=plop\",\"client_id\":\"clientXyz1234\",\"client_secret\":\"secretXyx1234\",\"username\":\"dev\",\"user_password\":\"password\",\"additional_parameters\":{\"key\":\"value\"},\"additional_response\":{\"key\":\"value\"},\"authorization_endpoint\":\"https://isp.tld/auth\",\"token_endpoint\":\"https://isp.tld/token\",\"openid_config_endpoint\":\"https://isp.tld/.well-known/openid-configuration\",\"userinfo_endpoint\":\"http://localhost:8080/userinfo\",\"result\":4,\"error\":\"errorXyz1234\",\"error_description\":\"errorDescriptionXyz1234\",\"error_uri\":\"errorUriXyz1234\",\"code\":\"codeXyz1234\",\"refresh_token\":\"refreshXyz1234\",\"access_token\":\"accessXyz1234\",\"token_type\":\"typeXyz1234\",\"expires_in\":3600,\"id_token\":\"idTokenXyz1234\",\"id_token_payload\":{\"aud\":\"payload\"},\"id_token_header\":{\"alg\":\"HS256\",\"typ\":\"JWT\"},\"glewlwyd_api_url\":\"https://glewlwyd.tld/api\",\"glewlwyd_cookie_session\":\"cookieXyz1234\",\"auth_method\":0,\"auth_sign_alg\":1,\"jwks\":{\"keys\":[{\"alg\":\"HS256\",\"typ\":\"JWT\"}]},\"x5u_flags\":17,\"openid_config\":{\"issuer\":\"https://glewlwyd.tld/\",\"authorization_endpoint\":\"https://isp.tld/auth\",\"token_endpoint\":\"https://isp.tld/token\",\"userinfo_endpoint\":\"http://localhost:8080/userinfo\",\"jwks_uri\":\"http://localhost:8080/jwks\",\"token_endpoint_auth_methods_supported\":[\"client_secret_basic\",\"client_secret_jwt\"],\"id_token_signing_alg_values_supported\":[\"RS512\",\"RS256\"],\"scopes_supported\":[\"openid\",\"g_profile\"],\"response_types_supported\":[\"code\",\"id_token\",\"token\",\"code id_token\",\"token id_token\",\"code id_token token\",\"none\",\"refresh_token\"],\"response_modes_supported\":[\"query\",\"fragment\"],\"grant_types_supported\":[\"authorization_code\",\"implicit\"],\"display_values_supported\":[\"page\",\"popup\",\"touch\",\"wap\"],\"claim_types_supported\":[\"normal\"],\"claims_parameter_supported\":true,\"claims_supported\":[\"name\"],\"service_documentation\":\"https://glewlwyd.tld/docs\",\"ui_locales_supported\":[\"en\",\"fr\",\"nl\"],\"request_parameter_supported\":true,\"request_uri_parameter_supported\":true,\"require_request_uri_registration\":false,\"subject_types_supported\":[\"public\"]},\"openid_config_strict\":0,\"issuer\":\"https://glewlwyd.tld/\",\"userinfo\":\"{\\\"aud\\\":\\\"abcd1234\\\",\\\"name\\\":\\\"Dave Lopper\\\"}\"}");
+  o_free(str_export);
+
+  json_decref(j_additional);
+  json_decref(j_additional_empty);
+  json_decref(jwks_empty);
+  json_decref(j_config);
+  json_decref(jwks);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_import_str)
+{
+  struct _i_session i_session, i_session_import;
+  json_t * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_userinfo = json_loads(USERINFO, JSON_DECODE_ANY, NULL), * jwks = NULL;
+  char * str_import;
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_init_session(&i_session_import), I_OK);
+  
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_NONCE, NONCE,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_REDIRECT_TO, REDIRECT_TO,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_ADDITIONAL_PARAMETER, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT,
+                                                    I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                                    I_OPT_RESULT, I_ERROR_UNAUTHORIZED,
+                                                    I_OPT_ERROR, ERROR,
+                                                    I_OPT_ERROR_DESCRIPTION, ERROR_DESCRIPTION,
+                                                    I_OPT_ERROR_URI, ERROR_URI,
+                                                    I_OPT_CODE, CODE,
+                                                    I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
+                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                    I_OPT_TOKEN_TYPE, TOKEN_TYPE,
+                                                    I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                    I_OPT_ID_TOKEN, ID_TOKEN,
+                                                    I_OPT_AUTH_SIGN_ALG, I_AUTH_SIGN_ALG_RS256,
+                                                    I_OPT_GLEWLWYD_API_URL, GLEWLWYD_API_URL,
+                                                    I_OPT_GLEWLWYD_COOKIE_SESSION, GLEWLWYD_COOKIE_SESSION,
+                                                    I_OPT_USERNAME, USERNAME,
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
+                                                    I_OPT_USER_PASSWORD, USER_PASSWORD,
+                                                    I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                    I_OPT_X5U_FLAGS, R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT,
+                                                    I_OPT_OPENID_CONFIG, openid_configuration_valid,
+                                                    I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
+                                                    I_OPT_ISSUER, ISSUER,
+                                                    I_OPT_USERINFO, USERINFO,
+                                                    I_OPT_NONE), I_OK);
+  i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
+  ck_assert_int_eq(r_jwk_import_from_json_str(i_session.id_token_header, jwk_simple_hmac), RHN_OK);
+  jwks = json_pack("{s[O]}", "keys", i_session.id_token_header);
+  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.jwks, jwks), RHN_OK);
+  
+  str_import = i_export_session_str(&i_session);
+  ck_assert_ptr_ne(str_import, NULL);
+  ck_assert_int_eq(i_import_session_str(&i_session_import, str_import), I_OK);
+  ck_assert_int_eq(i_get_response_type(&i_session_import), I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_SCOPE), SCOPE_LIST);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_NONCE), NONCE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_STATE), STATE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REDIRECT_URI), REDIRECT_URI);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REDIRECT_TO), REDIRECT_TO);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CLIENT_ID), CLIENT_ID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CLIENT_SECRET), CLIENT_SECRET);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERNAME), USERNAME);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USER_PASSWORD), USER_PASSWORD);
+  ck_assert_str_eq(i_get_additional_parameter(&i_session_import, ADDITIONAL_KEY), ADDITIONAL_VALUE);
+  ck_assert_str_eq(i_get_additional_response(&i_session_import, ADDITIONAL_KEY), ADDITIONAL_VALUE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_AUTH_ENDPOINT), AUTH_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TOKEN_ENDPOINT), TOKEN_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_OPENID_CONFIG_ENDPOINT), OPENID_CONFIG_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERINFO_ENDPOINT), USERINFO_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_RESULT), I_ERROR_UNAUTHORIZED);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ERROR), ERROR);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ERROR_DESCRIPTION), ERROR_DESCRIPTION);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ERROR_URI), ERROR_URI);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CODE), CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REFRESH_TOKEN), REFRESH_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TOKEN_TYPE), TOKEN_TYPE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_EXPIRES_IN), EXPIRES_IN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ID_TOKEN), ID_TOKEN);
+  ck_assert_int_eq(json_equal(i_session_import.id_token_payload, i_session.id_token_payload), 1);
+  ck_assert_int_eq(json_equal(i_session_import.id_token_header, i_session.id_token_header), 1);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_GLEWLWYD_API_URL), GLEWLWYD_API_URL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_GLEWLWYD_COOKIE_SESSION), GLEWLWYD_COOKIE_SESSION);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
+  ck_assert_int_eq(json_equal(i_session_import.jwks, i_session.jwks), 1);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_SIGN_ALG), I_AUTH_SIGN_ALG_RS256);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_X5U_FLAGS), R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT);
+  ck_assert_int_eq(json_equal(i_session_import.openid_config, j_config), 1);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_OPENID_CONFIG_STRICT), I_STRICT_NO);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ISSUER), ISSUER);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERINFO), USERINFO);
+  ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
+  o_free(str_import);
+
+  json_decref(j_config);
+  json_decref(j_userinfo);
+  json_decref(jwks);
+  i_clean_session(&i_session);
+  i_clean_session(&i_session_import);
+}
+END_TEST
+
 static Suite *iddawc_suite(void)
 {
   Suite *s;
@@ -839,8 +1007,10 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_get_additional_parameter);
   tcase_add_test(tc_core, test_iddawc_get_additional_response);
   tcase_add_test(tc_core, test_iddawc_parameter_list);
-  tcase_add_test(tc_core, test_iddawc_export);
-  tcase_add_test(tc_core, test_iddawc_import);
+  tcase_add_test(tc_core, test_iddawc_export_json_t);
+  tcase_add_test(tc_core, test_iddawc_import_json_t);
+  tcase_add_test(tc_core, test_iddawc_export_str);
+  tcase_add_test(tc_core, test_iddawc_import_str);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
 
