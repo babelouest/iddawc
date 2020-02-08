@@ -87,7 +87,7 @@ extern "C"
 /**
  * Options available to set or get properties using
  * i_set_int_parameter, i_set_str_parameter,
- * i_get_flag_parameter or i_get_parameter
+ * i_get_int_parameter or i_get_str_parameter
  */
 enum _i_option {
   I_OPT_NONE                             = 0,
@@ -314,7 +314,7 @@ uint i_get_result(struct _i_session * i_session);
  * I_OPT_AUTH_SIGN_ALG, I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
  * @return the option value
  */
-uint i_get_flag_parameter(struct _i_session * i_session, uint option);
+uint i_get_int_parameter(struct _i_session * i_session, uint option);
 
 /**
  * Returns the char * value of an option
@@ -330,7 +330,7 @@ uint i_get_flag_parameter(struct _i_session * i_session, uint option);
  * I_OPT_USER_PASSWORD, I_OPT_OPENID_CONFIG, I_OPT_ISSUER
  * @return the char * value of the option, NULL if no value set
  */
-const char * i_get_parameter(struct _i_session * i_session, uint option);
+const char * i_get_str_parameter(struct _i_session * i_session, uint option);
 
 /**
  * Gets an additional parameter for auth or token requests

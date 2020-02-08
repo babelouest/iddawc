@@ -1154,14 +1154,14 @@ int i_load_userinfo(struct _i_session * i_session) {
 }
 
 uint i_get_response_type(struct _i_session * i_session) {
-  return i_get_flag_parameter(i_session, I_OPT_RESPONSE_TYPE);
+  return i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE);
 }
 
 uint i_get_result(struct _i_session * i_session) {
-  return i_get_flag_parameter(i_session, I_OPT_RESULT);
+  return i_get_int_parameter(i_session, I_OPT_RESULT);
 }
 
-uint i_get_flag_parameter(struct _i_session * i_session, uint option) {
+uint i_get_int_parameter(struct _i_session * i_session, uint option) {
   if (i_session != NULL) {
     switch (option) {
       case I_OPT_RESPONSE_TYPE:
@@ -1205,7 +1205,7 @@ uint i_get_flag_parameter(struct _i_session * i_session, uint option) {
 int i_parse_redirect_to(struct _i_session * i_session) {
   int ret = I_OK;
   struct _u_map map;
-  const char * fragment = NULL, * query = NULL, * redirect_to = i_get_parameter(i_session, I_OPT_REDIRECT_TO);
+  const char * fragment = NULL, * query = NULL, * redirect_to = i_get_str_parameter(i_session, I_OPT_REDIRECT_TO);
   char * state = NULL, * query_dup = NULL;
   
   if (o_strncmp(redirect_to, i_session->redirect_uri, o_strlen(i_session->redirect_uri)) == 0) {
@@ -1248,25 +1248,25 @@ int i_parse_redirect_to(struct _i_session * i_session) {
       o_free(query_dup);
     }
     
-    if (i_get_parameter(i_session, I_OPT_STATE) != NULL) {
-      if (o_strcmp(i_get_parameter(i_session, I_OPT_STATE), state)) {
+    if (i_get_str_parameter(i_session, I_OPT_STATE) != NULL) {
+      if (o_strcmp(i_get_str_parameter(i_session, I_OPT_STATE), state)) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error state invalid");
-        y_log_message(Y_LOG_LEVEL_DEBUG, "'%s' - '%s'", i_get_parameter(i_session, I_OPT_STATE), state);
+        y_log_message(Y_LOG_LEVEL_DEBUG, "'%s' - '%s'", i_get_str_parameter(i_session, I_OPT_STATE), state);
         ret = I_ERROR_SERVER;
       }
     }
     
-    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE && i_get_parameter(i_session, I_OPT_ERROR) == NULL && i_get_parameter(i_session, I_OPT_CODE) == NULL) {
+    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_CODE) == NULL) {
       y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected code");
       ret = I_ERROR_SERVER;
     }
     
-    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN && i_get_parameter(i_session, I_OPT_ERROR) == NULL && i_get_parameter(i_session, I_OPT_ACCESS_TOKEN) == NULL) {
+    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN) == NULL) {
       y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected access_token");
       ret = I_ERROR_SERVER;
     }
     
-    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN && i_get_parameter(i_session, I_OPT_ERROR) == NULL && i_get_parameter(i_session, I_OPT_ID_TOKEN) == NULL) {
+    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_ID_TOKEN) == NULL) {
       y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected id_token");
       ret = I_ERROR_SERVER;
     }
@@ -1275,7 +1275,7 @@ int i_parse_redirect_to(struct _i_session * i_session) {
   return ret;
 }
 
-const char * i_get_parameter(struct _i_session * i_session, uint option) {
+const char * i_get_str_parameter(struct _i_session * i_session, uint option) {
   const char * result = NULL;
   if (i_session != NULL) {
     switch (option) {
@@ -1466,7 +1466,7 @@ int i_run_auth_request(struct _i_session * i_session) {
       if (i_session->auth_method == I_AUTH_METHOD_GET) {
         if ((ret = i_build_auth_url_get(i_session)) == I_OK) {
           request.http_verb = o_strdup("GET");
-          request.http_url = o_strdup(i_get_parameter(i_session, I_OPT_REDIRECT_TO));
+          request.http_url = o_strdup(i_get_str_parameter(i_session, I_OPT_REDIRECT_TO));
         }
       } else if (i_session->auth_method == I_AUTH_METHOD_POST) {
         request.http_verb = o_strdup("POST");
@@ -1495,8 +1495,8 @@ int i_run_auth_request(struct _i_session * i_session) {
         ret = I_ERROR_PARAM;
       }
       
-      if (i_get_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION) != NULL) {
-        u_map_put(request.map_header, "Cookie", i_get_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION));
+      if (i_get_str_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION) != NULL) {
+        u_map_put(request.map_header, "Cookie", i_get_str_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION));
       }
       
       if (ret == I_OK) {
@@ -1921,51 +1921,51 @@ json_t * i_export_session(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
     j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  ss* sO* so* ss* ss*  si si so* si sO*  si ss* ss* }",
-                         "response_type", i_get_flag_parameter(i_session, I_OPT_RESPONSE_TYPE),
-                         "scope", i_get_parameter(i_session, I_OPT_SCOPE),
-                         "state", i_get_parameter(i_session, I_OPT_STATE),
-                         "nonce", i_get_parameter(i_session, I_OPT_NONCE),
-                         "redirect_uri", i_get_parameter(i_session, I_OPT_REDIRECT_URI),
+                         "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
+                         "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
+                         "state", i_get_str_parameter(i_session, I_OPT_STATE),
+                         "nonce", i_get_str_parameter(i_session, I_OPT_NONCE),
+                         "redirect_uri", i_get_str_parameter(i_session, I_OPT_REDIRECT_URI),
                          
-                         "redirect_to", i_get_parameter(i_session, I_OPT_REDIRECT_TO),
-                         "client_id", i_get_parameter(i_session, I_OPT_CLIENT_ID),
-                         "client_secret", i_get_parameter(i_session, I_OPT_CLIENT_SECRET),
-                         "username", i_get_parameter(i_session, I_OPT_USERNAME),
-                         "user_password", i_get_parameter(i_session, I_OPT_USER_PASSWORD),
+                         "redirect_to", i_get_str_parameter(i_session, I_OPT_REDIRECT_TO),
+                         "client_id", i_get_str_parameter(i_session, I_OPT_CLIENT_ID),
+                         "client_secret", i_get_str_parameter(i_session, I_OPT_CLIENT_SECRET),
+                         "username", i_get_str_parameter(i_session, I_OPT_USERNAME),
+                         "user_password", i_get_str_parameter(i_session, I_OPT_USER_PASSWORD),
                          
                          "additional_parameters", export_u_map(&i_session->additional_parameters),
                          "additional_response", export_u_map(&i_session->additional_response),
-                         "authorization_endpoint", i_get_parameter(i_session, I_OPT_AUTH_ENDPOINT),
-                         "token_endpoint", i_get_parameter(i_session, I_OPT_TOKEN_ENDPOINT),
-                         "openid_config_endpoint", i_get_parameter(i_session, I_OPT_OPENID_CONFIG_ENDPOINT),
+                         "authorization_endpoint", i_get_str_parameter(i_session, I_OPT_AUTH_ENDPOINT),
+                         "token_endpoint", i_get_str_parameter(i_session, I_OPT_TOKEN_ENDPOINT),
+                         "openid_config_endpoint", i_get_str_parameter(i_session, I_OPT_OPENID_CONFIG_ENDPOINT),
                          
-                         "userinfo_endpoint", i_get_parameter(i_session, I_OPT_USERINFO_ENDPOINT),
-                         "result", i_get_flag_parameter(i_session, I_OPT_RESULT),
-                         "error", i_get_parameter(i_session, I_OPT_ERROR),
-                         "error_description", i_get_parameter(i_session, I_OPT_ERROR_DESCRIPTION),
-                         "error_uri", i_get_parameter(i_session, I_OPT_ERROR_URI),
+                         "userinfo_endpoint", i_get_str_parameter(i_session, I_OPT_USERINFO_ENDPOINT),
+                         "result", i_get_int_parameter(i_session, I_OPT_RESULT),
+                         "error", i_get_str_parameter(i_session, I_OPT_ERROR),
+                         "error_description", i_get_str_parameter(i_session, I_OPT_ERROR_DESCRIPTION),
+                         "error_uri", i_get_str_parameter(i_session, I_OPT_ERROR_URI),
                          
-                         "code", i_get_parameter(i_session, I_OPT_CODE),
-                         "refresh_token", i_get_parameter(i_session, I_OPT_REFRESH_TOKEN),
-                         "access_token", i_get_parameter(i_session, I_OPT_ACCESS_TOKEN),
-                         "token_type", i_get_parameter(i_session, I_OPT_TOKEN_TYPE),
-                         "expires_in", i_get_flag_parameter(i_session, I_OPT_EXPIRES_IN),
+                         "code", i_get_str_parameter(i_session, I_OPT_CODE),
+                         "refresh_token", i_get_str_parameter(i_session, I_OPT_REFRESH_TOKEN),
+                         "access_token", i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN),
+                         "token_type", i_get_str_parameter(i_session, I_OPT_TOKEN_TYPE),
+                         "expires_in", i_get_int_parameter(i_session, I_OPT_EXPIRES_IN),
                          
-                         "id_token", i_get_parameter(i_session, I_OPT_ID_TOKEN),
+                         "id_token", i_get_str_parameter(i_session, I_OPT_ID_TOKEN),
                          "id_token_payload", i_session->id_token_payload,
                          "id_token_header", r_jwk_export_to_json_t(i_session->id_token_header),
-                         "glewlwyd_api_url", i_get_parameter(i_session, I_OPT_GLEWLWYD_API_URL),
-                         "glewlwyd_cookie_session", i_get_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION),
+                         "glewlwyd_api_url", i_get_str_parameter(i_session, I_OPT_GLEWLWYD_API_URL),
+                         "glewlwyd_cookie_session", i_get_str_parameter(i_session, I_OPT_GLEWLWYD_COOKIE_SESSION),
                          
-                         "auth_method", i_get_flag_parameter(i_session, I_OPT_AUTH_METHOD),
-                         "auth_sign_alg", i_get_flag_parameter(i_session, I_OPT_AUTH_SIGN_ALG),
+                         "auth_method", i_get_int_parameter(i_session, I_OPT_AUTH_METHOD),
+                         "auth_sign_alg", i_get_int_parameter(i_session, I_OPT_AUTH_SIGN_ALG),
                          "jwks", r_jwks_export_to_json_t(i_session->jwks),
-                         "x5u_flags", i_get_flag_parameter(i_session, I_OPT_X5U_FLAGS),
+                         "x5u_flags", i_get_int_parameter(i_session, I_OPT_X5U_FLAGS),
                          "openid_config", i_session->openid_config,
                          
-                         "openid_config_strict", i_get_flag_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT),
-                         "issuer", i_get_parameter(i_session, I_OPT_ISSUER),
-                         "userinfo", i_get_parameter(i_session, I_OPT_USERINFO));
+                         "openid_config_strict", i_get_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT),
+                         "issuer", i_get_str_parameter(i_session, I_OPT_ISSUER),
+                         "userinfo", i_get_str_parameter(i_session, I_OPT_USERINFO));
   }
   return j_return;
 }
