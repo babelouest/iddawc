@@ -26,6 +26,7 @@
 #define CLIENT_ID "clientXyz"
 #define CLIENT_SECRET "secretXyz"
 #define REDIRECT_URI "https://www.example.com/"
+#define SCOPE "profile"
 
 int main() {
   struct _i_session i_session;
@@ -40,7 +41,7 @@ int main() {
                                                         I_OPT_CLIENT_ID, CLIENT_ID,
                                                         I_OPT_CLIENT_SECRET, CLIENT_SECRET,
                                                         I_OPT_REDIRECT_URI, REDIRECT_URI,
-                                                        I_OPT_SCOPE, "profile",
+                                                        I_OPT_SCOPE, SCOPE,
                                                         I_OPT_STATE_GENERATE, 16,
                                                         I_OPT_NONCE_GENERATE, 32,
                                                         I_OPT_NONE);
@@ -56,7 +57,7 @@ int main() {
     i_clean_session(&i_session);
     return 1;
   }
-  printf("Redirect to: %s\n", i_get_parameter(&i_session, I_OPT_REDIRECT_TO));
+  printf("Redirect to: %s\n", i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO));
 
   // When the user has logged in the external application, gets redirected with a result, we parse the result
   y_log_message(Y_LOG_LEVEL_INFO, "Enter redirect URL");
@@ -83,7 +84,7 @@ int main() {
     return 1;
   }
 
-  y_log_message(Y_LOG_LEVEL_DEBUG, "userinfo:\n%s", i_get_parameter(&i_session, I_OPT_USERINFO));
+  y_log_message(Y_LOG_LEVEL_DEBUG, "userinfo:\n%s", i_get_str_parameter(&i_session, I_OPT_USERINFO));
   
   // Cleanup session
   i_clean_session(&i_session);
