@@ -1917,7 +1917,7 @@ int i_verify_id_token(struct _i_session * i_session) {
   return ret;
 }
 
-json_t * i_export_session(struct _i_session * i_session) {
+json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
     j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  ss* sO* so* ss* ss*  si si so* si sO*  si ss* ss* }",
@@ -1970,7 +1970,7 @@ json_t * i_export_session(struct _i_session * i_session) {
   return j_return;
 }
 
-int i_import_session(struct _i_session * i_session, json_t * j_import) {
+int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
   int ret;
   const char * key = NULL;
   json_t * j_value = NULL;
@@ -2014,7 +2014,7 @@ int i_import_session(struct _i_session * i_session, json_t * j_import) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
           tmp = json_dumps(j_value, JSON_COMPACT);
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session - Error importing additional_parameters '%s' / '%s'", key, tmp);
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error importing additional_parameters '%s' / '%s'", key, tmp);
           o_free(tmp);
           return ret;
         }
@@ -2022,7 +2022,7 @@ int i_import_session(struct _i_session * i_session, json_t * j_import) {
       json_object_foreach(json_object_get(j_import, "additional_response"), key, j_value) {
         if ((ret = i_set_additional_response(i_session, key, json_string_value(j_value))) != I_OK) {
           tmp = json_dumps(j_value, JSON_COMPACT);
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session - Error importing additional_response '%s' / '%s'", key, tmp);
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error importing additional_response '%s' / '%s'", key, tmp);
           o_free(tmp);
           return ret;
         }
@@ -2030,14 +2030,43 @@ int i_import_session(struct _i_session * i_session, json_t * j_import) {
       i_session->id_token_payload = json_deep_copy(json_object_get(j_import, "id_token_payload"));
       i_session->openid_config = json_deep_copy(json_object_get(j_import, "openid_config"));
       if (json_object_get(j_import, "id_token_header") != NULL && r_jwk_import_from_json_t(i_session->id_token_header, json_object_get(j_import, "id_token_header")) != RHN_OK) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session - Error r_jwk_import_from_json_t");
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwk_import_from_json_t");
         ret = I_ERROR;
       }
       if (r_jwks_import_from_json_t(i_session->jwks, json_object_get(j_import, "jwks")) != RHN_OK) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session - Error r_jwks_import_from_json_t");
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t");
         ret = I_ERROR;
       }
     }
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+char * i_export_session_str(struct _i_session * i_session) {
+  json_t * j_export = i_export_session_json_t(i_session);
+  char * out = NULL;
+  
+  if (j_export != NULL) {
+    out = json_dumps(j_export, JSON_COMPACT);
+    json_decref(j_export);
+  }
+  return out;
+}
+
+int i_import_session_str(struct _i_session * i_session, const char * str_import) {
+  json_t * j_import;
+  int ret;
+  
+  if (o_strlen(str_import)) {
+    j_import = json_loads(str_import, JSON_DECODE_ANY, NULL);
+    if (j_import != NULL) {
+      ret = i_import_session_json_t(i_session, j_import);
+    } else {
+      ret = I_ERROR;
+    }
+    json_decref(j_import);
   } else {
     ret = I_ERROR_PARAM;
   }

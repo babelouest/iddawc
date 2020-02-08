@@ -434,16 +434,32 @@ int i_verify_id_token(struct _i_session * i_session);
  * @param i_session: a reference to a struct _i_session *
  * @return a json_t * object containing all data set in the session
  */
-json_t * i_export_session(struct _i_session * i_session);
+json_t * i_export_session_json_t(struct _i_session * i_session);
 
 /**
  * Imports a _i_session * from a json_t * object
  * Imported data will overwrite existing data in i_session
  * @param i_session: a reference to a struct _i_session *
- * @param j_import: a json_t * object in i_export_session format
+ * @param j_import: a json_t * object in i_export_session_json_t format
  * @return I_OK on success, an error value on error
  */
-int i_import_session(struct _i_session * i_session, json_t * j_import);
+int i_import_session_json_t(struct _i_session * i_session, json_t * j_import);
+
+/**
+ * Exports a _i_session * into a json_t * object
+ * @param i_session: a reference to a struct _i_session *
+ * @return a char * containing a JSON stringified exported session
+ */
+char * i_export_session_str(struct _i_session * i_session);
+
+/**
+ * Imports a _i_session * from a json_t * object
+ * Imported data will overwrite existing data in i_session
+ * @param i_session: a reference to a struct _i_session *
+ * @param str_import: a char * containing a JSON stringified session
+ * @return I_OK on success, an error value on error
+ */
+int i_import_session_str(struct _i_session * i_session, const char * str_import);
 
 /**
  * @}
