@@ -3,6 +3,7 @@
 ## 0.9.3
 
 - Rename `i_get_flag_parameter` to `i_get_int_parameter` and `i_get_parameter` to `i_get_str_parameter`
+- Rename `i_export_session` to `i_export_session_json_t`, `i_import_session` to `i_import_session_json_t` and add `i_export_session_str` and `i_import_session_str`
 - Improve examples
 
 ## 0.9.2
