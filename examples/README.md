@@ -6,6 +6,7 @@ The following examples are for some well-known OAuth2 providers. For each exampl
 #define CLIENT_ID "clientXyz"
 #define CLIENT_SECRET "secretXyz"
 #define REDIRECT_URI "https://www.example.com/"
+#define SCOPE "scope_values"
 ```
 
 Please check each provider docmentation for how to register OAuth2 clients.
