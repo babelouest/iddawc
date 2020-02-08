@@ -99,7 +99,7 @@ START_TEST(test_iddawc_userinfo_response_unauthorized)
                                                     I_OPT_ACCESS_TOKEN, "error",
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_load_userinfo(&i_session), I_ERROR_UNAUTHORIZED);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_USERINFO), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO), NULL);
   ck_assert_ptr_eq(i_session.j_userinfo, NULL);
   i_clean_session(&i_session);
   
@@ -121,7 +121,7 @@ START_TEST(test_iddawc_userinfo_response_empty)
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_load_userinfo(&i_session), I_ERROR);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_USERINFO), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO), NULL);
   ck_assert_ptr_eq(i_session.j_userinfo, NULL);
   i_clean_session(&i_session);
   
@@ -143,7 +143,7 @@ START_TEST(test_iddawc_userinfo_response_char)
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_USERINFO), userinfo_char);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO), userinfo_char);
   ck_assert_ptr_eq(i_session.j_userinfo, NULL);
   i_clean_session(&i_session);
   

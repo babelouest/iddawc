@@ -178,13 +178,13 @@ START_TEST(test_iddawc_token_code_invalid_request)
                                                   I_OPT_CODE, CODE,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_request");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_request description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_request uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_request");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_request description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_request uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -209,13 +209,13 @@ START_TEST(test_iddawc_token_code_invalid_client)
                                                   I_OPT_CODE, CODE,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_client");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_client description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_client uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_client");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_client description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_client uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -240,13 +240,13 @@ START_TEST(test_iddawc_token_code_invalid_grant)
                                                   I_OPT_CODE, "error",
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_grant");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_grant description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_grant uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_grant");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_grant description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_grant uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -271,13 +271,13 @@ START_TEST(test_iddawc_token_code_unauthorized_client)
                                                   I_OPT_CODE, CODE,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "unauthorized_client");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unauthorized_client description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "unauthorized_client uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "unauthorized_client");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unauthorized_client description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "unauthorized_client uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -302,13 +302,13 @@ START_TEST(test_iddawc_token_code_unsupported_grant_type)
                                                   I_OPT_CODE, CODE,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "unsupported_grant_type");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unsupported_grant_type description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "unsupported_grant_type uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "unsupported_grant_type");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unsupported_grant_type description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "unsupported_grant_type uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -333,13 +333,13 @@ START_TEST(test_iddawc_token_code_invalid_scope)
                                                   I_OPT_CODE, CODE,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_scope");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_scope description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_scope uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_scope");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_scope description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_scope uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -364,10 +364,10 @@ START_TEST(test_iddawc_token_code_ok)
                                                   I_OPT_CODE, CODE,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -424,13 +424,13 @@ START_TEST(test_iddawc_token_password_noclient_invalid_request)
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_request");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_request description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_request uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_request");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_request description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_request uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -453,13 +453,13 @@ START_TEST(test_iddawc_token_password_noclient_unsupported_grant_type)
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "unsupported_grant_type");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unsupported_grant_type description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "unsupported_grant_type uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "unsupported_grant_type");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unsupported_grant_type description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "unsupported_grant_type uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -482,13 +482,13 @@ START_TEST(test_iddawc_token_password_noclient_invalid_scope)
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_scope");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_scope description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_scope uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_scope");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_scope description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_scope uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -511,10 +511,10 @@ START_TEST(test_iddawc_token_password_noclient_ok)
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -539,13 +539,13 @@ START_TEST(test_iddawc_token_password_client_invalid_client)
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_client");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_client description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_client uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_client");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_client description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_client uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -570,13 +570,13 @@ START_TEST(test_iddawc_token_password_noclient_unauthorized_client)
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "unauthorized_client");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unauthorized_client description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "unauthorized_client uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "unauthorized_client");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unauthorized_client description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "unauthorized_client uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -601,10 +601,10 @@ START_TEST(test_iddawc_token_password_client_ok)
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -627,13 +627,13 @@ START_TEST(test_iddawc_token_client_credentials_client_invalid_client)
                                                   I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_client");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_client description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_client uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_client");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_client description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_client uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -656,13 +656,13 @@ START_TEST(test_iddawc_token_client_credentials_client_unauthorized_client)
                                                   I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "unauthorized_client");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unauthorized_client description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "unauthorized_client uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "unauthorized_client");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unauthorized_client description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "unauthorized_client uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -685,9 +685,9 @@ START_TEST(test_iddawc_token_client_credentials_client_ok)
                                                   I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -734,12 +734,12 @@ START_TEST(test_iddawc_token_refresh_token_noclient_invalid_grant)
                                                   I_OPT_REFRESH_TOKEN, "error",
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_grant");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_grant description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_grant uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_grant");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_grant description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_grant uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -761,12 +761,12 @@ START_TEST(test_iddawc_token_refresh_token_noclient_unauthorized_client)
                                                   I_OPT_REFRESH_TOKEN, "error",
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "unauthorized_client");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unauthorized_client description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "unauthorized_client uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "unauthorized_client");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "unauthorized_client description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "unauthorized_client uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -788,12 +788,12 @@ START_TEST(test_iddawc_token_refresh_token_noclient_invalid_client)
                                                   I_OPT_REFRESH_TOKEN, "error",
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR), "invalid_client");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_client description");
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_ERROR_URI), "invalid_client uri");
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), "invalid_client");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_DESCRIPTION), "invalid_client description");
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), "invalid_client uri");
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);
@@ -815,9 +815,9 @@ START_TEST(test_iddawc_token_refresh_token_noclient_ok)
                                                   I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
                                                   I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   i_clean_session(&i_session);
   ulfius_stop_framework(&instance);

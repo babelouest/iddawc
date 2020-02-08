@@ -246,17 +246,17 @@ START_TEST(test_iddawc_token_flow)
                                                     I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
                                                     I_OPT_STATE, STATE,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   
   // First step: get redirection to login page
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_ACCESS_TOKEN ACCESS_TOKEN "&state=" STATE "&token_type=bearer"), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   
   // And finally we load user info using the access token
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
@@ -291,22 +291,22 @@ START_TEST(test_iddawc_code_flow)
                                                     I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
                                                     I_OPT_STATE, STATE,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_CODE CODE "&state=" STATE), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_CODE), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
   
   // Run the token request, get the refresh and access tokens
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   // And finally we load user info using the access token
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
@@ -359,14 +359,14 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   
   // First step: get redirection to login page
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
   ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);
   
   // And finally we load user info using the access token
@@ -410,22 +410,22 @@ START_TEST(test_iddawc_oidc_code_flow)
   
   // First step: get redirection to login page
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_CODE CODE "&state=" STATE), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_CODE), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
   
   // Run the token request, get the refresh and access tokens
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   // And finally we load user info using the access token
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
@@ -480,21 +480,21 @@ START_TEST(test_iddawc_oidc_token_id_token_code_flow)
   
   // First step: get redirection to login page
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
-  ck_assert_ptr_eq(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
   
   // Then the user has loggined in the external application, gets redirected with a result, we parse the result
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to), I_OK);
   ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
   
   // Run the token request, get the refresh and access tokens
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
-  ck_assert_ptr_ne(i_get_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
-  ck_assert_str_eq(i_get_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
-  ck_assert_int_eq(i_get_flag_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   // And finally we load user info using the access token
   ck_assert_int_eq(i_load_userinfo(&i_session), I_OK);
