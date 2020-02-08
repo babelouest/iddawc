@@ -43,7 +43,7 @@ int main() {
     i_clean_session(&i_session);
     return 1;
   }
-  printf("Redirect to: %s\n", i_get_parameter(&i_session, I_OPT_REDIRECT_TO));
+  printf("Redirect to: %s\n", i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO));
 
   // When the user has logged in the external application, gets redirected with a result, we parse the result
   fprintf(stdout, "Enter redirect URL\n");
@@ -70,7 +70,7 @@ int main() {
     return 1;
   }
 
-  fprintf(stdout, "userinfo:\n%s\n", i_get_parameter(&i_session, I_OPT_USERINFO));
+  fprintf(stdout, "userinfo:\n%s\n", i_get_str_parameter(&i_session, I_OPT_USERINFO));
   
   // Cleanup session
   i_clean_session(&i_session);
