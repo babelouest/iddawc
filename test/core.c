@@ -503,7 +503,7 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   
   ck_assert_int_eq(i_set_parameter_list(&i_session, 666, "error", I_OPT_NONE), I_ERROR_PARAM);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_SCOPE_APPEND, "error", I_OPT_NONE), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_SCOPE_APPEND, "error", I_OPT_NONE), I_OK);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_STATE), NULL);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_NONE), I_OK);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_STATE), NULL);
