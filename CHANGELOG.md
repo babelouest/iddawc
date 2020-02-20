@@ -1,5 +1,9 @@
 # Iddawc Changelog
 
+## 0.9.4
+
+- Bugfixes
+
 ## 0.9.3
 
 - Rename `i_get_flag_parameter` to `i_get_int_parameter` and `i_get_parameter` to `i_get_str_parameter`
