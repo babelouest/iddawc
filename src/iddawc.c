@@ -136,6 +136,8 @@ static int parse_redirect_to_parameters(struct _i_session * i_session, struct _u
   const char ** keys = u_map_enum_keys(map), * key = NULL;
   size_t i;
   int ret = I_OK, c_ret;
+  char * endptr = NULL;
+  long expires_in = 0;
   
   for (i=0; keys[i] != NULL; i++) {
     key = keys[i];
@@ -156,9 +158,15 @@ static int parse_redirect_to_parameters(struct _i_session * i_session, struct _u
       c_ret = i_set_str_parameter(i_session, I_OPT_TOKEN_TYPE, u_map_get(map, key));
       ret = ret!=I_OK?ret:c_ret;
     } else if (0 == o_strcasecmp(key, "expires_in")) {
-      if (i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, (uint)strtol(u_map_get(map, key), NULL, 10)) != I_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - expires_in invalid");
-        ret = ret!=I_OK?ret:I_ERROR_SERVER;
+      expires_in = strtol(u_map_get(map, key), &endptr, 10);
+      if (endptr != (char *)u_map_get(map, key)) {
+        if (i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, (uint)expires_in) != I_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - expires_in invalid");
+          ret = ret!=I_OK?ret:I_ERROR_SERVER;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "parse_redirect_to_parameters - expires_in not numeric");
+        ret = I_ERROR_SERVER;
       }
     } else if (0 == o_strcasecmp(key, "error")) {
       c_ret = i_set_result(i_session, I_ERROR_UNAUTHORIZED);
@@ -234,11 +242,11 @@ static int parse_token_response(struct _i_session * i_session, int http_status, 
             }
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - Error setting response parameters");
+          y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - Error setting response parameters (1)");
           ret = I_ERROR;
         }
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - required response parameters missing");
+        y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - required response parameters missing (1)");
         ret = I_ERROR_PARAM;
       }
     } else if (http_status == 400) {
@@ -272,11 +280,11 @@ static int parse_token_response(struct _i_session * i_session, int http_status, 
             }
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - Error setting response parameters");
+          y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - Error setting response parameters (2)");
           ret = I_ERROR;
         }
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - required response parameters missing");
+        y_log_message(Y_LOG_LEVEL_ERROR, "parse_token_response - required response parameters missing (2)");
         ret = I_ERROR_PARAM;
       }
     }
@@ -631,6 +639,7 @@ int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value
             i_session->response_type = i_value;
             break;
           default:
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error unknown response type");
             ret = I_ERROR_PARAM;
             break;
         }
@@ -645,6 +654,7 @@ int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value
             i_session->result = i_value;
             break;
           default:
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error unknown result");
             ret = I_ERROR_PARAM;
             break;
         }
@@ -656,6 +666,7 @@ int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value
             i_session->auth_method = i_value;
             break;
           default:
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error unknown auth method");
             ret = I_ERROR_PARAM;
             break;
         }
@@ -671,17 +682,17 @@ int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value
           case I_AUTH_SIGN_ALG_RS512:
             o_strcpy(i_session->auth_sign_alg, "RS512");
             break;
+          case I_AUTH_SIGN_ALG_NONE:
+            o_strcpy(i_session->auth_sign_alg, "");
+            break;
           default:
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error unknown auth sign alg %d", i_value);
             ret = I_ERROR_PARAM;
             break;
         }
         break;
       case I_OPT_EXPIRES_IN:
-        if (i_value) {
-          i_session->expires_in = i_value;
-        } else {
-          ret = I_ERROR_PARAM;
-        }
+        i_session->expires_in = i_value;
         break;
       case I_OPT_OPENID_CONFIG_STRICT:
         i_session->openid_config_strict = i_value;
@@ -694,6 +705,7 @@ int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value
           value[i_value] = '\0';
           ret = i_set_str_parameter(i_session, I_OPT_STATE, value);
         } else {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error invalid state length");
           ret = I_ERROR_PARAM;
         }
         break;
@@ -705,6 +717,7 @@ int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value
           value[i_value] = '\0';
           ret = i_set_str_parameter(i_session, I_OPT_NONCE, value);
         } else {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error invalid nonce length");
           ret = I_ERROR_PARAM;
         }
         break;
@@ -712,10 +725,12 @@ int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value
         i_session->x5u_flags = i_value;
         break;
       default:
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
         ret = I_ERROR_PARAM;
         break;
     }
   } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error input parameter");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -740,9 +755,6 @@ int i_set_str_parameter(struct _i_session * i_session, uint option, const char *
           } else {
             i_session->scope = mstrcatf(i_session->scope, " %s", s_value);
           }
-        } else {
-          o_free(i_session->scope);
-          i_session->scope = NULL;
         }
         break;
       case I_OPT_STATE:
@@ -958,10 +970,12 @@ int i_set_str_parameter(struct _i_session * i_session, uint option, const char *
         }
         break;
       default:
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error unkown option %d", option);
         ret = I_ERROR_PARAM;
         break;
     }
   } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error input parameter");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -1013,6 +1027,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
         case I_OPT_SCOPE:
+        case I_OPT_SCOPE_APPEND:
         case I_OPT_STATE:
         case I_OPT_NONCE:
         case I_OPT_REDIRECT_URI:
@@ -1052,12 +1067,14 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
           ret = i_set_additional_response(i_session, str_key, str_value);
           break;
         default:
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_parameter_list - Error unkown option %d", option);
           ret = I_ERROR_PARAM;
           break;
       }
     }
     va_end(vl);
   } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_parameter_list - Error input parameter");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -1251,7 +1268,6 @@ int i_parse_redirect_to(struct _i_session * i_session) {
     if (i_get_str_parameter(i_session, I_OPT_STATE) != NULL) {
       if (o_strcmp(i_get_str_parameter(i_session, I_OPT_STATE), state)) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error state invalid");
-        y_log_message(Y_LOG_LEVEL_DEBUG, "'%s' - '%s'", i_get_str_parameter(i_session, I_OPT_STATE), state);
         ret = I_ERROR_SERVER;
       }
     }
@@ -1435,6 +1451,25 @@ int i_build_auth_url_get(struct _i_session * i_session) {
     ret = i_set_str_parameter(i_session, I_OPT_REDIRECT_TO, url);
     o_free(url);
   } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - Error input parameter");
+    if (i_session == NULL) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_session NULL");
+    }
+    if (i_session->response_type == I_RESPONSE_TYPE_NONE ||
+        i_session->response_type == I_RESPONSE_TYPE_PASSWORD ||
+        i_session->response_type == I_RESPONSE_TYPE_CLIENT_CREDENTIALS ||
+        i_session->response_type == I_RESPONSE_TYPE_REFRESH_TOKEN) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "response_type invalid");
+    }
+    if (i_session->authorization_endpoint == NULL) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "authorization_endpoint invalid");
+    }
+    if (!check_strict_parameters(i_session)) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "strict parameters invalid");
+    }
+    if (!has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || !has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "grant_types not supported");
+    }
     ret = I_ERROR_PARAM;
   }
 
@@ -1978,39 +2013,39 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
   
   if (i_session != NULL && json_is_object(j_import)) {
     if ((ret = i_set_parameter_list(i_session,
-                               I_OPT_RESPONSE_TYPE, json_integer_value(json_object_get(j_import, "response_type")),
-                               I_OPT_SCOPE, json_string_value(json_object_get(j_import, "scope")),
-                               I_OPT_STATE, json_string_value(json_object_get(j_import, "state")),
-                               I_OPT_NONCE, json_string_value(json_object_get(j_import, "nonce")),
-                               I_OPT_REDIRECT_URI, json_string_value(json_object_get(j_import, "redirect_uri")),
-                               I_OPT_REDIRECT_TO, json_string_value(json_object_get(j_import, "redirect_to")),
-                               I_OPT_CLIENT_ID, json_string_value(json_object_get(j_import, "client_id")),
-                               I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_import, "client_secret")),
-                               I_OPT_AUTH_ENDPOINT, json_string_value(json_object_get(j_import, "authorization_endpoint")),
-                               I_OPT_TOKEN_ENDPOINT, json_string_value(json_object_get(j_import, "token_endpoint")),
-                               I_OPT_OPENID_CONFIG_ENDPOINT, json_string_value(json_object_get(j_import, "openid_config_endpoint")),
-                               I_OPT_USERINFO_ENDPOINT, json_string_value(json_object_get(j_import, "userinfo_endpoint")),
-                               I_OPT_RESULT, json_integer_value(json_object_get(j_import, "result")),
-                               I_OPT_ERROR, json_string_value(json_object_get(j_import, "error")),
-                               I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_import, "error_description")),
-                               I_OPT_ERROR_URI, json_string_value(json_object_get(j_import, "error_uri")),
-                               I_OPT_CODE, json_string_value(json_object_get(j_import, "code")),
-                               I_OPT_REFRESH_TOKEN, json_string_value(json_object_get(j_import, "refresh_token")),
-                               I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_import, "access_token")),
-                               I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_import, "token_type")),
-                               I_OPT_AUTH_SIGN_ALG, json_integer_value(json_object_get(j_import, "auth_sign_alg")),
-                               I_OPT_EXPIRES_IN, json_integer_value(json_object_get(j_import, "expires_in")),
-                               I_OPT_ID_TOKEN, json_string_value(json_object_get(j_import, "id_token")),
-                               I_OPT_GLEWLWYD_API_URL, json_string_value(json_object_get(j_import, "glewlwyd_api_url")),
-                               I_OPT_GLEWLWYD_COOKIE_SESSION, json_string_value(json_object_get(j_import, "glewlwyd_cookie_session")),
-                               I_OPT_USERNAME, json_string_value(json_object_get(j_import, "username")),
-                               I_OPT_AUTH_METHOD, json_integer_value(json_object_get(j_import, "auth_method")),
-                               I_OPT_USER_PASSWORD, json_string_value(json_object_get(j_import, "user_password")),
-                               I_OPT_X5U_FLAGS, json_integer_value(json_object_get(j_import, "x5u_flags")),
-                               I_OPT_OPENID_CONFIG_STRICT, json_integer_value(json_object_get(j_import, "openid_config_strict")),
-                               I_OPT_ISSUER, json_string_value(json_object_get(j_import, "issuer")),
-                               I_OPT_USERINFO, json_string_value(json_object_get(j_import, "userinfo")),
-                               I_OPT_NONE)) == I_OK) {
+                                     I_OPT_RESPONSE_TYPE, (int)json_integer_value(json_object_get(j_import, "response_type")),
+                                     I_OPT_SCOPE, json_string_value(json_object_get(j_import, "scope")),
+                                     I_OPT_STATE, json_string_value(json_object_get(j_import, "state")),
+                                     I_OPT_NONCE, json_string_value(json_object_get(j_import, "nonce")),
+                                     I_OPT_REDIRECT_URI, json_string_value(json_object_get(j_import, "redirect_uri")),
+                                     I_OPT_REDIRECT_TO, json_string_value(json_object_get(j_import, "redirect_to")),
+                                     I_OPT_CLIENT_ID, json_string_value(json_object_get(j_import, "client_id")),
+                                     I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_import, "client_secret")),
+                                     I_OPT_AUTH_ENDPOINT, json_string_value(json_object_get(j_import, "authorization_endpoint")),
+                                     I_OPT_TOKEN_ENDPOINT, json_string_value(json_object_get(j_import, "token_endpoint")),
+                                     I_OPT_OPENID_CONFIG_ENDPOINT, json_string_value(json_object_get(j_import, "openid_config_endpoint")),
+                                     I_OPT_USERINFO_ENDPOINT, json_string_value(json_object_get(j_import, "userinfo_endpoint")),
+                                     I_OPT_RESULT, (int)json_integer_value(json_object_get(j_import, "result")),
+                                     I_OPT_ERROR, json_string_value(json_object_get(j_import, "error")),
+                                     I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_import, "error_description")),
+                                     I_OPT_ERROR_URI, json_string_value(json_object_get(j_import, "error_uri")),
+                                     I_OPT_CODE, json_string_value(json_object_get(j_import, "code")),
+                                     I_OPT_REFRESH_TOKEN, json_string_value(json_object_get(j_import, "refresh_token")),
+                                     I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_import, "access_token")),
+                                     I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_import, "token_type")),
+                                     I_OPT_AUTH_SIGN_ALG, (int)json_integer_value(json_object_get(j_import, "auth_sign_alg")),
+                                     I_OPT_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "expires_in")),
+                                     I_OPT_ID_TOKEN, json_string_value(json_object_get(j_import, "id_token")),
+                                     I_OPT_GLEWLWYD_API_URL, json_string_value(json_object_get(j_import, "glewlwyd_api_url")),
+                                     I_OPT_GLEWLWYD_COOKIE_SESSION, json_string_value(json_object_get(j_import, "glewlwyd_cookie_session")),
+                                     I_OPT_USERNAME, json_string_value(json_object_get(j_import, "username")),
+                                     I_OPT_AUTH_METHOD, (int)json_integer_value(json_object_get(j_import, "auth_method")),
+                                     I_OPT_USER_PASSWORD, json_string_value(json_object_get(j_import, "user_password")),
+                                     I_OPT_X5U_FLAGS, (int)json_integer_value(json_object_get(j_import, "x5u_flags")),
+                                     I_OPT_OPENID_CONFIG_STRICT, (int)json_integer_value(json_object_get(j_import, "openid_config_strict")),
+                                     I_OPT_ISSUER, json_string_value(json_object_get(j_import, "issuer")),
+                                     I_OPT_USERINFO, json_string_value(json_object_get(j_import, "userinfo")),
+                                     I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
           tmp = json_dumps(j_value, JSON_COMPACT);
@@ -2033,10 +2068,12 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwk_import_from_json_t");
         ret = I_ERROR;
       }
-      if (r_jwks_import_from_json_t(i_session->jwks, json_object_get(j_import, "jwks")) != RHN_OK) {
+      if (json_object_get(j_import, "jwks") != NULL && r_jwks_import_from_json_t(i_session->jwks, json_object_get(j_import, "jwks")) != RHN_OK) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t");
         ret = I_ERROR;
       }
+    } else {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error i_set_parameter_list");
     }
   } else {
     ret = I_ERROR_PARAM;
