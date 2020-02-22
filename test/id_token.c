@@ -15,6 +15,7 @@ const char id_token_pattern[] =
 #define EXPIRES_IN 3600
 #define ISSUER "https://glewlwyd.tld"
 #define CLIENT_ID "client1_id"
+#define NONCE_INVALID "4321cba"
 
 const char code[] = "codeXyz1234";
 const char c_hash[] = "xTrH4sIDT1DIDKEmAfED1g";
@@ -348,6 +349,46 @@ START_TEST(test_iddawc_id_token_invalid_iat)
 }
 END_TEST
 
+START_TEST(test_iddawc_id_token_invalid_nonce)
+{
+  struct _i_session i_session;
+  jwk_t * jwk;
+  jwt_t * jwt;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  
+  ck_assert_int_eq(jwt_new(&jwt), 0);
+  time(&now);
+  grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(jwt_add_grants_json(jwt, grants), 0);
+  ck_assert_int_eq(jwt_set_alg(jwt, JWT_ALG_RS256, private_key, o_strlen((const char *)private_key)), 0);
+  ck_assert_ptr_ne((jwt_str = jwt_encode_str(jwt)), NULL);
+  
+  ck_assert_int_eq(r_init_jwk(&jwk), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  ck_assert_int_eq(i_verify_id_token(NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
+  
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ISSUER, ISSUER), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN, jwt_str), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_INVALID), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
+  ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  r_free_jwk(jwk);
+  
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
+  
+  o_free(grants);
+  o_free(jwt_str);
+  jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
 START_TEST(test_iddawc_id_token)
 {
   struct _i_session i_session;
@@ -517,6 +558,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_id_token_invalid_exp);
   tcase_add_test(tc_core, test_iddawc_id_token_missing_iat);
   tcase_add_test(tc_core, test_iddawc_id_token_invalid_iat);
+  tcase_add_test(tc_core, test_iddawc_id_token_invalid_nonce);
   tcase_add_test(tc_core, test_iddawc_id_token);
   tcase_add_test(tc_core, test_iddawc_id_token_with_code);
   tcase_add_test(tc_core, test_iddawc_id_token_with_access_token);
