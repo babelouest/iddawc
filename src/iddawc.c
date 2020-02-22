@@ -385,9 +385,9 @@ static int parse_openid_config(struct _i_session * i_session, int get_jwks) {
         if (ret != I_OK) {
           break;
         }
-        json_array_foreach(json_object_get(i_session->openid_config, "token_endpoint_auth_signing_alg_values_supported"), index, j_element) {
+        json_array_foreach(json_object_get(i_session->openid_config, "id_token_signing_alg_values_supported"), index, j_element) {
           if (!json_string_length(j_element)) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "parse_openid_config - Error token_endpoint_auth_signing_alg_values_supported invalid at index %zu", index);
+            y_log_message(Y_LOG_LEVEL_ERROR, "parse_openid_config - Error id_token_signing_alg_values_supported invalid at index %zu", index);
             ret = I_ERROR;
             break;
           }
@@ -1824,22 +1824,25 @@ int i_verify_id_token(struct _i_session * i_session) {
                         } else if (!json_string_length(json_object_get(i_session->id_token_payload, "aud"))) {
                           y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - required value aud missing");
                           ret = I_ERROR_PARAM;
+                        } else if (i_session->nonce != NULL && 0 != o_strcmp(i_session->nonce, json_string_value(json_object_get(i_session->id_token_payload, "nonce")))) {
+                          y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - invalid nonce");
+                          ret = I_ERROR_PARAM;
                         } else {
                           ret = I_OK;
                           if (json_object_get(i_session->id_token_payload, "at_hash") != NULL) {
                             if (i_session->access_token != NULL) {
                               alg = GNUTLS_DIG_UNKNOWN;
-                              if ((jwt_get_alg(jwt) == JWT_ALG_HS256 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS256")) || 
-                              (jwt_get_alg(jwt) == JWT_ALG_RS256 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "RS256")) || 
-                              (jwt_get_alg(jwt) == JWT_ALG_ES256 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "ES256"))) {
+                              if ((jwt_get_alg(jwt) == JWT_ALG_HS256 && has_openid_config_parameter_value(i_session, "id_token_signing_alg_values_supported", "HS256")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_RS256 && has_openid_config_parameter_value(i_session, "id_token_signing_alg_values_supported", "RS256")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_ES256 && has_openid_config_parameter_value(i_session, "id_token_signing_alg_values_supported", "ES256"))) {
                                 alg = GNUTLS_DIG_SHA256;
-                              } else if ((jwt_get_alg(jwt) == JWT_ALG_HS384 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS384")) || 
-                              (jwt_get_alg(jwt) == JWT_ALG_RS384 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "RS384")) || 
-                              (jwt_get_alg(jwt) == JWT_ALG_ES384 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "ES384"))) {
+                              } else if ((jwt_get_alg(jwt) == JWT_ALG_HS384 && has_openid_config_parameter_value(i_session, "id_token_signing_alg_values_supported", "HS384")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_RS384 && has_openid_config_parameter_value(i_session, "id_token_signing_alg_values_supported", "RS384")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_ES384 && has_openid_config_parameter_value(i_session, "id_token_signing_alg_values_supported", "ES384"))) {
                                 alg = GNUTLS_DIG_SHA384;
-                              } else if ((jwt_get_alg(jwt) == JWT_ALG_HS512 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS512")) || 
-                              (jwt_get_alg(jwt) == JWT_ALG_RS512 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "RS512")) || 
-                              (jwt_get_alg(jwt) == JWT_ALG_ES512 && has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "ES512"))) {
+                              } else if ((jwt_get_alg(jwt) == JWT_ALG_HS512 && has_openid_config_parameter_value(i_session, "id_token_signing_alg_values_supported", "HS512")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_RS512 && has_openid_config_parameter_value(i_session, "id_token_signing_alg_values_supported", "RS512")) || 
+                              (jwt_get_alg(jwt) == JWT_ALG_ES512 && has_openid_config_parameter_value(i_session, "id_token_signing_alg_values_supported", "ES512"))) {
                                 alg = GNUTLS_DIG_SHA384;
                               }
                               if (alg != GNUTLS_DIG_UNKNOWN) {
