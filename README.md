@@ -3,12 +3,12 @@
 [![Build Status](https://travis-ci.com/babelouest/iddawc.svg?branch=master)](https://travis-ci.com/babelouest/iddawc)
 ![.github/workflows/ccpp.yml](https://github.com/babelouest/iddawc/workflows/.github/workflows/ccpp.yml/badge.svg)
 
-Handles the flow of OAuth2 and OpenID Connect authentication process from the client side.
+Handles the OAuth2 and OpenID Connect authentication process flow from the client side.
 - Genrates requests based on input parameters
 - Parses response
 - Validates response values
 
-Example for code and id_token flow on an OpenID Connect server.
+Example for `code` and `id_token` response types on an OpenID Connect server.
 
 ```C
 /**
@@ -23,14 +23,14 @@ int main() {
 
   i_init_session(&i_session);
   i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_ID_TOKEN|I_RESPONSE_TYPE_CODE,
-                                                        I_OPT_OPENID_CONFIG_ENDPOINT, "https://oidc.tld/.well-known/openid-configuration",
-                                                        I_OPT_CLIENT_ID, "client1",
-                                                        I_OPT_CIENT_SECRET, "mySecret",
-                                                        I_OPT_REDIRECT_URI, "https://my-client.tld",
-                                                        I_OPT_SCOPE, "openid",
-                                                        I_OPT_STATE_GENERATE, 16,
-                                                        I_OPT_NONCE_GENERATE, 32,
-                                                        I_OPT_NONE);
+                                   I_OPT_OPENID_CONFIG_ENDPOINT, "https://oidc.tld/.well-known/openid-configuration",
+                                   I_OPT_CLIENT_ID, "client1",
+                                   I_OPT_CIENT_SECRET, "mySecret",
+                                   I_OPT_REDIRECT_URI, "https://my-client.tld",
+                                   I_OPT_SCOPE, "openid",
+                                   I_OPT_STATE_GENERATE, 16,
+                                   I_OPT_NONCE_GENERATE, 32,
+                                   I_OPT_NONE);
   if (i_load_openid_config(&i_session)) {
     fprintf(stderr, "Error loading openid-configuration\n");
     i_clean_session(&i_session);
@@ -139,4 +139,4 @@ If you choose to install Iddawc in another directory, you must set your environm
 
 # API Documentation
 
-Documentation is available in the documentation page: [https://babelouest.github.io/iddawc/doc/html/](https://babelouest.github.io/iddawc/doc/html/)
+Documentation is available in the documentation page: [https://babelouest.github.io/iddawc/](https://babelouest.github.io/iddawc/)
