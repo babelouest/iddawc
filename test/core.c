@@ -654,7 +654,7 @@ START_TEST(test_iddawc_export_json_t)
                                                   I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                   I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
-                                                  I_OPT_X5U_FLAGS, R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT,
+                                                  I_OPT_X5U_FLAGS, R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT,
                                                   I_OPT_OPENID_CONFIG, openid_configuration_valid,
                                                   I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
                                                   I_OPT_ISSUER, ISSUER,
@@ -701,7 +701,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_equal(json_object_get(j_export, "jwks"), i_session.jwks), 1);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "id_token_header"), i_session.id_token_header), 1);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "auth_sign_alg")), I_AUTH_SIGN_ALG_RS256);
-  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "x5u_flags")), R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "x5u_flags")), R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "openid_config"), j_config), 1);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "openid_config_strict")), I_STRICT_NO);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "issuer")), ISSUER);
@@ -755,7 +755,7 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
                                                     I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                     I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
-                                                    I_OPT_X5U_FLAGS, R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT,
+                                                    I_OPT_X5U_FLAGS, R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT,
                                                     I_OPT_OPENID_CONFIG, openid_configuration_valid,
                                                     I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
                                                     I_OPT_ISSUER, ISSUER,
@@ -802,7 +802,7 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
   ck_assert_int_eq(json_equal(i_session_import.jwks, i_session.jwks), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_SIGN_ALG), I_AUTH_SIGN_ALG_RS256);
-  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_X5U_FLAGS), R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_X5U_FLAGS), R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT);
   ck_assert_int_eq(json_equal(i_session_import.openid_config, j_config), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_OPENID_CONFIG_STRICT), I_STRICT_NO);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ISSUER), ISSUER);
@@ -860,7 +860,7 @@ START_TEST(test_iddawc_export_str)
                                                   I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                   I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
-                                                  I_OPT_X5U_FLAGS, R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT,
+                                                  I_OPT_X5U_FLAGS, R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT,
                                                   I_OPT_OPENID_CONFIG, openid_configuration_valid,
                                                   I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
                                                   I_OPT_ISSUER, ISSUER,
@@ -923,7 +923,7 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
                                                     I_OPT_USER_PASSWORD, USER_PASSWORD,
                                                     I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
-                                                    I_OPT_X5U_FLAGS, R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT,
+                                                    I_OPT_X5U_FLAGS, R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT,
                                                     I_OPT_OPENID_CONFIG, openid_configuration_valid,
                                                     I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
                                                     I_OPT_ISSUER, ISSUER,
@@ -970,7 +970,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
   ck_assert_int_eq(json_equal(i_session_import.jwks, i_session.jwks), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_SIGN_ALG), I_AUTH_SIGN_ALG_RS256);
-  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_X5U_FLAGS), R_X5U_FLAG_IGNORE_SERVER_CERTIFICATE|R_X5U_FLAG_FOLLOW_REDIRECT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_X5U_FLAGS), R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT);
   ck_assert_int_eq(json_equal(i_session_import.openid_config, j_config), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_OPENID_CONFIG_STRICT), I_STRICT_NO);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ISSUER), ISSUER);
