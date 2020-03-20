@@ -88,7 +88,7 @@ START_TEST(test_iddawc_id_token_invalid_iss)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
@@ -125,7 +125,7 @@ START_TEST(test_iddawc_id_token_missing_iss)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
@@ -162,7 +162,7 @@ START_TEST(test_iddawc_id_token_missing_sub)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
@@ -199,7 +199,7 @@ START_TEST(test_iddawc_id_token_missing_aud)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
@@ -236,7 +236,7 @@ START_TEST(test_iddawc_id_token_missing_exp)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
@@ -272,7 +272,7 @@ START_TEST(test_iddawc_id_token_invalid_exp)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
@@ -309,7 +309,7 @@ START_TEST(test_iddawc_id_token_missing_iat)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
@@ -346,7 +346,7 @@ START_TEST(test_iddawc_id_token_invalid_iat)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
@@ -386,7 +386,7 @@ START_TEST(test_iddawc_id_token_invalid_nonce)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
@@ -426,7 +426,7 @@ START_TEST(test_iddawc_id_token)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR_PARAM);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);
@@ -468,7 +468,7 @@ START_TEST(test_iddawc_id_token_with_code)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CODE, code), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);
@@ -505,7 +505,7 @@ START_TEST(test_iddawc_id_token_with_access_token)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN, access_token), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);
@@ -544,7 +544,7 @@ START_TEST(test_iddawc_id_token_with_code_access_token)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CODE, code), I_OK);
   ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.jwks, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
   r_free_jwk(jwk);
   
   ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);

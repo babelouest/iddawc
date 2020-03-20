@@ -663,7 +663,7 @@ START_TEST(test_iddawc_export_json_t)
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(r_jwk_import_from_json_str(i_session.id_token_header, jwk_simple_hmac), RHN_OK);
   jwks = json_pack("{s[O]}", "keys", i_session.id_token_header);
-  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.jwks, jwks), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.server_jwks, jwks), RHN_OK);
   
   j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
@@ -698,7 +698,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "glewlwyd_api_url")), GLEWLWYD_API_URL);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "glewlwyd_cookie_session")), GLEWLWYD_COOKIE_SESSION);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "auth_method")), I_AUTH_METHOD_GET);
-  ck_assert_int_eq(json_equal(json_object_get(j_export, "jwks"), i_session.jwks), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "jwks"), i_session.server_jwks), 1);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "id_token_header"), i_session.id_token_header), 1);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "auth_sign_alg")), I_AUTH_SIGN_ALG_RS256);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "x5u_flags")), R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT);
@@ -764,7 +764,7 @@ START_TEST(test_iddawc_import_json_t)
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(r_jwk_import_from_json_str(i_session.id_token_header, jwk_simple_hmac), RHN_OK);
   jwks = json_pack("{s[O]}", "keys", i_session.id_token_header);
-  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.jwks, jwks), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.server_jwks, jwks), RHN_OK);
   
   j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
@@ -800,7 +800,7 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_GLEWLWYD_API_URL), GLEWLWYD_API_URL);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_GLEWLWYD_COOKIE_SESSION), GLEWLWYD_COOKIE_SESSION);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
-  ck_assert_int_eq(json_equal(i_session_import.jwks, i_session.jwks), 1);
+  ck_assert_int_eq(json_equal(i_session_import.server_jwks, i_session.server_jwks), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_SIGN_ALG), I_AUTH_SIGN_ALG_RS256);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_X5U_FLAGS), R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT);
   ck_assert_int_eq(json_equal(i_session_import.openid_config, j_config), 1);
@@ -869,7 +869,7 @@ START_TEST(test_iddawc_export_str)
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(r_jwk_import_from_json_str(i_session.id_token_header, jwk_simple_hmac), RHN_OK);
   jwks = json_pack("{s[O]}", "keys", i_session.id_token_header);
-  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.jwks, jwks), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.server_jwks, jwks), RHN_OK);
   
   str_export = i_export_session_str(&i_session);
   ck_assert_str_eq(str_export, "{\"response_type\":273,\"scope\":\"scope1 scope2\",\"state\":\"stateXyz1234\",\"nonce\":\"nonceXyz1234\",\"redirect_uri\":\"https://iddawc.tld\",\"redirect_to\":\"https://iddawc.tld#access_token=plop\",\"client_id\":\"clientXyz1234\",\"client_secret\":\"secretXyx1234\",\"username\":\"dev\",\"user_password\":\"password\",\"additional_parameters\":{\"key\":\"value\"},\"additional_response\":{\"key\":\"value\"},\"authorization_endpoint\":\"https://isp.tld/auth\",\"token_endpoint\":\"https://isp.tld/token\",\"openid_config_endpoint\":\"https://isp.tld/.well-known/openid-configuration\",\"userinfo_endpoint\":\"http://localhost:8080/userinfo\",\"result\":4,\"error\":\"errorXyz1234\",\"error_description\":\"errorDescriptionXyz1234\",\"error_uri\":\"errorUriXyz1234\",\"code\":\"codeXyz1234\",\"refresh_token\":\"refreshXyz1234\",\"access_token\":\"accessXyz1234\",\"token_type\":\"typeXyz1234\",\"expires_in\":3600,\"id_token\":\"idTokenXyz1234\",\"id_token_payload\":{\"aud\":\"payload\"},\"id_token_header\":{\"alg\":\"HS256\",\"typ\":\"JWT\"},\"glewlwyd_api_url\":\"https://glewlwyd.tld/api\",\"glewlwyd_cookie_session\":\"cookieXyz1234\",\"auth_method\":0,\"auth_sign_alg\":1,\"jwks\":{\"keys\":[{\"alg\":\"HS256\",\"typ\":\"JWT\"}]},\"x5u_flags\":17,\"openid_config\":{\"issuer\":\"https://glewlwyd.tld/\",\"authorization_endpoint\":\"https://isp.tld/auth\",\"token_endpoint\":\"https://isp.tld/token\",\"userinfo_endpoint\":\"http://localhost:8080/userinfo\",\"jwks_uri\":\"http://localhost:8080/jwks\",\"token_endpoint_auth_methods_supported\":[\"client_secret_basic\",\"client_secret_jwt\"],\"id_token_signing_alg_values_supported\":[\"RS512\",\"RS256\"],\"scopes_supported\":[\"openid\",\"g_profile\"],\"response_types_supported\":[\"code\",\"id_token\",\"token\",\"code id_token\",\"token id_token\",\"code id_token token\",\"none\",\"refresh_token\"],\"response_modes_supported\":[\"query\",\"fragment\"],\"grant_types_supported\":[\"authorization_code\",\"implicit\"],\"display_values_supported\":[\"page\",\"popup\",\"touch\",\"wap\"],\"claim_types_supported\":[\"normal\"],\"claims_parameter_supported\":true,\"claims_supported\":[\"name\"],\"service_documentation\":\"https://glewlwyd.tld/docs\",\"ui_locales_supported\":[\"en\",\"fr\",\"nl\"],\"request_parameter_supported\":true,\"request_uri_parameter_supported\":true,\"require_request_uri_registration\":false,\"subject_types_supported\":[\"public\"]},\"openid_config_strict\":0,\"issuer\":\"https://glewlwyd.tld/\",\"userinfo\":\"{\\\"aud\\\":\\\"abcd1234\\\",\\\"name\\\":\\\"Dave Lopper\\\"}\"}");
@@ -932,7 +932,7 @@ START_TEST(test_iddawc_import_str)
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(r_jwk_import_from_json_str(i_session.id_token_header, jwk_simple_hmac), RHN_OK);
   jwks = json_pack("{s[O]}", "keys", i_session.id_token_header);
-  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.jwks, jwks), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_t(i_session.server_jwks, jwks), RHN_OK);
   
   str_import = i_export_session_str(&i_session);
   ck_assert_ptr_ne(str_import, NULL);
@@ -968,7 +968,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_GLEWLWYD_API_URL), GLEWLWYD_API_URL);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_GLEWLWYD_COOKIE_SESSION), GLEWLWYD_COOKIE_SESSION);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
-  ck_assert_int_eq(json_equal(i_session_import.jwks, i_session.jwks), 1);
+  ck_assert_int_eq(json_equal(i_session_import.server_jwks, i_session.server_jwks), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_SIGN_ALG), I_AUTH_SIGN_ALG_RS256);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_X5U_FLAGS), R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT);
   ck_assert_int_eq(json_equal(i_session_import.openid_config, j_config), 1);
