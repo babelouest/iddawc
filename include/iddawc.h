@@ -65,8 +65,9 @@ extern "C"
 /**
  * i_set_response_type i_values parameter values
  */
-#define I_AUTH_METHOD_GET  0
-#define I_AUTH_METHOD_POST 1
+#define I_AUTH_METHOD_GET  0x00000000
+#define I_AUTH_METHOD_POST 0x00000001
+#define I_AUTH_METHOD_JWT  0x00000010
 
 /**
  * I_OPT_OPENID_CONFIG_STRICT values available
@@ -174,7 +175,7 @@ struct _i_session {
   char        * glewlwyd_cookie_session;
   uint          auth_method;
   char          auth_sign_alg[I_AUTH_SIGN_ALG_MAX_LENGTH];
-  jwks_t *      jwks;
+  jwks_t *      server_jwks;
   int           x5u_flags;
   json_t *      openid_config;
   int           openid_config_strict;

@@ -310,9 +310,9 @@ static int load_jwks_endpoint(struct _i_session * i_session) {
     if (ulfius_send_http_request(&request, &response) == U_OK) {
       if (response.status == 200) {
         j_jwks = ulfius_get_json_body_response(&response, NULL);
-        r_free_jwks(i_session->jwks);
-        r_init_jwks(&i_session->jwks);
-        if (r_jwks_import_from_json_t(i_session->jwks, j_jwks) == RHN_OK) {
+        r_free_jwks(i_session->server_jwks);
+        r_init_jwks(&i_session->server_jwks);
+        if (r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
           ret = I_OK;
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "load_jwks_endpoint - Error r_jwks_import_from_str");
@@ -547,7 +547,7 @@ int i_init_session(struct _i_session * i_session) {
     o_strcpy(i_session->auth_sign_alg, "");
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
-        if ((res = r_init_jwks(&i_session->jwks)) == RHN_OK) {
+        if ((res = r_init_jwks(&i_session->server_jwks)) == RHN_OK) {
           if ((res = r_init_jwk(&i_session->id_token_header)) == RHN_OK) {
             return I_OK;
           } else if (res == U_ERROR_MEMORY) {
@@ -604,7 +604,7 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->userinfo);
     u_map_clean(&i_session->additional_parameters);
     u_map_clean(&i_session->additional_response);
-    r_free_jwks(i_session->jwks);
+    r_free_jwks(i_session->server_jwks);
     r_free_jwk(i_session->id_token_header);
     json_decref(i_session->id_token_payload);
     json_decref(i_session->openid_config);
@@ -1232,7 +1232,7 @@ int i_parse_redirect_to(struct _i_session * i_session) {
       u_map_init(&map);
       if (extract_parameters(fragment+1, &map) == I_OK) {
         if ((ret = parse_redirect_to_parameters(i_session, &map)) == I_OK) {
-          if (i_session->id_token != NULL && r_jwks_size(i_session->jwks) && i_verify_id_token(i_session) != I_OK) {
+          if (i_session->id_token != NULL && r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
             y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to fragment - Error id_token invalid");
             ret = I_ERROR_SERVER;
           }
@@ -1252,7 +1252,7 @@ int i_parse_redirect_to(struct _i_session * i_session) {
       u_map_init(&map);
       if (extract_parameters(query_dup, &map) == I_OK) {
         if ((ret = parse_redirect_to_parameters(i_session, &map)) == I_OK) {
-         if (i_session->id_token != NULL && r_jwks_size(i_session->jwks) && i_verify_id_token(i_session) != I_OK) {
+         if (i_session->id_token != NULL && r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
             y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error id_token invalid");
             ret = I_ERROR_SERVER;
           }
@@ -1791,9 +1791,9 @@ int i_verify_id_token(struct _i_session * i_session) {
   gnutls_datum_t hash_data;
   time_t now = 0;
   
-  if (i_session != NULL && i_session->id_token != NULL && r_jwks_size(i_session->jwks)) {
-    for (i=0; i<r_jwks_size(i_session->jwks); i++) {
-      jwk = r_jwks_get_at(i_session->jwks, i);
+  if (i_session != NULL && i_session->id_token != NULL && r_jwks_size(i_session->server_jwks)) {
+    for (i=0; i<r_jwks_size(i_session->server_jwks); i++) {
+      jwk = r_jwks_get_at(i_session->server_jwks, i);
       if (jwk != NULL) {
         if (r_jwk_export_to_pem_der(jwk, R_FORMAT_PEM, NULL, &len, i_session->x5u_flags) == RHN_ERROR_PARAM && len) {
           if ((pem = o_malloc(len)) != NULL) {
@@ -1997,7 +1997,7 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          
                          "auth_method", i_get_int_parameter(i_session, I_OPT_AUTH_METHOD),
                          "auth_sign_alg", i_get_int_parameter(i_session, I_OPT_AUTH_SIGN_ALG),
-                         "jwks", r_jwks_export_to_json_t(i_session->jwks),
+                         "jwks", r_jwks_export_to_json_t(i_session->server_jwks),
                          "x5u_flags", i_get_int_parameter(i_session, I_OPT_X5U_FLAGS),
                          "openid_config", i_session->openid_config,
                          
@@ -2071,7 +2071,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwk_import_from_json_t");
         ret = I_ERROR;
       }
-      if (json_object_get(j_import, "jwks") != NULL && r_jwks_import_from_json_t(i_session->jwks, json_object_get(j_import, "jwks")) != RHN_OK) {
+      if (json_object_get(j_import, "jwks") != NULL && r_jwks_import_from_json_t(i_session->server_jwks, json_object_get(j_import, "jwks")) != RHN_OK) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t");
         ret = I_ERROR;
       }
