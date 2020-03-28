@@ -98,6 +98,17 @@ set(LIB_SRC
 set(PKGCONF_REQ "")
 set(PKGCONF_REQ_PRIVATE "")
 
+# static library
+
+option(BUILD_STATIC "Build static library." OFF)
+
+if (BUILD_STATIC)
+    add_library(iddawc_static STATIC ${LIB_SRC})
+    target_compile_definitions(iddawc_static PUBLIC -DO_STATIC_LIBRARY)
+    set_target_properties(iddawc_static PROPERTIES
+            OUTPUT_NAME iddawc)
+endif ()
+
 # shared library
 
 add_library(iddawc SHARED ${LIB_SRC})
@@ -391,5 +402,6 @@ include(CPack)
 
 message(STATUS "Build testing tree:       ${BUILD_IDDAWC_TESTING}")
 message(STATUS "Install the header files: ${INSTALL_HEADER}")
+message(STATUS "Build Static library:     ${BUILD_STATIC}")
 message(STATUS "Build RPM package:        ${BUILD_RPM}")
 message(STATUS "Build documentation:      ${BUILD_IDDAWC_DOCUMENTATION}")

@@ -264,15 +264,16 @@ START_TEST(test_iddawc_set_parameter)
 }
 END_TEST
 
-START_TEST(test_iddawc_set_flag_parameter)
+START_TEST(test_iddawc_set_int_parameter)
 {
   struct _i_session i_session;
 
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   
-  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_AUTH_METHOD, 666), I_ERROR_PARAM);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST|I_AUTH_METHOD_JWT_SECRET), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET|I_AUTH_METHOD_JWT_PRIVKEY), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_EXPIRES_IN, EXPIRES_IN), I_OK);
 
@@ -366,7 +367,7 @@ START_TEST(test_iddawc_get_parameter)
 }
 END_TEST
 
-START_TEST(test_iddawc_get_flag_parameter)
+START_TEST(test_iddawc_get_int_parameter)
 {
   struct _i_session i_session;
 
@@ -374,6 +375,10 @@ START_TEST(test_iddawc_get_flag_parameter)
   
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET), I_OK);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST|I_AUTH_METHOD_JWT_SECRET), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_AUTH_METHOD), I_AUTH_METHOD_POST|I_AUTH_METHOD_JWT_SECRET);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET|I_AUTH_METHOD_JWT_PRIVKEY), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET|I_AUTH_METHOD_JWT_PRIVKEY);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST), I_OK);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_AUTH_METHOD), I_AUTH_METHOD_POST);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_EXPIRES_IN, EXPIRES_IN), I_OK);
@@ -997,11 +1002,11 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_set_response_type);
   tcase_add_test(tc_core, test_iddawc_set_result);
   tcase_add_test(tc_core, test_iddawc_set_parameter);
-  tcase_add_test(tc_core, test_iddawc_set_flag_parameter);
+  tcase_add_test(tc_core, test_iddawc_set_int_parameter);
   tcase_add_test(tc_core, test_iddawc_set_additional_parameter);
   tcase_add_test(tc_core, test_iddawc_set_additional_response);
   tcase_add_test(tc_core, test_iddawc_get_parameter);
-  tcase_add_test(tc_core, test_iddawc_get_flag_parameter);
+  tcase_add_test(tc_core, test_iddawc_get_int_parameter);
   tcase_add_test(tc_core, test_iddawc_get_response_type);
   tcase_add_test(tc_core, test_iddawc_get_result);
   tcase_add_test(tc_core, test_iddawc_get_additional_parameter);

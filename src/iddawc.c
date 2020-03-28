@@ -310,8 +310,8 @@ static int load_jwks_endpoint(struct _i_session * i_session) {
     if (ulfius_send_http_request(&request, &response) == U_OK) {
       if (response.status == 200) {
         j_jwks = ulfius_get_json_body_response(&response, NULL);
-        r_free_jwks(i_session->server_jwks);
-        r_init_jwks(&i_session->server_jwks);
+        r_jwks_free(i_session->server_jwks);
+        r_jwks_init(&i_session->server_jwks);
         if (r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
           ret = I_OK;
         } else {
@@ -506,6 +506,20 @@ static json_t * export_u_map(struct _u_map * map) {
   return j_return;
 }
 
+/*static char * generate_auth_jwt(struct _i_session * i_session) {
+  jwt_t * jwt;
+  char * jwt_str = NULL;
+  
+  if (i_session != NULL) {
+    jwt_init(&jwt);
+    if (i_session->auth_method & I_AUTH_METHOD_JWT_SECRET && o_strlen(i_session->client_secret)) {
+      
+    } else if (i_session->auth_method & I_AUTH_METHOD_JWT_PRIVKEY && )
+    jwt_free(jwt);
+  }
+  return jwt_str;
+}*/
+
 int i_init_session(struct _i_session * i_session) {
   int res;
   
@@ -547,9 +561,15 @@ int i_init_session(struct _i_session * i_session) {
     o_strcpy(i_session->auth_sign_alg, "");
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
-        if ((res = r_init_jwks(&i_session->server_jwks)) == RHN_OK) {
-          if ((res = r_init_jwk(&i_session->id_token_header)) == RHN_OK) {
-            return I_OK;
+        if ((res = r_jwks_init(&i_session->server_jwks)) == RHN_OK) {
+          if ((res = r_jwks_init(&i_session->client_jwks)) == RHN_OK) {
+            if ((res = r_jwk_init(&i_session->id_token_header)) == RHN_OK) {
+              return I_OK;
+            } else if (res == U_ERROR_MEMORY) {
+              return I_ERROR_MEMORY;
+            } else {
+              return I_ERROR;
+            }
           } else if (res == U_ERROR_MEMORY) {
             return I_ERROR_MEMORY;
           } else {
@@ -604,8 +624,9 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->userinfo);
     u_map_clean(&i_session->additional_parameters);
     u_map_clean(&i_session->additional_response);
-    r_free_jwks(i_session->server_jwks);
-    r_free_jwk(i_session->id_token_header);
+    r_jwks_free(i_session->server_jwks);
+    r_jwks_free(i_session->client_jwks);
+    r_jwk_free(i_session->id_token_header);
     json_decref(i_session->id_token_payload);
     json_decref(i_session->openid_config);
     json_decref(i_session->j_userinfo);
@@ -660,16 +681,7 @@ int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value
         }
         break;
       case I_OPT_AUTH_METHOD:
-        switch (i_value) {
-          case I_AUTH_METHOD_GET:
-          case I_AUTH_METHOD_POST:
-            i_session->auth_method = i_value;
-            break;
-          default:
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error unknown auth method");
-            ret = I_ERROR_PARAM;
-            break;
-        }
+        i_session->auth_method = i_value;
         break;
       case I_OPT_AUTH_SIGN_ALG:
         switch (i_value) {
@@ -1410,7 +1422,7 @@ int i_build_auth_url_get(struct _i_session * i_session) {
       i_session->authorization_endpoint != NULL &&
       check_strict_parameters(i_session) &&
       (has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) &&
-      i_session->auth_method == I_AUTH_METHOD_GET) {
+      i_session->auth_method & I_AUTH_METHOD_GET) {
     escaped = ulfius_url_encode(i_session->redirect_uri);
     url = msprintf("%s?redirect_uri=%s", i_session->authorization_endpoint, escaped);
     o_free(escaped);
@@ -1498,12 +1510,12 @@ int i_run_auth_request(struct _i_session * i_session) {
       ret = I_ERROR;
     } else {
       u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
-      if (i_session->auth_method == I_AUTH_METHOD_GET) {
+      if (i_session->auth_method & I_AUTH_METHOD_GET) {
         if ((ret = i_build_auth_url_get(i_session)) == I_OK) {
           request.http_verb = o_strdup("GET");
           request.http_url = o_strdup(i_get_str_parameter(i_session, I_OPT_REDIRECT_TO));
         }
-      } else if (i_session->auth_method == I_AUTH_METHOD_POST) {
+      } else if (i_session->auth_method & I_AUTH_METHOD_POST) {
         request.http_verb = o_strdup("POST");
         request.http_url = o_strdup(i_session->authorization_endpoint);
         u_map_put(request.map_post_body, "redirect_uri", i_session->redirect_uri);
@@ -1942,7 +1954,7 @@ int i_verify_id_token(struct _i_session * i_session) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error r_jwk_export_to_pem_der (1) at index %zu", i);
           ret = I_ERROR;
         }
-        r_free_jwk(jwk);
+        r_jwk_free(jwk);
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error getting jwk at index %zu", i);
         ret = I_ERROR;

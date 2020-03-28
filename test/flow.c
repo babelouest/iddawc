@@ -214,15 +214,15 @@ int callback_openid_jwks_valid (const struct _u_request * request, struct _u_res
   jwks_t * jwks;
   json_t * j_response;
   
-  r_init_jwk(&jwk);
-  r_init_jwks(&jwks);
+  r_jwk_init(&jwk);
+  r_jwks_init(&jwks);
   r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, (unsigned char *)public_key, o_strlen(public_key));
   r_jwks_append_jwk(jwks, jwk);
   j_response = r_jwks_export_to_json_t(jwks);
   ulfius_set_json_body_response(response, 200, j_response);
   
-  r_free_jwk(jwk);
-  r_free_jwks(jwks);
+  r_jwk_free(jwk);
+  r_jwks_free(jwks);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
 }
