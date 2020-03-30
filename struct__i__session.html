@@ -113,8 +113,10 @@ Data Fields</h2></td></tr>
 <tr class="separator:aa9cd99d67b8416d305828191c7571b3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ce4496441b2a84a34034d05efcf63cd"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__i__session.html#a2ce4496441b2a84a34034d05efcf63cd">auth_sign_alg</a> [<a class="el" href="group__const.html#gad4f00a53de1797f759065d4b815a5985">I_AUTH_SIGN_ALG_MAX_LENGTH</a>]</td></tr>
 <tr class="separator:a2ce4496441b2a84a34034d05efcf63cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42358e4d8a3fd11ef3474b785679fa06"><td class="memItemLeft" align="right" valign="top">jwks_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__i__session.html#a42358e4d8a3fd11ef3474b785679fa06">jwks</a></td></tr>
-<tr class="separator:a42358e4d8a3fd11ef3474b785679fa06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9a60275d7fe1a3cffa75454c4981119"><td class="memItemLeft" align="right" valign="top">jwks_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__i__session.html#af9a60275d7fe1a3cffa75454c4981119">server_jwks</a></td></tr>
+<tr class="separator:af9a60275d7fe1a3cffa75454c4981119"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d95f5ca1913301823e5c64c20537394"><td class="memItemLeft" align="right" valign="top">jwks_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__i__session.html#a3d95f5ca1913301823e5c64c20537394">client_jwks</a></td></tr>
+<tr class="separator:a3d95f5ca1913301823e5c64c20537394"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a381cea1adba59731b285cb62b39d1a23"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__i__session.html#a381cea1adba59731b285cb62b39d1a23">x5u_flags</a></td></tr>
 <tr class="separator:a381cea1adba59731b285cb62b39d1a23"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4bf4fa948532b3fda7a35dab2d67c245"><td class="memItemLeft" align="right" valign="top">json_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__i__session.html#a4bf4fa948532b3fda7a35dab2d67c245">openid_config</a></td></tr>
@@ -577,14 +579,28 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a id="a42358e4d8a3fd11ef3474b785679fa06"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a42358e4d8a3fd11ef3474b785679fa06">&#9670;&nbsp;</a></span>jwks</h2>
+<a id="af9a60275d7fe1a3cffa75454c4981119"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9a60275d7fe1a3cffa75454c4981119">&#9670;&nbsp;</a></span>server_jwks</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">jwks_t* _i_session::jwks</td>
+          <td class="memname">jwks_t* _i_session::server_jwks</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a3d95f5ca1913301823e5c64c20537394"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d95f5ca1913301823e5c64c20537394">&#9670;&nbsp;</a></span>client_jwks</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">jwks_t* _i_session::client_jwks</td>
         </tr>
       </table>
 </div><div class="memdoc">

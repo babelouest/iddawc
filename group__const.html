@@ -74,10 +74,14 @@ Macros</h2></td></tr>
 <tr class="separator:ga298e1585f5a8232bba2b87168d1ef5c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae605879f560cff134d4047ea0eae449c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gae605879f560cff134d4047ea0eae449c">I_RESPONSE_TYPE_REFRESH_TOKEN</a>&#160;&#160;&#160;0x00100000</td></tr>
 <tr class="separator:gae605879f560cff134d4047ea0eae449c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga324601c3e9a1f0212d34341e125ef4bc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga324601c3e9a1f0212d34341e125ef4bc">I_AUTH_METHOD_GET</a>&#160;&#160;&#160;0</td></tr>
+<tr class="memitem:ga324601c3e9a1f0212d34341e125ef4bc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga324601c3e9a1f0212d34341e125ef4bc">I_AUTH_METHOD_GET</a>&#160;&#160;&#160;0x00000000</td></tr>
 <tr class="separator:ga324601c3e9a1f0212d34341e125ef4bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab26b347fd648e803babe686d77d9b551"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gab26b347fd648e803babe686d77d9b551">I_AUTH_METHOD_POST</a>&#160;&#160;&#160;1</td></tr>
+<tr class="memitem:gab26b347fd648e803babe686d77d9b551"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gab26b347fd648e803babe686d77d9b551">I_AUTH_METHOD_POST</a>&#160;&#160;&#160;0x00000001</td></tr>
 <tr class="separator:gab26b347fd648e803babe686d77d9b551"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8a16fe375d9de5506502370f0db1c26b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga8a16fe375d9de5506502370f0db1c26b">I_AUTH_METHOD_JWT_SECRET</a>&#160;&#160;&#160;0x00000010</td></tr>
+<tr class="separator:ga8a16fe375d9de5506502370f0db1c26b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga14a4779376537b4f8111af0d3d339ff0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga14a4779376537b4f8111af0d3d339ff0">I_AUTH_METHOD_JWT_PRIVKEY</a>&#160;&#160;&#160;0x00000100</td></tr>
+<tr class="separator:ga14a4779376537b4f8111af0d3d339ff0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga709282ef4107f8e96ba857d213f9c704"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga709282ef4107f8e96ba857d213f9c704">I_STRICT_NO</a>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:ga709282ef4107f8e96ba857d213f9c704"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga883c307abcb55fb0240a0bb71330231f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga883c307abcb55fb0240a0bb71330231f">I_STRICT_YES</a>&#160;&#160;&#160;1</td></tr>
@@ -348,7 +352,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define I_AUTH_METHOD_GET&#160;&#160;&#160;0</td>
+          <td class="memname">#define I_AUTH_METHOD_GET&#160;&#160;&#160;0x00000000</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -363,7 +367,35 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define I_AUTH_METHOD_POST&#160;&#160;&#160;1</td>
+          <td class="memname">#define I_AUTH_METHOD_POST&#160;&#160;&#160;0x00000001</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ga8a16fe375d9de5506502370f0db1c26b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8a16fe375d9de5506502370f0db1c26b">&#9670;&nbsp;</a></span>I_AUTH_METHOD_JWT_SECRET</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define I_AUTH_METHOD_JWT_SECRET&#160;&#160;&#160;0x00000010</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ga14a4779376537b4f8111af0d3d339ff0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga14a4779376537b4f8111af0d3d339ff0">&#9670;&nbsp;</a></span>I_AUTH_METHOD_JWT_PRIVKEY</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define I_AUTH_METHOD_JWT_PRIVKEY&#160;&#160;&#160;0x00000100</td>
         </tr>
       </table>
 </div><div class="memdoc">
