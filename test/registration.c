@@ -11,7 +11,7 @@
 
 const char client_id[] = "s6BhdRkqt3";
 const char client_secret[] = "ZJYCqe3GGRvdrudKyZS0XhGv_Z45DuKhCUk0gBR1vZk";
-const char register_pattern[] = "{\"client_id\": \"s6BhdRkqt3\",\"client_secret\":\"ZJYCqe3GGRvdrudKyZS0XhGv_Z45DuKhCUk0gBR1vZk\",\"client_secret_expires_at\": 1577858400,\"registration_access_token\":\"this.is.an.access.token.value.ffx83\",\"registration_client_uri\":\"https://server.example.com/connect/register?client_id=s6BhdRkqt3\",\"token_endpoint_auth_method\":\"client_secret_basic\",\"application_type\": \"web\",\"redirect_uris\":[\"https://client.example.org/callback\",\"https://client.example.org/callback2\"],\"client_name\": \"My Example\",\"client_name#ja-Jpan-JP\":\"クライアント名\",\"logo_uri\": \"https://client.example.org/logo.png\",\"subject_type\": \"pairwise\",\"sector_identifier_uri\":\"https://other.example.net/file_of_redirect_uris.json\",\"jwks_uri\": \"https://client.example.org/my_public_keys.jwks\",\"userinfo_encrypted_response_alg\": \"RSA1_5\",\"userinfo_encrypted_response_enc\": \"A128CBC-HS256\",\"contacts\": [\"ve7jtb@example.org\", \"mary@example.org\"],\"request_uris\":[]}";
+const char register_pattern[] = "{\"client_id\": \"s6BhdRkqt3\",\"client_secret\":\"ZJYCqe3GGRvdrudKyZS0XhGv_Z45DuKhCUk0gBR1vZk\",\"client_secret_expires_at\": 1577858400,\"registration_access_token\":\"this.is.an.access.token.value.ffx83\",\"registration_client_uri\":\"https://server.example.com/connect/register?client_id=s6BhdRkqt3\",\"token_endpoint_auth_method\":\"client_secret_basic\",\"application_type\": \"web\",\"redirect_uris\":[],\"client_name\": \"My Example\",\"client_name#ja-Jpan-JP\":\"クライアント名\",\"logo_uri\": \"https://client.example.org/logo.png\",\"subject_type\": \"pairwise\",\"sector_identifier_uri\":\"https://other.example.net/file_of_redirect_uris.json\",\"jwks_uri\": \"https://client.example.org/my_public_keys.jwks\",\"userinfo_encrypted_response_alg\": \"RSA1_5\",\"userinfo_encrypted_response_enc\": \"A128CBC-HS256\",\"contacts\": [\"ve7jtb@example.org\", \"mary@example.org\"],\"request_uris\":[]}";
 
 int callback_register (const struct _u_request * request, struct _u_response * response, void * user_data) {
   if (0 == o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization"))) {
@@ -68,6 +68,7 @@ START_TEST(test_iddawc_registration_valid)
   ck_assert_int_eq(1, json_equal(j_expected, j_result));
   ck_assert_str_eq(client_id, i_get_str_parameter(&i_session, I_OPT_CLIENT_ID));
   ck_assert_str_eq(client_secret, i_get_str_parameter(&i_session, I_OPT_CLIENT_SECRET));
+  ck_assert_str_eq("https://www.example.com/callback", i_get_str_parameter(&i_session, I_OPT_REDIRECT_URI));
   json_decref(j_result);
   json_decref(j_expected);
   i_clean_session(&i_session);
@@ -114,7 +115,7 @@ int main(int argc, char *argv[])
   int number_failed;
   Suite *s;
   SRunner *sr;
-  y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc token registration tests");
+  //y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc token registration tests");
   s = iddawc_suite();
   sr = srunner_create(s);
 
@@ -122,6 +123,6 @@ int main(int argc, char *argv[])
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);
   
-  y_close_logs();
+  //y_close_logs();
   return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
