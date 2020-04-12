@@ -30,12 +30,11 @@ set(PROJECT_HOMEPAGE_URL "https://github.com/babelouest/iddawc/")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/iddawc/issues")
 set(LIBRARY_VERSION_MAJOR "0")
 set(LIBRARY_VERSION_MINOR "9")
-set(LIBRARY_VERSION_PATCH "4")
+set(LIBRARY_VERSION_PATCH "5")
 set(ORCANIA_VERSION_REQUIRED "2.1.0")
 set(YDER_VERSION_REQUIRED "1.4.10")
-set(ULFIUS_VERSION_REQUIRED "2.6.5")
-set(RHONABWY_VERSION_REQUIRED "0.9.5")
-set(LIBJWT_VERSION_REQUIRED "1.10.0")
+set(ULFIUS_VERSION_REQUIRED "2.6.6")
+set(RHONABWY_VERSION_REQUIRED "0.9.9")
 
 set(PROJECT_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
 set(PROJECT_VERSION_MAJOR ${LIBRARY_VERSION_MAJOR})
@@ -118,13 +117,6 @@ set_target_properties(iddawc PROPERTIES
         VERSION "${LIBRARY_VERSION}"
         SOVERSION "${LIBRARY_SOVERSION}")
 target_link_libraries(iddawc ${LIBS})
-
-include(FindLibJWT)
-find_package(LibJWT ${LIBJWT_VERSION_REQUIRED} REQUIRED)
-if (LIBJWT_FOUND)
-	set(LIBS ${LIBS} ${LIBJWT_LIBRARIES})
-	include_directories(${LIBJWT_INCLUDE_DIRS})
-endif ()
 
 include(FindJansson)
 set(JANSSON_MIN_VERSION 2.11)
@@ -304,7 +296,11 @@ if (BUILD_IDDAWC_TESTING)
             token
             load_config
             load_userinfo
-            flow)
+            flow
+            introspection
+            revocation
+            registration
+            )
 
         configure_file(
                 "${CMAKE_MODULE_PATH}/CTestCustom.cmake.in"

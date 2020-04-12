@@ -1,5 +1,12 @@
 # Iddawc Changelog
 
+## 0.9.5
+
+- Use rhonabwy instead of libjwt for JWT management
+- Add JWT requests in `/auth` and `/token` endpoints
+- Add `i_load_userinfo_custom`
+- Add functions `i_revoke_token`, `i_introspect_token`, `i_register_client`
+
 ## 0.9.4
 
 - Bugfixes

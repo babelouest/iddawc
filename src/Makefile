@@ -31,13 +31,13 @@ CONFIG_TEMPLATE=$(IDDAWC_INCLUDE)/iddawc-cfg.h.in
 DESTDIR=/usr/local
 CC=gcc
 CFLAGS+=-c -pedantic -std=gnu99 -fPIC -Wall -Werror -Wextra -D_REENTRANT -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS)
-LIBS=-L$(DESTDIR)/lib -lc -lulfius -lorcania -lrhonabwy -ljwt -lgnutls $(LDFLAGS)
+LIBS=-L$(DESTDIR)/lib -lc -lulfius -lorcania -lrhonabwy -lgnutls $(LDFLAGS)
 SONAME=-soname
 OBJECTS=iddawc.o
 OUTPUT=libiddawc.so
 VERSION_MAJOR=0
 VERSION_MINOR=9
-VERSION_PATCH=4
+VERSION_PATCH=5
 
 .PHONY: all clean
 
