@@ -49,6 +49,14 @@ $(function() {
 Functions</h2></td></tr>
 <tr class="memitem:ga71428e3bcc19f2ae742c8fe36e5428b7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga71428e3bcc19f2ae742c8fe36e5428b7">i_load_userinfo</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga71428e3bcc19f2ae742c8fe36e5428b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga290ed5c2e464ae32e423c21c00765d8e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga290ed5c2e464ae32e423c21c00765d8e">i_load_userinfo_custom</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *http_method, struct _u_map *additional_query, struct _u_map *additional_headers)</td></tr>
+<tr class="separator:ga290ed5c2e464ae32e423c21c00765d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga418b5be2b1d81f405a5602d9b865b82c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga418b5be2b1d81f405a5602d9b865b82c">i_revoke_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga418b5be2b1d81f405a5602d9b865b82c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf950f7340cb07382ee8dcb2e2d9b86f3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gaf950f7340cb07382ee8dcb2e2d9b86f3">i_introspect_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t **j_result)</td></tr>
+<tr class="separator:gaf950f7340cb07382ee8dcb2e2d9b86f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gae4b42399eedec1b1a73eaea95c22ce51">i_register_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_parameters, int update_session, json_t **j_result)</td></tr>
+<tr class="separator:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga1a31bc20153cb660fe8224563cd96bb1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga1a31bc20153cb660fe8224563cd96bb1">i_build_auth_url_get</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga1a31bc20153cb660fe8224563cd96bb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2db60e3de3bb62e5cbfc114f1c8449db"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga2db60e3de3bb62e5cbfc114f1c8449db">i_run_auth_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
@@ -84,9 +92,170 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Loads the userinfo endpoint using the access_token sets the result to i_session-&gt;userinfo as char * and i_session-&gt;j_userinfo as json_t * if the result is in JSON format </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Loads the userinfo endpoint using the access_token if the result is a JWT, validate the signature and/or decrypt the token sets the result to i_session-&gt;userinfo as char * and i_session-&gt;j_userinfo as json_t * if the result is in JSON format </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
+
+</div>
+</div>
+<a id="ga290ed5c2e464ae32e423c21c00765d8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga290ed5c2e464ae32e423c21c00765d8e">&#9670;&nbsp;</a></span>i_load_userinfo_custom()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_load_userinfo_custom </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>http_method</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct _u_map *&#160;</td>
+          <td class="paramname"><em>additional_query</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct _u_map *&#160;</td>
+          <td class="paramname"><em>additional_headers</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Loads the userinfo endpoint using the access_token with custom parameters if the result is a JWT, validate the signature and/or decrypt the token sets the result to i_session-&gt;userinfo as char * and i_session-&gt;j_userinfo as json_t * if the result is in JSON format </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">http_method</td><td>http method to use, values available are 'GET' or 'POST' </td></tr>
+    <tr><td class="paramname">additional_query</td><td>set of additional parameters to add to the url query </td></tr>
+    <tr><td class="paramname">additional_headers</td><td>set of additional parameters to add to the request header </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
+
+</div>
+</div>
+<a id="ga418b5be2b1d81f405a5602d9b865b82c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga418b5be2b1d81f405a5602d9b865b82c">&#9670;&nbsp;</a></span>i_revoke_token()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_revoke_token </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Loads the revocation endpoint for the access_token_target Using the access_token for authentication </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
+
+</div>
+</div>
+<a id="gaf950f7340cb07382ee8dcb2e2d9b86f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf950f7340cb07382ee8dcb2e2d9b86f3">&#9670;&nbsp;</a></span>i_introspect_token()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_introspect_token </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">json_t **&#160;</td>
+          <td class="paramname"><em>j_result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Loads the introspection endpoint for the access_token_target Using the access_token for authentication </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">j_result</td><td>if not NULL, set an allocated json_t * object with the endpoint result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success and if the access_token_target is valid, I_ERROR_UNAUTHORIZED if the access_token_target is invalid, another error value on error </dd></dl>
+
+</div>
+</div>
+<a id="gae4b42399eedec1b1a73eaea95c22ce51"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae4b42399eedec1b1a73eaea95c22ce51">&#9670;&nbsp;</a></span>i_register_client()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_register_client </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">json_t *&#160;</td>
+          <td class="paramname"><em>j_parameters</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>update_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">json_t **&#160;</td>
+          <td class="paramname"><em>j_result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Register a new client using the dynamic registration endpoint Using the access_token for authentication </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">j_parameters</td><td>a json_t * object containing the client metadata The metadata content depends on the registration endpoint but at least the parameter redirect_uris (array of string) is required to register a new client </td></tr>
+    <tr><td class="paramname">update_session</td><td>if the registration is succesfull, update the session with the new client_id and client_secret </td></tr>
+    <tr><td class="paramname">j_result</td><td>if not NULL, set an allocated json_t * object with the endpoint result </td></tr>
   </table>
   </dd>
 </dl>
