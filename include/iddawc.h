@@ -360,15 +360,6 @@ const char * i_get_additional_parameter(struct _i_session * i_session, const cha
 const char * i_get_additional_response(struct _i_session * i_session, const char * s_key);
 
 /**
- * Parses the redirect_uri given by the oauth2 server in the implicit flow
- * The redirect_uri may contain a code, a token, an id_token, or an error
- * Fills the session parameters with the values given in the redirect_uri
- * @param i_session: a reference to a struct _i_session *
- * @return I_OK on success, an error value on error
- */
-int i_parse_redirect_to(struct _i_session * i_session);
-
-/**
  * Sets a list of parameters to a session
  * @param i_session: a reference to a struct _i_session *
  * the list of parameters to set
@@ -382,111 +373,6 @@ int i_parse_redirect_to(struct _i_session * i_session);
  * @return I_OK on success, an error value on error
  */
 int i_set_parameter_list(struct _i_session * i_session, ...);
-
-/**
- * Loads and parse the openid_config endpoint, and sets the parameter values accordingly
- * @param i_session: a reference to a struct _i_session *
- * @return I_OK on success, an error value on error
- */
-int i_load_openid_config(struct _i_session * i_session);
-
-/**
- * @}
- */
-
-/**
- * @defgroup run Executes oauth2 or oidc requests
- * Run auth, token or userinfo requests
- * @{
- */
-
-/**
- * Loads the userinfo endpoint using the access_token
- * if the result is a JWT, validate the signature 
- * and/or decrypt the token
- * sets the result to i_session->userinfo as char *
- * and i_session->j_userinfo as json_t * if the result is in JSON format
- * @param i_session: a reference to a struct _i_session *
- * @return I_OK on success, an error value on error
- */
-int i_load_userinfo(struct _i_session * i_session);
-
-/**
- * Loads the userinfo endpoint using the access_token
- * with custom parameters
- * if the result is a JWT, validate the signature 
- * and/or decrypt the token
- * sets the result to i_session->userinfo as char *
- * and i_session->j_userinfo as json_t * if the result is in JSON format
- * @param i_session: a reference to a struct _i_session *
- * @param http_method: http method to use, values available are 'GET' or 'POST'
- * @param additional_query: set of additional parameters to add to the url query
- * @param additional_headers: set of additional parameters to add to the request header
- * @return I_OK on success, an error value on error
- */
-int i_load_userinfo_custom(struct _i_session * i_session, const char * http_method, struct _u_map * additional_query, struct _u_map * additional_headers);
-
-/**
- * Loads the revocation endpoint for the access_token_target
- * Using the access_token for authentication
- * @param i_session: a reference to a struct _i_session *
- * @return I_OK on success, an error value on error
- */
-int i_revoke_token(struct _i_session * i_session);
-
-/**
- * Loads the introspection endpoint for the access_token_target
- * Using the access_token for authentication
- * @param i_session: a reference to a struct _i_session *
- * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
- * @return I_OK on success and if the access_token_target is valid, 
- * I_ERROR_UNAUTHORIZED if the access_token_target is invalid, another error value on error
- */
-int i_introspect_token(struct _i_session * i_session, json_t ** j_result);
-
-/**
- * Register a new client using the dynamic registration endpoint
- * Using the access_token for authentication
- * @param i_session: a reference to a struct _i_session *
- * @param j_parameters: a json_t * object containing the client metadata
- * The metadata content depends on the registration endpoint but at least
- * the parameter redirect_uris (array of string) is required to register a new client
- * @param update_session: if the registration is succesfull, update the session with the new client_id and client_secret
- * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
- * @return I_OK on success, an error value on error
- */
-int i_register_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
-
-/**
- * Builds the url to GET the auth endpoint
- * sets the result to parameter I_OPT_REDIRECT_TO
- * @param i_session: a reference to a struct _i_session *
- * @return I_OK on success, an error value on error
- */
-int i_build_auth_url_get(struct _i_session * i_session);
-
-/**
- * Executes an auth request using the implicit endpoint
- * and sets the result values in the session variables
- * @param i_session: a reference to a struct _i_session *
- * @return I_OK on success, an error value on error
- */
-int i_run_auth_request(struct _i_session * i_session);
-
-/**
- * Executes a token request using the implicit endpoint
- * and sets the result values in the session variables
- * @param i_session: a reference to a struct _i_session *
- * @return I_OK on success, an error value on error
- */
-int i_run_token_request(struct _i_session * i_session);
-
-/**
- * Validates the id_token signature and content if necessary
- * @param i_session: a reference to a struct _i_session *
- * @return I_OK on success, an error value on error
- */
-int i_verify_id_token(struct _i_session * i_session);
 
 /**
  * Exports a _i_session * into a json_t * object
@@ -519,6 +405,120 @@ char * i_export_session_str(struct _i_session * i_session);
  * @return I_OK on success, an error value on error
  */
 int i_import_session_str(struct _i_session * i_session, const char * str_import);
+
+/**
+ * @}
+ */
+
+/**
+ * @defgroup run Run OAuth2 or OIDC requests
+ * Run auth, token, userinfo, introspect, revoke or register requests
+ * @{
+ */
+
+/**
+ * Loads and parse the openid_config endpoint, and sets the parameter values accordingly
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_load_openid_config(struct _i_session * i_session);
+
+/**
+ * Builds the url to GET the auth endpoint
+ * sets the result to parameter I_OPT_REDIRECT_TO
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_build_auth_url_get(struct _i_session * i_session);
+
+/**
+ * Executes an auth request using the implicit endpoint
+ * and sets the result values in the session variables
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_run_auth_request(struct _i_session * i_session);
+
+/**
+ * Parses the redirect_uri given by the oauth2 server in the implicit flow
+ * The redirect_uri may contain a code, a token, an id_token, or an error
+ * Fills the session parameters with the values given in the redirect_uri
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_parse_redirect_to(struct _i_session * i_session);
+
+/**
+ * Executes a token request using the implicit endpoint
+ * and sets the result values in the session variables
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_run_token_request(struct _i_session * i_session);
+
+/**
+ * Validates the id_token signature and content if necessary
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_verify_id_token(struct _i_session * i_session);
+
+/**
+ * Loads the userinfo endpoint using the access_token
+ * if the result is a JWT, validate the signature 
+ * and/or decrypt the token
+ * sets the result to i_session->userinfo as char *
+ * and i_session->j_userinfo as json_t * if the result is in JSON format
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_load_userinfo(struct _i_session * i_session);
+
+/**
+ * Loads the userinfo endpoint using the access_token
+ * with custom parameters
+ * if the result is a JWT, validate the signature 
+ * and/or decrypt the token
+ * sets the result to i_session->userinfo as char *
+ * and i_session->j_userinfo as json_t * if the result is in JSON format
+ * @param i_session: a reference to a struct _i_session *
+ * @param http_method: http method to use, values available are 'GET' or 'POST'
+ * @param additional_query: set of additional parameters to add to the url query
+ * @param additional_headers: set of additional parameters to add to the request header
+ * @return I_OK on success, an error value on error
+ */
+int i_load_userinfo_custom(struct _i_session * i_session, const char * http_method, struct _u_map * additional_query, struct _u_map * additional_headers);
+
+/**
+ * Loads the introspection endpoint for the access_token_target
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
+ * @return I_OK on success and if the access_token_target is valid, 
+ * I_ERROR_UNAUTHORIZED if the access_token_target is invalid, another error value on error
+ */
+int i_introspect_token(struct _i_session * i_session, json_t ** j_result);
+
+/**
+ * Loads the revocation endpoint for the access_token_target
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_revoke_token(struct _i_session * i_session);
+
+/**
+ * Register a new client using the dynamic registration endpoint
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_parameters: a json_t * object containing the client metadata
+ * The metadata content depends on the registration endpoint but at least
+ * the parameter redirect_uris (array of string) is required to register a new client
+ * @param update_session: if the registration is succesfull, update the session with the new client_id and client_secret
+ * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
+ * @return I_OK on success, an error value on error
+ */
+int i_register_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
 
 /**
  * @}
