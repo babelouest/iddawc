@@ -4,8 +4,8 @@
 
 #include <check.h>
 #include <yder.h>
+#include <rhonabwy.h>
 #include <iddawc.h>
-#include <jwt.h>
 
 #define SCOPE_LIST "openid g_profile"
 #define STATE "stateXyz1234"
@@ -174,18 +174,21 @@ int callback_oauth2_token_code_ok (const struct _u_request * request, struct _u_
 
 int callback_oauth2_token_code_id_token_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
   jwt_t * jwt;
+  jwk_t * jwk;
   char * grants = NULL, * jwt_str;
   time_t now;
   json_t * result;
   
-  jwt_new(&jwt);
+  r_jwt_init(&jwt);
+  r_jwk_init(&jwk);
   time(&now);
+  r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PRIVKEY, R_FORMAT_PEM, private_key, o_strlen((const char *)private_key));
   grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
-  jwt_add_grants_json(jwt, grants);
-  ck_assert_int_eq(jwt_add_grant(jwt, "at_hash", at_hash), 0);
-  ck_assert_int_eq(jwt_add_grant(jwt, "c_hash", c_hash), 0);
-  jwt_set_alg(jwt, JWT_ALG_RS256, private_key, o_strlen((const char *)private_key));
-  jwt_str = jwt_encode_str(jwt);
+  r_jwt_set_full_claims_json_str(jwt, grants);
+  r_jwt_set_claim_str_value(jwt, "at_hash", at_hash);
+  r_jwt_set_claim_str_value(jwt, "c_hash", c_hash);
+  r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256);
+  jwt_str = r_jwt_serialize_signed(jwt, jwk, 0);
   
   result = json_pack("{sssssissss}", 
                      "access_token", ACCESS_TOKEN,
@@ -198,7 +201,8 @@ int callback_oauth2_token_code_id_token_ok (const struct _u_request * request, s
   json_decref(result);
   o_free(grants);
   o_free(jwt_str);
-  jwt_free(jwt);
+  r_jwt_free(jwt);
+  r_jwk_free(jwk);
   return U_CALLBACK_CONTINUE;
 }
 
@@ -325,18 +329,21 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   struct _u_instance instance;
   json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
   jwt_t * jwt;
+  jwk_t * jwk;
   char * grants = NULL, * jwt_str;
   time_t now;
   char * redirect_to;
 
-  ck_assert_int_eq(jwt_new(&jwt), 0);
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   time(&now);
   grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
   ck_assert_ptr_ne(grants, NULL);
-  ck_assert_int_eq(jwt_add_grants_json(jwt, grants), 0);
-  ck_assert_int_eq(jwt_add_grant(jwt, "at_hash", at_hash), 0);
-  ck_assert_int_eq(jwt_set_alg(jwt, JWT_ALG_RS256, private_key, o_strlen((const char *)private_key)), 0);
-  ck_assert_ptr_ne((jwt_str = jwt_encode_str(jwt)), NULL);
+  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_claim_str_value(jwt, "at_hash", at_hash), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PRIVKEY, R_FORMAT_PEM, private_key, o_strlen((const char *)private_key)), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256), RHN_OK);
+  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed(jwt, jwk, 0)), NULL);
   
   redirect_to = msprintf(REDIRECT_ID_TOKEN "&access_token=" ACCESS_TOKEN "&state=" STATE "&token_type=bearer", jwt_str);
 
@@ -380,7 +387,8 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   o_free(redirect_to);
   o_free(grants);
   o_free(jwt_str);
-  jwt_free(jwt);
+  r_jwt_free(jwt);
+  r_jwk_free(jwk);
 }
 END_TEST
 
@@ -444,19 +452,22 @@ START_TEST(test_iddawc_oidc_token_id_token_code_flow)
   struct _u_instance instance;
   json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
   jwt_t * jwt;
+  jwk_t * jwk;
   char * grants = NULL, * jwt_str;
   time_t now;
   char * redirect_to;
 
-  ck_assert_int_eq(jwt_new(&jwt), 0);
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   time(&now);
   grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
   ck_assert_ptr_ne(grants, NULL);
-  ck_assert_int_eq(jwt_add_grants_json(jwt, grants), 0);
-  ck_assert_int_eq(jwt_add_grant(jwt, "at_hash", at_hash), 0);
-  ck_assert_int_eq(jwt_add_grant(jwt, "c_hash", c_hash), 0);
-  ck_assert_int_eq(jwt_set_alg(jwt, JWT_ALG_RS256, private_key, o_strlen((const char *)private_key)), 0);
-  ck_assert_ptr_ne((jwt_str = jwt_encode_str(jwt)), NULL);
+  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_claim_str_value(jwt, "at_hash", at_hash), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_claim_str_value(jwt, "c_hash", c_hash), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PRIVKEY, R_FORMAT_PEM, private_key, o_strlen((const char *)private_key)), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256), RHN_OK);
+  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed(jwt, jwk, 0)), NULL);
   
   redirect_to = msprintf(REDIRECT_ID_TOKEN "&access_token=" ACCESS_TOKEN "&code=" CODE "&state=" STATE "&token_type=bearer", jwt_str);
 
@@ -507,7 +518,8 @@ START_TEST(test_iddawc_oidc_token_id_token_code_flow)
   o_free(redirect_to);
   o_free(grants);
   o_free(jwt_str);
-  jwt_free(jwt);
+  r_jwt_free(jwt);
+  r_jwk_free(jwk);
 }
 END_TEST
 
@@ -534,7 +546,7 @@ int main(int argc, char *argv[])
   int number_failed;
   Suite *s;
   SRunner *sr;
-  y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc oauth complete flow tests");
+  //y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc oauth complete flow tests");
   s = iddawc_suite();
   sr = srunner_create(s);
 
@@ -542,6 +554,6 @@ int main(int argc, char *argv[])
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);
   
-  y_close_logs();
+  //y_close_logs();
   return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

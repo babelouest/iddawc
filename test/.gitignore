@@ -5,3 +5,6 @@ token
 load_config
 load_userinfo
 flow
+introspection
+revocation
+registration
