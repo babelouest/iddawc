@@ -2057,7 +2057,7 @@ int i_run_auth_request(struct _i_session * i_session) {
         }
       } else {
         // Unsupported auth_method
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Unsupported auth_method %2x", i_session->auth_method);
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Unsupported auth_method");
         ret = I_ERROR_PARAM;
       }
       
@@ -2598,6 +2598,7 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
             if (update_session) {
               i_set_str_parameter(i_session, I_OPT_CLIENT_ID, json_string_value(json_object_get(j_response, "client_id")));
               i_set_str_parameter(i_session, I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_response, "client_secret")));
+              i_set_str_parameter(i_session, I_OPT_REDIRECT_URI, json_string_value(json_array_get(json_object_get(j_response, "redirect_uris"), 0)));
             }
             if (j_result != NULL) {
               *j_result = json_incref(j_response);
