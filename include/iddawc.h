@@ -41,97 +41,96 @@ extern "C"
  * @{
  */
 
-/**
- * Return values
- */
-#define I_OK                 0
-#define I_ERROR              1
-#define I_ERROR_PARAM        2
-#define I_ERROR_MEMORY       3
-#define I_ERROR_UNAUTHORIZED 4
-#define I_ERROR_SERVER       5
+#define I_OK                 0 ///< Success
+#define I_ERROR              1 ///< Error
+#define I_ERROR_PARAM        2 ///< Error in parameters
+#define I_ERROR_MEMORY       3 ///< Memory error
+#define I_ERROR_UNAUTHORIZED 4 ///< Request unauthorized
+#define I_ERROR_SERVER       5 ///< Server error
 
-/**
- * Stackable response type values
- */
-#define I_RESPONSE_TYPE_NONE               0x00000000
-#define I_RESPONSE_TYPE_CODE               0x00000001
-#define I_RESPONSE_TYPE_TOKEN              0x00000010
-#define I_RESPONSE_TYPE_ID_TOKEN           0x00000100
-#define I_RESPONSE_TYPE_PASSWORD           0x00001000
-#define I_RESPONSE_TYPE_CLIENT_CREDENTIALS 0x00010000
-#define I_RESPONSE_TYPE_REFRESH_TOKEN      0x00100000
+#define I_RESPONSE_TYPE_NONE               0x00000000 ///< No response type
+#define I_RESPONSE_TYPE_CODE               0x00000001 ///< Response type code
+#define I_RESPONSE_TYPE_TOKEN              0x00000010 ///< Response type token
+#define I_RESPONSE_TYPE_ID_TOKEN           0x00000100 ///< Response type id_token
+#define I_RESPONSE_TYPE_PASSWORD           0x00001000 ///< Response type password
+#define I_RESPONSE_TYPE_CLIENT_CREDENTIALS 0x00010000 ///< Response type client_credentials
+#define I_RESPONSE_TYPE_REFRESH_TOKEN      0x00100000 ///< Response type refresh_token
 
-/**
- * i_set_response_type i_values parameter values
- */
-#define I_AUTH_METHOD_GET         0x00000000
-#define I_AUTH_METHOD_POST        0x00000001
-#define I_AUTH_METHOD_JWT_SECRET  0x00000010
-#define I_AUTH_METHOD_JWT_PRIVKEY 0x00000100
+#define I_AUTH_METHOD_GET                 0x00000001 ///< access auth endpoint using GET method
+#define I_AUTH_METHOD_POST                0x00000010 ///< access auth endpoint using POST method
+#define I_AUTH_METHOD_JWT_SIGN_SECRET     0x00000100 ///< access auth endpoint using a JWT signed with the client secret
+#define I_AUTH_METHOD_JWT_SIGN_PRIVKEY    0x00001000 ///< access auth endpoint using a JWT signed with the client private key
+#define I_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00010000 ///< access auth endpoint using a JWT encrypted with the client secret
+#define I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x00100000 ///< access auth endpoint using a JWT encrypted with the client private key
 
-/**
- * I_OPT_OPENID_CONFIG_STRICT values available
- */
-#define I_STRICT_NO  0
-#define I_STRICT_YES 1
+#define I_TOKEN_AUTH_METHOD_SECRET_BASIC 0 ///< access token endpoint using HTTP basic auth with client_id and client password
+#define I_TOKEN_AUTH_METHOD_SECRET_POST  1 ///< access token endpoint using secret send in POST parameters
+#define I_TOKEN_AUTH_METHOD_SECRET_JWT   2 ///< access token endpoint using a JWT signed with the client secret
+#define I_TOKEN_AUTH_METHOD_PRIVATE_JWT  3 ///< access token endpoint using a JWT signed with the client private key
+#define I_TOKEN_AUTH_METHOD_NONE         4 ///< access token endpoint using no authentication
 
-#define I_AUTH_SIGN_ALG_MAX_LENGTH 8
+#define I_STRICT_NO  0 ///< Do not stricly conform to openid config result
+#define I_STRICT_YES 1 ///< Stricly conform to openid config result
 
-/**
- * I_OPT_AUTH_SIGN_ALG values available
- */
-#define I_AUTH_SIGN_ALG_NONE  0
-#define I_AUTH_SIGN_ALG_RS256 1
-#define I_AUTH_SIGN_ALG_RS384 2
-#define I_AUTH_SIGN_ALG_RS512 3
+#define I_AUTH_SIGN_ALG_MAX_LENGTH 8 ///< Max length of a sign algorithm name
 
 /**
  * Options available to set or get properties using
  * i_set_int_parameter, i_set_str_parameter,
  * i_get_int_parameter or i_get_str_parameter
  */
-enum _i_option {
-  I_OPT_NONE                             = 0,
-  I_OPT_RESPONSE_TYPE                    = 1,
-  I_OPT_SCOPE                            = 2,
-  I_OPT_SCOPE_APPEND                     = 3,
-  I_OPT_STATE                            = 4,
-  I_OPT_NONCE                            = 5,
-  I_OPT_REDIRECT_URI                     = 6,
-  I_OPT_REDIRECT_TO                      = 7,
-  I_OPT_CLIENT_ID                        = 8,
-  I_OPT_CLIENT_SECRET                    = 9,
-  I_OPT_ADDITIONAL_PARAMETER             = 10,
-  I_OPT_ADDITIONAL_RESPONSE              = 11,
-  I_OPT_AUTH_ENDPOINT                    = 12,
-  I_OPT_TOKEN_ENDPOINT                   = 13,
-  I_OPT_OPENID_CONFIG_ENDPOINT           = 14,
-  I_OPT_OPENID_CONFIG                    = 15,
-  I_OPT_OPENID_CONFIG_STRICT             = 16,
-  I_OPT_USERINFO_ENDPOINT                = 17,
-  I_OPT_RESULT                           = 18,
-  I_OPT_ERROR                            = 19,
-  I_OPT_ERROR_DESCRIPTION                = 20,
-  I_OPT_ERROR_URI                        = 21,
-  I_OPT_CODE                             = 22,
-  I_OPT_REFRESH_TOKEN                    = 23,
-  I_OPT_ACCESS_TOKEN                     = 24,
-  I_OPT_ID_TOKEN                         = 25,
-  I_OPT_GLEWLWYD_API_URL                 = 26,
-  I_OPT_GLEWLWYD_COOKIE_SESSION          = 27,
-  I_OPT_AUTH_METHOD                      = 28,
-  I_OPT_AUTH_SIGN_ALG                    = 29,
-  I_OPT_TOKEN_TYPE                       = 30,
-  I_OPT_EXPIRES_IN                       = 31,
-  I_OPT_USERNAME                         = 32,
-  I_OPT_USER_PASSWORD                    = 33,
-  I_OPT_ISSUER                           = 34,
-  I_OPT_USERINFO                         = 35,
-  I_OPT_NONCE_GENERATE                   = 36,
-  I_OPT_STATE_GENERATE                   = 37,
-  I_OPT_X5U_FLAGS                        = 38
-};
+typedef enum {
+  I_OPT_NONE                             = 0,  ///< Empty option to complete a i_set_parameter_list
+  I_OPT_RESPONSE_TYPE                    = 1,  ///< response_type, values available are I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS and I_RESPONSE_TYPE_REFRESH_TOKEN
+  I_OPT_SCOPE                            = 2,  ///< scope values, string, multiple scopes must be separated by a space character: "scope1 openid"
+  I_OPT_SCOPE_APPEND                     = 3,  ///< append another scope value to the scope list, string
+  I_OPT_STATE                            = 4,  ///< state value, string
+  I_OPT_NONCE                            = 5,  ///< nonce value, string
+  I_OPT_REDIRECT_URI                     = 6,  ///< redirect_uri, string
+  I_OPT_REDIRECT_TO                      = 7,  ///< url where the oauth2 is redirected to after a /auth request
+  I_OPT_CLIENT_ID                        = 8,  ///< client_id, string
+  I_OPT_CLIENT_SECRET                    = 9,  ///< client secret, string
+  I_OPT_ADDITIONAL_PARAMETER             = 10, ///< use this option to pass any additional parameter value in the /auth request
+  I_OPT_ADDITIONAL_RESPONSE              = 11, ///< 
+  I_OPT_AUTH_ENDPOINT                    = 12, ///< absolute url for the auth endpoint, string
+  I_OPT_TOKEN_ENDPOINT                   = 13, ///< absolute url for the token endpoint, string
+  I_OPT_OPENID_CONFIG_ENDPOINT           = 14, ///< absolute url for the .well-known/openid-configuration endpoint, string
+  I_OPT_OPENID_CONFIG                    = 15, ///< result of the .well-known/openid-configuration
+  I_OPT_OPENID_CONFIG_STRICT             = 16, ///< must the .well-known/openid-configuration parameters be strictly 
+  I_OPT_USERINFO_ENDPOINT                = 17, ///< absolute url for the userinfo endpoint or equivalent, string
+  I_OPT_RESULT                           = 18, ///< result of a request
+  I_OPT_ERROR                            = 19, ///< error value of a failed request, string
+  I_OPT_ERROR_DESCRIPTION                = 20, ///< error description of a failed request, string
+  I_OPT_ERROR_URI                        = 21, ///< error uri of a failed request, string
+  I_OPT_CODE                             = 22, ///< code given after a succesfull auth request using the response_type I_RESPONSE_TYPE_CODE
+  I_OPT_REFRESH_TOKEN                    = 23, ///< refresh token given after a succesfull token request using the proper response_type
+  I_OPT_ACCESS_TOKEN                     = 24, ///< access token given after a succesfull auth or token request using the proper response_type
+  I_OPT_ID_TOKEN                         = 25, ///< id_token given after a succesfull auth or token request using the proper response_type
+  I_OPT_AUTH_METHOD                      = 28, ///< Authentication method to use with the auth endpoint, values available are I_AUTH_METHOD_GET, I_AUTH_METHOD_POST, I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY, values I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY can be combined with I_AUTH_METHOD_GET or I_AUTH_METHOD_POST
+  I_OPT_TOKEN_METHOD                     = 29, ///< Authentication method to use with the token endpoint, values available are I_TOKEN_AUTH_METHOD_SECRET_BASIC, I_TOKEN_AUTH_METHOD_SECRET_POST, I_TOKEN_AUTH_METHOD_SECRET_JWT, I_TOKEN_AUTH_METHOD_PRIVATE_JWT, I_TOKEN_AUTH_METHOD_NONE
+  I_OPT_TOKEN_TYPE                       = 30, ///< token_type value after a succesfull auth or token request, string
+  I_OPT_EXPIRES_IN                       = 31, ///< expires_in value after a succesfull auth or token request, integer
+  I_OPT_USERNAME                         = 32, ///< username for password response_types, string
+  I_OPT_USER_PASSWORD                    = 33, ///< password for password response_types, string
+  I_OPT_ISSUER                           = 34, ///< issuer value, string
+  I_OPT_USERINFO                         = 35, ///< userinfo result, string
+  I_OPT_NONCE_GENERATE                   = 36, ///< generate a random nonce value
+  I_OPT_STATE_GENERATE                   = 37, ///< generate a random state value
+  I_OPT_X5U_FLAGS                        = 38, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
+  I_OPT_SERVER_KID                       = 39, ///< key id to use if multiple jwk are available on the server, string
+  I_OPT_CLIENT_KID                       = 40, ///< key id to use if multiple jwk are available on the client, string
+  I_OPT_CLIENT_SIGN_ALG                  = 41, ///< signature algorithm to use when the client signs a request in a JWT, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
+  I_OPT_CLIENT_ENC_ALG                   = 42, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA_OAEP', 'RSA_OAEP_256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH_ES', 'ECDH_ES_A128KW', 'ECDH_ES_A192KW', 'ECDH_ES_A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2_H256', 'PBES2_H384 or 'PBES2_H512', warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_CLIENT_ENC                       = 43, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC,' 'A192CBC,' 'A256CBC,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_TOKEN_JTI                        = 44, ///< jti value, string
+  I_OPT_TOKEN_JTI_GENERATE               = 45, ///< generate a random jti value
+  I_OPT_TOKEN_EXP                        = 46, ///< JWT token request expiration time in seconds
+  I_OPT_TOKEN_TARGET                     = 47, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_TOKEN_TARGET_TYPE_HINT           = 48, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_REVOCATION_ENDPOINT              = 49, ///< absolute url for the revocation endpoint, string
+  I_OPT_INTROSPECTION_ENDPOINT           = 50, ///< absolute url for the introspection endpoint, string
+  I_OPT_REGISTRATION_ENDPOINT            = 51  ///< absolute url for the client registration endpoint, string
+} i_option;
 
 /**
  * @}
@@ -160,6 +159,9 @@ struct _i_session {
   char        * token_endpoint;
   char        * openid_config_endpoint;
   char        * userinfo_endpoint;
+  char        * revocation_endpoint;
+  char        * introspection_endpoint;
+  char        * registration_endpoint;
   uint          result;
   char        * error;
   char        * error_description;
@@ -167,23 +169,29 @@ struct _i_session {
   char        * code;
   char        * refresh_token;
   char        * access_token;
+  char        * token_target;
+  char        * token_target_type_hint;
   char        * token_type;
   uint          expires_in;
   char        * id_token;
-  json_t *      id_token_payload;
-  jwk_t  *      id_token_header;
-  char        * glewlwyd_api_url;
-  char        * glewlwyd_cookie_session;
+  json_t      * id_token_payload;
   uint          auth_method;
-  char          auth_sign_alg[I_AUTH_SIGN_ALG_MAX_LENGTH];
-  jwks_t *      server_jwks;
-  jwks_t *      client_jwks;
+  uint          token_method;
+  jwks_t      * server_jwks;
+  char        * server_kid;
+  jwks_t      * client_jwks;
+  char        * client_kid;
+  jwa_alg       client_sign_alg;
+  jwa_alg       client_enc_alg;
+  jwa_enc       client_enc;
   int           x5u_flags;
-  json_t *      openid_config;
+  json_t      * openid_config;
   int           openid_config_strict;
   char        * issuer;
   char        * userinfo;
-  json_t *      j_userinfo;
+  json_t      * j_userinfo;
+  char        * token_jti;
+  uint          token_exp;
 };
 
 /**
@@ -248,11 +256,11 @@ int i_set_result(struct _i_session * i_session, uint i_value);
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to set
  * options availble are I_OPT_RESPONSE_TYPE, I_OPT_RESULT, I_OPT_AUTH_METHOD
- * I_OPT_AUTH_SIGN_ALG, I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
+ * I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
  * @param i_value: The unsigned integer value to set
  * @return I_OK on success, an error value on error
  */
-int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value);
+int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_value);
 
 /**
  * Sets a char * property value
@@ -269,7 +277,7 @@ int i_set_int_parameter(struct _i_session * i_session, uint option, uint i_value
  * @param s_value: The char * value to set
  * @return I_OK on success, an error value on error
  */
-int i_set_str_parameter(struct _i_session * i_session, uint option, const char * s_value);
+int i_set_str_parameter(struct _i_session * i_session, i_option option, const char * s_value);
 
 /**
  * Sets an additional parameter for auth or token requests
@@ -314,10 +322,10 @@ uint i_get_result(struct _i_session * i_session);
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to get
  * options availble are I_OPT_RESPONSE_TYPE, I_OPT_RESULT, I_OPT_AUTH_METHOD
- * I_OPT_AUTH_SIGN_ALG, I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
+ * I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
  * @return the option value
  */
-uint i_get_int_parameter(struct _i_session * i_session, uint option);
+uint i_get_int_parameter(struct _i_session * i_session, i_option option);
 
 /**
  * Returns the char * value of an option
@@ -333,7 +341,7 @@ uint i_get_int_parameter(struct _i_session * i_session, uint option);
  * I_OPT_USER_PASSWORD, I_OPT_OPENID_CONFIG, I_OPT_ISSUER
  * @return the char * value of the option, NULL if no value set
  */
-const char * i_get_str_parameter(struct _i_session * i_session, uint option);
+const char * i_get_str_parameter(struct _i_session * i_session, i_option option);
 
 /**
  * Gets an additional parameter for auth or token requests
@@ -394,12 +402,60 @@ int i_load_openid_config(struct _i_session * i_session);
 
 /**
  * Loads the userinfo endpoint using the access_token
+ * if the result is a JWT, validate the signature 
+ * and/or decrypt the token
  * sets the result to i_session->userinfo as char *
  * and i_session->j_userinfo as json_t * if the result is in JSON format
  * @param i_session: a reference to a struct _i_session *
  * @return I_OK on success, an error value on error
  */
 int i_load_userinfo(struct _i_session * i_session);
+
+/**
+ * Loads the userinfo endpoint using the access_token
+ * with custom parameters
+ * if the result is a JWT, validate the signature 
+ * and/or decrypt the token
+ * sets the result to i_session->userinfo as char *
+ * and i_session->j_userinfo as json_t * if the result is in JSON format
+ * @param i_session: a reference to a struct _i_session *
+ * @param http_method: http method to use, values available are 'GET' or 'POST'
+ * @param additional_query: set of additional parameters to add to the url query
+ * @param additional_headers: set of additional parameters to add to the request header
+ * @return I_OK on success, an error value on error
+ */
+int i_load_userinfo_custom(struct _i_session * i_session, const char * http_method, struct _u_map * additional_query, struct _u_map * additional_headers);
+
+/**
+ * Loads the revocation endpoint for the access_token_target
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_revoke_token(struct _i_session * i_session);
+
+/**
+ * Loads the introspection endpoint for the access_token_target
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
+ * @return I_OK on success and if the access_token_target is valid, 
+ * I_ERROR_UNAUTHORIZED if the access_token_target is invalid, another error value on error
+ */
+int i_introspect_token(struct _i_session * i_session, json_t ** j_result);
+
+/**
+ * Register a new client using the dynamic registration endpoint
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_parameters: a json_t * object containing the client metadata
+ * The metadata content depends on the registration endpoint but at least
+ * the parameter redirect_uris (array of string) is required to register a new client
+ * @param update_session: if the registration is succesfull, update the session with the new client_id and client_secret
+ * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
+ * @return I_OK on success, an error value on error
+ */
+int i_register_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
 
 /**
  * Builds the url to GET the auth endpoint
