@@ -1302,21 +1302,21 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
         break;
       case I_OPT_CLIENT_SIGN_ALG:
         if (o_strlen(s_value)) {
-          i_session->client_sign_alg = str_to_jwa_alg(s_value);
+          i_session->client_sign_alg = r_str_to_jwa_alg(s_value);
         } else {
           i_session->client_sign_alg = R_JWA_ALG_UNKNOWN;
         }
         break;
       case I_OPT_CLIENT_ENC_ALG:
         if (o_strlen(s_value)) {
-          i_session->client_enc_alg = str_to_jwa_alg(s_value);
+          i_session->client_enc_alg = r_str_to_jwa_alg(s_value);
         } else {
           i_session->client_enc_alg = R_JWA_ALG_UNKNOWN;
         }
         break;
       case I_OPT_CLIENT_ENC:
         if (o_strlen(s_value)) {
-          i_session->client_enc = str_to_jwa_enc(s_value);
+          i_session->client_enc = r_str_to_jwa_enc(s_value);
         } else {
           i_session->client_enc = R_JWA_ENC_UNKNOWN;
         }
@@ -1856,13 +1856,13 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
         result = (const char *)i_session->client_kid;
         break;
       case I_OPT_CLIENT_SIGN_ALG:
-        result = jwa_alg_to_str(i_session->client_sign_alg);
+        result = r_jwa_alg_to_str(i_session->client_sign_alg);
         break;
       case I_OPT_CLIENT_ENC_ALG:
-        result = jwa_alg_to_str(i_session->client_enc_alg);
+        result = r_jwa_alg_to_str(i_session->client_enc_alg);
         break;
       case I_OPT_CLIENT_ENC:
-        result = jwa_enc_to_str(i_session->client_enc);
+        result = r_jwa_enc_to_str(i_session->client_enc);
         break;
       case I_OPT_TOKEN_JTI:
         result = (const char *)i_session->token_jti;
