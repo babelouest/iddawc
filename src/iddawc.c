@@ -421,7 +421,7 @@ static int _i_parse_openid_config(struct _i_session * i_session, int get_jwks) {
       y_log_message(Y_LOG_LEVEL_ERROR, "subject_types_supported: %s", json_is_array(json_object_get(i_session->openid_config, "subject_types_supported"))?"valid":"invalid");
       y_log_message(Y_LOG_LEVEL_ERROR, "id_token_signing_alg_values_supported: %s", json_is_array(json_object_get(i_session->openid_config, "id_token_signing_alg_values_supported"))?"valid":"invalid");
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "i_session is NULL");
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_openid_config - i_session is NULL");
     }
     ret = I_ERROR_PARAM;
   }
@@ -1964,22 +1964,22 @@ int i_build_auth_url_get(struct _i_session * i_session) {
   } else {
     y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - Error input parameter");
     if (i_session == NULL) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_session NULL");
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - i_session NULL");
     }
     if (i_session->response_type == I_RESPONSE_TYPE_NONE ||
         i_session->response_type == I_RESPONSE_TYPE_PASSWORD ||
         i_session->response_type == I_RESPONSE_TYPE_CLIENT_CREDENTIALS ||
         i_session->response_type == I_RESPONSE_TYPE_REFRESH_TOKEN) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "response_type invalid");
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - response_type invalid");
     }
     if (i_session->authorization_endpoint == NULL) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "authorization_endpoint invalid");
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - authorization_endpoint invalid");
     }
     if (!check_strict_parameters(i_session)) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "strict parameters invalid");
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - strict parameters invalid");
     }
     if (!has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || !has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "grant_types not supported");
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - grant_types not supported");
     }
     ret = I_ERROR_PARAM;
   }
@@ -2006,7 +2006,7 @@ int i_run_auth_request(struct _i_session * i_session) {
       check_strict_parameters(i_session) &&
       (has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code"))) {
     if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error initializing request or response");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error initializing request or response");
       ret = I_ERROR;
     } else {
       u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
@@ -2017,7 +2017,7 @@ int i_run_auth_request(struct _i_session * i_session) {
             request.http_url = msprintf("%s?request=%s", i_session->authorization_endpoint, jwt);
             o_free(jwt);
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Error generating jwt");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error generating jwt");
             ret = I_ERROR_PARAM;
           }
         } else if ((ret = i_build_auth_url_get(i_session)) == I_OK) {
@@ -2032,7 +2032,7 @@ int i_run_auth_request(struct _i_session * i_session) {
             u_map_put(request.map_post_body, "request", jwt);
             o_free(jwt);
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Error generating jwt");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error generating jwt");
             ret = I_ERROR_PARAM;
           }
         } else {
@@ -2148,13 +2148,13 @@ int i_run_token_request(struct _i_session * i_session) {
       } else {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - Error input parameters");
         if (i_session->redirect_uri == NULL) {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "redirect_uri NULL");
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - redirect_uri NULL");
         }
         if (i_session->client_id == NULL) {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "client_id NULL");
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - client_id NULL");
         }
         if (i_session->code == NULL) {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "code NULL");
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - code NULL");
         }
         ret = I_ERROR_PARAM;
       }
@@ -2459,7 +2459,7 @@ int i_revoke_token(struct _i_session * i_session) {
   
   if (i_session != NULL && o_strlen(i_session->revocation_endpoint) && o_strlen(i_session->token_target)) {
     if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error initializing request or response");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error initializing request or response");
       ret = I_ERROR;
     } else {
       ret = I_OK;
@@ -2469,18 +2469,18 @@ int i_revoke_token(struct _i_session * i_session) {
       if (o_strlen(i_session->access_token)) {
         bearer = msprintf("Bearer %s", i_session->access_token);
         if (u_map_put(request.map_header, "Authorization", bearer) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error setting bearer token");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting bearer token");
           ret = I_ERROR;
         }
         o_free(bearer);
       }
       if (u_map_put(request.map_post_body, "token", i_session->token_target) != U_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Error setting target token");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting target token");
         ret = I_ERROR;
       }
       if (o_strlen(i_session->token_target_type_hint)) {
         if (u_map_put(request.map_post_body, "token_type_hint", i_session->token_target_type_hint) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error setting target token type hint");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting target token type hint");
           ret = I_ERROR;
         }
       }
@@ -2489,11 +2489,11 @@ int i_revoke_token(struct _i_session * i_session) {
           if (response.status == 400 || response.status == 404 || response.status == 403) {
             ret = I_ERROR_PARAM;
           } else if (response.status != 200) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Error revoking token");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error revoking token");
             ret = I_ERROR;
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error sending http request");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error sending http request");
           ret = I_ERROR;
         }
       }
@@ -2514,7 +2514,7 @@ int i_introspect_token(struct _i_session * i_session, json_t ** j_result) {
   
   if (i_session != NULL && o_strlen(i_session->introspection_endpoint) && o_strlen(i_session->token_target)) {
     if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error initializing request or response");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error initializing request or response");
       ret = I_ERROR;
     } else {
       ret = I_OK;
@@ -2524,18 +2524,18 @@ int i_introspect_token(struct _i_session * i_session, json_t ** j_result) {
       if (o_strlen(i_session->access_token)) {
         bearer = msprintf("Bearer %s", i_session->access_token);
         if (u_map_put(request.map_header, "Authorization", bearer) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error setting bearer token");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error setting bearer token");
           ret = I_ERROR;
         }
         o_free(bearer);
       }
       if (u_map_put(request.map_post_body, "token", i_session->token_target) != U_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Error setting target token");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error setting target token");
         ret = I_ERROR;
       }
       if (o_strlen(i_session->token_target_type_hint)) {
         if (u_map_put(request.map_post_body, "token_type_hint", i_session->token_target_type_hint) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error setting target token type hint");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error setting target token type hint");
           ret = I_ERROR;
         }
       }
@@ -2546,11 +2546,11 @@ int i_introspect_token(struct _i_session * i_session, json_t ** j_result) {
           } else if (response.status == 400 || response.status == 404 || response.status == 403) {
             ret = I_ERROR_PARAM;
           } else if (response.status != 200) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Error introspecting token");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error introspecting token");
             ret = I_ERROR;
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error sending http request");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error sending http request");
           ret = I_ERROR;
         }
       }
@@ -2572,7 +2572,7 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
   
   if (i_session != NULL && o_strlen(i_session->registration_endpoint) && json_string_length(json_array_get(json_object_get(j_parameters, "redirect_uris"), 0))) {
     if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "Error initializing request or response");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error initializing request or response");
       ret = I_ERROR;
     } else {
       ret = I_OK;
@@ -2582,13 +2582,13 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
       if (o_strlen(i_session->access_token)) {
         bearer = msprintf("Bearer %s", i_session->access_token);
         if (u_map_put(request.map_header, "Authorization", bearer) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error setting bearer token");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting bearer token");
           ret = I_ERROR;
         }
         o_free(bearer);
       }
       if (ulfius_set_json_body_request(&request, j_parameters) != U_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Error setting parameters");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting parameters");
         ret = I_ERROR;
       }
       if (ret == I_OK) {
@@ -2607,11 +2607,11 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
           } else if (response.status == 400 || response.status == 404 || response.status == 403) {
             ret = I_ERROR_PARAM;
           } else if (response.status != 200) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Error registering client");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error registering client");
             ret = I_ERROR;
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Error sending http request");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error sending http request");
           ret = I_ERROR;
         }
       }
