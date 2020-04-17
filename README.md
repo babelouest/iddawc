@@ -81,15 +81,23 @@ int main() {
 
 ## Install
 
+## Dependencies
+
+Iddawc is based on [GnuTLS](https://www.gnutls.org/), [jansson](http://www.digip.org/jansson/), [zlib](https://www.zlib.net/), [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/), [libcurl](https://curl.haxx.se/libcurl/) and libsystemd (if possible), you must install those libraries first before building libiddawc.
+
+GnuTLS 3.6 minimum is required for ECDSA, Ed25519 (EDDSA) and RSA-PSS JWT signatures.
+
+## Prerequisites
+
+You need [liborcania](https://github.com/babelouest/orcania), [libyder](https://github.com/babelouest/yder), [libulfius](https://github.com/babelouest/ulfius) and [librhonabwy](https://github.com/babelouest/rhonabwy).
+
+Those libraries are included in the package `iddawc-dev-full_{x.x.x}_{OS}_{ARCH}.tar.gz` in the [Latest release](https://github.com/babelouest/iddawc/releases/latest) page. If you're building with CMake, they will be automatically downloaded and installed if missing.
+
 ## Pre-compiled packages
 
 You can install Iddawc with a pre-compiled package available in the [release pages](https://github.com/babelouest/iddawc/releases/latest/).
 
 ## Manual install
-
-### Prerequisites
-
-You must install [liborcania](https://github.com/babelouest/orcania), [libyder](https://github.com/babelouest/yder), [libulfius](https://github.com/babelouest/ulfius), [librhonabwy](https://github.com/babelouest/rhonabwy), [jansson](http://www.digip.org/jansson/) (Minimum 2.11) and [GnuTLS](https://www.gnutls.org/) first before building libiddawc. Orcania, Yder, Ulfius and Rhonabwy will be automatically installed if missing and you're using cmake.
 
 ### CMake - Multi architecture
 
