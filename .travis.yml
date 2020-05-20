@@ -1,35 +1,23 @@
 # travis configuration file
 # Copyright 2018 Ilya Shipitsin <chipitsine@gmail.com>
 #           2019 Nicolas Mora <mail@babelouest.org>
-sudo: required
-
 language: c
-
-dist: xenial
+os: linux
+dist: bionic
 addons:
   apt:
-    packages: [ libgnutls28-dev, libcurl4-gnutls-dev, check, libsubunit-dev, libsystemd-dev, cppcheck ]
+    packages: [ libgnutls28-dev, libcurl4-gnutls-dev, libsystemd-dev, libmicrohttpd-dev, libjansson-dev, check, libsubunit-dev, cppcheck ]
 
 matrix:
   include:
-    - os: linux
+    - env: LABEL=gcc
       compiler: gcc
-    - os: linux
+    - env: LABEL=clang
       compiler: clang
     - env: LABEL=cppcheck
       os: linux
       script:
-        - cppcheck --force --enable=warning,missingInclude --error-exitcode=1 . >build.log 2>&1 || (cat build.log && exit 1)
-
-install:
-- wget https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.63.tar.gz
-- mkdir libmicrohttpd && tar xf libmicrohttpd-0.9.63.tar.gz -C libmicrohttpd --strip-components 1
-- cd libmicrohttpd && ./configure && make && sudo make install && cd ..
-- rm -rf libmicrohttpd
-- wget https://github.com/akheron/jansson/archive/v2.11.tar.gz -O jansson-2.11.tar.gz
-- tar xzf jansson-2.11.tar.gz
-- pushd jansson-2.11 && autoreconf -i && ./configure && make && sudo make install && popd
-- rm -rf jansson-2.11
+        - cppcheck --force --enable=warning,missingInclude --error-exitcode=1 .
 
 script:
   - mkdir build
