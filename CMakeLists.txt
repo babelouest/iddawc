@@ -4,7 +4,7 @@
 # CMake file used to build all programs
 #
 # Copyright 2018 Silvio Clecio <silvioprog@gmail.com>
-# Copyright 2019 Nicolas Mora <mail@babelouest.org>
+# Copyright 2019-20 Nicolas Mora <mail@babelouest.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the MIT License
@@ -34,7 +34,7 @@ set(LIBRARY_VERSION_PATCH "5")
 set(ORCANIA_VERSION_REQUIRED "2.1.0")
 set(YDER_VERSION_REQUIRED "1.4.10")
 set(ULFIUS_VERSION_REQUIRED "2.6.6")
-set(RHONABWY_VERSION_REQUIRED "0.9.9")
+set(RHONABWY_VERSION_REQUIRED "0.9.10")
 
 set(PROJECT_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
 set(PROJECT_VERSION_MAJOR ${LIBRARY_VERSION_MAJOR})
