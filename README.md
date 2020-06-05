@@ -4,7 +4,7 @@
 ![.github/workflows/ccpp.yml](https://github.com/babelouest/iddawc/workflows/.github/workflows/ccpp.yml/badge.svg)
 
 Handles the OAuth2 and OpenID Connect authentication process flow from the client side.
-- Genrates requests based on input parameters
+- Generates requests based on input parameters
 - Parses response
 - Validates response values
 

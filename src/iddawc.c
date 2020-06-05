@@ -1370,7 +1370,7 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
         }
         break;
       default:
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error unkown option %d", option);
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error unknown option %d", option);
         ret = I_ERROR_PARAM;
         break;
     }
@@ -1478,7 +1478,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
           ret = i_set_additional_response(i_session, str_key, str_value);
           break;
         default:
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_parameter_list - Error unkown option %d", option);
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_parameter_list - Error unknown option %d", option);
           ret = I_ERROR_PARAM;
           break;
       }
