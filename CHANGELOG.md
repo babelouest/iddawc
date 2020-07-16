@@ -1,5 +1,9 @@
 # Iddawc Changelog
 
+## 0.9.6
+
+- Allow encrypted JWT requests
+
 ## 0.9.5
 
 - Use rhonabwy instead of libjwt for JWT management
