@@ -2732,7 +2732,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_CLIENT_ENC_ALG, json_string_value(json_object_get(j_import, "enc-alg")),
                                      I_OPT_CLIENT_ENC, json_string_value(json_object_get(j_import, "enc")),
                                      I_OPT_TOKEN_JTI, json_string_value(json_object_get(j_import, "token_jti")),
-                                     I_OPT_TOKEN_EXP, json_integer_value(json_object_get(j_import, "token_exp")),
+                                     I_OPT_TOKEN_EXP, (int)json_integer_value(json_object_get(j_import, "token_exp")),
                                      I_OPT_TOKEN_TARGET, json_string_value(json_object_get(j_import, "token_target")),
                                      I_OPT_TOKEN_TARGET_TYPE_HINT, json_string_value(json_object_get(j_import, "token_target_type_hint")),
                                      I_OPT_REVOCATION_ENDPOINT, json_string_value(json_object_get(j_import, "revocation_endpoint")),
