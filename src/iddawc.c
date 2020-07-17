@@ -1552,7 +1552,7 @@ int i_load_userinfo_custom(struct _i_session * i_session, const char * http_meth
   const char ** keys;
   size_t i;
   int has_param;
-  jwt_t * jwt;
+  jwt_t * jwt = NULL;
   
   if (i_session != NULL && i_session->userinfo_endpoint != NULL && i_session->access_token != NULL) {
     ulfius_init_request(&request);
