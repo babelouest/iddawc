@@ -3,6 +3,7 @@
 ## 0.9.6
 
 - Allow encrypted JWT requests
+- Bugfixes
 
 ## 0.9.5
 
