@@ -828,6 +828,19 @@ static int _i_add_token_authentication(struct _i_session * i_session, struct _u_
   return ret;
 }
 
+int i_global_init() {
+  if (ulfius_send_request_init() == U_OK) {
+    return RHN_OK;
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_global_init - Error ulfius_send_request_init");
+    return RHN_ERROR;
+  }
+}
+
+void i_global_close() {
+  ulfius_send_request_close();
+}
+
 int i_init_session(struct _i_session * i_session) {
   int res;
   
