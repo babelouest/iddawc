@@ -205,6 +205,19 @@ struct _i_session {
  */
 
 /**
+ * Initialize iddawc global parameters
+ * This function isn't thread-safe so it must be called once before any other call to iddawc functions
+ * The function i_global_close must be called when iddawc library is no longer required
+ * @return RHN_OK on success, an error value on error
+ */
+int i_global_init();
+
+/**
+ * Close iddawc global parameters
+ */
+void i_global_close();
+
+/**
  * Initialize a struct _i_session
  * @param i_session: a reference to a struct _i_session * to initialize
  * @return I_OK on success, an error value on error
