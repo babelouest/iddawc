@@ -47,8 +47,6 @@ jobs:
     #    uses a compiled language
 
     - run: |
-    #   make bootstrap
-    #   make release
         mkdir build
         cd build
         cmake -DBUILD_IDDAWC_DOCUMENTATION=on ..
