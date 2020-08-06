@@ -46,13 +46,14 @@ jobs:
     #    and modify them (or add more) to build your code if your project
     #    uses a compiled language
 
-    #- run: |
+    - run: |
     #   make bootstrap
     #   make release
         mkdir build
         cd build
-        cmake -DBUILD_IDDAWC_TESTING=on ..
+        cmake -DBUILD_IDDAWC_DOCUMENTATION=on ..
         make
+        make doc
         sudo make install
 
     - name: Perform CodeQL Analysis
