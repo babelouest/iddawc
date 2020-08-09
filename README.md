@@ -88,13 +88,13 @@ Iddawc is available in the following distributions.
 
 ## Dependencies
 
-Iddawc is based on [GnuTLS](https://www.gnutls.org/), [jansson](http://www.digip.org/jansson/), [zlib](https://www.zlib.net/), [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/), [libcurl](https://curl.haxx.se/libcurl/) and libsystemd (if possible), you must install those libraries first before building libiddawc.
+Iddawc is based on [GnuTLS](https://www.gnutls.org/), [jansson](http://www.digip.org/jansson/), [zlib](https://www.zlib.net/), [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/), [libcurl](https://curl.haxx.se/libcurl/) and libsystemd (if possible), you must install those libraries first before building iddawc.
 
-GnuTLS 3.6 minimum is required for ECDSA, Ed25519 (EDDSA) and RSA-PSS JWT signatures.
+GnuTLS 3.6 minimum is required for `ECDSA`, `Ed25519 (EDDSA)` and `RSA-PSS` JWT signatures.
 
 ## Prerequisites
 
-You need [liborcania](https://github.com/babelouest/orcania), [libyder](https://github.com/babelouest/yder), [libulfius](https://github.com/babelouest/ulfius) and [librhonabwy](https://github.com/babelouest/rhonabwy).
+You need [orcania](https://github.com/babelouest/orcania), [yder](https://github.com/babelouest/yder), [ulfius](https://github.com/babelouest/ulfius) and [rhonabwy](https://github.com/babelouest/rhonabwy).
 
 Those libraries are included in the package `iddawc-dev-full_{x.x.x}_{OS}_{ARCH}.tar.gz` in the [Latest release](https://github.com/babelouest/iddawc/releases/latest) page. If you're building with CMake, they will be automatically downloaded and installed if missing.
 
