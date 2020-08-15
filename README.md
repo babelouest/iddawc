@@ -88,13 +88,13 @@ Iddawc is available in the following distributions.
 
 ## Dependencies
 
-Iddawc is based on [GnuTLS](https://www.gnutls.org/), [jansson](http://www.digip.org/jansson/), [zlib](https://www.zlib.net/), [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/), [libcurl](https://curl.haxx.se/libcurl/) and libsystemd (if possible), you must install those libraries first before building iddawc.
+Iddawc is based on [GnuTLS](https://www.gnutls.org/), [Jansson](http://www.digip.org/jansson/), [zlib](https://www.zlib.net/), [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/), [libcurl](https://curl.haxx.se/libcurl/) and libsystemd (if possible), you must install those libraries first before building Iddawc.
 
 GnuTLS 3.6 minimum is required for `ECDSA`, `Ed25519 (EDDSA)` and `RSA-PSS` JWT signatures.
 
 ## Prerequisites
 
-You need [orcania](https://github.com/babelouest/orcania), [yder](https://github.com/babelouest/yder), [ulfius](https://github.com/babelouest/ulfius) and [rhonabwy](https://github.com/babelouest/rhonabwy).
+You need [Orcania](https://github.com/babelouest/orcania), [Yder](https://github.com/babelouest/yder), [Ulfius](https://github.com/babelouest/ulfius) and [Rhonabwy](https://github.com/babelouest/rhonabwy).
 
 Those libraries are included in the package `iddawc-dev-full_{x.x.x}_{OS}_{ARCH}.tar.gz` in the [Latest release](https://github.com/babelouest/iddawc/releases/latest) page. If you're building with CMake, they will be automatically downloaded and installed if missing.
 
@@ -108,7 +108,7 @@ You can install Iddawc with a pre-compiled package available in the [release pag
 
 [CMake](https://cmake.org/download/) minimum 3.5 is required.
 
-Run the cmake script in a subdirectory, example:
+Run the CMake script in a sub-directory, example:
 
 ```shell
 $ git clone https://github.com/babelouest/iddawc.git
@@ -119,7 +119,7 @@ $ cmake ..
 $ make && sudo make install
 ```
 
-The available options for cmake are:
+The available options for CMake are:
 - `-DWITH_JOURNALD=[on|off]` (default `on`): Build with journald (SystemD) support
 - `-BUILD_IDDAWC_TESTING=[on|off]` (default `off`): Build unit tests
 - `-DINSTALL_HEADER=[on|off]` (default `on`): Install header file `iddawc.h`
@@ -128,7 +128,7 @@ The available options for cmake are:
 
 ### Good ol' Makefile
 
-Download iddawc from github repository, compile and install.
+Download Iddawc from GitHub repository, compile and install.
 
 ```shell
 $ git clone https://github.com/babelouest/iddawc.git
@@ -139,7 +139,7 @@ $ sudo make install
 
 By default, the shared library and the header file will be installed in the `/usr/local` location. To change this setting, you can modify the `DESTDIR` value in the `src/Makefile`.
 
-Example: install iddawc in /tmp/lib directory
+Example: install Iddawc in /tmp/lib directory
 
 ```shell
 $ cd src
