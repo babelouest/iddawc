@@ -27,11 +27,11 @@ Lots of functions in Rhonabwy library return an int value. The returned value ca
 #define I_ERROR_SERVER       5
 ```
 
-If a function is succesfull, it will return `I_OK` (0), otherwise an error code is returned.
+If a function is successful, it will return `I_OK` (0), otherwise an error code is returned.
 
 ## Log messages
 
-Usually, a log message is displayed to explain more specifically what happened on error. The log manager used is [Yder](https://github.com/babelouest/yder). You can enable yder log messages on the console with the following command at the beginning of your program:
+Usually, a log message is displayed to explain more specifically what happened on error. The log manager used is [Yder](https://github.com/babelouest/yder). You can enable Yder log messages on the console with the following command at the beginning of your program:
 
 ```C
 
@@ -269,7 +269,7 @@ int i_load_openid_config(struct _i_session * i_session);
 
 ### Build and run auth request and parse results
 
-The function `i_build_auth_url_get` can be used to build the full auth request with all the parameters in the url query for a GET request.
+The function `i_build_auth_url_get` can be used to build the full auth request with all the parameters in the URL query for a GET request.
 
 ```C
 /**
@@ -281,7 +281,7 @@ The function `i_build_auth_url_get` can be used to build the full auth request w
 int i_build_auth_url_get(struct _i_session * i_session);
 ```
 
-The function `i_run_auth_request` builds the full auth requests and executes it. If the OAuth2 server answers with a succesfull response, the response will be parsed in the session properties. Otherwise, the rediect_to value and the errors if any will be parsed and made available in the session properties.
+The function `i_run_auth_request` builds the full auth requests and executes it. If the OAuth2 server answers with a successful response, the response will be parsed in the session properties. Otherwise, the redirect_to value and the errors if any will be parsed and made available in the session properties.
 
 ```C
 /**
@@ -322,7 +322,7 @@ int i_run_token_request(struct _i_session * i_session);
 
 ### Verify an id_token
 
-If the auth or token endpoints returns an id_token, this one will be parsed, the signature will be verified and the content will be validated to make sure the id_token is valid. You can also manually validate an id_token using the dedicated function. The property `I_OPT_ID_TOKEN` and the publick key property must be set.
+If the auth or token endpoints returns an id_token, this one will be parsed, the signature will be verified and the content will be validated to make sure the id_token is valid. You can also manually validate an id_token using the dedicated function. The property `I_OPT_ID_TOKEN` and the public key property must be set.
 
 ```C
 /**
@@ -391,7 +391,7 @@ int i_revoke_token(struct _i_session * i_session);
 
 ### Register new clients
 
-If available, you can register a new client. You may have to set a `I_OPT_ACCESS_TOKEN` property, depending on the server configuration. If `update_session` is true and the registration is successfull, the properties `I_OPT_CLIENT_ID` and `I_OPT_CLIENT_SECRET` will be set to the session, and the first `redirect_to` entry will be used as `I_OPT_REDIRECT_TO` value.
+If available, you can register a new client. You may have to set a `I_OPT_ACCESS_TOKEN` property, depending on the server configuration. If `update_session` is true and the registration is successful, the properties `I_OPT_CLIENT_ID` and `I_OPT_CLIENT_SECRET` will be set to the session, and the first `redirect_to` entry will be used as `I_OPT_REDIRECT_TO` value.
 
 ```C
 /**
