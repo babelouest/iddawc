@@ -1,5 +1,7 @@
 # Iddawc Changelog
 
+## 0.9.7
+
 ## 0.9.6
 
 - Allow encrypted JWT requests
