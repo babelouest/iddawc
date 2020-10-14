@@ -832,7 +832,7 @@ int i_global_init() {
   if (ulfius_global_init() == U_OK && r_global_init() == RHN_OK) {
     return RHN_OK;
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "i_global_init - Error ulfius_send_request_init or r_global_init");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_global_init - Error ulfius_global_init or r_global_init");
     return RHN_ERROR;
   }
 }
@@ -840,6 +840,10 @@ int i_global_init() {
 void i_global_close() {
   ulfius_global_close();
   r_global_close();
+}
+
+void i_free(void * data) {
+  o_free(data);
 }
 
 int i_init_session(struct _i_session * i_session) {
@@ -2811,4 +2815,87 @@ int i_import_session_str(struct _i_session * i_session, const char * str_import)
     ret = I_ERROR_PARAM;
   }
   return ret;
+}
+
+char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat) {
+  char * token = NULL;
+  jwt_t * jwt_dpop = NULL;
+  jwk_t * jwk_sign = NULL, * jwk_pub = NULL;
+  json_t * j_dpop_pub = NULL;
+  int has_error = 0;
+  
+  if (i_session != NULL && o_strlen(i_session->token_jti) && o_strlen(htu) && o_strlen(htm)) {
+    if (r_jwt_init(&jwt_dpop) == RHN_OK) {
+      if ((i_session->client_kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, i_session->client_kid)) != NULL) || 
+          (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
+        if ((i_session->client_sign_alg == R_JWA_ALG_RS256 || i_session->client_sign_alg == R_JWA_ALG_RS384 || i_session->client_sign_alg == R_JWA_ALG_RS512 ||
+             i_session->client_sign_alg == R_JWA_ALG_PS256 || i_session->client_sign_alg == R_JWA_ALG_PS384 || i_session->client_sign_alg == R_JWA_ALG_PS512)) {
+          if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key type");
+            has_error = 1;
+          }
+        } else if (i_session->client_sign_alg == R_JWA_ALG_ES256 || i_session->client_sign_alg == R_JWA_ALG_ES384 || i_session->client_sign_alg == R_JWA_ALG_ES512) {
+          if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_ECDSA|R_KEY_TYPE_PRIVATE))) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key type");
+            has_error = 1;
+          }
+        } else if (i_session->client_sign_alg == R_JWA_ALG_EDDSA) {
+          if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key type");
+            has_error = 1;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key parameters");
+          has_error = 1;
+        }
+      } else if (!r_jwks_size(i_session->client_jwks)) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Client has no private key ");
+        has_error = 1;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
+        has_error = 1;
+      }
+      if (jwk_sign != NULL) {
+        r_jwt_set_sign_alg(jwt_dpop, i_session->client_sign_alg);
+        if (r_jwk_init(&jwk_pub) == RHN_OK) {
+          if (r_jwk_extract_pubkey(jwk_sign, jwk_pub, i_session->x5u_flags) == RHN_OK) {
+            if ((j_dpop_pub = r_jwk_export_to_json_t(jwk_pub)) == NULL) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error r_jwk_export_to_json_t");
+              has_error = 1;
+            }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error r_jwk_extract_pubkey");
+            has_error = 1;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error r_jwk_init");
+          has_error = 1;
+        }
+        r_jwk_free(jwk_pub);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Client has no signing key");
+        has_error = 1;
+      }
+      if (!has_error) {
+        r_jwt_set_claim_str_value(jwt_dpop, "jti", i_session->token_jti);
+        r_jwt_set_claim_str_value(jwt_dpop, "htu", htu);
+        r_jwt_set_claim_str_value(jwt_dpop, "htm", htm);
+        if (iat) {
+          r_jwt_set_claim_int_value(jwt_dpop, "iat", iat);
+        } else {
+          r_jwt_set_claim_int_value(jwt_dpop, "iat", time(NULL));
+        }
+        r_jwt_set_header_json_t_value(jwt_dpop, "jwk", j_dpop_pub);
+        token = r_jwt_serialize_signed(jwt_dpop, jwk_sign, i_session->x5u_flags);
+      }
+      r_jwk_free(jwk_sign);
+      json_decref(j_dpop_pub);
+    } else {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_generate_dpop_token - Error r_jwt_init");
+    }
+    r_jwt_free(jwt_dpop);
+  } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_generate_dpop_token - Error input parameters");
+  }
+  return token;
 }

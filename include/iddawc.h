@@ -218,6 +218,13 @@ int i_global_init();
 void i_global_close();
 
 /**
+ * Free a heap allocated variable
+ * previously returned by a iddawc function
+ * @param data: the data to free
+ */
+void i_free(void * data);
+
+/**
  * Initialize a struct _i_session
  * @param i_session: a reference to a struct _i_session * to initialize
  * @return I_OK on success, an error value on error
@@ -406,7 +413,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import);
 /**
  * Exports a _i_session * into a json_t * object
  * @param i_session: a reference to a struct _i_session *
- * @return a char * containing a JSON stringified exported session
+ * @return a char * containing a JSON stringified exported session, must be i_free'd after use
  */
 char * i_export_session_str(struct _i_session * i_session);
 
@@ -532,6 +539,17 @@ int i_revoke_token(struct _i_session * i_session);
  * @return I_OK on success, an error value on error
  */
 int i_register_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
+
+/**
+ * Generates a DPoP token based on the given parameters and the internal state of the struct _i_session
+ * The jti must be previously generated vie I_OPT_TOKEN_JTI_GENERATE or I_OPT_TOKEN_JTI
+ * @param i_session: a reference to a struct _i_session *
+ * @param htm: The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.)
+ * @param htu: The htu claim value, the HTTP url used to access the protected resource (ex: https://resource.tld/object)
+ * @param iat: the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used
+ * @return a char * containing the DPoP token signed, must be i_free'd after use
+ */
+char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat);
 
 /**
  * @}
