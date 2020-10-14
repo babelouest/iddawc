@@ -2,6 +2,9 @@
 
 ## 0.9.7
 
+- Add `i_global_init`, `i_global_close`, `i_free`
+- Add `i_generate_dpop_token`
+
 ## 0.9.6
 
 - Allow encrypted JWT requests
