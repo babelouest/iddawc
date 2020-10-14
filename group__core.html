@@ -47,6 +47,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ga74a3452a89fef139072602162847ae49"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#ga74a3452a89fef139072602162847ae49">i_global_init</a> ()</td></tr>
+<tr class="separator:ga74a3452a89fef139072602162847ae49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac94619aa9efbbe5ca77e2e5d7908ec18"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#gac94619aa9efbbe5ca77e2e5d7908ec18">i_global_close</a> ()</td></tr>
+<tr class="separator:gac94619aa9efbbe5ca77e2e5d7908ec18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac546c5eb27df088b3282aca340e3b8ee"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#gac546c5eb27df088b3282aca340e3b8ee">i_free</a> (void *data)</td></tr>
+<tr class="separator:gac546c5eb27df088b3282aca340e3b8ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga43fa354058e5ebc2c4d02ef3e9e62687"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#ga43fa354058e5ebc2c4d02ef3e9e62687">i_init_session</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga43fa354058e5ebc2c4d02ef3e9e62687"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6a2fefde91c578c8c2f6b0297e3ee058"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#ga6a2fefde91c578c8c2f6b0297e3ee058">i_clean_session</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
@@ -55,6 +61,66 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Core functions used to initialize or free struct <a class="el" href="struct__i__session.html">_i_session</a> </p>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="ga74a3452a89fef139072602162847ae49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga74a3452a89fef139072602162847ae49">&#9670;&nbsp;</a></span>i_global_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_global_init </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Initialize iddawc global parameters This function isn't thread-safe so it must be called once before any other call to iddawc functions The function i_global_close must be called when iddawc library is no longer required </p><dl class="section return"><dt>Returns</dt><dd>RHN_OK on success, an error value on error </dd></dl>
+
+</div>
+</div>
+<a id="gac94619aa9efbbe5ca77e2e5d7908ec18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac94619aa9efbbe5ca77e2e5d7908ec18">&#9670;&nbsp;</a></span>i_global_close()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void i_global_close </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Close iddawc global parameters </p>
+
+</div>
+</div>
+<a id="gac546c5eb27df088b3282aca340e3b8ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac546c5eb27df088b3282aca340e3b8ee">&#9670;&nbsp;</a></span>i_free()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void i_free </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>data</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Free a heap allocated variable previously returned by a iddawc function </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td>the data to free </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="ga43fa354058e5ebc2c4d02ef3e9e62687"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga43fa354058e5ebc2c4d02ef3e9e62687">&#9670;&nbsp;</a></span>i_init_session()</h2>
 
