@@ -147,6 +147,23 @@ Macros</h2></td></tr>
 <tr class="memitem:gad4f00a53de1797f759065d4b815a5985"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gad4f00a53de1797f759065d4b815a5985">I_AUTH_SIGN_ALG_MAX_LENGTH</a>&#160;&#160;&#160;8</td></tr>
 <tr class="memdesc:gad4f00a53de1797f759065d4b815a5985"><td class="mdescLeft">&#160;</td><td class="mdescRight">Max length of a sign algorithm name.  <a href="group__const.html#gad4f00a53de1797f759065d4b815a5985">More...</a><br /></td></tr>
 <tr class="separator:gad4f00a53de1797f759065d4b815a5985"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga31a37a18a330e9643b08a380aecfc4f2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga31a37a18a330e9643b08a380aecfc4f2">I_BEARER_TYPE_HEADER</a>&#160;&#160;&#160;0</td></tr>
+<tr class="memdesc:ga31a37a18a330e9643b08a380aecfc4f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Bearer type header, the token will be available in the header.  <a href="group__const.html#ga31a37a18a330e9643b08a380aecfc4f2">More...</a><br /></td></tr>
+<tr class="separator:ga31a37a18a330e9643b08a380aecfc4f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8a815e7ca6b7ad9ae07bd323a42dede8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga8a815e7ca6b7ad9ae07bd323a42dede8">I_BEARER_TYPE_BODY</a>&#160;&#160;&#160;1</td></tr>
+<tr class="memdesc:ga8a815e7ca6b7ad9ae07bd323a42dede8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Bearer type body, the token will be available as a body url-encoded parameter.  <a href="group__const.html#ga8a815e7ca6b7ad9ae07bd323a42dede8">More...</a><br /></td></tr>
+<tr class="separator:ga8a815e7ca6b7ad9ae07bd323a42dede8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga967b9743461e59601f7443b1843ad8bb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga967b9743461e59601f7443b1843ad8bb">I_BEARER_TYPE_URL</a>&#160;&#160;&#160;2</td></tr>
+<tr class="memdesc:ga967b9743461e59601f7443b1843ad8bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Bearer type url, the token will be available as a url query parameter.  <a href="group__const.html#ga967b9743461e59601f7443b1843ad8bb">More...</a><br /></td></tr>
+<tr class="separator:ga967b9743461e59601f7443b1843ad8bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8d3e6c25af7f482ec09031f266328eee"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga8d3e6c25af7f482ec09031f266328eee">I_HEADER_PREFIX_BEARER</a>&#160;&#160;&#160;&quot;Bearer &quot;</td></tr>
+<tr class="separator:ga8d3e6c25af7f482ec09031f266328eee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0d7ad34dafb5be9ec06ef5ced9a811b9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga0d7ad34dafb5be9ec06ef5ced9a811b9">I_HEADER_AUTHORIZATION</a>&#160;&#160;&#160;&quot;Authorization&quot;</td></tr>
+<tr class="separator:ga0d7ad34dafb5be9ec06ef5ced9a811b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4ee7659b8ccb5dcac4ec046cf1c755cc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga4ee7659b8ccb5dcac4ec046cf1c755cc">I_BODY_URL_PARAMETER</a>&#160;&#160;&#160;&quot;access_token&quot;</td></tr>
+<tr class="separator:ga4ee7659b8ccb5dcac4ec046cf1c755cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadc7bc3a0336fc8a0bfb3448b6a71e018"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gadc7bc3a0336fc8a0bfb3448b6a71e018">I_HEADER_DPOP</a>&#160;&#160;&#160;&quot;DPoP&quot;</td></tr>
+<tr class="separator:gadc7bc3a0336fc8a0bfb3448b6a71e018"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -188,31 +205,32 @@ Enumerations</h2></td></tr>
 <br />
 &#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a00b9ee83228522517a266479492c8b8f">I_OPT_TOKEN_TYPE</a> = 30, 
 <a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ad5396a5af59f49a536af48c80a7fb978">I_OPT_EXPIRES_IN</a> = 31, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41aeb529ceff5bbf28aed23cbd685fb54d3">I_OPT_USERNAME</a> = 32, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ab849cbb176bca0f9316a0c6f2880811f">I_OPT_USER_PASSWORD</a> = 33, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a00274614e366f213e5d9c8f332b9d63f">I_OPT_EXPIRES_AT</a> = 32, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41aeb529ceff5bbf28aed23cbd685fb54d3">I_OPT_USERNAME</a> = 33, 
 <br />
-&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a092b19a4e52c22e06745f45f543e43d2">I_OPT_ISSUER</a> = 34, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41af38b0c0c9deffb15855c035130068ce9">I_OPT_USERINFO</a> = 35, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41af04663bc99cdb72a8e11a0a7743d161d">I_OPT_NONCE_GENERATE</a> = 36, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ac4a9e236a3a626179f89e30a49a68961">I_OPT_STATE_GENERATE</a> = 37, 
+&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ab849cbb176bca0f9316a0c6f2880811f">I_OPT_USER_PASSWORD</a> = 34, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a092b19a4e52c22e06745f45f543e43d2">I_OPT_ISSUER</a> = 35, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41af38b0c0c9deffb15855c035130068ce9">I_OPT_USERINFO</a> = 36, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41af04663bc99cdb72a8e11a0a7743d161d">I_OPT_NONCE_GENERATE</a> = 37, 
 <br />
-&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a4381619538835b54b964a4559655381a">I_OPT_X5U_FLAGS</a> = 38, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a46767c3d126ea25691e47487411ba819">I_OPT_SERVER_KID</a> = 39, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a92f03ddc9e597a88318a9f2b7172793d">I_OPT_CLIENT_KID</a> = 40, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41aca68691bad884870967ef3dc9288fc05">I_OPT_CLIENT_SIGN_ALG</a> = 41, 
+&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ac4a9e236a3a626179f89e30a49a68961">I_OPT_STATE_GENERATE</a> = 38, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a4381619538835b54b964a4559655381a">I_OPT_X5U_FLAGS</a> = 39, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a46767c3d126ea25691e47487411ba819">I_OPT_SERVER_KID</a> = 40, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a92f03ddc9e597a88318a9f2b7172793d">I_OPT_CLIENT_KID</a> = 41, 
 <br />
-&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a8524d44e4803e6c174edd70d08cffeb6">I_OPT_CLIENT_ENC_ALG</a> = 42, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ad3840658820df6d70419c4169ef367c2">I_OPT_CLIENT_ENC</a> = 43, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a1361f99b21eb6ccd3b484edb4a04391f">I_OPT_TOKEN_JTI</a> = 44, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a43eb69f2e4903c36873468ea06a12bac">I_OPT_TOKEN_JTI_GENERATE</a> = 45, 
+&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41aca68691bad884870967ef3dc9288fc05">I_OPT_CLIENT_SIGN_ALG</a> = 42, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a8524d44e4803e6c174edd70d08cffeb6">I_OPT_CLIENT_ENC_ALG</a> = 43, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ad3840658820df6d70419c4169ef367c2">I_OPT_CLIENT_ENC</a> = 44, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a1361f99b21eb6ccd3b484edb4a04391f">I_OPT_TOKEN_JTI</a> = 45, 
 <br />
-&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a04fae4420a17aee2b768cacf5eb02797">I_OPT_TOKEN_EXP</a> = 46, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a144da29ec9db608a8874032abd694c4b">I_OPT_TOKEN_TARGET</a> = 47, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a2deaf7772506bc1a025bc5852fd315d1">I_OPT_TOKEN_TARGET_TYPE_HINT</a> = 48, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ab8d0e9247f0c58674daeb624f29646eb">I_OPT_REVOCATION_ENDPOINT</a> = 49, 
+&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a43eb69f2e4903c36873468ea06a12bac">I_OPT_TOKEN_JTI_GENERATE</a> = 46, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a04fae4420a17aee2b768cacf5eb02797">I_OPT_TOKEN_EXP</a> = 47, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a144da29ec9db608a8874032abd694c4b">I_OPT_TOKEN_TARGET</a> = 48, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a2deaf7772506bc1a025bc5852fd315d1">I_OPT_TOKEN_TARGET_TYPE_HINT</a> = 49, 
 <br />
-&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a1afc2fde1d96bb3c1ed6f29189240dcd">I_OPT_INTROSPECTION_ENDPOINT</a> = 50, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ad002aec90b1a636256672c8adb829913">I_OPT_REGISTRATION_ENDPOINT</a> = 51
+&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ab8d0e9247f0c58674daeb624f29646eb">I_OPT_REVOCATION_ENDPOINT</a> = 50, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a1afc2fde1d96bb3c1ed6f29189240dcd">I_OPT_INTROSPECTION_ENDPOINT</a> = 51, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ad002aec90b1a636256672c8adb829913">I_OPT_REGISTRATION_ENDPOINT</a> = 52
 <br />
  }</td></tr>
 <tr class="separator:ga845a2122b22dd4f5a7f66c7d3bce2b41"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -287,6 +305,8 @@ Functions</h2></td></tr>
 <tr class="separator:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4276d0948b5f70cc6fed9c4c177d119d"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga4276d0948b5f70cc6fed9c4c177d119d">i_generate_dpop_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *htm, const char *htu, time_t iat)</td></tr>
 <tr class="separator:ga4276d0948b5f70cc6fed9c4c177d119d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga069cc2c92fee719ee529c22a5eb93653"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga069cc2c92fee719ee529c22a5eb93653">i_perform_api_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, struct _u_request *http_request, struct _u_response *http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat)</td></tr>
+<tr class="separator:ga069cc2c92fee719ee529c22a5eb93653"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->

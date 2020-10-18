@@ -71,6 +71,8 @@ Functions</h2></td></tr>
 <tr class="separator:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4276d0948b5f70cc6fed9c4c177d119d"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga4276d0948b5f70cc6fed9c4c177d119d">i_generate_dpop_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *htm, const char *htu, time_t iat)</td></tr>
 <tr class="separator:ga4276d0948b5f70cc6fed9c4c177d119d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga069cc2c92fee719ee529c22a5eb93653"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga069cc2c92fee719ee529c22a5eb93653">i_perform_api_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, struct _u_request *http_request, struct _u_response *http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat)</td></tr>
+<tr class="separator:ga069cc2c92fee719ee529c22a5eb93653"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Run auth, token, userinfo, introspect, revoke or register requests </p>
@@ -448,7 +450,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generates a DPoP token based on the given parameters and the internal state of the struct <a class="el" href="struct__i__session.html">_i_session</a> The jti must be previously generated vie I_OPT_TOKEN_JTI_GENERATE or I_OPT_TOKEN_JTI </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Generates a DPoP token based on the given parameters and the internal state of the struct <a class="el" href="struct__i__session.html">_i_session</a> The jti must be previously generated via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
     <tr><td class="paramname">htm</td><td>The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.) </td></tr>
@@ -458,6 +460,77 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a char * containing the DPoP token signed, must be i_free'd after use </dd></dl>
+
+</div>
+</div>
+<a id="ga069cc2c92fee719ee529c22a5eb93653"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga069cc2c92fee719ee529c22a5eb93653">&#9670;&nbsp;</a></span>i_perform_api_request()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_perform_api_request </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct _u_request *&#160;</td>
+          <td class="paramname"><em>http_request</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct _u_response *&#160;</td>
+          <td class="paramname"><em>http_response</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>refresh_if_expired</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>bearer_type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>use_dpop</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">time_t&#160;</td>
+          <td class="paramname"><em>dpop_iat</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Sends an HTTP request to a REST API using the access token to authenticate This functions uses ulfius' function ulfius_send_http_request It will add the i_session's access token to the request As well as a DPoP token if required </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> *, mandatory </td></tr>
+    <tr><td class="paramname">http_request</td><td>the request parameters, will store all the request data (method, url, headers, body parameters, etc.), mandatory </td></tr>
+    <tr><td class="paramname">http_response</td><td>the response parameters, will store all the response data (status, headers, body response, etc.), may be NULL </td></tr>
+    <tr><td class="paramname">refresh_if_expired</td><td>if set to true, the access token will be refreshed if expired </td></tr>
+    <tr><td class="paramname">bearer_type</td><td>How the access token will be provided to the resource server options available are: I_BEARER_TYPE_HEADER, I_BEARER_TYPE_BODY, I_BEARER_TYPE_URL </td></tr>
+    <tr><td class="paramname">use_dpop</td><td>set this flag to 1 if you want to send the DPoP header in the request The jti must be previously generated via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE </td></tr>
+    <tr><td class="paramname">dpop_iat</td><td>the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
 
 </div>
 </div>
