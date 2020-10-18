@@ -25,6 +25,7 @@
 #define ACCESS_TOKEN "accessXyz1234"
 #define TOKEN_TYPE "typeXyz1234"
 #define EXPIRES_IN 3600
+#define EXPIRES_AT 7200
 #define ID_TOKEN "idTokenXyz1234"
 #define ERROR "errorXyz1234"
 #define ERROR_DESCRIPTION "errorDescriptionXyz1234"
@@ -313,6 +314,7 @@ START_TEST(test_iddawc_set_int_parameter)
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SECRET_POST), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_EXPIRES_IN, EXPIRES_IN), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_EXPIRES_AT, EXPIRES_AT), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_NONCE_GENERATE, 32), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_STATE_GENERATE, 32), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_TOKEN_JTI_GENERATE, 32), I_OK);
@@ -453,6 +455,8 @@ START_TEST(test_iddawc_get_int_parameter)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_TOKEN_METHOD), I_TOKEN_AUTH_METHOD_SECRET_POST);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_EXPIRES_IN, EXPIRES_IN), I_OK);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), EXPIRES_IN);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_EXPIRES_AT, EXPIRES_AT), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_AT), EXPIRES_AT);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO), I_OK);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_OPENID_CONFIG_STRICT), I_STRICT_NO);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_NONCE_GENERATE, 32), I_OK);
@@ -618,6 +622,7 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                   I_OPT_TOKEN_TYPE, TOKEN_TYPE,
                                                   I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                  I_OPT_EXPIRES_AT, EXPIRES_AT,
                                                   I_OPT_ID_TOKEN, ID_TOKEN,
                                                   I_OPT_USERNAME, USERNAME,
                                                   I_OPT_USER_PASSWORD, USER_PASSWORD,
@@ -655,6 +660,7 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), TOKEN_TYPE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_AT), EXPIRES_AT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), ID_TOKEN);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERNAME), USERNAME);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USER_PASSWORD), USER_PASSWORD);
@@ -755,6 +761,7 @@ START_TEST(test_iddawc_export_json_t)
                                                   I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                   I_OPT_TOKEN_TYPE, TOKEN_TYPE,
                                                   I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                  I_OPT_EXPIRES_AT, EXPIRES_AT,
                                                   I_OPT_ID_TOKEN, ID_TOKEN,
                                                   I_OPT_USERNAME, USERNAME,
                                                   I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
@@ -808,6 +815,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "access_token")), ACCESS_TOKEN);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "token_type")), TOKEN_TYPE);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "expires_in")), EXPIRES_IN);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "expires_at")), EXPIRES_AT);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "id_token")), ID_TOKEN);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "id_token_payload"), i_session.id_token_payload), 1);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "auth_method")), I_AUTH_METHOD_GET);
@@ -870,6 +878,7 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_TOKEN_TYPE, TOKEN_TYPE,
                                                     I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                    I_OPT_EXPIRES_AT, EXPIRES_AT,
                                                     I_OPT_ID_TOKEN, ID_TOKEN,
                                                     I_OPT_USERNAME, USERNAME,
                                                     I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
@@ -924,6 +933,7 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TOKEN_TYPE), TOKEN_TYPE);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_EXPIRES_IN), EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_EXPIRES_AT), EXPIRES_AT);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ID_TOKEN), ID_TOKEN);
   ck_assert_int_eq(json_equal(i_session_import.id_token_payload, i_session.id_token_payload), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
@@ -966,55 +976,56 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   
   str_export = i_export_session_str(&i_session);
-  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"auth_method\":1,\"token_method\":0,\"jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":1,\"token_exp\":600}");
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":1,\"token_exp\":600}");
   o_free(str_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_STATE, STATE,
-                                                  I_OPT_NONCE, NONCE,
-                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
-                                                  I_OPT_REDIRECT_TO, REDIRECT_TO,
-                                                  I_OPT_CLIENT_ID, CLIENT_ID,
-                                                  I_OPT_CLIENT_SECRET, CLIENT_SECRET,
-                                                  I_OPT_ADDITIONAL_PARAMETER, ADDITIONAL_KEY, ADDITIONAL_VALUE,
-                                                  I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
-                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT,
-                                                  I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
-                                                  I_OPT_RESULT, I_ERROR_UNAUTHORIZED,
-                                                  I_OPT_ERROR, ERROR,
-                                                  I_OPT_ERROR_DESCRIPTION, ERROR_DESCRIPTION,
-                                                  I_OPT_ERROR_URI, ERROR_URI,
-                                                  I_OPT_CODE, CODE,
-                                                  I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
-                                                  I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
-                                                  I_OPT_TOKEN_TYPE, TOKEN_TYPE,
-                                                  I_OPT_EXPIRES_IN, EXPIRES_IN,
-                                                  I_OPT_ID_TOKEN, ID_TOKEN,
-                                                  I_OPT_USERNAME, USERNAME,
-                                                  I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
-                                                  I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SECRET_POST,
-                                                  I_OPT_USER_PASSWORD, USER_PASSWORD,
-                                                  I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
-                                                  I_OPT_X5U_FLAGS, R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT,
-                                                  I_OPT_OPENID_CONFIG, openid_configuration_valid,
-                                                  I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
-                                                  I_OPT_ISSUER, ISSUER,
-                                                  I_OPT_USERINFO, USERINFO,
-                                                  I_OPT_ISSUER, ISSUER,
-                                                  I_OPT_USERINFO, USERINFO,
-                                                  I_OPT_CLIENT_SIGN_ALG, CLIENT_SIGN_ALG,
-                                                  I_OPT_CLIENT_ENC_ALG, CLIENT_ENC_ALG,
-                                                  I_OPT_CLIENT_ENC, CLIENT_ENC,
-                                                  I_OPT_TOKEN_JTI, TOKEN_JTI,
-                                                  I_OPT_TOKEN_EXP, TOKEN_EXP,
-                                                  I_OPT_TOKEN_TARGET, TOKEN_TARGET,
-                                                  I_OPT_TOKEN_TARGET_TYPE_HINT, TOKEN_TARGET_TYPE_HINT,
-                                                  I_OPT_REVOCATION_ENDPOINT, REVOCATION_ENDPOINT,
-                                                  I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
-                                                  I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_NONCE, NONCE,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_REDIRECT_TO, REDIRECT_TO,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_ADDITIONAL_PARAMETER, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT,
+                                                    I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                                    I_OPT_RESULT, I_ERROR_UNAUTHORIZED,
+                                                    I_OPT_ERROR, ERROR,
+                                                    I_OPT_ERROR_DESCRIPTION, ERROR_DESCRIPTION,
+                                                    I_OPT_ERROR_URI, ERROR_URI,
+                                                    I_OPT_CODE, CODE,
+                                                    I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
+                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                    I_OPT_TOKEN_TYPE, TOKEN_TYPE,
+                                                    I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                    I_OPT_EXPIRES_AT, EXPIRES_AT,
+                                                    I_OPT_ID_TOKEN, ID_TOKEN,
+                                                    I_OPT_USERNAME, USERNAME,
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SECRET_POST,
+                                                    I_OPT_USER_PASSWORD, USER_PASSWORD,
+                                                    I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                    I_OPT_X5U_FLAGS, R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT,
+                                                    I_OPT_OPENID_CONFIG, openid_configuration_valid,
+                                                    I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
+                                                    I_OPT_ISSUER, ISSUER,
+                                                    I_OPT_USERINFO, USERINFO,
+                                                    I_OPT_ISSUER, ISSUER,
+                                                    I_OPT_USERINFO, USERINFO,
+                                                    I_OPT_CLIENT_SIGN_ALG, CLIENT_SIGN_ALG,
+                                                    I_OPT_CLIENT_ENC_ALG, CLIENT_ENC_ALG,
+                                                    I_OPT_CLIENT_ENC, CLIENT_ENC,
+                                                    I_OPT_TOKEN_JTI, TOKEN_JTI,
+                                                    I_OPT_TOKEN_EXP, TOKEN_EXP,
+                                                    I_OPT_TOKEN_TARGET, TOKEN_TARGET,
+                                                    I_OPT_TOKEN_TARGET_TYPE_HINT, TOKEN_TARGET_TYPE_HINT,
+                                                    I_OPT_REVOCATION_ENDPOINT, REVOCATION_ENDPOINT,
+                                                    I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
+                                                    I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
+                                                    I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   
   ck_assert_ptr_ne(str_export = i_export_session_str(&i_session), NULL);
@@ -1058,6 +1069,7 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_TOKEN_TYPE, TOKEN_TYPE,
                                                     I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                    I_OPT_EXPIRES_AT, EXPIRES_AT,
                                                     I_OPT_ID_TOKEN, ID_TOKEN,
                                                     I_OPT_USERNAME, USERNAME,
                                                     I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
@@ -1114,6 +1126,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TOKEN_TYPE), TOKEN_TYPE);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_EXPIRES_IN), EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_EXPIRES_AT), EXPIRES_AT);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ID_TOKEN), ID_TOKEN);
   ck_assert_int_eq(json_equal(i_session_import.id_token_payload, i_session.id_token_payload), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);

@@ -303,6 +303,8 @@ if (BUILD_IDDAWC_TESTING)
             introspection
             revocation
             registration
+            dpop
+            api_request
             )
 
         configure_file(
