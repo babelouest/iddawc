@@ -407,3 +407,75 @@ If available, you can register a new client. You may have to set a `I_OPT_ACCESS
  */
 int i_register_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
 ```
+
+### Generate a DPoP token
+
+You can use your client's private key parameters to generate a DPoP token
+
+```C
+/**
+ * Generates a DPoP token based on the given parameters and the internal state of the struct _i_session
+ * The jti must be previously generated via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE
+ * @param i_session: a reference to a struct _i_session *
+ * @param htm: The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.)
+ * @param htu: The htu claim value, the HTTP url used to access the protected resource (ex: https://resource.tld/object)
+ * @param iat: the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used
+ * @return a char * containing the DPoP token signed, must be i_free'd after use
+ */
+char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat);
+```
+
+### Perform a HTTP request to a Resource Service
+
+This features uses Ulfius' `ulfius_send_http_request` function to proceed. This function requires at least a `struct _u_request` with all the request parameters.
+Iddawc will add the access token previously obtained to the HTTP request using the [Bearer usage](https://tools.ietf.org/html/rfc6750) specified.
+If the access token is expired, Iddawc will attempt to refresh the token.
+If specified, Iddawc will generate and add a DPoP token in the request using the request parameters.
+
+```C
+/**
+ * Sends an HTTP request to a REST API using the access token to authenticate
+ * This functions uses ulfius' function ulfius_send_http_request
+ * It will add the i_session's access token to the request
+ * As well as a DPoP token if required
+ * @param i_session: a reference to a struct _i_session *, mandatory
+ * @param http_request: the request parameters, will store all the request data (method, url, headers, body parameters, etc.), mandatory
+ * @param http_response: the response parameters, will store all the response data (status, headers, body response, etc.), may be NULL
+ * @param refresh_if_expired: if set to true, the access token will be refreshed if expired
+ * @param bearer_type: How the access token will be provided to the resource server
+ * options available are: I_BEARER_TYPE_HEADER, I_BEARER_TYPE_BODY, I_BEARER_TYPE_URL
+ * @param use_dpop: set this flag to 1 if you want to send the DPoP header in the request
+ * The jti must be previously generated via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE
+ * @param dpop_iat: the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used
+ * @return I_OK on success, an error value on error
+ */
+int i_perform_api_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat);
+```
+
+Here is an example of how to use `i_perform_api_request`:
+
+```C
+struct _i_session i_session;
+struct _u_request req;
+struct _u_response resp;
+json_t * j_resp;
+
+i_init_session(&i_session);
+/*
+ * All the process to get an access token is hidden, this example considers the _i_session has an access token
+ */
+ulfius_init_request(&req);
+ulfius_init_response(&resp);
+
+ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, "GET", U_OPT_HTTP_URL, "https://resource.tld/object", U_OPT_NONE);
+
+if (i_perform_api_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 1, 0) == I_OK && resp.status == 200) {
+  // j_resp contains the JSON response of the protected resource
+  j_resp = ulfius_get_json_body_response(&resp, NULL);
+}
+
+i_clean_session(&i_session);
+ulfius_clean_request(&req);
+ulfius_clean_response(&resp);
+json_decref(j_resp);
+```
