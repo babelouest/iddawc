@@ -137,6 +137,7 @@ static int _i_parse_redirect_to_parameters(struct _i_session * i_session, struct
   int ret = I_OK, c_ret;
   char * endptr = NULL;
   long expires_in = 0;
+  time_t expires_at;
   
   for (i=0; keys[i] != NULL; i++) {
     key = keys[i];
@@ -158,9 +159,15 @@ static int _i_parse_redirect_to_parameters(struct _i_session * i_session, struct
       ret = ret!=I_OK?ret:c_ret;
     } else if (0 == o_strcasecmp(key, "expires_in")) {
       expires_in = strtol(u_map_get(map, key), &endptr, 10);
+      time(&expires_at);
+      expires_at += (time_t)expires_in;
       if (endptr != (char *)u_map_get(map, key)) {
         if (i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, (uint)expires_in) != I_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_redirect_to_parameters - expires_in invalid");
+          ret = ret!=I_OK?ret:I_ERROR_SERVER;
+        }
+        if (i_set_int_parameter(i_session, I_OPT_EXPIRES_AT, (uint)expires_at) != I_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_redirect_to_parameters - expires_at invalid");
           ret = ret!=I_OK?ret:I_ERROR_SERVER;
         }
       } else {
@@ -870,6 +877,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->token_target_type_hint = NULL;
     i_session->token_type = NULL;
     i_session->expires_in = 0;
+    i_session->expires_at = 0;
     i_session->id_token = NULL;
     i_session->id_token_payload = NULL;
     i_session->code = NULL;
@@ -1023,6 +1031,9 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
         break;
       case I_OPT_EXPIRES_IN:
         i_session->expires_in = i_value;
+        break;
+      case I_OPT_EXPIRES_AT:
+        i_session->expires_at = (time_t)i_value;
         break;
       case I_OPT_OPENID_CONFIG_STRICT:
         i_session->openid_config_strict = i_value;
@@ -1437,6 +1448,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_AUTH_METHOD:
         case I_OPT_TOKEN_METHOD:
         case I_OPT_EXPIRES_IN:
+        case I_OPT_EXPIRES_AT:
         case I_OPT_STATE_GENERATE:
         case I_OPT_NONCE_GENERATE:
         case I_OPT_X5U_FLAGS:
@@ -1703,6 +1715,9 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option) {
         break;
       case I_OPT_EXPIRES_IN:
         return i_session->expires_in;
+        break;
+      case I_OPT_EXPIRES_AT:
+        return (uint)i_session->expires_at;
         break;
       case I_OPT_X5U_FLAGS:
         return i_session->x5u_flags;
@@ -2645,7 +2660,7 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* }",
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_str_parameter(i_session, I_OPT_STATE),
@@ -2676,6 +2691,7 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "token_type", i_get_str_parameter(i_session, I_OPT_TOKEN_TYPE),
                          "expires_in", i_get_int_parameter(i_session, I_OPT_EXPIRES_IN),
                          
+                         "expires_at", i_get_int_parameter(i_session, I_OPT_EXPIRES_AT),
                          "id_token", i_get_str_parameter(i_session, I_OPT_ID_TOKEN),
                          "id_token_payload", i_session->id_token_payload,
                          
@@ -2735,6 +2751,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_import, "access_token")),
                                      I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_import, "token_type")),
                                      I_OPT_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "expires_in")),
+                                     I_OPT_EXPIRES_AT, (int)json_integer_value(json_object_get(j_import, "expires_at")),
                                      I_OPT_ID_TOKEN, json_string_value(json_object_get(j_import, "id_token")),
                                      I_OPT_USERNAME, json_string_value(json_object_get(j_import, "username")),
                                      I_OPT_AUTH_METHOD, (int)json_integer_value(json_object_get(j_import, "auth_method")),
@@ -2898,4 +2915,94 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
     y_log_message(Y_LOG_LEVEL_DEBUG, "i_generate_dpop_token - Error input parameters");
   }
   return token;
+}
+
+int i_perform_api_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat) {
+  int ret = I_OK, reset_resp_type = 0;
+  uint cur_resp_type;
+  char * dpop_token = NULL, * auth_header;
+  struct _u_request copy_req;
+  
+  if (i_session != NULL && http_request != NULL && i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN) != NULL) {
+    if (refresh_if_expired) {
+      // Refresh access token if expired
+      if (time(NULL) > (time_t)i_get_int_parameter(i_session, I_OPT_EXPIRES_AT)) {
+        reset_resp_type = 1;
+        cur_resp_type = i_get_response_type(i_session);
+        i_set_response_type(i_session, I_RESPONSE_TYPE_REFRESH_TOKEN);
+        if ((ret = i_run_token_request(i_session)) != I_OK) {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error refresh access token");
+        }
+      }
+    }
+    if (I_OK == ret) {
+      if (ulfius_init_request(&copy_req) == U_OK) {
+        if (ulfius_copy_request(&copy_req, http_request) == U_OK) {
+          // Set access token
+          switch (bearer_type) {
+            case I_BEARER_TYPE_HEADER:
+              auth_header = msprintf("%s%s", I_HEADER_PREFIX_BEARER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN));
+              if (u_map_put(copy_req.map_header, I_HEADER_AUTHORIZATION, auth_header) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error setting access_token in header");
+                ret = I_ERROR;
+              }
+              o_free(auth_header);
+              break;
+            case I_BEARER_TYPE_BODY:
+              if (u_map_put(copy_req.map_post_body, I_BODY_URL_PARAMETER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN)) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error setting access_token in body");
+                ret = I_ERROR;
+              }
+              break;
+            case I_BEARER_TYPE_URL:
+              if (u_map_put(copy_req.map_url, I_BODY_URL_PARAMETER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN)) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error setting access_token in url");
+                ret = I_ERROR;
+              }
+              break;
+            default:
+              y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Invalid bearer_type");
+              ret = I_ERROR_PARAM;
+              break;
+          }
+          // Set DPoP
+          if (use_dpop) {
+            if (I_OK == ret) {
+              if ((dpop_token = i_generate_dpop_token(i_session, copy_req.http_verb, copy_req.http_url, dpop_iat)) != NULL) {
+                if (u_map_put(copy_req.map_header, I_HEADER_DPOP, dpop_token) != U_OK) {
+                  y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error setting DPoP in header");
+                  ret = I_ERROR;
+                }
+              } else {
+                y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error i_generate_dpop_token");
+                ret = I_ERROR;
+              }
+              o_free(dpop_token);
+            }
+          }
+          // Perform HTTP request
+          if (I_OK == ret) {
+            if (ulfius_send_http_request(&copy_req, http_response) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error ulfius_send_http_request");
+              ret = I_ERROR;
+            }
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error ulfius_copy_request");
+          ret = I_ERROR;
+        }
+        ulfius_clean_request(&copy_req);
+      } else {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error ulfius_init_request");
+        ret = I_ERROR;
+      }
+    }
+    if (reset_resp_type && cur_resp_type != I_RESPONSE_TYPE_NONE) {
+      i_set_response_type(i_session, cur_resp_type);
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error input parameters");
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
 }

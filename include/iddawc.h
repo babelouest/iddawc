@@ -74,6 +74,14 @@ extern "C"
 
 #define I_AUTH_SIGN_ALG_MAX_LENGTH 8 ///< Max length of a sign algorithm name
 
+#define I_BEARER_TYPE_HEADER 0 ///< Bearer type header, the token will be available in the header
+#define I_BEARER_TYPE_BODY   1 ///< Bearer type body, the token will be available as a body url-encoded parameter
+#define I_BEARER_TYPE_URL    2 ///< Bearer type url, the token will be available as a url query parameter
+
+#define I_HEADER_PREFIX_BEARER "Bearer "
+#define I_HEADER_AUTHORIZATION "Authorization"
+#define I_BODY_URL_PARAMETER   "access_token"
+#define I_HEADER_DPOP          "DPoP"
 /**
  * Options available to set or get properties using
  * i_set_int_parameter, i_set_str_parameter,
@@ -110,26 +118,27 @@ typedef enum {
   I_OPT_TOKEN_METHOD                     = 29, ///< Authentication method to use with the token endpoint, values available are I_TOKEN_AUTH_METHOD_SECRET_BASIC, I_TOKEN_AUTH_METHOD_SECRET_POST, I_TOKEN_AUTH_METHOD_SECRET_JWT, I_TOKEN_AUTH_METHOD_PRIVATE_JWT, I_TOKEN_AUTH_METHOD_NONE
   I_OPT_TOKEN_TYPE                       = 30, ///< token_type value after a succesfull auth or token request, string
   I_OPT_EXPIRES_IN                       = 31, ///< expires_in value after a succesfull auth or token request, integer
-  I_OPT_USERNAME                         = 32, ///< username for password response_types, string
-  I_OPT_USER_PASSWORD                    = 33, ///< password for password response_types, string
-  I_OPT_ISSUER                           = 34, ///< issuer value, string
-  I_OPT_USERINFO                         = 35, ///< userinfo result, string
-  I_OPT_NONCE_GENERATE                   = 36, ///< generate a random nonce value
-  I_OPT_STATE_GENERATE                   = 37, ///< generate a random state value
-  I_OPT_X5U_FLAGS                        = 38, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
-  I_OPT_SERVER_KID                       = 39, ///< key id to use if multiple jwk are available on the server, string
-  I_OPT_CLIENT_KID                       = 40, ///< key id to use if multiple jwk are available on the client, string
-  I_OPT_CLIENT_SIGN_ALG                  = 41, ///< signature algorithm to use when the client signs a request in a JWT, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
-  I_OPT_CLIENT_ENC_ALG                   = 42, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA_OAEP', 'RSA_OAEP_256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH_ES', 'ECDH_ES_A128KW', 'ECDH_ES_A192KW', 'ECDH_ES_A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2_H256', 'PBES2_H384 or 'PBES2_H512', warning: some algorithm may be unavailable depending on Rhonabwy version used
-  I_OPT_CLIENT_ENC                       = 43, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC,' 'A192CBC,' 'A256CBC,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
-  I_OPT_TOKEN_JTI                        = 44, ///< jti value, string
-  I_OPT_TOKEN_JTI_GENERATE               = 45, ///< generate a random jti value
-  I_OPT_TOKEN_EXP                        = 46, ///< JWT token request expiration time in seconds
-  I_OPT_TOKEN_TARGET                     = 47, ///< access_token which is the target of a revocation or an introspection, string
-  I_OPT_TOKEN_TARGET_TYPE_HINT           = 48, ///< access_token which is the target of a revocation or an introspection, string
-  I_OPT_REVOCATION_ENDPOINT              = 49, ///< absolute url for the revocation endpoint, string
-  I_OPT_INTROSPECTION_ENDPOINT           = 50, ///< absolute url for the introspection endpoint, string
-  I_OPT_REGISTRATION_ENDPOINT            = 51  ///< absolute url for the client registration endpoint, string
+  I_OPT_EXPIRES_AT                       = 32, ///< expires_at value after a succesfull auth or token request, time_t
+  I_OPT_USERNAME                         = 33, ///< username for password response_types, string
+  I_OPT_USER_PASSWORD                    = 34, ///< password for password response_types, string
+  I_OPT_ISSUER                           = 35, ///< issuer value, string
+  I_OPT_USERINFO                         = 36, ///< userinfo result, string
+  I_OPT_NONCE_GENERATE                   = 37, ///< generate a random nonce value
+  I_OPT_STATE_GENERATE                   = 38, ///< generate a random state value
+  I_OPT_X5U_FLAGS                        = 39, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
+  I_OPT_SERVER_KID                       = 40, ///< key id to use if multiple jwk are available on the server, string
+  I_OPT_CLIENT_KID                       = 41, ///< key id to use if multiple jwk are available on the client, string
+  I_OPT_CLIENT_SIGN_ALG                  = 42, ///< signature algorithm to use when the client signs a request in a JWT, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
+  I_OPT_CLIENT_ENC_ALG                   = 43, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA_OAEP', 'RSA_OAEP_256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH_ES', 'ECDH_ES_A128KW', 'ECDH_ES_A192KW', 'ECDH_ES_A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2_H256', 'PBES2_H384 or 'PBES2_H512', warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_CLIENT_ENC                       = 44, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC,' 'A192CBC,' 'A256CBC,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_TOKEN_JTI                        = 45, ///< jti value, string
+  I_OPT_TOKEN_JTI_GENERATE               = 46, ///< generate a random jti value
+  I_OPT_TOKEN_EXP                        = 47, ///< JWT token request expiration time in seconds
+  I_OPT_TOKEN_TARGET                     = 48, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_TOKEN_TARGET_TYPE_HINT           = 49, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_REVOCATION_ENDPOINT              = 50, ///< absolute url for the revocation endpoint, string
+  I_OPT_INTROSPECTION_ENDPOINT           = 51, ///< absolute url for the introspection endpoint, string
+  I_OPT_REGISTRATION_ENDPOINT            = 52  ///< absolute url for the client registration endpoint, string
 } i_option;
 
 /**
@@ -173,6 +182,7 @@ struct _i_session {
   char        * token_target_type_hint;
   char        * token_type;
   uint          expires_in;
+  time_t        expires_at;
   char        * id_token;
   json_t      * id_token_payload;
   uint          auth_method;
@@ -542,7 +552,7 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
 
 /**
  * Generates a DPoP token based on the given parameters and the internal state of the struct _i_session
- * The jti must be previously generated vie I_OPT_TOKEN_JTI_GENERATE or I_OPT_TOKEN_JTI
+ * The jti must be previously generated via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE
  * @param i_session: a reference to a struct _i_session *
  * @param htm: The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.)
  * @param htu: The htu claim value, the HTTP url used to access the protected resource (ex: https://resource.tld/object)
@@ -550,6 +560,24 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
  * @return a char * containing the DPoP token signed, must be i_free'd after use
  */
 char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat);
+
+/**
+ * Sends an HTTP request to a REST API using the access token to authenticate
+ * This functions uses ulfius' function ulfius_send_http_request
+ * It will add the i_session's access token to the request
+ * As well as a DPoP token if required
+ * @param i_session: a reference to a struct _i_session *, mandatory
+ * @param http_request: the request parameters, will store all the request data (method, url, headers, body parameters, etc.), mandatory
+ * @param http_response: the response parameters, will store all the response data (status, headers, body response, etc.), may be NULL
+ * @param refresh_if_expired: if set to true, the access token will be refreshed if expired
+ * @param bearer_type: How the access token will be provided to the resource server
+ * options available are: I_BEARER_TYPE_HEADER, I_BEARER_TYPE_BODY, I_BEARER_TYPE_URL
+ * @param use_dpop: set this flag to 1 if you want to send the DPoP header in the request
+ * The jti must be previously generated via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE
+ * @param dpop_iat: the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used
+ * @return I_OK on success, an error value on error
+ */
+int i_perform_api_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat);
 
 /**
  * @}
