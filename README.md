@@ -1,6 +1,6 @@
 # Iddawc - OAuth2 client library
 
-[![Build Status](https://travis-ci.com/babelouest/iddawc.svg?branch=master)](https://travis-ci.com/babelouest/iddawc)
+[![Build Status](https://travis-ci.org/babelouest/iddawc.svg?branch=master)](https://travis-ci.org/babelouest/iddawc)
 ![.github/workflows/ccpp.yml](https://github.com/babelouest/iddawc/workflows/.github/workflows/ccpp.yml/badge.svg)
 [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/github@babelouest.org)
 
