@@ -2,7 +2,6 @@
 
 [![Build Status](https://travis-ci.org/babelouest/iddawc.svg?branch=master)](https://travis-ci.org/babelouest/iddawc)
 ![.github/workflows/ccpp.yml](https://github.com/babelouest/iddawc/workflows/.github/workflows/ccpp.yml/badge.svg)
-[![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/github@babelouest.org)
 
 Handles the OAuth2 and OpenID Connect authentication process flow from the client side.
 - Generates requests based on input parameters
