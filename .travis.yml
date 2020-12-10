@@ -8,7 +8,7 @@ addons:
   apt:
     packages: [ libgnutls28-dev, libcurl4-gnutls-dev, libsystemd-dev, libmicrohttpd-dev, libjansson-dev, check, libsubunit-dev, cppcheck ]
 
-matrix:
+jobs:
   include:
     - env: LABEL=gcc
       compiler: gcc
