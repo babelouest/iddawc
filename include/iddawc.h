@@ -202,6 +202,7 @@ struct _i_session {
   json_t      * j_userinfo;
   char        * token_jti;
   uint          token_exp;
+  json_t      * j_authorization_details;
 };
 
 /**
@@ -326,6 +327,31 @@ int i_set_additional_parameter(struct _i_session * i_session, const char * s_key
  * @return I_OK on success, an error value on error
  */
 int i_set_additional_response(struct _i_session * i_session, const char * s_key, const char * s_value);
+
+/**
+ * Adds an authorization request object or replace it if the type already exists
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @param value: the authorization request, must be a stringified JSON object
+ * @return I_OK on success, an error value on error
+ */
+int i_set_rich_authorization_request(struct _i_session * i_session, const char * type, const char * value);
+
+/**
+ * Remove an authorization request object based on the type
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @return I_OK on success, an error value on error
+ */
+int i_remove_rich_authorization_request(struct _i_session * i_session, const char * type);
+
+/**
+ * Returns an authorization request object based on the type
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @return a char * containing a JSON stringified exported session, must be i_free'd after use, or NULL if not found
+ */
+char * i_get_rich_authorization_request(struct _i_session * i_session, const char * type);
 
 /**
  * Returns the response type of the current session
