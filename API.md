@@ -86,7 +86,6 @@ void i_clean_session(struct _i_session * i_session);
 To set or get parameters stored in the `struct _i_session *`, you must use the appropriate function
 
 ```C
-
 /**
  * Sets response type of a session
  * @param i_session: a reference to a struct _i_session *
@@ -218,6 +217,31 @@ const char * i_get_additional_parameter(struct _i_session * i_session, const cha
  * @return the value
  */
 const char * i_get_additional_response(struct _i_session * i_session, const char * s_key);
+
+/**
+ * Adds an authorization request object or replace it if the type already exists
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @param value: the authorization request, must be a stringified JSON object
+ * @return I_OK on success, an error value on error
+ */
+int i_set_rich_authorization_request(struct _i_session * i_session, const char * type, const char * value);
+
+/**
+ * Remove an authorization request object based on the type
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @return I_OK on success, an error value on error
+ */
+int i_remove_rich_authorization_request(struct _i_session * i_session, const char * type);
+
+/**
+ * Returns an authorization request object based on the type
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @return a char * containing a JSON stringified exported session, must be i_free'd after use, or NULL if not found
+ */
+char * i_get_rich_authorization_request(struct _i_session * i_session, const char * type);
 ```
 
 ### Import or export sessions
