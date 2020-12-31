@@ -4,6 +4,7 @@
 
 - Support Rich Authorization Requests Draft 03
 - Add `i_set_rich_authorization_request`, `i_remove_rich_authorization_request`, `i_get_rich_authorization_request`
+- Remove Travis CI tests
 
 ## 0.9.7
 
