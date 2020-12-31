@@ -1,5 +1,10 @@
 # Iddawc Changelog
 
+## 0.9.8
+
+- Support Rich Authorization Requests Draft 03
+- Add `i_set_rich_authorization_request`, `i_remove_rich_authorization_request`, `i_get_rich_authorization_request`
+
 ## 0.9.7
 
 - Add `i_global_init`, `i_global_close`, `i_free`
