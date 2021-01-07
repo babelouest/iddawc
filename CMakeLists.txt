@@ -33,7 +33,7 @@ set(LIBRARY_VERSION_MINOR "9")
 set(LIBRARY_VERSION_PATCH "8")
 set(ORCANIA_VERSION_REQUIRED "2.1.1")
 set(YDER_VERSION_REQUIRED "1.4.12")
-set(ULFIUS_VERSION_REQUIRED "2.7.0")
+set(ULFIUS_VERSION_REQUIRED "2.7.1")
 set(RHONABWY_VERSION_REQUIRED "0.9.13")
 
 set(PROJECT_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
@@ -116,7 +116,6 @@ set_target_properties(iddawc PROPERTIES
         PUBLIC_HEADER "${INC_DIR}/iddawc.h;${PROJECT_BINARY_DIR}/iddawc-cfg.h"
         VERSION "${LIBRARY_VERSION}"
         SOVERSION "${LIBRARY_SOVERSION}")
-target_link_libraries(iddawc ${LIBS})
 
 include(FindJansson)
 set(JANSSON_MIN_VERSION 2.11)
@@ -139,6 +138,7 @@ if (NETTLE_FOUND)
 	set(LIBS ${LIBS} ${NETTLE_LIBRARIES})
 	include_directories(${NETTLE_INCLUDE_DIRS})
 endif ()
+target_link_libraries(iddawc ${LIBS})
 
 include(FindMHD)
 find_package(MHD REQUIRED)
