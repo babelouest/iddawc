@@ -2138,6 +2138,7 @@ int i_run_auth_request(struct _i_session * i_session) {
       i_session->response_type != I_RESPONSE_TYPE_PASSWORD &&
       i_session->response_type != I_RESPONSE_TYPE_CLIENT_CREDENTIALS &&
       i_session->response_type != I_RESPONSE_TYPE_REFRESH_TOKEN &&
+      i_session->response_type != I_RESPONSE_TYPE_DEVICE_CODE &&
       i_session->redirect_uri != NULL &&
       i_session->client_id != NULL &&
       i_session->authorization_endpoint != NULL &&
