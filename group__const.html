@@ -79,14 +79,17 @@ Macros</h2></td></tr>
 <tr class="memdesc:ga1a02bd6006b9e1af5f0bc894cbd9363a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Response type id_token.  <a href="#ga1a02bd6006b9e1af5f0bc894cbd9363a">More...</a><br /></td></tr>
 <tr class="separator:ga1a02bd6006b9e1af5f0bc894cbd9363a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad4b2bf679e3d69b0f7cab18336d9ad62"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gad4b2bf679e3d69b0f7cab18336d9ad62">I_RESPONSE_TYPE_PASSWORD</a>&#160;&#160;&#160;0x00001000</td></tr>
-<tr class="memdesc:gad4b2bf679e3d69b0f7cab18336d9ad62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Response type password.  <a href="#gad4b2bf679e3d69b0f7cab18336d9ad62">More...</a><br /></td></tr>
+<tr class="memdesc:gad4b2bf679e3d69b0f7cab18336d9ad62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Grant type password.  <a href="#gad4b2bf679e3d69b0f7cab18336d9ad62">More...</a><br /></td></tr>
 <tr class="separator:gad4b2bf679e3d69b0f7cab18336d9ad62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga298e1585f5a8232bba2b87168d1ef5c1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga298e1585f5a8232bba2b87168d1ef5c1">I_RESPONSE_TYPE_CLIENT_CREDENTIALS</a>&#160;&#160;&#160;0x00010000</td></tr>
-<tr class="memdesc:ga298e1585f5a8232bba2b87168d1ef5c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Response type client_credentials.  <a href="#ga298e1585f5a8232bba2b87168d1ef5c1">More...</a><br /></td></tr>
+<tr class="memdesc:ga298e1585f5a8232bba2b87168d1ef5c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Grant type client_credentials.  <a href="#ga298e1585f5a8232bba2b87168d1ef5c1">More...</a><br /></td></tr>
 <tr class="separator:ga298e1585f5a8232bba2b87168d1ef5c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae605879f560cff134d4047ea0eae449c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gae605879f560cff134d4047ea0eae449c">I_RESPONSE_TYPE_REFRESH_TOKEN</a>&#160;&#160;&#160;0x00100000</td></tr>
-<tr class="memdesc:gae605879f560cff134d4047ea0eae449c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Response type refresh_token.  <a href="#gae605879f560cff134d4047ea0eae449c">More...</a><br /></td></tr>
+<tr class="memdesc:gae605879f560cff134d4047ea0eae449c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Grant type refresh_token.  <a href="#gae605879f560cff134d4047ea0eae449c">More...</a><br /></td></tr>
 <tr class="separator:gae605879f560cff134d4047ea0eae449c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf7712d398792b240343b3afae27bcac2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#gaf7712d398792b240343b3afae27bcac2">I_RESPONSE_TYPE_DEVICE_CODE</a>&#160;&#160;&#160;0x01000000</td></tr>
+<tr class="memdesc:gaf7712d398792b240343b3afae27bcac2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Grant type urn:ietf:params:oauth:grant-type:device_code.  <a href="#gaf7712d398792b240343b3afae27bcac2">More...</a><br /></td></tr>
+<tr class="separator:gaf7712d398792b240343b3afae27bcac2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga324601c3e9a1f0212d34341e125ef4bc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__const.html#ga324601c3e9a1f0212d34341e125ef4bc">I_AUTH_METHOD_GET</a>&#160;&#160;&#160;0x00000001</td></tr>
 <tr class="memdesc:ga324601c3e9a1f0212d34341e125ef4bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">access auth endpoint using GET method  <a href="#ga324601c3e9a1f0212d34341e125ef4bc">More...</a><br /></td></tr>
 <tr class="separator:ga324601c3e9a1f0212d34341e125ef4bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -212,7 +215,16 @@ Enumerations</h2></td></tr>
 <br />
 &#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ab8d0e9247f0c58674daeb624f29646eb">I_OPT_REVOCATION_ENDPOINT</a> = 50, 
 <a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a1afc2fde1d96bb3c1ed6f29189240dcd">I_OPT_INTROSPECTION_ENDPOINT</a> = 51, 
-<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ad002aec90b1a636256672c8adb829913">I_OPT_REGISTRATION_ENDPOINT</a> = 52
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ad002aec90b1a636256672c8adb829913">I_OPT_REGISTRATION_ENDPOINT</a> = 52, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a6a01028799d651141a5300897c8a5259">I_OPT_DEVICE_AUTHORIZATION_ENDPOINT</a> = 53, 
+<br />
+&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a07ccc0f66b6726ebd6ca843ba4ad8a63">I_OPT_DEVICE_AUTH_CODE</a> = 54, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41adaef70123cf5261e7208b687feed1bd1">I_OPT_DEVICE_AUTH_USER_CODE</a> = 55, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41acdbf3def1eedbeead240aa3da9dbf63f">I_OPT_DEVICE_AUTH_VERIFICATION_URI</a> = 56, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41afc57a5f7a174f51c50693b26a6170d94">I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE</a> = 57, 
+<br />
+&#160;&#160;<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a76afbbf678ad8a91776dc431ea8f18bb">I_OPT_DEVICE_AUTH_EXPIRES_IN</a> = 58, 
+<a class="el" href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41a7c5c83115e6e64d4ba71372765df649e">I_OPT_DEVICE_AUTH_INTERVAL</a> = 59
 <br />
  }</td></tr>
 <tr class="separator:ga845a2122b22dd4f5a7f66c7d3bce2b41"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -398,7 +410,7 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Response type password. </p>
+<p>Grant type password. </p>
 
 </div>
 </div>
@@ -414,7 +426,7 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Response type client_credentials. </p>
+<p>Grant type client_credentials. </p>
 
 </div>
 </div>
@@ -430,7 +442,23 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Response type refresh_token. </p>
+<p>Grant type refresh_token. </p>
+
+</div>
+</div>
+<a id="gaf7712d398792b240343b3afae27bcac2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf7712d398792b240343b3afae27bcac2">&#9670;&nbsp;</a></span>I_RESPONSE_TYPE_DEVICE_CODE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define I_RESPONSE_TYPE_DEVICE_CODE&#160;&#160;&#160;0x01000000</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Grant type urn:ietf:params:oauth:grant-type:device_code. </p>
 
 </div>
 </div>
@@ -876,6 +904,20 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><a id="gga845a2122b22dd4f5a7f66c7d3bce2b41a1afc2fde1d96bb3c1ed6f29189240dcd"></a>I_OPT_INTROSPECTION_ENDPOINT&#160;</td><td class="fielddoc"><p>absolute url for the introspection endpoint, string </p>
 </td></tr>
 <tr><td class="fieldname"><a id="gga845a2122b22dd4f5a7f66c7d3bce2b41ad002aec90b1a636256672c8adb829913"></a>I_OPT_REGISTRATION_ENDPOINT&#160;</td><td class="fielddoc"><p>absolute url for the client registration endpoint, string </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga845a2122b22dd4f5a7f66c7d3bce2b41a6a01028799d651141a5300897c8a5259"></a>I_OPT_DEVICE_AUTHORIZATION_ENDPOINT&#160;</td><td class="fielddoc"><p>absolute url for the pushed authorization endpoint, string </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga845a2122b22dd4f5a7f66c7d3bce2b41a07ccc0f66b6726ebd6ca843ba4ad8a63"></a>I_OPT_DEVICE_AUTH_CODE&#160;</td><td class="fielddoc"><p>device authorization code sent by the AS </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga845a2122b22dd4f5a7f66c7d3bce2b41adaef70123cf5261e7208b687feed1bd1"></a>I_OPT_DEVICE_AUTH_USER_CODE&#160;</td><td class="fielddoc"><p>device authorization user code sent by the AS </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga845a2122b22dd4f5a7f66c7d3bce2b41acdbf3def1eedbeead240aa3da9dbf63f"></a>I_OPT_DEVICE_AUTH_VERIFICATION_URI&#160;</td><td class="fielddoc"><p>device authorization verification URI sent by the AS </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga845a2122b22dd4f5a7f66c7d3bce2b41afc57a5f7a174f51c50693b26a6170d94"></a>I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE&#160;</td><td class="fielddoc"><p>device authorization verification URI complete sent by the AS </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga845a2122b22dd4f5a7f66c7d3bce2b41a76afbbf678ad8a91776dc431ea8f18bb"></a>I_OPT_DEVICE_AUTH_EXPIRES_IN&#160;</td><td class="fielddoc"><p>device authorization code expiration sent by the AS </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga845a2122b22dd4f5a7f66c7d3bce2b41a7c5c83115e6e64d4ba71372765df649e"></a>I_OPT_DEVICE_AUTH_INTERVAL&#160;</td><td class="fielddoc"><p>device authorization code verification interval sent by the AS </p>
 </td></tr>
 </table>
 
