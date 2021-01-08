@@ -743,9 +743,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
   time_t now;
   char * jwt_str = NULL;
 
-  if (i_session->client_id == NULL) {
-    ret = I_ERROR_PARAM;
-  } else if (i_session->token_method == I_TOKEN_AUTH_METHOD_SECRET_BASIC) {
+  if (i_session->token_method == I_TOKEN_AUTH_METHOD_SECRET_BASIC) {
     if (i_session->client_secret != NULL) {
       request->auth_basic_user = o_strdup(i_session->client_id);
       request->auth_basic_password = o_strdup(i_session->client_secret);
@@ -3258,6 +3256,7 @@ int i_run_device_auth_request(struct _i_session * i_session) {
   
   if (i_session != NULL &&
       i_session->device_authorization_endpoint != NULL &&
+      i_session->client_id != NULL &&
       i_session->response_type == I_RESPONSE_TYPE_DEVICE_CODE) {
     ulfius_init_request(&request);
     ulfius_init_response(&response);
