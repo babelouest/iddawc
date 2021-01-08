@@ -88,57 +88,64 @@ extern "C"
  * i_get_int_parameter or i_get_str_parameter
  */
 typedef enum {
-  I_OPT_NONE                             = 0,  ///< Empty option to complete a i_set_parameter_list
-  I_OPT_RESPONSE_TYPE                    = 1,  ///< response_type, values available are I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS and I_RESPONSE_TYPE_REFRESH_TOKEN
-  I_OPT_SCOPE                            = 2,  ///< scope values, string, multiple scopes must be separated by a space character: "scope1 openid"
-  I_OPT_SCOPE_APPEND                     = 3,  ///< append another scope value to the scope list, string
-  I_OPT_STATE                            = 4,  ///< state value, string
-  I_OPT_NONCE                            = 5,  ///< nonce value, string
-  I_OPT_REDIRECT_URI                     = 6,  ///< redirect_uri, string
-  I_OPT_REDIRECT_TO                      = 7,  ///< url where the oauth2 is redirected to after a /auth request
-  I_OPT_CLIENT_ID                        = 8,  ///< client_id, string
-  I_OPT_CLIENT_SECRET                    = 9,  ///< client secret, string
-  I_OPT_ADDITIONAL_PARAMETER             = 10, ///< use this option to pass any additional parameter value in the /auth request
-  I_OPT_ADDITIONAL_RESPONSE              = 11, ///< 
-  I_OPT_AUTH_ENDPOINT                    = 12, ///< absolute url for the auth endpoint, string
-  I_OPT_TOKEN_ENDPOINT                   = 13, ///< absolute url for the token endpoint, string
-  I_OPT_OPENID_CONFIG_ENDPOINT           = 14, ///< absolute url for the .well-known/openid-configuration endpoint, string
-  I_OPT_OPENID_CONFIG                    = 15, ///< result of the .well-known/openid-configuration
-  I_OPT_OPENID_CONFIG_STRICT             = 16, ///< must the .well-known/openid-configuration parameters be strictly 
-  I_OPT_USERINFO_ENDPOINT                = 17, ///< absolute url for the userinfo endpoint or equivalent, string
-  I_OPT_RESULT                           = 18, ///< result of a request
-  I_OPT_ERROR                            = 19, ///< error value of a failed request, string
-  I_OPT_ERROR_DESCRIPTION                = 20, ///< error description of a failed request, string
-  I_OPT_ERROR_URI                        = 21, ///< error uri of a failed request, string
-  I_OPT_CODE                             = 22, ///< code given after a succesfull auth request using the response_type I_RESPONSE_TYPE_CODE
-  I_OPT_REFRESH_TOKEN                    = 23, ///< refresh token given after a succesfull token request using the proper response_type
-  I_OPT_ACCESS_TOKEN                     = 24, ///< access token given after a succesfull auth or token request using the proper response_type
-  I_OPT_ID_TOKEN                         = 25, ///< id_token given after a succesfull auth or token request using the proper response_type
-  I_OPT_AUTH_METHOD                      = 28, ///< Authentication method to use with the auth endpoint, values available are I_AUTH_METHOD_GET, I_AUTH_METHOD_POST, I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY, values I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY can be combined with I_AUTH_METHOD_GET or I_AUTH_METHOD_POST
-  I_OPT_TOKEN_METHOD                     = 29, ///< Authentication method to use with the token endpoint, values available are I_TOKEN_AUTH_METHOD_SECRET_BASIC, I_TOKEN_AUTH_METHOD_SECRET_POST, I_TOKEN_AUTH_METHOD_SECRET_JWT, I_TOKEN_AUTH_METHOD_PRIVATE_JWT, I_TOKEN_AUTH_METHOD_NONE
-  I_OPT_TOKEN_TYPE                       = 30, ///< token_type value after a succesfull auth or token request, string
-  I_OPT_EXPIRES_IN                       = 31, ///< expires_in value after a succesfull auth or token request, integer
-  I_OPT_EXPIRES_AT                       = 32, ///< expires_at value after a succesfull auth or token request, time_t
-  I_OPT_USERNAME                         = 33, ///< username for password response_types, string
-  I_OPT_USER_PASSWORD                    = 34, ///< password for password response_types, string
-  I_OPT_ISSUER                           = 35, ///< issuer value, string
-  I_OPT_USERINFO                         = 36, ///< userinfo result, string
-  I_OPT_NONCE_GENERATE                   = 37, ///< generate a random nonce value
-  I_OPT_STATE_GENERATE                   = 38, ///< generate a random state value
-  I_OPT_X5U_FLAGS                        = 39, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
-  I_OPT_SERVER_KID                       = 40, ///< key id to use if multiple jwk are available on the server, string
-  I_OPT_CLIENT_KID                       = 41, ///< key id to use if multiple jwk are available on the client, string
-  I_OPT_CLIENT_SIGN_ALG                  = 42, ///< signature algorithm to use when the client signs a request in a JWT, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
-  I_OPT_CLIENT_ENC_ALG                   = 43, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA_OAEP', 'RSA_OAEP_256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH_ES', 'ECDH_ES_A128KW', 'ECDH_ES_A192KW', 'ECDH_ES_A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2_H256', 'PBES2_H384 or 'PBES2_H512', warning: some algorithm may be unavailable depending on Rhonabwy version used
-  I_OPT_CLIENT_ENC                       = 44, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC,' 'A192CBC,' 'A256CBC,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
-  I_OPT_TOKEN_JTI                        = 45, ///< jti value, string
-  I_OPT_TOKEN_JTI_GENERATE               = 46, ///< generate a random jti value
-  I_OPT_TOKEN_EXP                        = 47, ///< JWT token request expiration time in seconds
-  I_OPT_TOKEN_TARGET                     = 48, ///< access_token which is the target of a revocation or an introspection, string
-  I_OPT_TOKEN_TARGET_TYPE_HINT           = 49, ///< access_token which is the target of a revocation or an introspection, string
-  I_OPT_REVOCATION_ENDPOINT              = 50, ///< absolute url for the revocation endpoint, string
-  I_OPT_INTROSPECTION_ENDPOINT           = 51, ///< absolute url for the introspection endpoint, string
-  I_OPT_REGISTRATION_ENDPOINT            = 52  ///< absolute url for the client registration endpoint, string
+  I_OPT_NONE                                  = 0,  ///< Empty option to complete a i_set_parameter_list
+  I_OPT_RESPONSE_TYPE                         = 1,  ///< response_type, values available are I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS and I_RESPONSE_TYPE_REFRESH_TOKEN
+  I_OPT_SCOPE                                 = 2,  ///< scope values, string, multiple scopes must be separated by a space character: "scope1 openid"
+  I_OPT_SCOPE_APPEND                          = 3,  ///< append another scope value to the scope list, string
+  I_OPT_STATE                                 = 4,  ///< state value, string
+  I_OPT_NONCE                                 = 5,  ///< nonce value, string
+  I_OPT_REDIRECT_URI                          = 6,  ///< redirect_uri, string
+  I_OPT_REDIRECT_TO                           = 7,  ///< url where the oauth2 is redirected to after a /auth request
+  I_OPT_CLIENT_ID                             = 8,  ///< client_id, string
+  I_OPT_CLIENT_SECRET                         = 9,  ///< client secret, string
+  I_OPT_ADDITIONAL_PARAMETER                  = 10, ///< use this option to pass any additional parameter value in the /auth request
+  I_OPT_ADDITIONAL_RESPONSE                   = 11, ///< 
+  I_OPT_AUTH_ENDPOINT                         = 12, ///< absolute url for the auth endpoint, string
+  I_OPT_TOKEN_ENDPOINT                        = 13, ///< absolute url for the token endpoint, string
+  I_OPT_OPENID_CONFIG_ENDPOINT                = 14, ///< absolute url for the .well-known/openid-configuration endpoint, string
+  I_OPT_OPENID_CONFIG                         = 15, ///< result of the .well-known/openid-configuration
+  I_OPT_OPENID_CONFIG_STRICT                  = 16, ///< must the .well-known/openid-configuration parameters be strictly 
+  I_OPT_USERINFO_ENDPOINT                     = 17, ///< absolute url for the userinfo endpoint or equivalent, string
+  I_OPT_RESULT                                = 18, ///< result of a request
+  I_OPT_ERROR                                 = 19, ///< error value of a failed request, string
+  I_OPT_ERROR_DESCRIPTION                     = 20, ///< error description of a failed request, string
+  I_OPT_ERROR_URI                             = 21, ///< error uri of a failed request, string
+  I_OPT_CODE                                  = 22, ///< code given after a succesfull auth request using the response_type I_RESPONSE_TYPE_CODE
+  I_OPT_REFRESH_TOKEN                         = 23, ///< refresh token given after a succesfull token request using the proper response_type
+  I_OPT_ACCESS_TOKEN                          = 24, ///< access token given after a succesfull auth or token request using the proper response_type
+  I_OPT_ID_TOKEN                              = 25, ///< id_token given after a succesfull auth or token request using the proper response_type
+  I_OPT_AUTH_METHOD                           = 28, ///< Authentication method to use with the auth endpoint, values available are I_AUTH_METHOD_GET, I_AUTH_METHOD_POST, I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY, values I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY can be combined with I_AUTH_METHOD_GET or I_AUTH_METHOD_POST
+  I_OPT_TOKEN_METHOD                          = 29, ///< Authentication method to use with the token endpoint, values available are I_TOKEN_AUTH_METHOD_SECRET_BASIC, I_TOKEN_AUTH_METHOD_SECRET_POST, I_TOKEN_AUTH_METHOD_SECRET_JWT, I_TOKEN_AUTH_METHOD_PRIVATE_JWT, I_TOKEN_AUTH_METHOD_NONE
+  I_OPT_TOKEN_TYPE                            = 30, ///< token_type value after a succesfull auth or token request, string
+  I_OPT_EXPIRES_IN                            = 31, ///< expires_in value after a succesfull auth or token request, integer
+  I_OPT_EXPIRES_AT                            = 32, ///< expires_at value after a succesfull auth or token request, time_t
+  I_OPT_USERNAME                              = 33, ///< username for password response_types, string
+  I_OPT_USER_PASSWORD                         = 34, ///< password for password response_types, string
+  I_OPT_ISSUER                                = 35, ///< issuer value, string
+  I_OPT_USERINFO                              = 36, ///< userinfo result, string
+  I_OPT_NONCE_GENERATE                        = 37, ///< generate a random nonce value
+  I_OPT_STATE_GENERATE                        = 38, ///< generate a random state value
+  I_OPT_X5U_FLAGS                             = 39, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
+  I_OPT_SERVER_KID                            = 40, ///< key id to use if multiple jwk are available on the server, string
+  I_OPT_CLIENT_KID                            = 41, ///< key id to use if multiple jwk are available on the client, string
+  I_OPT_CLIENT_SIGN_ALG                       = 42, ///< signature algorithm to use when the client signs a request in a JWT, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
+  I_OPT_CLIENT_ENC_ALG                        = 43, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA_OAEP', 'RSA_OAEP_256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH_ES', 'ECDH_ES_A128KW', 'ECDH_ES_A192KW', 'ECDH_ES_A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2_H256', 'PBES2_H384 or 'PBES2_H512', warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_CLIENT_ENC                            = 44, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC,' 'A192CBC,' 'A256CBC,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_TOKEN_JTI                             = 45, ///< jti value, string
+  I_OPT_TOKEN_JTI_GENERATE                    = 46, ///< generate a random jti value
+  I_OPT_TOKEN_EXP                             = 47, ///< JWT token request expiration time in seconds
+  I_OPT_TOKEN_TARGET                          = 48, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_TOKEN_TARGET_TYPE_HINT                = 49, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_REVOCATION_ENDPOINT                   = 50, ///< absolute url for the revocation endpoint, string
+  I_OPT_INTROSPECTION_ENDPOINT                = 51, ///< absolute url for the introspection endpoint, string
+  I_OPT_REGISTRATION_ENDPOINT                 = 52, ///< absolute url for the client registration endpoint, string
+  I_OPT_DEVICE_AUTHORIZATION_ENDPOINT         = 53, ///< absolute url for the pushed authorization endpoint, string
+  I_OPT_DEVICE_AUTH_CODE                      = 54, ///< device authorization code sent by the AS
+  I_OPT_DEVICE_AUTH_USER_CODE                 = 55, ///< device authorization user code sent by the AS
+  I_OPT_DEVICE_AUTH_VERIFICATION_URI          = 56, ///< device authorization verification URI sent by the AS
+  I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE = 57, ///< device authorization verification URI complete sent by the AS
+  I_OPT_DEVICE_AUTH_EXPIRES_IN                = 58, ///< device authorization code expiration sent by the AS
+  I_OPT_DEVICE_AUTH_INTERVAL                  = 59  ///< device authorization code verification interval sent by the AS
 } i_option;
 
 /**
@@ -170,7 +177,9 @@ struct _i_session {
   char        * userinfo_endpoint;
   char        * revocation_endpoint;
   char        * introspection_endpoint;
+  char        * device_authorization_endpoint;
   char        * registration_endpoint;
+  char        * par_endpoint;
   uint          result;
   char        * error;
   char        * error_description;
@@ -203,6 +212,12 @@ struct _i_session {
   char        * token_jti;
   uint          token_exp;
   json_t      * j_authorization_details;
+  char        * device_auth_code;
+  char        * device_auth_user_code;
+  char        * device_auth_verifucation_uri;
+  char        * device_auth_verifucation_uri_complete;
+  uint          device_auth_expires_in;
+  uint          device_auth_interval;
 };
 
 /**
@@ -604,6 +619,14 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
  * @return I_OK on success, an error value on error
  */
 int i_perform_api_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat);
+
+/**
+ * Executes a pushed authorization request
+ * and sets the request_uri value on success
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_run_par_request(struct _i_session * i_session);
 
 /**
  * @}

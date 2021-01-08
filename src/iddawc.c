@@ -906,6 +906,13 @@ int i_init_session(struct _i_session * i_session) {
     i_session->revocation_endpoint = NULL;
     i_session->introspection_endpoint = NULL;
     i_session->registration_endpoint = NULL;
+    i_session->device_authorization_endpoint = NULL;
+    i_session->device_auth_code = NULL;
+    i_session->device_auth_user_code = NULL;
+    i_session->device_auth_verifucation_uri = NULL;
+    i_session->device_auth_verifucation_uri_complete = NULL;
+    i_session->device_auth_expires_in = 0;
+    i_session->device_auth_interval = 0;
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
         if ((res = r_jwks_init(&i_session->server_jwks)) == RHN_OK) {
@@ -973,6 +980,11 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->registration_endpoint);
     o_free(i_session->token_target);
     o_free(i_session->token_target_type_hint);
+    o_free(i_session->device_authorization_endpoint);
+    o_free(i_session->device_auth_code);
+    o_free(i_session->device_auth_user_code);
+    o_free(i_session->device_auth_verifucation_uri);
+    o_free(i_session->device_auth_verifucation_uri_complete);
     u_map_clean(&i_session->additional_parameters);
     u_map_clean(&i_session->additional_response);
     r_jwks_free(i_session->server_jwks);
@@ -1091,6 +1103,12 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
         } else {
           ret = I_ERROR_PARAM;
         }
+        break;
+      case I_OPT_DEVICE_AUTH_EXPIRES_IN:
+        i_session->device_auth_expires_in = i_value;
+        break;
+      case I_OPT_DEVICE_AUTH_INTERVAL:
+        i_session->device_auth_interval = i_value;
         break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
@@ -1406,6 +1424,46 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
           i_session->registration_endpoint = NULL;
         }
         break;
+      case I_OPT_DEVICE_AUTHORIZATION_ENDPOINT:
+        o_free(i_session->device_authorization_endpoint);
+        if (o_strlen(s_value)) {
+          i_session->device_authorization_endpoint = o_strdup(s_value);
+        } else {
+          i_session->device_authorization_endpoint = NULL;
+        }
+        break;
+      case I_OPT_DEVICE_AUTH_CODE:
+        o_free(i_session->device_auth_code);
+        if (o_strlen(s_value)) {
+          i_session->device_auth_code = o_strdup(s_value);
+        } else {
+          i_session->device_auth_code = NULL;
+        }
+        break;
+      case I_OPT_DEVICE_AUTH_USER_CODE:
+        o_free(i_session->device_auth_user_code);
+        if (o_strlen(s_value)) {
+          i_session->device_auth_user_code = o_strdup(s_value);
+        } else {
+          i_session->device_auth_user_code = NULL;
+        }
+        break;
+      case I_OPT_DEVICE_AUTH_VERIFICATION_URI:
+        o_free(i_session->device_auth_verifucation_uri);
+        if (o_strlen(s_value)) {
+          i_session->device_auth_verifucation_uri = o_strdup(s_value);
+        } else {
+          i_session->device_auth_verifucation_uri = NULL;
+        }
+        break;
+      case I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE:
+        o_free(i_session->device_auth_verifucation_uri_complete);
+        if (o_strlen(s_value)) {
+          i_session->device_auth_verifucation_uri_complete = o_strdup(s_value);
+        } else {
+          i_session->device_auth_verifucation_uri_complete = NULL;
+        }
+        break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error unknown option %d", option);
         ret = I_ERROR_PARAM;
@@ -1463,6 +1521,8 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_OPENID_CONFIG_STRICT:
         case I_OPT_TOKEN_JTI_GENERATE:
         case I_OPT_TOKEN_EXP:
+        case I_OPT_DEVICE_AUTH_EXPIRES_IN:
+        case I_OPT_DEVICE_AUTH_INTERVAL:
           i_value = va_arg(vl, uint);
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
@@ -1502,6 +1562,11 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_REVOCATION_ENDPOINT:
         case I_OPT_INTROSPECTION_ENDPOINT:
         case I_OPT_REGISTRATION_ENDPOINT:
+        case I_OPT_DEVICE_AUTHORIZATION_ENDPOINT:
+        case I_OPT_DEVICE_AUTH_CODE:
+        case I_OPT_DEVICE_AUTH_USER_CODE:
+        case I_OPT_DEVICE_AUTH_VERIFICATION_URI:
+        case I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE:
           str_value = va_arg(vl, const char *);
           ret = i_set_str_parameter(i_session, option, str_value);
           break;
@@ -1736,6 +1801,12 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option) {
       case I_OPT_TOKEN_EXP:
         return i_session->token_exp;
         break;
+      case I_OPT_DEVICE_AUTH_EXPIRES_IN:
+        return i_session->device_auth_expires_in;
+        break;
+      case I_OPT_DEVICE_AUTH_INTERVAL:
+        return i_session->device_auth_interval;
+        break;
       default:
         return 0;
         break;
@@ -1922,6 +1993,21 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_REGISTRATION_ENDPOINT:
         result = (const char *)i_session->registration_endpoint;
+        break;
+      case I_OPT_DEVICE_AUTHORIZATION_ENDPOINT:
+        result = (const char *)i_session->device_authorization_endpoint;
+        break;
+      case I_OPT_DEVICE_AUTH_CODE:
+        result = (const char *)i_session->device_auth_code;
+        break;
+      case I_OPT_DEVICE_AUTH_USER_CODE:
+        result = (const char *)i_session->device_auth_user_code;
+        break;
+      case I_OPT_DEVICE_AUTH_VERIFICATION_URI:
+        result = (const char *)i_session->device_auth_verifucation_uri;
+        break;
+      case I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE:
+        result = (const char *)i_session->device_auth_verifucation_uri_complete;
         break;
       default:
         break;
@@ -2676,7 +2762,7 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si }",
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_str_parameter(i_session, I_OPT_STATE),
@@ -2734,7 +2820,17 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "revocation_endpoint", i_get_str_parameter(i_session, I_OPT_REVOCATION_ENDPOINT),
                          "introspection_endpoint", i_get_str_parameter(i_session, I_OPT_INTROSPECTION_ENDPOINT),
                          "registration_endpoint", i_get_str_parameter(i_session, I_OPT_REGISTRATION_ENDPOINT),
-                         "authorization_details", i_session->j_authorization_details);
+                         "authorization_details", i_session->j_authorization_details,
+                         
+                         "device_authorization_endpoint", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT),
+                         "device_auth_code", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_CODE),
+                         "device_auth_user_code", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_USER_CODE),
+                         "device_auth_verifucation_uri", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI),
+                         "device_auth_verifucation_uri_complete", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE),
+                         
+                         "device_auth_expires_in", i_get_int_parameter(i_session, I_OPT_DEVICE_AUTH_EXPIRES_IN),
+                         "device_auth_interval", i_get_int_parameter(i_session, I_OPT_DEVICE_AUTH_INTERVAL)
+                         );
   }
   return j_return;
 }
@@ -2790,6 +2886,13 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_REVOCATION_ENDPOINT, json_string_value(json_object_get(j_import, "revocation_endpoint")),
                                      I_OPT_INTROSPECTION_ENDPOINT, json_string_value(json_object_get(j_import, "introspection_endpoint")),
                                      I_OPT_REGISTRATION_ENDPOINT, json_string_value(json_object_get(j_import, "registration_endpoint")),
+                                     I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, json_string_value(json_object_get(j_import, "device_authorization_endpoint")),
+                                     I_OPT_DEVICE_AUTH_CODE, json_string_value(json_object_get(j_import, "device_auth_code")),
+                                     I_OPT_DEVICE_AUTH_USER_CODE, json_string_value(json_object_get(j_import, "device_auth_user_code")),
+                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI, json_string_value(json_object_get(j_import, "device_auth_verifucation_uri")),
+                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, json_string_value(json_object_get(j_import, "device_auth_verifucation_uri_complete")),
+                                     I_OPT_DEVICE_AUTH_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "device_auth_expires_in")),
+                                     I_OPT_DEVICE_AUTH_INTERVAL, (int)json_integer_value(json_object_get(j_import, "device_auth_interval")),
                                      I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
