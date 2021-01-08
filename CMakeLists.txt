@@ -305,6 +305,7 @@ if (BUILD_IDDAWC_TESTING)
             registration
             dpop
             api_request
+            device
             )
 
         configure_file(
