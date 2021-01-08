@@ -52,9 +52,10 @@ extern "C"
 #define I_RESPONSE_TYPE_CODE               0x00000001 ///< Response type code
 #define I_RESPONSE_TYPE_TOKEN              0x00000010 ///< Response type token
 #define I_RESPONSE_TYPE_ID_TOKEN           0x00000100 ///< Response type id_token
-#define I_RESPONSE_TYPE_PASSWORD           0x00001000 ///< Response type password
-#define I_RESPONSE_TYPE_CLIENT_CREDENTIALS 0x00010000 ///< Response type client_credentials
-#define I_RESPONSE_TYPE_REFRESH_TOKEN      0x00100000 ///< Response type refresh_token
+#define I_RESPONSE_TYPE_PASSWORD           0x00001000 ///< Grant type password
+#define I_RESPONSE_TYPE_CLIENT_CREDENTIALS 0x00010000 ///< Grant type client_credentials
+#define I_RESPONSE_TYPE_REFRESH_TOKEN      0x00100000 ///< Grant type refresh_token
+#define I_RESPONSE_TYPE_DEVICE_CODE        0x01000000 ///< Grant type urn:ietf:params:oauth:grant-type:device_code
 
 #define I_AUTH_METHOD_GET                 0x00000001 ///< access auth endpoint using GET method
 #define I_AUTH_METHOD_POST                0x00000010 ///< access auth endpoint using POST method
@@ -627,6 +628,14 @@ int i_perform_api_request(struct _i_session * i_session, struct _u_request * htt
  * @return I_OK on success, an error value on error
  */
 int i_run_par_request(struct _i_session * i_session);
+
+/**
+ * Executes a device authorization request
+ * and sets the code, user code and verification uri in the _i_session *
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_run_device_auth_request(struct _i_session * i_session);
 
 /**
  * @}
