@@ -340,6 +340,20 @@ If the auth request is executed by an external program such as the browser, you 
 int i_parse_redirect_to(struct _i_session * i_session);
 ```
 
+### Build and run device authorization requests and parse results
+
+If you need to run a device authorization request, you need to use the response type `I_RESPONSE_TYPE_DEVICE_CODE` and use the function `i_run_device_auth_request`, the parameter `I_OPT_DEVICE_AUTHORIZATION_ENDPOINT` must be set. On success, the parameters `I_OPT_DEVICE_AUTH_CODE`, `I_OPT_DEVICE_AUTH_USER_CODE`, `I_OPT_DEVICE_AUTH_VERIFICATION_URI`, `I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE`, `I_OPT_DEVICE_AUTH_EXPIRES_IN` and `I_OPT_DEVICE_AUTH_INTERVAL` will be set. After that, you'll need to run `i_run_token_request` (see below) every few seconds until you get a success or a definitive error.
+
+```C
+/**
+ * Executes a device authorization request
+ * and sets the code, user code and verification uri in the _i_session *
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_run_device_auth_request(struct _i_session * i_session);
+```
+
 ### Build and run token requests and parse results
 
 If you need to execute a request in the token endpoint, to get a refresh token from a code or refresh a token for example, 
