@@ -3,7 +3,8 @@
 ## 0.9.8
 
 - Support Rich Authorization Requests Draft 03
-- Add `i_set_rich_authorization_request`, `i_remove_rich_authorization_request`, `i_get_rich_authorization_request`
+- Add `i_set_rich_authorization_request`, `i_remove_rich_authorization_request`, `i_get_rich_authorization_request` for rich authorization requests
+- Add `i_run_device_auth_request` for device authorization requests
 - Remove Travis CI tests
 
 ## 0.9.7
