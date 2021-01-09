@@ -2,9 +2,12 @@
 
 ## 0.9.8
 
-- Support Rich Authorization Requests Draft 03
+- Support [OAuth 2.0 Rich Authorization Requests Draft 03](https://www.ietf.org/archive/id/draft-ietf-oauth-rar-03.html)
+- Support [OAuth 2.0 Device Authorization Grant (rfc #8628)](https://tools.ietf.org/html/rfc8628)
+- Support [OAuth 2.0 Pushed Authorization Requests Draft 05](https://tools.ietf.org/html/draft-ietf-oauth-par-05)
 - Add `i_set_rich_authorization_request`, `i_remove_rich_authorization_request`, `i_get_rich_authorization_request` for rich authorization requests
 - Add `i_run_device_auth_request` for device authorization requests
+- Add `i_run_par_request` for pushed authorization requests
 - Remove Travis CI tests
 
 ## 0.9.7
