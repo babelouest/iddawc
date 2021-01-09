@@ -93,6 +93,10 @@
 #define DEVICE_AUTH_INTERVAL 5
 #define END_SESSION_ENDPOINT "https://isp.tld/end_session"
 #define CHECK_SESSION_IRAME "https://isp.tld/check_session"
+#define PUSHED_AUTH_REQ_ENDPOINT "https://isp.tld/par"
+#define PUSHED_AUTH_REQ_REQUIRED 1
+#define PUSHED_AUTH_REQ_EXPIRES_IN 90
+#define PUSHED_AUTH_REQ_URI "parURI1234"
 
 /**
  * json_t * json_search(json_t * haystack, json_t * needle)
@@ -394,6 +398,12 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT, PUSHED_AUTH_REQ_ENDPOINT), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI), I_OK);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -418,6 +428,8 @@ START_TEST(test_iddawc_set_int_parameter)
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_TOKEN_EXP, TOKEN_EXP), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_DEVICE_AUTH_EXPIRES_IN, DEVICE_AUTH_EXPIRES_IN), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED, PUSHED_AUTH_REQ_REQUIRED), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN), I_OK);
 
   i_clean_session(&i_session);
 }
@@ -553,6 +565,12 @@ START_TEST(test_iddawc_get_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME), CHECK_SESSION_IRAME);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT, PUSHED_AUTH_REQ_ENDPOINT), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT), PUSHED_AUTH_REQ_ENDPOINT);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -591,6 +609,10 @@ START_TEST(test_iddawc_get_int_parameter)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DEVICE_AUTH_EXPIRES_IN), DEVICE_AUTH_EXPIRES_IN);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL), I_OK);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DEVICE_AUTH_INTERVAL), DEVICE_AUTH_INTERVAL);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED, PUSHED_AUTH_REQ_REQUIRED), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED), PUSHED_AUTH_REQ_REQUIRED);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN), PUSHED_AUTH_REQ_EXPIRES_IN);
 
   i_clean_session(&i_session);
 }
@@ -916,6 +938,10 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "check_session_iframe"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_expires_in")), 0);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_interval")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "pushed_authorization_request_endpoint"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "require_pushed_authorization_requests")), 0);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pushed_authorization_request_expires_in")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "pushed_authorization_request_uri"), NULL);
   json_decref(j_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -973,6 +999,10 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL,
                                                     I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT,
                                                     I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME,
+                                                    I_OPT_PUSHED_AUTH_REQ_ENDPOINT, PUSHED_AUTH_REQ_ENDPOINT,
+                                                    I_OPT_PUSHED_AUTH_REQ_REQUIRED, PUSHED_AUTH_REQ_REQUIRED,
+                                                    I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1036,6 +1066,10 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_interval")), DEVICE_AUTH_INTERVAL);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "end_session_endpoint")), END_SESSION_ENDPOINT);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "check_session_iframe")), CHECK_SESSION_IRAME);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "pushed_authorization_request_endpoint")), PUSHED_AUTH_REQ_ENDPOINT);
+  ck_assert_ptr_eq(json_object_get(j_export, "require_pushed_authorization_requests"), json_true());
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pushed_authorization_request_expires_in")), PUSHED_AUTH_REQ_EXPIRES_IN);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "pushed_authorization_request_uri")), PUSHED_AUTH_REQ_URI);
   json_decref(j_export);
 
   json_decref(j_additional);
@@ -1112,6 +1146,10 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL,
                                                     I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT,
                                                     I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME,
+                                                    I_OPT_PUSHED_AUTH_REQ_ENDPOINT, PUSHED_AUTH_REQ_ENDPOINT,
+                                                    I_OPT_PUSHED_AUTH_REQ_REQUIRED, PUSHED_AUTH_REQ_REQUIRED,
+                                                    I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1176,6 +1214,10 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DEVICE_AUTH_INTERVAL), DEVICE_AUTH_INTERVAL);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_END_SESSION_ENDPOINT), END_SESSION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME), CHECK_SESSION_IRAME);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT), PUSHED_AUTH_REQ_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED), PUSHED_AUTH_REQ_REQUIRED);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN), PUSHED_AUTH_REQ_EXPIRES_IN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   json_decref(j_export);
 
@@ -1197,7 +1239,7 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
   str_export = i_export_session_str(&i_session);
-  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":1,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0}");
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":1,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0}");
   o_free(str_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1255,6 +1297,10 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL,
                                                     I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT,
                                                     I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME,
+                                                    I_OPT_PUSHED_AUTH_REQ_ENDPOINT, PUSHED_AUTH_REQ_ENDPOINT,
+                                                    I_OPT_PUSHED_AUTH_REQ_REQUIRED, PUSHED_AUTH_REQ_REQUIRED,
+                                                    I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1335,6 +1381,10 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL,
                                                     I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT,
                                                     I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME,
+                                                    I_OPT_PUSHED_AUTH_REQ_ENDPOINT, PUSHED_AUTH_REQ_ENDPOINT,
+                                                    I_OPT_PUSHED_AUTH_REQ_REQUIRED, PUSHED_AUTH_REQ_REQUIRED,
+                                                    I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1399,7 +1449,11 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_DEVICE_AUTH_INTERVAL), DEVICE_AUTH_INTERVAL);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_END_SESSION_ENDPOINT), END_SESSION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CHECK_SESSION_IRAME), CHECK_SESSION_IRAME);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT), PUSHED_AUTH_REQ_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED), PUSHED_AUTH_REQ_REQUIRED);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN), PUSHED_AUTH_REQ_EXPIRES_IN);
   ck_assert_ptr_ne(NULL, str_rar = i_get_rich_authorization_request(&i_session_import, AUTH_REQUEST_TYPE_1));
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   o_free(str_import);
   o_free(str_rar);
