@@ -91,6 +91,8 @@
 #define DEVICE_AUTH_VERIFICATION_URI_COMPLETE "https://isp.tld/deviceUserAuth?code=deviceUserCode1234"
 #define DEVICE_AUTH_EXPIRES_IN 90
 #define DEVICE_AUTH_INTERVAL 5
+#define END_SESSION_ENDPOINT "https://isp.tld/end_session"
+#define CHECK_SESSION_IRAME "https://isp.tld/check_session"
 
 /**
  * json_t * json_search(json_t * haystack, json_t * needle)
@@ -386,6 +388,12 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, DEVICE_AUTH_VERIFICATION_URI_COMPLETE), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_END_SESSION_ENDPOINT, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME), I_OK);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -538,6 +546,12 @@ START_TEST(test_iddawc_get_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, DEVICE_AUTH_VERIFICATION_URI_COMPLETE), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE), DEVICE_AUTH_VERIFICATION_URI_COMPLETE);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_END_SESSION_ENDPOINT), END_SESSION_ENDPOINT);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME), CHECK_SESSION_IRAME);
 
   i_clean_session(&i_session);
 }
@@ -898,6 +912,8 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "device_auth_user_code"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "device_auth_verifucation_uri"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "device_auth_verifucation_uri_complete"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "end_session_endpoint"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "check_session_iframe"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_expires_in")), 0);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_interval")), 0);
   json_decref(j_export);
@@ -955,6 +971,8 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, DEVICE_AUTH_VERIFICATION_URI_COMPLETE,
                                                     I_OPT_DEVICE_AUTH_EXPIRES_IN, DEVICE_AUTH_EXPIRES_IN,
                                                     I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL,
+                                                    I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT,
+                                                    I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1016,6 +1034,8 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_auth_verifucation_uri_complete")), DEVICE_AUTH_VERIFICATION_URI_COMPLETE);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_expires_in")), DEVICE_AUTH_EXPIRES_IN);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_interval")), DEVICE_AUTH_INTERVAL);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "end_session_endpoint")), END_SESSION_ENDPOINT);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "check_session_iframe")), CHECK_SESSION_IRAME);
   json_decref(j_export);
 
   json_decref(j_additional);
@@ -1090,6 +1110,8 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, DEVICE_AUTH_VERIFICATION_URI_COMPLETE,
                                                     I_OPT_DEVICE_AUTH_EXPIRES_IN, DEVICE_AUTH_EXPIRES_IN,
                                                     I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL,
+                                                    I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT,
+                                                    I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1152,6 +1174,8 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE), DEVICE_AUTH_VERIFICATION_URI_COMPLETE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DEVICE_AUTH_EXPIRES_IN), DEVICE_AUTH_EXPIRES_IN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DEVICE_AUTH_INTERVAL), DEVICE_AUTH_INTERVAL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_END_SESSION_ENDPOINT), END_SESSION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME), CHECK_SESSION_IRAME);
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   json_decref(j_export);
 
@@ -1229,6 +1253,8 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, DEVICE_AUTH_VERIFICATION_URI_COMPLETE,
                                                     I_OPT_DEVICE_AUTH_EXPIRES_IN, DEVICE_AUTH_EXPIRES_IN,
                                                     I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL,
+                                                    I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT,
+                                                    I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1307,6 +1333,8 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, DEVICE_AUTH_VERIFICATION_URI_COMPLETE,
                                                     I_OPT_DEVICE_AUTH_EXPIRES_IN, DEVICE_AUTH_EXPIRES_IN,
                                                     I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL,
+                                                    I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT,
+                                                    I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1369,6 +1397,8 @@ START_TEST(test_iddawc_import_str)
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE), DEVICE_AUTH_VERIFICATION_URI_COMPLETE);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_DEVICE_AUTH_EXPIRES_IN), DEVICE_AUTH_EXPIRES_IN);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_DEVICE_AUTH_INTERVAL), DEVICE_AUTH_INTERVAL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_END_SESSION_ENDPOINT), END_SESSION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CHECK_SESSION_IRAME), CHECK_SESSION_IRAME);
   ck_assert_ptr_ne(NULL, str_rar = i_get_rich_authorization_request(&i_session_import, AUTH_REQUEST_TYPE_1));
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   o_free(str_import);
