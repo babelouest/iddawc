@@ -148,7 +148,11 @@ typedef enum {
   I_OPT_DEVICE_AUTH_EXPIRES_IN                = 58, ///< device authorization code expiration sent by the AS
   I_OPT_DEVICE_AUTH_INTERVAL                  = 59, ///< device authorization code verification interval sent by the AS
   I_OPT_END_SESSION_ENDPOINT                  = 60, ///< absolute url for the end session endpoint, string
-  I_OPT_CHECK_SESSION_IRAME                   = 61  ///< absolute url for the check session iframe string, string
+  I_OPT_CHECK_SESSION_IRAME                   = 61, ///< absolute url for the check session iframe, string
+  I_OPT_PUSHED_AUTH_REQ_ENDPOINT              = 62, ///< absolute url for the pushed authoization endpoint, string
+  I_OPT_PUSHED_AUTH_REQ_REQUIRED              = 63, ///< are pushed authorization requests required, boolean
+  I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN            = 64, ///< pushed authorization request expiration time in seconds
+  I_OPT_PUSHED_AUTH_REQ_URI                   = 65  ///< request_uri sent by the par endpoint result, string
 } i_option;
 
 /**
@@ -184,7 +188,7 @@ struct _i_session {
   char        * check_session_iframe;
   char        * device_authorization_endpoint;
   char        * registration_endpoint;
-  char        * par_endpoint;
+  char        * pushed_authorization_request_endpoint;
   uint          result;
   char        * error;
   char        * error_description;
@@ -223,6 +227,9 @@ struct _i_session {
   char        * device_auth_verifucation_uri_complete;
   uint          device_auth_expires_in;
   uint          device_auth_interval;
+  uint          require_pushed_authorization_requests;
+  uint          pushed_authorization_request_expires_in;
+  char        * pushed_authorization_request_uri;
 };
 
 /**

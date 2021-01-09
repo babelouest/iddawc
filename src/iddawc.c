@@ -444,6 +444,16 @@ static int _i_parse_openid_config(struct _i_session * i_session, int get_jwks) {
           ret = I_ERROR;
         }
       }
+      if (json_string_length(json_object_get(i_session->openid_config, "pushed_authorization_request_endpoint"))) {
+        if (i_set_str_parameter(i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT, json_string_value(json_object_get(i_session->openid_config, "pushed_authorization_request_endpoint"))) != I_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_openid_config - Error setting pushed_authorization_request_endpoint");
+          ret = I_ERROR;
+        }
+        if (i_set_int_parameter(i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED, json_object_get(i_session->openid_config, "require_pushed_authorization_requests")==json_true()) != I_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_openid_config - Error setting require_pushed_authorization_requests");
+          ret = I_ERROR;
+        }
+      }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_openid_config - Error missing required metadata in JSON response");
       ret = I_ERROR;
@@ -947,6 +957,10 @@ int i_init_session(struct _i_session * i_session) {
     i_session->device_auth_interval = 0;
     i_session->end_session_endpoint = NULL;
     i_session->check_session_iframe = NULL;
+    i_session->pushed_authorization_request_endpoint = NULL;
+    i_session->require_pushed_authorization_requests = 0;
+    i_session->pushed_authorization_request_expires_in = 0;
+    i_session->pushed_authorization_request_uri = NULL;
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
         if ((res = r_jwks_init(&i_session->server_jwks)) == RHN_OK) {
@@ -1021,6 +1035,8 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->device_auth_verifucation_uri_complete);
     o_free(i_session->end_session_endpoint);
     o_free(i_session->check_session_iframe);
+    o_free(i_session->pushed_authorization_request_endpoint);
+    o_free(i_session->pushed_authorization_request_uri);
     u_map_clean(&i_session->additional_parameters);
     u_map_clean(&i_session->additional_response);
     r_jwks_free(i_session->server_jwks);
@@ -1146,6 +1162,12 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
         break;
       case I_OPT_DEVICE_AUTH_INTERVAL:
         i_session->device_auth_interval = i_value;
+        break;
+      case I_OPT_PUSHED_AUTH_REQ_REQUIRED:
+        i_session->require_pushed_authorization_requests = i_value;
+        break;
+      case I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN:
+        i_session->pushed_authorization_request_expires_in = i_value;
         break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
@@ -1517,6 +1539,22 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
           i_session->check_session_iframe = NULL;
         }
         break;
+      case I_OPT_PUSHED_AUTH_REQ_ENDPOINT:
+        o_free(i_session->pushed_authorization_request_endpoint);
+        if (o_strlen(s_value)) {
+          i_session->pushed_authorization_request_endpoint = o_strdup(s_value);
+        } else {
+          i_session->pushed_authorization_request_endpoint = NULL;
+        }
+        break;
+      case I_OPT_PUSHED_AUTH_REQ_URI:
+        o_free(i_session->pushed_authorization_request_uri);
+        if (o_strlen(s_value)) {
+          i_session->pushed_authorization_request_uri = o_strdup(s_value);
+        } else {
+          i_session->pushed_authorization_request_uri = NULL;
+        }
+        break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error unknown option %d", option);
         ret = I_ERROR_PARAM;
@@ -1576,6 +1614,8 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_TOKEN_EXP:
         case I_OPT_DEVICE_AUTH_EXPIRES_IN:
         case I_OPT_DEVICE_AUTH_INTERVAL:
+        case I_OPT_PUSHED_AUTH_REQ_REQUIRED:
+        case I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN:
           i_value = va_arg(vl, uint);
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
@@ -1622,6 +1662,8 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE:
         case I_OPT_END_SESSION_ENDPOINT:
         case I_OPT_CHECK_SESSION_IRAME:
+        case I_OPT_PUSHED_AUTH_REQ_ENDPOINT:
+        case I_OPT_PUSHED_AUTH_REQ_URI:
           str_value = va_arg(vl, const char *);
           ret = i_set_str_parameter(i_session, option, str_value);
           break;
@@ -1862,6 +1904,12 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option) {
       case I_OPT_DEVICE_AUTH_INTERVAL:
         return i_session->device_auth_interval;
         break;
+      case I_OPT_PUSHED_AUTH_REQ_REQUIRED:
+        return i_session->require_pushed_authorization_requests;
+        break;
+      case I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN:
+        return i_session->pushed_authorization_request_expires_in;
+        break;
       default:
         return 0;
         break;
@@ -2070,6 +2118,12 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
       case I_OPT_CHECK_SESSION_IRAME:
         result = (const char *)i_session->check_session_iframe;
         break;
+      case I_OPT_PUSHED_AUTH_REQ_ENDPOINT:
+        result = (const char *)i_session->pushed_authorization_request_endpoint;
+        break;
+      case I_OPT_PUSHED_AUTH_REQ_URI:
+        result = (const char *)i_session->pushed_authorization_request_uri;
+        break;
       default:
         break;
     }
@@ -2100,84 +2154,118 @@ int i_build_auth_url_get(struct _i_session * i_session) {
   uint i;
 
   if (i_session != NULL &&
+      i_session->client_id != NULL) {
+    if (i_session->pushed_authorization_request_uri != NULL) {
+      escaped = ulfius_url_encode(i_session->pushed_authorization_request_uri);
+      url = msprintf("%s?request_uri=%s", i_session->authorization_endpoint, escaped);
+      o_free(escaped);
+      
+      escaped = ulfius_url_encode(i_session->client_id);
+      url = mstrcatf(url, "&client_id=%s", escaped);
+      o_free(escaped);
+      
+      ret = i_set_str_parameter(i_session, I_OPT_REDIRECT_TO, url);
+      o_free(url);
+    } else if (i_session->response_type != I_RESPONSE_TYPE_NONE &&
+               i_session->response_type != I_RESPONSE_TYPE_PASSWORD &&
+               i_session->response_type != I_RESPONSE_TYPE_CLIENT_CREDENTIALS &&
+               i_session->response_type != I_RESPONSE_TYPE_REFRESH_TOKEN &&
+               i_session->response_type != I_RESPONSE_TYPE_DEVICE_CODE &&
+               i_session->redirect_uri != NULL &&
+               i_session->authorization_endpoint != NULL &&
+               check_strict_parameters(i_session) &&
+               (has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) &&
+               i_session->auth_method & I_AUTH_METHOD_GET) {
+      escaped = ulfius_url_encode(i_session->redirect_uri);
+      url = msprintf("%s?redirect_uri=%s", i_session->authorization_endpoint, escaped);
+      o_free(escaped);
+
+      escaped = ulfius_url_encode(get_response_type(i_session->response_type));
+      url = mstrcatf(url, "&response_type=%s", escaped);
+      o_free(escaped);
+
+      escaped = ulfius_url_encode(i_session->client_id);
+      url = mstrcatf(url, "&client_id=%s", escaped);
+      o_free(escaped);
+
+      if (i_session->state != NULL) {
+        escaped = ulfius_url_encode(i_session->state);
+        url = mstrcatf(url, "&state=%s", escaped);
+        o_free(escaped);
+      }
+
+      if (i_session->scope != NULL) {
+        escaped = ulfius_url_encode(i_session->scope);
+        url = mstrcatf(url, "&scope=%s", escaped);
+        o_free(escaped);
+      }
+
+      if (i_session->nonce != NULL) {
+        escaped = ulfius_url_encode(i_session->nonce);
+        url = mstrcatf(url, "&nonce=%s", escaped);
+        o_free(escaped);
+      }
+
+      if (json_array_size(i_session->j_authorization_details)) {
+        tmp = json_dumps(i_session->j_authorization_details, JSON_COMPACT);
+        escaped = ulfius_url_encode(tmp);
+        url = mstrcatf(url, "&authorization_details=%s", escaped);
+        o_free(escaped);
+        o_free(tmp);
+      }
+
+      keys = u_map_enum_keys(&i_session->additional_parameters);
+
+      for (i=0; keys[i] != NULL; i++) {
+        escaped = ulfius_url_encode(u_map_get(&i_session->additional_parameters, keys[i]));
+        url = mstrcatf(url, "&%s=%s", keys[i], escaped);
+        o_free(escaped);
+      }
+      ret = i_set_str_parameter(i_session, I_OPT_REDIRECT_TO, url);
+      o_free(url);
+    } else {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - Error input parameter");
+      if (i_session->response_type == I_RESPONSE_TYPE_NONE ||
+          i_session->response_type == I_RESPONSE_TYPE_PASSWORD ||
+          i_session->response_type == I_RESPONSE_TYPE_CLIENT_CREDENTIALS ||
+          i_session->response_type == I_RESPONSE_TYPE_REFRESH_TOKEN) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - response_type invalid");
+      }
+      if (i_session->authorization_endpoint == NULL) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - authorization_endpoint invalid");
+      }
+      if (!check_strict_parameters(i_session)) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - strict parameters invalid");
+      }
+      if (!has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || !has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - grant_types not supported");
+      }
+      ret = I_ERROR_PARAM;
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - Error input parameter");
+    if (i_session == NULL) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - i_session NULL");
+    }
+    if (i_session->client_id == NULL) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - client_id NULL");
+    }
+    ret = I_ERROR_PARAM;
+  }
+  
+  if (i_session != NULL &&
       i_session->response_type != I_RESPONSE_TYPE_NONE &&
       i_session->response_type != I_RESPONSE_TYPE_PASSWORD &&
       i_session->response_type != I_RESPONSE_TYPE_CLIENT_CREDENTIALS &&
       i_session->response_type != I_RESPONSE_TYPE_REFRESH_TOKEN &&
+      i_session->response_type != I_RESPONSE_TYPE_DEVICE_CODE &&
       i_session->redirect_uri != NULL &&
       i_session->client_id != NULL &&
       i_session->authorization_endpoint != NULL &&
       check_strict_parameters(i_session) &&
       (has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) &&
       i_session->auth_method & I_AUTH_METHOD_GET) {
-    escaped = ulfius_url_encode(i_session->redirect_uri);
-    url = msprintf("%s?redirect_uri=%s", i_session->authorization_endpoint, escaped);
-    o_free(escaped);
-
-    escaped = ulfius_url_encode(get_response_type(i_session->response_type));
-    url = mstrcatf(url, "&response_type=%s", escaped);
-    o_free(escaped);
-
-    escaped = ulfius_url_encode(i_session->client_id);
-    url = mstrcatf(url, "&client_id=%s", escaped);
-    o_free(escaped);
-
-    if (i_session->state != NULL) {
-      escaped = ulfius_url_encode(i_session->state);
-      url = mstrcatf(url, "&state=%s", escaped);
-      o_free(escaped);
-    }
-
-    if (i_session->scope != NULL) {
-      escaped = ulfius_url_encode(i_session->scope);
-      url = mstrcatf(url, "&scope=%s", escaped);
-      o_free(escaped);
-    }
-
-    if (i_session->nonce != NULL) {
-      escaped = ulfius_url_encode(i_session->nonce);
-      url = mstrcatf(url, "&nonce=%s", escaped);
-      o_free(escaped);
-    }
-
-    if (json_array_size(i_session->j_authorization_details)) {
-      tmp = json_dumps(i_session->j_authorization_details, JSON_COMPACT);
-      escaped = ulfius_url_encode(tmp);
-      url = mstrcatf(url, "&authorization_details=%s", escaped);
-      o_free(escaped);
-      o_free(tmp);
-    }
-
-    keys = u_map_enum_keys(&i_session->additional_parameters);
-
-    for (i=0; keys[i] != NULL; i++) {
-      escaped = ulfius_url_encode(u_map_get(&i_session->additional_parameters, keys[i]));
-      url = mstrcatf(url, "&%s=%s", keys[i], escaped);
-      o_free(escaped);
-    }
-    ret = i_set_str_parameter(i_session, I_OPT_REDIRECT_TO, url);
-    o_free(url);
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - Error input parameter");
-    if (i_session == NULL) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - i_session NULL");
-    }
-    if (i_session->response_type == I_RESPONSE_TYPE_NONE ||
-        i_session->response_type == I_RESPONSE_TYPE_PASSWORD ||
-        i_session->response_type == I_RESPONSE_TYPE_CLIENT_CREDENTIALS ||
-        i_session->response_type == I_RESPONSE_TYPE_REFRESH_TOKEN) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - response_type invalid");
-    }
-    if (i_session->authorization_endpoint == NULL) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - authorization_endpoint invalid");
-    }
-    if (!check_strict_parameters(i_session)) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - strict parameters invalid");
-    }
-    if (!has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || !has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - grant_types not supported");
-    }
-    ret = I_ERROR_PARAM;
   }
 
   return ret;
@@ -2870,7 +2958,7 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* }",
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_str_parameter(i_session, I_OPT_STATE),
@@ -2939,7 +3027,11 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "device_auth_expires_in", i_get_int_parameter(i_session, I_OPT_DEVICE_AUTH_EXPIRES_IN),
                          "device_auth_interval", i_get_int_parameter(i_session, I_OPT_DEVICE_AUTH_INTERVAL),
                          "end_session_endpoint", i_get_str_parameter(i_session, I_OPT_END_SESSION_ENDPOINT),
-                         "check_session_iframe", i_get_str_parameter(i_session, I_OPT_CHECK_SESSION_IRAME)
+                         "check_session_iframe", i_get_str_parameter(i_session, I_OPT_CHECK_SESSION_IRAME),
+                         "pushed_authorization_request_endpoint", i_get_str_parameter(i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT),
+                         "require_pushed_authorization_requests", i_get_int_parameter(i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED)?json_true():json_false(),
+                         "pushed_authorization_request_expires_in", i_get_int_parameter(i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN),
+                         "pushed_authorization_request_uri", i_get_str_parameter(i_session, I_OPT_PUSHED_AUTH_REQ_URI)
                          );
   }
   return j_return;
@@ -3005,6 +3097,10 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_DEVICE_AUTH_INTERVAL, (int)json_integer_value(json_object_get(j_import, "device_auth_interval")),
                                      I_OPT_END_SESSION_ENDPOINT, json_string_value(json_object_get(j_import, "end_session_endpoint")),
                                      I_OPT_CHECK_SESSION_IRAME, json_string_value(json_object_get(j_import, "check_session_iframe")),
+                                     I_OPT_PUSHED_AUTH_REQ_ENDPOINT, json_string_value(json_object_get(j_import, "pushed_authorization_request_endpoint")),
+                                     I_OPT_PUSHED_AUTH_REQ_REQUIRED, json_object_get(j_import, "require_pushed_authorization_requests")==json_true(),
+                                     I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "pushed_authorization_request_expires_in")),
+                                     I_OPT_PUSHED_AUTH_REQ_URI, json_string_value(json_object_get(j_import, "pushed_authorization_request_uri")),
                                      I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
@@ -3333,7 +3429,7 @@ int i_run_device_auth_request(struct _i_session * i_session) {
     if (i_session->scope != NULL) {
       u_map_put(request.map_post_body, "scope", i_session->scope);
     }
-    if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request)) == I_OK) {
+    if ((res = _i_add_token_authentication(i_session, i_session->device_authorization_endpoint, &request)) == I_OK) {
       if (ulfius_send_http_request(&request, &response) == U_OK) {
         if (response.status == 200 || response.status == 400) {
           j_response = ulfius_get_json_body_response(&response, NULL);
@@ -3373,6 +3469,104 @@ int i_run_device_auth_request(struct _i_session * i_session) {
       }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_device_auth_request - Error _i_add_token_authentication");
+      ret = res;
+    }
+    ulfius_clean_request(&request);
+    ulfius_clean_response(&response);
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+int i_run_par_request(struct _i_session * i_session) {
+  int ret = I_OK, res;
+  struct _u_request request;
+  struct _u_response response;
+  json_t * j_response;
+  char * tmp;
+  const char ** key = NULL;
+  int i;
+  
+  if (i_session != NULL &&
+      i_session->pushed_authorization_request_endpoint != NULL &&
+      check_strict_parameters(i_session) &&
+      i_session->redirect_uri != NULL &&
+      i_session->client_id != NULL) {
+    ulfius_init_request(&request);
+    ulfius_init_response(&response);
+    
+    if (u_map_count(&i_session->additional_parameters)) {
+      key = u_map_enum_keys(&i_session->additional_parameters);
+      for (i=0; key[i]!=NULL; i++) {
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, key[i], u_map_get(&i_session->additional_parameters, key[i]), U_OPT_NONE);
+      }
+    }
+
+    ulfius_set_request_properties(&request,
+                                  U_OPT_HTTP_VERB, "POST",
+                                  U_OPT_HTTP_URL, i_session->pushed_authorization_request_endpoint,
+                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                  U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                  U_OPT_POST_BODY_PARAMETER, "client_id", i_session->client_id,
+                                  U_OPT_POST_BODY_PARAMETER, "redirect_uri", i_session->redirect_uri,
+                                  U_OPT_POST_BODY_PARAMETER, "response_type", get_response_type(i_session->response_type),
+                                  U_OPT_NONE);
+
+    if (i_session->state != NULL) {
+      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "state", i_session->state, U_OPT_NONE);
+    }
+
+    if (i_session->scope != NULL) {
+      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "scope", i_session->scope, U_OPT_NONE);
+    }
+
+    if (i_session->nonce != NULL) {
+      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "nonce", i_session->nonce, U_OPT_NONE);
+    }
+
+    if (json_array_size(i_session->j_authorization_details)) {
+      tmp = json_dumps(i_session->j_authorization_details, JSON_COMPACT);
+      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "authorization_details", tmp, U_OPT_NONE);
+      o_free(tmp);
+    }
+    
+    if ((res = _i_add_token_authentication(i_session, i_session->pushed_authorization_request_endpoint, &request)) == I_OK) {
+      if (ulfius_send_http_request(&request, &response) == U_OK) {
+        if (response.status == 200 || response.status == 400) {
+          j_response = ulfius_get_json_body_response(&response, NULL);
+          if (j_response != NULL) {
+            if (response.status == 200) {
+              i_set_parameter_list(i_session,
+                                   I_OPT_PUSHED_AUTH_REQ_URI, json_string_value(json_object_get(j_response, "request_uri")),
+                                   I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, (uint)json_integer_value(json_object_get(j_response, "expires_in")),
+                                   I_OPT_NONE);
+              ret = I_OK;
+            } else {
+              i_set_parameter_list(i_session,
+                                   I_OPT_ERROR, json_string_value(json_object_get(j_response, "error")),
+                                   I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_response, "error_description")),
+                                   I_OPT_ERROR_URI, json_string_value(json_object_get(j_response, "error_uri")),
+                                   I_OPT_NONE);
+              ret = I_ERROR_PARAM;
+            }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_par_request - Error parsing JSON response");
+            ret = I_ERROR;
+          }
+          json_decref(j_response);
+        } else if (response.status == 403) {
+          ret = I_ERROR_UNAUTHORIZED;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_run_par_request - Invalid response status");
+          ret = I_ERROR;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_run_par_request - Error sending token request");
+        ret = I_ERROR;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_run_par_request - Error _i_add_token_authentication");
       ret = res;
     }
     ulfius_clean_request(&request);
