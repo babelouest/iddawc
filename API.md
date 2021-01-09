@@ -354,6 +354,20 @@ If you need to run a device authorization request, you need to use the response 
 int i_run_device_auth_request(struct _i_session * i_session);
 ```
 
+### Build and run pushed authorization requests and parse results
+
+If you need to run a device authorization request, you need to use the function `i_run_par_request`, and the other parameters as if the request was a normal `auth` request (`response_type`, `client_id`, `scope`, `redirect_uri`, authenticaiton type, etc.). On success, the parameters `I_OPT_PUSHED_AUTH_REQ_URI` and `I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN` will be automatically set. Then the function `i_build_auth_url_get` will build an auth url using the request_uri and client_id parameters only.
+
+```C
+/**
+ * Executes a pushed authorization request
+ * and sets the values I_OPT_PUSHED_AUTH_REQ_URI and I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN on success
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_run_par_request(struct _i_session * i_session);
+```
+
 ### Build and run token requests and parse results
 
 If you need to execute a request in the token endpoint, to get a refresh token from a code or refresh a token for example, 

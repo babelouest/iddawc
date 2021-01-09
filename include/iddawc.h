@@ -634,7 +634,7 @@ int i_perform_api_request(struct _i_session * i_session, struct _u_request * htt
 
 /**
  * Executes a pushed authorization request
- * and sets the request_uri value on success
+ * and sets the values I_OPT_PUSHED_AUTH_REQ_URI and I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN on success
  * @param i_session: a reference to a struct _i_session *
  * @return I_OK on success, an error value on error
  */
