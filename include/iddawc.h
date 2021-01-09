@@ -146,7 +146,9 @@ typedef enum {
   I_OPT_DEVICE_AUTH_VERIFICATION_URI          = 56, ///< device authorization verification URI sent by the AS
   I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE = 57, ///< device authorization verification URI complete sent by the AS
   I_OPT_DEVICE_AUTH_EXPIRES_IN                = 58, ///< device authorization code expiration sent by the AS
-  I_OPT_DEVICE_AUTH_INTERVAL                  = 59  ///< device authorization code verification interval sent by the AS
+  I_OPT_DEVICE_AUTH_INTERVAL                  = 59, ///< device authorization code verification interval sent by the AS
+  I_OPT_END_SESSION_ENDPOINT                  = 60, ///< absolute url for the end session endpoint, string
+  I_OPT_CHECK_SESSION_IRAME                   = 61  ///< absolute url for the check session iframe string, string
 } i_option;
 
 /**
@@ -178,6 +180,8 @@ struct _i_session {
   char        * userinfo_endpoint;
   char        * revocation_endpoint;
   char        * introspection_endpoint;
+  char        * end_session_endpoint;
+  char        * check_session_iframe;
   char        * device_authorization_endpoint;
   char        * registration_endpoint;
   char        * par_endpoint;
