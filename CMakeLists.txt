@@ -306,6 +306,7 @@ if (BUILD_IDDAWC_TESTING)
             dpop
             api_request
             device
+            par
             )
 
         configure_file(
