@@ -15,6 +15,7 @@ LDFLAGS=-lc -lorcania -lulfius -liddawc -lrhonabwy -ljansson -L$(IDDAWC_LOCATION
 VALGRIND_COMMAND=valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all
 TARGET=core implicit id_token token load_config load_userinfo flow introspection revocation registration dpop api_request device par
 TARGET_TEST=test_core test_implicit test_id_token test_token test_load_config test_load_userinfo test_flow test_introspection test_revocation test_registration test_dpop test_api_request test_device test_par
+VERBOSE=0
 MEMCHECK=0
 
 all: test
@@ -28,11 +29,13 @@ $(IDDAWC_LIBRARY): $(IDDAWC_INCLUDE)/iddawc.h $(IDDAWC_LOCATION)/iddawc.c
 %: $(IDDAWC_LIBRARY) %.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-test_%: %
-	@if [ "$(MEMCHECK)" = "0" ]; then \
-	  LD_LIBRARY_PATH=$(IDDAWC_LOCATION):$(LD_LIBRARY_PATH) ./$^ ; \
+test_%: % $(IDDAWC_LIBRARY)
+	@if [ "$(VERBOSE)" = "0" ] && [ "$(MEMCHECK)" = "0" ]; then \
+		LD_LIBRARY_PATH=$(IDDAWC_LIBRARY):${LD_LIBRARY_PATH} ./run_test.sh ./$^; \
+	elif [ "$(MEMCHECK)" = "0" ]; then \
+		LD_LIBRARY_PATH=$(IDDAWC_LIBRARY):${LD_LIBRARY_PATH} ./$^ ; \
 	else \
-	  CK_FORK=no LD_LIBRARY_PATH=$(IDDAWC_LOCATION):$(LD_LIBRARY_PATH) $(VALGRIND_COMMAND) ./$^ 2>valgrind-$@.txt; \
+		CK_FORK=no LD_LIBRARY_PATH=$(IDDAWC_LIBRARY):${LD_LIBRARY_PATH} $(VALGRIND_COMMAND) ./$^ 2>valgrind-$@.txt; \
 	fi
 
 test: $(TARGET) $(TARGET_TEST)

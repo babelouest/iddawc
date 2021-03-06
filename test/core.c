@@ -737,18 +737,18 @@ START_TEST(test_iddawc_rich_authorization_request)
   struct _i_session i_session;
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
-  ck_assert_ptr_eq(i_get_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1), NULL);
+  ck_assert_ptr_eq(i_get_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1), NULL);
 
-  ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
-  ck_assert_ptr_ne(str_rar = i_get_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1), NULL);
+  ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_ptr_ne(str_rar = i_get_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1), NULL);
   j_rar = json_loads(str_rar, JSON_DECODE_ANY, NULL);
   j_rar_2 = json_loads(AUTH_REQUEST_FULL_1, JSON_DECODE_ANY, NULL);
   ck_assert_int_eq(1, json_equal(j_rar, j_rar_2));
   json_decref(j_rar);
   json_decref(j_rar_2);
 
-  ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_2, AUTH_REQUEST_2), I_OK);
-  ck_assert_ptr_ne(str_rar_2 = i_get_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_2), NULL);
+  ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_2, AUTH_REQUEST_2), I_OK);
+  ck_assert_ptr_ne(str_rar_2 = i_get_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_2), NULL);
   ck_assert_str_ne(str_rar_2, str_rar);
   j_rar = json_loads(str_rar_2, JSON_DECODE_ANY, NULL);
   j_rar_2 = json_loads(AUTH_REQUEST_FULL_2, JSON_DECODE_ANY, NULL);
@@ -759,8 +759,8 @@ START_TEST(test_iddawc_rich_authorization_request)
   o_free(str_rar_2);
   str_rar = NULL;
 
-  ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_2), I_OK);
-  ck_assert_ptr_ne(str_rar = i_get_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1), NULL);
+  ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_2), I_OK);
+  ck_assert_ptr_ne(str_rar = i_get_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1), NULL);
   j_rar = json_loads(str_rar, JSON_DECODE_ANY, NULL);
   j_rar_2 = json_loads(AUTH_REQUEST_FULL_2, JSON_DECODE_ANY, NULL);
   json_object_set_new(j_rar_2, "type", json_string(AUTH_REQUEST_TYPE_1));
@@ -1005,7 +1005,7 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
-  ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
 
   j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
@@ -1152,7 +1152,7 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
-  ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
 
   j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
@@ -1303,7 +1303,7 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
-  ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
 
   ck_assert_ptr_ne(str_export = i_export_session_str(&i_session), NULL);
   o_free(str_export);
@@ -1387,7 +1387,7 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
-  ck_assert_int_eq(i_set_rich_authorization_request(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
 
   str_import = i_export_session_str(&i_session);
   ck_assert_ptr_ne(str_import, NULL);
@@ -1452,7 +1452,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT), PUSHED_AUTH_REQ_ENDPOINT);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED), PUSHED_AUTH_REQ_REQUIRED);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN), PUSHED_AUTH_REQ_EXPIRES_IN);
-  ck_assert_ptr_ne(NULL, str_rar = i_get_rich_authorization_request(&i_session_import, AUTH_REQUEST_TYPE_1));
+  ck_assert_ptr_ne(NULL, str_rar = i_get_rich_authorization_request_str(&i_session_import, AUTH_REQUEST_TYPE_1));
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   o_free(str_import);
