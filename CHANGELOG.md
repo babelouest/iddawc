@@ -1,5 +1,11 @@
 # Iddawc Changelog
 
+## 0.9.9
+
+- Improve OAuth 2.0 Rich Authorization Requests
+- Add `i_set_rich_authorization_request_json_t`, `i_remove_rich_authorization_request_json_t`
+- Rename `i_set_rich_authorization_request` to `i_set_rich_authorization_request_str`, `i_remove_rich_authorization_request` to `i_remove_rich_authorization_request_str`
+
 ## 0.9.8
 
 - Support [OAuth 2.0 Rich Authorization Requests Draft 03](https://www.ietf.org/archive/id/draft-ietf-oauth-rar-03.html)
