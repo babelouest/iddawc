@@ -359,10 +359,19 @@ int i_set_additional_response(struct _i_session * i_session, const char * s_key,
  * Adds an authorization request object or replace it if the type already exists
  * @param i_session: a reference to a struct _i_session *
  * @param type: the type of the authorization request
+ * @param j_value: the authorization request, must be a JSON object
+ * @return I_OK on success, an error value on error
+ */
+int i_set_rich_authorization_request_json_t(struct _i_session * i_session, const char * type, json_t * j_value);
+
+/**
+ * Adds an authorization request object or replace it if the type already exists
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
  * @param value: the authorization request, must be a stringified JSON object
  * @return I_OK on success, an error value on error
  */
-int i_set_rich_authorization_request(struct _i_session * i_session, const char * type, const char * value);
+int i_set_rich_authorization_request_str(struct _i_session * i_session, const char * type, const char * value);
 
 /**
  * Remove an authorization request object based on the type
@@ -376,9 +385,17 @@ int i_remove_rich_authorization_request(struct _i_session * i_session, const cha
  * Returns an authorization request object based on the type
  * @param i_session: a reference to a struct _i_session *
  * @param type: the type of the authorization request
- * @return a char * containing a JSON stringified exported session, must be i_free'd after use, or NULL if not found
+ * @return a json_t * containing a JSON authorization request, or NULL if not found, must be i_free'd after use
  */
-char * i_get_rich_authorization_request(struct _i_session * i_session, const char * type);
+json_t * i_get_rich_authorization_request_json_t(struct _i_session * i_session, const char * type);
+
+/**
+ * Returns an authorization request object based on the type
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @return a char * containing a JSON stringified authorization request, or NULL if not found, must be i_free'd after use
+ */
+char * i_get_rich_authorization_request_str(struct _i_session * i_session, const char * type);
 
 /**
  * Returns the response type of the current session

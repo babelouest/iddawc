@@ -3336,34 +3336,43 @@ int i_perform_api_request(struct _i_session * i_session, struct _u_request * htt
   return ret;
 }
 
-int i_set_rich_authorization_request(struct _i_session * i_session, const char * type, const char * value) {
+int i_set_rich_authorization_request_str(struct _i_session * i_session, const char * type, const char * value) {
   int ret;
-  json_t * j_value = NULL, * j_element = NULL;
-  size_t index = 0;
+  json_t * j_value = NULL;
 
   if (i_session != NULL && o_strlen(type) && o_strlen(value)) {
     if ((j_value = json_loads(value, JSON_DECODE_ANY, NULL)) != NULL) {
-      if (json_is_object(j_value)) {
-        json_array_foreach(i_session->j_authorization_details, index, j_element) {
-          if (0 == o_strcmp(type, json_string_value(json_object_get(j_element, "type")))) {
-            json_array_remove(i_session->j_authorization_details, index);
-            break;
-          }
-        }
-        json_object_set_new(j_value, "type", json_string(type));
-        json_array_append(i_session->j_authorization_details, j_value);
-        ret = I_OK;
-      } else {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_rich_authorization_request - Error loading value, not in JSON format");
-        ret = I_ERROR_PARAM;
-      }
+      ret = i_set_rich_authorization_request_json_t(i_session, type, j_value);
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_rich_authorization_request - Error loading value, not in JSON format");
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_rich_authorization_request_str - Error loading value, not in JSON format");
       ret = I_ERROR_PARAM;
     }
     json_decref(j_value);
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_rich_authorization_request - Error input parameters");
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_rich_authorization_request_str - Error input parameters");
+    ret = I_ERROR_PARAM;
+  }
+
+  return ret;
+}
+
+int i_set_rich_authorization_request_json_t(struct _i_session * i_session, const char * type, json_t * j_value) {
+  int ret;
+  json_t * j_element = NULL;
+  size_t index = 0;
+
+  if (i_session != NULL && o_strlen(type) && json_is_object(j_value)) {
+    json_array_foreach(i_session->j_authorization_details, index, j_element) {
+      if (0 == o_strcmp(type, json_string_value(json_object_get(j_element, "type")))) {
+        json_array_remove(i_session->j_authorization_details, index);
+        break;
+      }
+    }
+    json_object_set_new(j_value, "type", json_string(type));
+    json_array_append(i_session->j_authorization_details, j_value);
+    ret = I_OK;
+  } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_rich_authorization_request_json_t - Error input parameters");
     ret = I_ERROR_PARAM;
   }
 
@@ -3390,14 +3399,14 @@ int i_remove_rich_authorization_request(struct _i_session * i_session, const cha
   return ret;
 }
 
-char * i_get_rich_authorization_request(struct _i_session * i_session, const char * type) {
+json_t * i_get_rich_authorization_request_json_t(struct _i_session * i_session, const char * type) {
   json_t * j_element = NULL;
   size_t index = 0;
 
   if (i_session != NULL && o_strlen(type)) {
     json_array_foreach(i_session->j_authorization_details, index, j_element) {
       if (0 == o_strcmp(type, json_string_value(json_object_get(j_element, "type")))) {
-        return json_dumps(j_element, JSON_COMPACT);
+        return json_deep_copy(j_element);
       }
     }
   } else {
@@ -3405,6 +3414,18 @@ char * i_get_rich_authorization_request(struct _i_session * i_session, const cha
   }
   
   return NULL;
+}
+
+char * i_get_rich_authorization_request_str(struct _i_session * i_session, const char * type) {
+  json_t * j_element = i_get_rich_authorization_request_json_t(i_session, type);
+  char * to_return = NULL;
+
+  if (j_element != NULL) {
+    to_return = json_dumps(j_element, JSON_COMPACT);
+  }
+  json_decref(j_element);
+  
+  return to_return;
 }
 
 int i_run_device_auth_request(struct _i_session * i_session) {
