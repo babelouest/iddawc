@@ -31,11 +31,11 @@ $(IDDAWC_LIBRARY): $(IDDAWC_INCLUDE)/iddawc.h $(IDDAWC_LOCATION)/iddawc.c
 
 test_%: % $(IDDAWC_LIBRARY)
 	@if [ "$(VERBOSE)" = "0" ] && [ "$(MEMCHECK)" = "0" ]; then \
-		LD_LIBRARY_PATH=$(IDDAWC_LIBRARY):${LD_LIBRARY_PATH} ./run_test.sh ./$^; \
+		LD_LIBRARY_PATH=$(IDDAWC_LOCATION):${LD_LIBRARY_PATH} ./run_test.sh ./$^; \
 	elif [ "$(MEMCHECK)" = "0" ]; then \
-		LD_LIBRARY_PATH=$(IDDAWC_LIBRARY):${LD_LIBRARY_PATH} ./$^ ; \
+		LD_LIBRARY_PATH=$(IDDAWC_LOCATION):${LD_LIBRARY_PATH} ./$^ ; \
 	else \
-		CK_FORK=no LD_LIBRARY_PATH=$(IDDAWC_LIBRARY):${LD_LIBRARY_PATH} $(VALGRIND_COMMAND) ./$^ 2>valgrind-$@.txt; \
+		CK_FORK=no LD_LIBRARY_PATH=$(IDDAWC_LOCATION):${LD_LIBRARY_PATH} $(VALGRIND_COMMAND) ./$^ 2>valgrind-$@.txt; \
 	fi
 
 test: $(TARGET) $(TARGET_TEST)
