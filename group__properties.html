@@ -59,12 +59,16 @@ Functions</h2></td></tr>
 <tr class="separator:ga1ae5ceaf789edcc3826b94d22460ea36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae80f8aac03211943b854c3aede3fee6b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gae80f8aac03211943b854c3aede3fee6b">i_set_additional_response</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key, const char *s_value)</td></tr>
 <tr class="separator:gae80f8aac03211943b854c3aede3fee6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf8548115efbed52436735732aedbdeb7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gaf8548115efbed52436735732aedbdeb7">i_set_rich_authorization_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *type, const char *value)</td></tr>
-<tr class="separator:gaf8548115efbed52436735732aedbdeb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga05dc2e87b4a5a74321b2990b4089de65"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga05dc2e87b4a5a74321b2990b4089de65">i_set_rich_authorization_request_json_t</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *type, json_t *j_value)</td></tr>
+<tr class="separator:ga05dc2e87b4a5a74321b2990b4089de65"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf05fd86b5ffe6fa2bdc3d9d16c30cec0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gaf05fd86b5ffe6fa2bdc3d9d16c30cec0">i_set_rich_authorization_request_str</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *type, const char *value)</td></tr>
+<tr class="separator:gaf05fd86b5ffe6fa2bdc3d9d16c30cec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga80aeeac90937c44af74f496802517dc8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga80aeeac90937c44af74f496802517dc8">i_remove_rich_authorization_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *type)</td></tr>
 <tr class="separator:ga80aeeac90937c44af74f496802517dc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga50350be2d2bde7552dd15191d3dc0561"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga50350be2d2bde7552dd15191d3dc0561">i_get_rich_authorization_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *type)</td></tr>
-<tr class="separator:ga50350be2d2bde7552dd15191d3dc0561"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac96954fcd59de44988dc08e60f8a7113"><td class="memItemLeft" align="right" valign="top">json_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gac96954fcd59de44988dc08e60f8a7113">i_get_rich_authorization_request_json_t</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *type)</td></tr>
+<tr class="separator:gac96954fcd59de44988dc08e60f8a7113"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab75bc1e876fc25cfe06de04d60e92832"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gab75bc1e876fc25cfe06de04d60e92832">i_get_rich_authorization_request_str</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *type)</td></tr>
+<tr class="separator:gab75bc1e876fc25cfe06de04d60e92832"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga8ec512e6c051ca609bb506be8e0646bc"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga8ec512e6c051ca609bb506be8e0646bc">i_get_response_type</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga8ec512e6c051ca609bb506be8e0646bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga110fe3fcde671327f9c787049208a3f2"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga110fe3fcde671327f9c787049208a3f2">i_get_result</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
@@ -335,14 +339,57 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="gaf8548115efbed52436735732aedbdeb7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaf8548115efbed52436735732aedbdeb7">&#9670;&nbsp;</a></span>i_set_rich_authorization_request()</h2>
+<a id="ga05dc2e87b4a5a74321b2990b4089de65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga05dc2e87b4a5a74321b2990b4089de65">&#9670;&nbsp;</a></span>i_set_rich_authorization_request_json_t()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int i_set_rich_authorization_request </td>
+          <td class="memname">int i_set_rich_authorization_request_json_t </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">json_t *&#160;</td>
+          <td class="paramname"><em>j_value</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds an authorization request object or replace it if the type already exists </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">type</td><td>the type of the authorization request </td></tr>
+    <tr><td class="paramname">j_value</td><td>the authorization request, must be a JSON object </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
+
+</div>
+</div>
+<a id="gaf05fd86b5ffe6fa2bdc3d9d16c30cec0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf05fd86b5ffe6fa2bdc3d9d16c30cec0">&#9670;&nbsp;</a></span>i_set_rich_authorization_request_str()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_set_rich_authorization_request_str </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
           <td class="paramname"><em>i_session</em>, </td>
@@ -414,14 +461,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ga50350be2d2bde7552dd15191d3dc0561"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga50350be2d2bde7552dd15191d3dc0561">&#9670;&nbsp;</a></span>i_get_rich_authorization_request()</h2>
+<a id="gac96954fcd59de44988dc08e60f8a7113"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac96954fcd59de44988dc08e60f8a7113">&#9670;&nbsp;</a></span>i_get_rich_authorization_request_json_t()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">char* i_get_rich_authorization_request </td>
+          <td class="memname">json_t* i_get_rich_authorization_request_json_t </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
           <td class="paramname"><em>i_session</em>, </td>
@@ -446,7 +493,43 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>a char * containing a JSON stringified exported session, must be i_free'd after use, or NULL if not found </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>a json_t * containing a JSON authorization request, or NULL if not found, must be i_free'd after use </dd></dl>
+
+</div>
+</div>
+<a id="gab75bc1e876fc25cfe06de04d60e92832"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab75bc1e876fc25cfe06de04d60e92832">&#9670;&nbsp;</a></span>i_get_rich_authorization_request_str()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char* i_get_rich_authorization_request_str </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>type</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Returns an authorization request object based on the type </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">type</td><td>the type of the authorization request </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a char * containing a JSON stringified authorization request, or NULL if not found, must be i_free'd after use </dd></dl>
 
 </div>
 </div>
