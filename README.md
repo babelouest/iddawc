@@ -1,4 +1,4 @@
-# Iddawc - OAuth2 client library
+# Iddawc - OAuth2/OIDC client library
 
 ![.github/workflows/ccpp.yml](https://github.com/babelouest/iddawc/workflows/.github/workflows/ccpp.yml/badge.svg)
 
@@ -6,6 +6,20 @@ Handles the OAuth2 and OpenID Connect authentication process flow from the clien
 - Generates requests based on input parameters
 - Parses response
 - Validates response values
+
+Supported response_types: `code`, `token`, `id_token`, `password`, `client_credentials`, `refresh_token`, `device_code`
+Supported client authentication methods: `client_secret_basic`, `client_secret_post`, `client_secret_jwt`, `private_key_jwt`
+
+Supported features:
+- [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
+- [Token introspection (RFC 7662)](https://tools.ietf.org/html/rfc7662)
+- [Token revocation (RFC 7009)](https://tools.ietf.org/html/rfc7009)
+- [OpenID Connect Dynamic Registration](http://openid.net/specs/openid-connect-registration-1_0.html)
+- [OAuth 2.0 Dynamic Client Registration Protocol](https://tools.ietf.org/html/rfc7591)
+- [OAuth 2.0 Dynamic Client Registration Management Protocol](https://tools.ietf.org/html/rfc7592)
+- [OAuth 2.0 Demonstration of Proof-of-Possession at the Application Layer (DPoP) Draft 04](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-04)
+- [OAuth 2.0 Rich Authorization Requests Draft 03](https://www.ietf.org/archive/id/draft-ietf-oauth-rar-03.html)
+- [OAuth 2.0 Pushed Authorization Requests Draft 05](https://tools.ietf.org/html/draft-ietf-oauth-par-05)
 
 Example for `code` and `id_token` response types on an OpenID Connect server.
 
