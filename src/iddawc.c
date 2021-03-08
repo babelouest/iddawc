@@ -310,9 +310,10 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
     ulfius_init_request(&request);
     ulfius_init_response(&response);
 
-    u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
-    u_map_put(request.map_header, "Accept", "application/json");
-    request.http_url = o_strdup(json_string_value(json_object_get(i_session->openid_config, "jwks_uri")));
+    ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                            U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                            U_OPT_HTTP_URL, json_string_value(json_object_get(i_session->openid_config, "jwks_uri")),
+                                            U_OPT_NONE);
     if (ulfius_send_http_request(&request, &response) == U_OK) {
       if (response.status == 200) {
         j_jwks = ulfius_get_json_body_response(&response, NULL);
@@ -1700,9 +1701,10 @@ int i_load_openid_config(struct _i_session * i_session) {
     ulfius_init_request(&request);
     ulfius_init_response(&response);
 
-    u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
-    u_map_put(request.map_header, "Accept", "application/json");
-    request.http_url = o_strdup(i_session->openid_config_endpoint);
+    ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                            U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                            U_OPT_HTTP_URL, i_session->openid_config_endpoint,
+                                            U_OPT_NONE);
     if (ulfius_send_http_request(&request, &response) == U_OK) {
       if (response.status == 200) {
         if ((i_session->openid_config = ulfius_get_json_body_response(&response, NULL)) != NULL) {
@@ -1759,15 +1761,14 @@ int i_load_userinfo_custom(struct _i_session * i_session, const char * http_meth
     ulfius_init_response(&response);
 
     if (o_strlen(http_method)) {
-      request.http_verb = o_strdup(http_method);
+      ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, http_method, U_OPT_NONE);
     }
     if (additional_headers != NULL) {
       keys = u_map_enum_keys(additional_headers);
       for (i=0; keys[i]!=NULL; i++) {
-        u_map_put(request.map_header, keys[i], u_map_get(additional_headers, keys[i]));
+        ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, keys[i], u_map_get(additional_headers, keys[i]), U_OPT_NONE);
       }
     }
-    u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
 
     url = o_strdup(i_session->userinfo_endpoint);
     if (additional_query != NULL) {
@@ -1787,7 +1788,7 @@ int i_load_userinfo_custom(struct _i_session * i_session, const char * http_meth
     request.http_url = url;
 
     bearer = msprintf("Bearer %s", i_session->access_token);
-    if (u_map_put(request.map_header, "Authorization", bearer) == U_OK) {
+    if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) == U_OK) {
       if (ulfius_send_http_request(&request, &response) == U_OK) {
         if (response.status == 200) {
           if (0 == o_strcmp("application/jwt", u_map_get_case(response.map_header, "Content-Type"))) {
@@ -2294,50 +2295,65 @@ int i_run_auth_request(struct _i_session * i_session) {
       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error initializing request or response");
       ret = I_ERROR;
     } else {
-      u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
+      ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR, U_OPT_NONE);
       if (i_session->auth_method & I_AUTH_METHOD_GET) {
         if (i_session->auth_method & (I_AUTH_METHOD_JWT_SIGN_SECRET|I_AUTH_METHOD_JWT_SIGN_PRIVKEY|I_AUTH_METHOD_JWT_ENCRYPT_SECRET|I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY)) {
           if ((jwt = generate_auth_jwt(i_session)) != NULL) {
-            request.http_verb = o_strdup("GET");
-            request.http_url = msprintf("%s?request=%s", i_session->authorization_endpoint, jwt);
+            if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "GET",
+                                                        U_OPT_HTTP_URL, i_session->authorization_endpoint,
+                                                        U_OPT_HTTP_URL_APPEND, "?request=",
+                                                        U_OPT_HTTP_URL_APPEND, jwt,
+                                                        U_OPT_NONE) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error setting request properties");
+              ret = I_ERROR;
+            }
             o_free(jwt);
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error generating jwt");
             ret = I_ERROR_PARAM;
           }
         } else if ((ret = i_build_auth_url_get(i_session)) == I_OK) {
-          request.http_verb = o_strdup("GET");
-          request.http_url = o_strdup(i_get_str_parameter(i_session, I_OPT_REDIRECT_TO));
+          if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "GET",
+                                                      U_OPT_HTTP_URL, i_get_str_parameter(i_session, I_OPT_REDIRECT_TO),
+                                                      U_OPT_NONE) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error setting request properties");
+            ret = I_ERROR;
+          }
         }
       } else if (i_session->auth_method & I_AUTH_METHOD_POST) {
-        request.http_verb = o_strdup("POST");
-        request.http_url = o_strdup(i_session->authorization_endpoint);
+        if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                    U_OPT_HTTP_URL, i_session->authorization_endpoint,
+                                                    U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error setting request properties");
+          ret = I_ERROR;
+        }
         if (i_session->auth_method & (I_AUTH_METHOD_JWT_SIGN_SECRET|I_AUTH_METHOD_JWT_SIGN_PRIVKEY|I_AUTH_METHOD_JWT_ENCRYPT_SECRET|I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY)) {
           if ((jwt = generate_auth_jwt(i_session)) != NULL) {
-            u_map_put(request.map_post_body, "request", jwt);
+            ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "request", jwt, U_OPT_NONE);
             o_free(jwt);
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error generating jwt");
             ret = I_ERROR_PARAM;
           }
         } else {
-          u_map_put(request.map_post_body, "redirect_uri", i_session->redirect_uri);
-          u_map_put(request.map_post_body, "response_type", get_response_type(i_session->response_type));
-          u_map_put(request.map_post_body, "client_id", i_session->client_id);
+          ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "redirect_uri", i_session->redirect_uri,
+                                                  U_OPT_POST_BODY_PARAMETER, "response_type", get_response_type(i_session->response_type),
+                                                  U_OPT_POST_BODY_PARAMETER, "client_id", i_session->client_id,
+                                                  U_OPT_NONE);
           if (i_session->state != NULL) {
-            u_map_put(request.map_post_body, "state", i_session->state);
+            ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "state", i_session->state, U_OPT_NONE);
           }
           if (i_session->scope != NULL) {
-            u_map_put(request.map_post_body, "scope", i_session->scope);
+            ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "scope", i_session->scope, U_OPT_NONE);
           }
           if (i_session->nonce != NULL) {
-            u_map_put(request.map_post_body, "nonce", i_session->nonce);
+            ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "nonce", i_session->nonce, U_OPT_NONE);
           }
 
           keys = u_map_enum_keys(&i_session->additional_parameters);
 
           for (i=0; keys[i] != NULL; i++) {
-            u_map_put(request.map_post_body, keys[i], u_map_get(&i_session->additional_parameters, keys[i]));
+            ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, keys[i], u_map_get(&i_session->additional_parameters, keys[i]), U_OPT_NONE);
           }
         }
       } else {
@@ -2391,14 +2407,24 @@ int i_run_token_request(struct _i_session * i_session) {
           has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) {
         ulfius_init_request(&request);
         ulfius_init_response(&response);
-        u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
-        u_map_put(request.map_header, "Accept", "application/json");
-        request.http_verb = o_strdup("POST");
-        request.http_url = o_strdup(i_session->token_endpoint);
-        u_map_put(request.map_post_body, "grant_type", "authorization_code");
-        u_map_put(request.map_post_body, "code", i_session->code);
-        u_map_put(request.map_post_body, "redirect_uri", i_session->redirect_uri);
-        u_map_put(request.map_post_body, "client_id", i_session->client_id);
+        if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                    U_OPT_HTTP_URL, i_session->token_endpoint,
+                                                    U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                    U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                                    U_OPT_POST_BODY_PARAMETER, "grant_type", "authorization_code",
+                                                    U_OPT_POST_BODY_PARAMETER, "code", i_session->code,
+                                                    U_OPT_POST_BODY_PARAMETER, "redirect_uri", i_session->redirect_uri,
+                                                    U_OPT_POST_BODY_PARAMETER, "client_id", i_session->client_id,
+                                                    U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error setting request properties");
+          ret = I_ERROR;
+        }
+        if (i_session->scope != NULL) {
+          if (ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "scope", i_session->scope, U_OPT_NONE) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error setting scope property");
+            ret = I_ERROR;
+          }
+        }
         if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request)) == I_OK) {
           if (ulfius_send_http_request(&request, &response) == U_OK) {
             if (response.status == 200 || response.status == 400) {
@@ -2449,15 +2475,22 @@ int i_run_token_request(struct _i_session * i_session) {
           if (i_session->username != NULL && i_session->user_password != NULL) {
             ulfius_init_request(&request);
             ulfius_init_response(&response);
-            u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
-            u_map_put(request.map_header, "Accept", "application/json");
-            request.http_verb = o_strdup("POST");
-            request.http_url = o_strdup(i_session->token_endpoint);
-            u_map_put(request.map_post_body, "grant_type", "password");
-            u_map_put(request.map_post_body, "username", i_session->username);
-            u_map_put(request.map_post_body, "password", i_session->user_password);
+            if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                        U_OPT_HTTP_URL, i_session->token_endpoint,
+                                                        U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                        U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                                        U_OPT_POST_BODY_PARAMETER, "grant_type", "password",
+                                                        U_OPT_POST_BODY_PARAMETER, "username", i_session->username,
+                                                        U_OPT_POST_BODY_PARAMETER, "password", i_session->user_password,
+                                                        U_OPT_NONE) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Error setting request properties");
+              ret = I_ERROR;
+            }
             if (i_session->scope != NULL) {
-              u_map_put(request.map_post_body, "scope", i_session->scope);
+              if (ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "scope", i_session->scope, U_OPT_NONE) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Error setting scope property");
+                ret = I_ERROR;
+              }
             }
             if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request)) == I_OK) {
               if (ulfius_send_http_request(&request, &response) == U_OK) {
@@ -2497,13 +2530,20 @@ int i_run_token_request(struct _i_session * i_session) {
           if (i_session->client_id != NULL) {
             ulfius_init_request(&request);
             ulfius_init_response(&response);
-            u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
-            u_map_put(request.map_header, "Accept", "application/json");
-            request.http_verb = o_strdup("POST");
-            request.http_url = o_strdup(i_session->token_endpoint);
-            u_map_put(request.map_post_body, "grant_type", "client_credentials");
+            if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                        U_OPT_HTTP_URL, i_session->token_endpoint,
+                                                        U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                        U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                                        U_OPT_POST_BODY_PARAMETER, "grant_type", "client_credentials",
+                                                        U_OPT_NONE) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error setting request properties");
+              ret = I_ERROR;
+            }
             if (i_session->scope != NULL) {
-              u_map_put(request.map_post_body, "scope", i_session->scope);
+              if (ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "scope", i_session->scope, U_OPT_NONE) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error setting scope property");
+                ret = I_ERROR;
+              }
             }
             if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request)) == I_OK) {
               if (ulfius_send_http_request(&request, &response) == U_OK) {
@@ -2543,13 +2583,20 @@ int i_run_token_request(struct _i_session * i_session) {
           if (i_session->refresh_token != NULL) {
             ulfius_init_request(&request);
             ulfius_init_response(&response);
-            u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
-            u_map_put(request.map_header, "Accept", "application/json");
-            request.http_verb = o_strdup("POST");
-            request.http_url = o_strdup(i_session->token_endpoint);
-            u_map_put(request.map_post_body, "grant_type", "refresh_token");
+            if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                        U_OPT_HTTP_URL, i_session->token_endpoint,
+                                                        U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                        U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                                        U_OPT_POST_BODY_PARAMETER, "grant_type", "refresh_token",
+                                                        U_OPT_NONE) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Error setting request properties");
+              ret = I_ERROR;
+            }
             if (i_session->scope != NULL) {
-              u_map_put(request.map_post_body, "scope", i_session->scope);
+              if (ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "scope", i_session->scope, U_OPT_NONE) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Error setting scope property");
+                ret = I_ERROR;
+              }
             }
             if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request)) == I_OK) {
               if (ulfius_send_http_request(&request, &response) == U_OK) {
@@ -2794,23 +2841,24 @@ int i_revoke_token(struct _i_session * i_session) {
       ret = I_ERROR;
     } else {
       ret = I_OK;
-      request.http_verb = o_strdup("POST");
-      request.http_url = o_strdup(i_session->revocation_endpoint);
-      u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
+      if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                  U_OPT_HTTP_URL, i_session->revocation_endpoint,
+                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                  U_OPT_POST_BODY_PARAMETER, "token", i_session->token_target,
+                                                  U_OPT_NONE) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting request properties");
+        ret = I_ERROR;
+      }
       if (o_strlen(i_session->access_token)) {
         bearer = msprintf("Bearer %s", i_session->access_token);
-        if (u_map_put(request.map_header, "Authorization", bearer) != U_OK) {
+        if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting bearer token");
           ret = I_ERROR;
         }
         o_free(bearer);
       }
-      if (u_map_put(request.map_post_body, "token", i_session->token_target) != U_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting target token");
-        ret = I_ERROR;
-      }
       if (o_strlen(i_session->token_target_type_hint)) {
-        if (u_map_put(request.map_post_body, "token_type_hint", i_session->token_target_type_hint) != U_OK) {
+        if (ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "token_type_hint", i_session->token_target_type_hint, U_OPT_NONE) != U_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting target token type hint");
           ret = I_ERROR;
         }
@@ -2849,23 +2897,24 @@ int i_introspect_token(struct _i_session * i_session, json_t ** j_result) {
       ret = I_ERROR;
     } else {
       ret = I_OK;
-      request.http_verb = o_strdup("POST");
-      request.http_url = o_strdup(i_session->introspection_endpoint);
-      u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
+      if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                  U_OPT_HTTP_URL, i_session->introspection_endpoint,
+                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                  U_OPT_POST_BODY_PARAMETER, "token", i_session->token_target,
+                                                  U_OPT_NONE) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error setting request properties");
+        ret = I_ERROR;
+      }
       if (o_strlen(i_session->access_token)) {
         bearer = msprintf("Bearer %s", i_session->access_token);
-        if (u_map_put(request.map_header, "Authorization", bearer) != U_OK) {
+        if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error setting bearer token");
           ret = I_ERROR;
         }
         o_free(bearer);
       }
-      if (u_map_put(request.map_post_body, "token", i_session->token_target) != U_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error setting target token");
-        ret = I_ERROR;
-      }
       if (o_strlen(i_session->token_target_type_hint)) {
-        if (u_map_put(request.map_post_body, "token_type_hint", i_session->token_target_type_hint) != U_OK) {
+        if (ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "token_type_hint", i_session->token_target_type_hint, U_OPT_NONE) != U_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_introspect_token - Error setting target token type hint");
           ret = I_ERROR;
         }
@@ -2907,20 +2956,21 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
       ret = I_ERROR;
     } else {
       ret = I_OK;
-      request.http_verb = o_strdup("POST");
-      request.http_url = o_strdup(i_session->registration_endpoint);
-      u_map_put(request.map_header, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR);
+      if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                  U_OPT_HTTP_URL, i_session->registration_endpoint,
+                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                  U_OPT_JSON_BODY, j_parameters,
+                                                  U_OPT_NONE) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting parameters");
+        ret = I_ERROR;
+      }
       if (o_strlen(i_session->access_token)) {
         bearer = msprintf("Bearer %s", i_session->access_token);
-        if (u_map_put(request.map_header, "Authorization", bearer) != U_OK) {
+        if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting bearer token");
           ret = I_ERROR;
         }
         o_free(bearer);
-      }
-      if (ulfius_set_json_body_request(&request, j_parameters) != U_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting parameters");
-        ret = I_ERROR;
       }
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
@@ -2943,6 +2993,70 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
           }
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error sending http request");
+          ret = I_ERROR;
+        }
+      }
+      ulfius_clean_request(&request);
+      ulfius_clean_response(&response);
+    }
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+int i_manage_registration_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result) {
+  int ret;
+  struct _u_request request;
+  struct _u_response response;
+  char * bearer = NULL;
+  json_t * j_response;
+
+  if (i_session != NULL && o_strlen(i_session->registration_endpoint) && o_strlen(i_session->client_id) && json_string_length(json_array_get(json_object_get(j_parameters, "redirect_uris"), 0))) {
+    if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error initializing request or response");
+      ret = I_ERROR;
+    } else {
+      ret = I_OK;
+      if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                  U_OPT_HTTP_URL, i_session->registration_endpoint,
+                                                  U_OPT_HTTP_URL_APPEND, "/",
+                                                  U_OPT_HTTP_URL_APPEND, i_session->client_id,
+                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                  U_OPT_JSON_BODY, j_parameters,
+                                                  U_OPT_NONE) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error setting parameters");
+        ret = I_ERROR;
+      }
+      if (o_strlen(i_session->access_token)) {
+        bearer = msprintf("Bearer %s", i_session->access_token);
+        if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error setting bearer token");
+          ret = I_ERROR;
+        }
+        o_free(bearer);
+      }
+      if (ret == I_OK) {
+        if (ulfius_send_http_request(&request, &response) == U_OK) {
+          if (response.status == 200) {
+            j_response = ulfius_get_json_body_response(&response, NULL);
+            if (update_session) {
+              i_set_str_parameter(i_session, I_OPT_CLIENT_ID, json_string_value(json_object_get(j_response, "client_id")));
+              i_set_str_parameter(i_session, I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_response, "client_secret")));
+              i_set_str_parameter(i_session, I_OPT_REDIRECT_URI, json_string_value(json_array_get(json_object_get(j_response, "redirect_uris"), 0)));
+            }
+            if (j_result != NULL) {
+              *j_result = json_incref(j_response);
+            }
+            json_decref(j_response);
+          } else if (response.status == 400 || response.status == 404 || response.status == 403) {
+            ret = I_ERROR_PARAM;
+          } else if (response.status != 200) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error registering client");
+            ret = I_ERROR;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error sending http request");
           ret = I_ERROR;
         }
       }
@@ -3271,20 +3385,20 @@ int i_perform_api_request(struct _i_session * i_session, struct _u_request * htt
           switch (bearer_type) {
             case I_BEARER_TYPE_HEADER:
               auth_header = msprintf("%s%s", I_HEADER_PREFIX_BEARER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN));
-              if (u_map_put(copy_req.map_header, I_HEADER_AUTHORIZATION, auth_header) != U_OK) {
+              if (ulfius_set_request_properties(&copy_req, U_OPT_HEADER_PARAMETER, I_HEADER_AUTHORIZATION, auth_header, U_OPT_NONE) != U_OK) {
                 y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error setting access_token in header");
                 ret = I_ERROR;
               }
               o_free(auth_header);
               break;
             case I_BEARER_TYPE_BODY:
-              if (u_map_put(copy_req.map_post_body, I_BODY_URL_PARAMETER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN)) != U_OK) {
+              if (ulfius_set_request_properties(&copy_req, U_OPT_POST_BODY_PARAMETER, I_BODY_URL_PARAMETER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), U_OPT_NONE) != U_OK) {
                 y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error setting access_token in body");
                 ret = I_ERROR;
               }
               break;
             case I_BEARER_TYPE_URL:
-              if (u_map_put(copy_req.map_url, I_BODY_URL_PARAMETER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN)) != U_OK) {
+              if (ulfius_set_request_properties(&copy_req, U_OPT_URL_PARAMETER, I_BODY_URL_PARAMETER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), U_OPT_NONE) != U_OK) {
                 y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error setting access_token in url");
                 ret = I_ERROR;
               }
@@ -3298,7 +3412,7 @@ int i_perform_api_request(struct _i_session * i_session, struct _u_request * htt
           if (use_dpop) {
             if (I_OK == ret) {
               if ((dpop_token = i_generate_dpop_token(i_session, copy_req.http_verb, copy_req.http_url, dpop_iat)) != NULL) {
-                if (u_map_put(copy_req.map_header, I_HEADER_DPOP, dpop_token) != U_OK) {
+                if (ulfius_set_request_properties(&copy_req, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
                   y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_api_request - Error setting DPoP in header");
                   ret = I_ERROR;
                 }
@@ -3448,7 +3562,7 @@ int i_run_device_auth_request(struct _i_session * i_session) {
                                   U_OPT_POST_BODY_PARAMETER, "grant_type", "device_authorization",
                                   U_OPT_NONE);
     if (i_session->scope != NULL) {
-      u_map_put(request.map_post_body, "scope", i_session->scope);
+      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "scope", i_session->scope, U_OPT_NONE);
     }
     if ((res = _i_add_token_authentication(i_session, i_session->device_authorization_endpoint, &request)) == I_OK) {
       if (ulfius_send_http_request(&request, &response) == U_OK) {

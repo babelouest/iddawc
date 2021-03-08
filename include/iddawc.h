@@ -621,6 +621,19 @@ int i_revoke_token(struct _i_session * i_session);
 int i_register_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
 
 /**
+ * Manages a client registration using the dynamic registration endpoint
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_parameters: a json_t * object containing the client metadata
+ * The metadata content depends on the registration endpoint but at least
+ * the parameter redirect_uris (array of string) is required to register a new client
+ * @param update_session: if the registration is succesfull, update the session with the new client_id and client_secret
+ * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
+ * @return I_OK on success, an error value on error
+ */
+int i_manage_registration_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
+
+/**
  * Generates a DPoP token based on the given parameters and the internal state of the struct _i_session
  * The jti must be previously generated via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE
  * @param i_session: a reference to a struct _i_session *
