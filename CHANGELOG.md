@@ -3,14 +3,15 @@
 ## 0.9.9
 
 - Improve OAuth 2.0 Rich Authorization Requests
-- Add `i_set_rich_authorization_request_json_t`, `i_remove_rich_authorization_request_json_t`
+- Add `i_set_rich_authorization_request_json_t`, `i_remove_rich_authorization_request_json_t`, `i_manage_registration_client`
 - Rename `i_set_rich_authorization_request` to `i_set_rich_authorization_request_str`, `i_remove_rich_authorization_request` to `i_remove_rich_authorization_request_str`
+- Supports [OAuth 2.0 Dynamic Client Registration Management Protocol](https://tools.ietf.org/html/rfc7592)
 
 ## 0.9.8
 
-- Support [OAuth 2.0 Rich Authorization Requests Draft 03](https://www.ietf.org/archive/id/draft-ietf-oauth-rar-03.html)
-- Support [OAuth 2.0 Device Authorization Grant (rfc #8628)](https://tools.ietf.org/html/rfc8628)
-- Support [OAuth 2.0 Pushed Authorization Requests Draft 05](https://tools.ietf.org/html/draft-ietf-oauth-par-05)
+- Supports [OAuth 2.0 Rich Authorization Requests Draft 03](https://www.ietf.org/archive/id/draft-ietf-oauth-rar-03.html)
+- Supports [OAuth 2.0 Device Authorization Grant (rfc #8628)](https://tools.ietf.org/html/rfc8628)
+- Supports [OAuth 2.0 Pushed Authorization Requests Draft 05](https://tools.ietf.org/html/draft-ietf-oauth-par-05)
 - Add `i_set_rich_authorization_request`, `i_remove_rich_authorization_request`, `i_get_rich_authorization_request` for rich authorization requests
 - Add `i_run_device_auth_request` for device authorization requests
 - Add `i_run_par_request` for pushed authorization requests
