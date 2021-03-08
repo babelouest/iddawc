@@ -69,6 +69,8 @@ Functions</h2></td></tr>
 <tr class="separator:ga418b5be2b1d81f405a5602d9b865b82c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gae4b42399eedec1b1a73eaea95c22ce51">i_register_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_parameters, int update_session, json_t **j_result)</td></tr>
 <tr class="separator:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad361385c6da3d496994306ec5b37b37e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gad361385c6da3d496994306ec5b37b37e">i_manage_registration_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_parameters, int update_session, json_t **j_result)</td></tr>
+<tr class="separator:gad361385c6da3d496994306ec5b37b37e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4276d0948b5f70cc6fed9c4c177d119d"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga4276d0948b5f70cc6fed9c4c177d119d">i_generate_dpop_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *htm, const char *htu, time_t iat)</td></tr>
 <tr class="separator:ga4276d0948b5f70cc6fed9c4c177d119d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga069cc2c92fee719ee529c22a5eb93653"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga069cc2c92fee719ee529c22a5eb93653">i_perform_api_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, struct _u_request *http_request, struct _u_response *http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat)</td></tr>
@@ -405,6 +407,56 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Register a new client using the dynamic registration endpoint Using the access_token for authentication </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">j_parameters</td><td>a json_t * object containing the client metadata The metadata content depends on the registration endpoint but at least the parameter redirect_uris (array of string) is required to register a new client </td></tr>
+    <tr><td class="paramname">update_session</td><td>if the registration is succesfull, update the session with the new client_id and client_secret </td></tr>
+    <tr><td class="paramname">j_result</td><td>if not NULL, set an allocated json_t * object with the endpoint result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
+
+</div>
+</div>
+<a id="gad361385c6da3d496994306ec5b37b37e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad361385c6da3d496994306ec5b37b37e">&#9670;&nbsp;</a></span>i_manage_registration_client()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_manage_registration_client </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">json_t *&#160;</td>
+          <td class="paramname"><em>j_parameters</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>update_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">json_t **&#160;</td>
+          <td class="paramname"><em>j_result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Manages a client registration using the dynamic registration endpoint Using the access_token for authentication </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
     <tr><td class="paramname">j_parameters</td><td>a json_t * object containing the client metadata The metadata content depends on the registration endpoint but at least the parameter redirect_uris (array of string) is required to register a new client </td></tr>
