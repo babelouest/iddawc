@@ -62,13 +62,15 @@ extern "C"
 #define I_AUTH_METHOD_JWT_SIGN_SECRET     0x00000100 ///< access auth endpoint using a JWT signed with the client secret
 #define I_AUTH_METHOD_JWT_SIGN_PRIVKEY    0x00001000 ///< access auth endpoint using a JWT signed with the client private key
 #define I_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00010000 ///< access auth endpoint using a JWT encrypted with the client secret
-#define I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x00100000 ///< access auth endpoint using a JWT encrypted with the client private key
+#define I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x00100000 ///< access auth endpoint using a JWT encrypted with the server public key
 
-#define I_TOKEN_AUTH_METHOD_SECRET_BASIC 0 ///< access token endpoint using HTTP basic auth with client_id and client password
-#define I_TOKEN_AUTH_METHOD_SECRET_POST  1 ///< access token endpoint using secret send in POST parameters
-#define I_TOKEN_AUTH_METHOD_SECRET_JWT   2 ///< access token endpoint using a JWT signed with the client secret
-#define I_TOKEN_AUTH_METHOD_PRIVATE_JWT  3 ///< access token endpoint using a JWT signed with the client private key
-#define I_TOKEN_AUTH_METHOD_NONE         4 ///< access token endpoint using no authentication
+#define I_TOKEN_AUTH_METHOD_SECRET_BASIC   0 ///< access token endpoint using HTTP basic auth with client_id and client password
+#define I_TOKEN_AUTH_METHOD_SECRET_POST    1 ///< access token endpoint using secret send in POST parameters
+#define I_TOKEN_AUTH_METHOD_SIGN_SECRET    2 ///< access token endpoint using a JWT signed with the client secret
+#define I_TOKEN_AUTH_METHOD_SIGN_PRIVKEY   3 ///< access token endpoint using a JWT signed with the client private key
+#define I_TOKEN_AUTH_METHOD_ENCRYPT_SECRET 4 ///< access token endpoint using a JWT encrypted with the client secret
+#define I_TOKEN_AUTH_METHOD_ENCRYPT_PUBKEY 5 ///< access token endpoint using a JWT signed with the client private key and encrypted with the server public key or the client secret
+#define I_TOKEN_AUTH_METHOD_NONE           6 ///< access token endpoint using no authentication
 
 #define I_STRICT_NO  0 ///< Do not stricly conform to openid config result
 #define I_STRICT_YES 1 ///< Stricly conform to openid config result
@@ -78,6 +80,10 @@ extern "C"
 #define I_BEARER_TYPE_HEADER 0 ///< Bearer type header, the token will be available in the header
 #define I_BEARER_TYPE_BODY   1 ///< Bearer type body, the token will be available as a body url-encoded parameter
 #define I_BEARER_TYPE_URL    2 ///< Bearer type url, the token will be available as a url query parameter
+
+#define I_INTROSPECT_REVOKE_AUTH_NONE          0 ///< Introspection/Revocation - no authentication
+#define I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN  1 ///< Introspection/Revocation - authentication using access token
+#define I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET 2 ///< Introspection/Revocation - authentication with client credentials
 
 #define I_HEADER_PREFIX_BEARER "Bearer "
 #define I_HEADER_AUTHORIZATION "Authorization"
@@ -128,31 +134,33 @@ typedef enum {
   I_OPT_STATE_GENERATE                        = 38, ///< generate a random state value
   I_OPT_X5U_FLAGS                             = 39, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
   I_OPT_SERVER_KID                            = 40, ///< key id to use if multiple jwk are available on the server, string
-  I_OPT_CLIENT_KID                            = 41, ///< key id to use if multiple jwk are available on the client, string
-  I_OPT_CLIENT_SIGN_ALG                       = 42, ///< signature algorithm to use when the client signs a request in a JWT, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA', 'ES256K'
-  I_OPT_CLIENT_ENC_ALG                        = 43, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH-ES', 'ECDH-ES+A128KW', 'ECDH-ES+A192KW', 'ECDH-ES+A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2-HS256+A128KW', 'PBES2-HS384+A192KW or 'PBES2-HS512+A256KW', warning: some algorithm may be unavailable depending on Rhonabwy version used
-  I_OPT_CLIENT_ENC                            = 44, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC-HS256,' 'A192CBC-HS384,' 'A256CBC-HS512,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
-  I_OPT_TOKEN_JTI                             = 45, ///< jti value, string
-  I_OPT_TOKEN_JTI_GENERATE                    = 46, ///< generate a random jti value
-  I_OPT_TOKEN_EXP                             = 47, ///< JWT token request expiration time in seconds
-  I_OPT_TOKEN_TARGET                          = 48, ///< access_token which is the target of a revocation or an introspection, string
-  I_OPT_TOKEN_TARGET_TYPE_HINT                = 49, ///< access_token which is the target of a revocation or an introspection, string
-  I_OPT_REVOCATION_ENDPOINT                   = 50, ///< absolute url for the revocation endpoint, string
-  I_OPT_INTROSPECTION_ENDPOINT                = 51, ///< absolute url for the introspection endpoint, string
-  I_OPT_REGISTRATION_ENDPOINT                 = 52, ///< absolute url for the client registration endpoint, string
-  I_OPT_DEVICE_AUTHORIZATION_ENDPOINT         = 53, ///< absolute url for the pushed authorization endpoint, string
-  I_OPT_DEVICE_AUTH_CODE                      = 54, ///< device authorization code sent by the AS
-  I_OPT_DEVICE_AUTH_USER_CODE                 = 55, ///< device authorization user code sent by the AS
-  I_OPT_DEVICE_AUTH_VERIFICATION_URI          = 56, ///< device authorization verification URI sent by the AS
-  I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE = 57, ///< device authorization verification URI complete sent by the AS
-  I_OPT_DEVICE_AUTH_EXPIRES_IN                = 58, ///< device authorization code expiration sent by the AS
-  I_OPT_DEVICE_AUTH_INTERVAL                  = 59, ///< device authorization code verification interval sent by the AS
-  I_OPT_END_SESSION_ENDPOINT                  = 60, ///< absolute url for the end session endpoint, string
-  I_OPT_CHECK_SESSION_IRAME                   = 61, ///< absolute url for the check session iframe, string
-  I_OPT_PUSHED_AUTH_REQ_ENDPOINT              = 62, ///< absolute url for the pushed authoization endpoint, string
-  I_OPT_PUSHED_AUTH_REQ_REQUIRED              = 63, ///< are pushed authorization requests required, boolean
-  I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN            = 64, ///< pushed authorization request expiration time in seconds
-  I_OPT_PUSHED_AUTH_REQ_URI                   = 65  ///< request_uri sent by the par endpoint result, string
+  I_OPT_SERVER_ENC_ALG                        = 41, ///< key id to use if multiple jwk are available on the server, string
+  I_OPT_SERVER_ENC                            = 42, ///< key id to use if multiple jwk are available on the server, string
+  I_OPT_CLIENT_KID                            = 43, ///< key id to use if multiple jwk are available on the client, string
+  I_OPT_CLIENT_SIGN_ALG                       = 44, ///< signature algorithm to use when the client signs a request in a JWT, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
+  I_OPT_CLIENT_ENC_ALG                        = 45, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH-ES', 'ECDH-ES+A128KW', 'ECDH-ES+A192KW', 'ECDH-ES+A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2-HS256+A128KW', 'PBES2-HS384+A192KW or 'PBES2-HS512+A256KW', warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_CLIENT_ENC                            = 46, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC-HS256,' 'A192CBC-HS384,' 'A256CBC-HS512,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_TOKEN_JTI                             = 47, ///< jti value, string
+  I_OPT_TOKEN_JTI_GENERATE                    = 48, ///< generate a random jti value
+  I_OPT_TOKEN_EXP                             = 49, ///< JWT token request expiration time in seconds
+  I_OPT_TOKEN_TARGET                          = 50, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_TOKEN_TARGET_TYPE_HINT                = 51, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_REVOCATION_ENDPOINT                   = 52, ///< absolute url for the revocation endpoint, string
+  I_OPT_INTROSPECTION_ENDPOINT                = 53, ///< absolute url for the introspection endpoint, string
+  I_OPT_REGISTRATION_ENDPOINT                 = 54, ///< absolute url for the client registration endpoint, string
+  I_OPT_DEVICE_AUTHORIZATION_ENDPOINT         = 55, ///< absolute url for the pushed authorization endpoint, string
+  I_OPT_DEVICE_AUTH_CODE                      = 56, ///< device authorization code sent by the AS
+  I_OPT_DEVICE_AUTH_USER_CODE                 = 57, ///< device authorization user code sent by the AS
+  I_OPT_DEVICE_AUTH_VERIFICATION_URI          = 58, ///< device authorization verification URI sent by the AS
+  I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE = 59, ///< device authorization verification URI complete sent by the AS
+  I_OPT_DEVICE_AUTH_EXPIRES_IN                = 60, ///< device authorization code expiration sent by the AS
+  I_OPT_DEVICE_AUTH_INTERVAL                  = 61, ///< device authorization code verification interval sent by the AS
+  I_OPT_END_SESSION_ENDPOINT                  = 62, ///< absolute url for the end session endpoint, string
+  I_OPT_CHECK_SESSION_IRAME                   = 63, ///< absolute url for the check session iframe, string
+  I_OPT_PUSHED_AUTH_REQ_ENDPOINT              = 64, ///< absolute url for the pushed authoization endpoint, string
+  I_OPT_PUSHED_AUTH_REQ_REQUIRED              = 65, ///< are pushed authorization requests required, boolean
+  I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN            = 66, ///< pushed authorization request expiration time in seconds
+  I_OPT_PUSHED_AUTH_REQ_URI                   = 67  ///< request_uri sent by the par endpoint result, string
 } i_option;
 
 /**
@@ -196,6 +204,7 @@ struct _i_session {
   char        * code;
   char        * refresh_token;
   char        * access_token;
+  json_t      * access_token_payload;
   char        * token_target;
   char        * token_target_type_hint;
   char        * token_type;
@@ -207,6 +216,8 @@ struct _i_session {
   uint          token_method;
   jwks_t      * server_jwks;
   char        * server_kid;
+  jwa_alg       server_enc_alg;
+  jwa_enc       server_enc;
   jwks_t      * client_jwks;
   char        * client_kid;
   jwa_alg       client_sign_alg;
@@ -460,6 +471,20 @@ const char * i_get_additional_parameter(struct _i_session * i_session, const cha
 const char * i_get_additional_response(struct _i_session * i_session, const char * s_key);
 
 /**
+ * Gets the server configuration
+ * @param i_session: a reference to a struct _i_session *
+ * @return the server configuration in json_t * format
+ */
+json_t * i_get_server_configuration(struct _i_session * i_session);
+
+/**
+ * Gets the server configuration
+ * @param i_session: a reference to a struct _i_session *
+ * @return the server public JWKS in json_t * format
+ */
+json_t * i_get_server_jwks(struct _i_session * i_session);
+
+/**
  * Sets a list of parameters to a session
  * @param i_session: a reference to a struct _i_session *
  * the list of parameters to set
@@ -570,9 +595,10 @@ int i_verify_id_token(struct _i_session * i_session);
  * sets the result to i_session->userinfo as char *
  * and i_session->j_userinfo as json_t * if the result is in JSON format
  * @param i_session: a reference to a struct _i_session *
+ * @param get_jwt: Request result as a JWT
  * @return I_OK on success, an error value on error
  */
-int i_load_userinfo(struct _i_session * i_session);
+int i_load_userinfo(struct _i_session * i_session, int get_jwt);
 
 /**
  * Loads the userinfo endpoint using the access_token
@@ -594,18 +620,27 @@ int i_load_userinfo_custom(struct _i_session * i_session, const char * http_meth
  * Using the access_token for authentication
  * @param i_session: a reference to a struct _i_session *
  * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
+ * @param authentication: authentication type
+ * types available are I_INTROSPECT_REVOKE_AUTH_NONE,
+ * I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN,
+ * I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET
+ * @param get_jwt: Request result as a JWT
  * @return I_OK on success and if the access_token_target is valid, 
  * I_ERROR_UNAUTHORIZED if the access_token_target is invalid, another error value on error
  */
-int i_introspect_token(struct _i_session * i_session, json_t ** j_result);
+int i_introspect_token(struct _i_session * i_session, json_t ** j_result, int authentication, int get_jwt);
 
 /**
  * Loads the revocation endpoint for the access_token_target
  * Using the access_token for authentication
  * @param i_session: a reference to a struct _i_session *
+ * @param authentication: authentication type
+ * types available are I_INTROSPECT_REVOKE_AUTH_NONE,
+ * I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN,
+ * I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET
  * @return I_OK on success, an error value on error
  */
-int i_revoke_token(struct _i_session * i_session);
+int i_revoke_token(struct _i_session * i_session, int authentication);
 
 /**
  * Register a new client using the dynamic registration endpoint
