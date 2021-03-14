@@ -35,13 +35,13 @@ START_TEST(test_iddawc_introspection_invalid)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                   I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_introspect_token(&i_session, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_introspect_token(&i_session, NULL, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_ERROR_PARAM);
   
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect"), I_OK);
-  ck_assert_int_eq(i_introspect_token(&i_session, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_introspect_token(&i_session, NULL, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_ERROR_PARAM);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_INTROSPECTION_ENDPOINT, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_TARGET, TOKEN), I_OK);
-  ck_assert_int_eq(i_introspect_token(&i_session, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_introspect_token(&i_session, NULL, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_ERROR_PARAM);
   
   i_clean_session(&i_session);
   
@@ -63,7 +63,7 @@ START_TEST(test_iddawc_introspection_valid)
                                                   I_OPT_ACCESS_TOKEN, TOKEN,
                                                   I_OPT_TOKEN_TARGET, TOKEN,
                                                   I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_introspect_token(&i_session, &j_result), I_OK);
+  ck_assert_int_eq(i_introspect_token(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_OK);
   j_expected = json_loads(result, JSON_DECODE_ANY, NULL);
   ck_assert_int_eq(1, json_equal(j_expected, j_result));
   i_clean_session(&i_session);
@@ -76,7 +76,7 @@ START_TEST(test_iddawc_introspection_valid)
                                                   I_OPT_ACCESS_TOKEN, TOKEN,
                                                   I_OPT_TOKEN_TARGET, TOKEN "error",
                                                   I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_introspect_token(&i_session, &j_result), I_OK);
+  ck_assert_int_eq(i_introspect_token(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_OK);
   j_expected = json_loads("{\"active\":false}", JSON_DECODE_ANY, NULL);
   ck_assert_int_eq(1, json_equal(j_expected, j_result));
   i_clean_session(&i_session);
@@ -89,7 +89,7 @@ START_TEST(test_iddawc_introspection_valid)
                                                   I_OPT_ACCESS_TOKEN, TOKEN "error",
                                                   I_OPT_TOKEN_TARGET, TOKEN,
                                                   I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_introspect_token(&i_session, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_introspect_token(&i_session, NULL, I_INTROSPECT_REVOKE_AUTH_NONE, 0), I_ERROR_PARAM);
   i_clean_session(&i_session);
   
   ulfius_stop_framework(&instance);

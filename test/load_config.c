@@ -392,6 +392,9 @@ START_TEST(test_iddawc_configuration_valid)
 {
   struct _i_session i_session;
   struct _u_instance instance;
+  json_t * j_config, * j_jwks;
+  json_t * j_config_control, * j_jwks_control;
+  
   ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/jwks", 0, &callback_openid_jwks_valid, NULL), U_OK);
@@ -407,7 +410,17 @@ START_TEST(test_iddawc_configuration_valid)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT), TOKEN_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENDPOINT), USERINFO_ENDPOINT);
   ck_assert_int_gt(r_jwks_size(i_session.server_jwks), 0);
+  ck_assert_ptr_ne(NULL, j_config = i_get_server_configuration(&i_session));
+  ck_assert_ptr_ne(NULL, j_jwks = i_get_server_jwks(&i_session));
+  ck_assert_ptr_ne(NULL, j_config_control = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL));
+  ck_assert_ptr_ne(NULL, j_jwks_control = json_loads(jwks_pubkey_rsa_str, JSON_DECODE_ANY, NULL));
+  ck_assert_int_eq(1, json_equal(j_config, j_config_control));
+  ck_assert_int_eq(1, json_equal(j_jwks, j_jwks_control));
   i_clean_session(&i_session);
+  json_decref(j_config);
+  json_decref(j_jwks);
+  json_decref(j_config_control);
+  json_decref(j_jwks_control);
   
   ulfius_stop_framework(&instance);
   ulfius_clean_instance(&instance);

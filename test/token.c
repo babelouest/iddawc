@@ -911,12 +911,13 @@ START_TEST(test_iddawc_token_code_jwt_auth_secret_error_param)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SECRET_JWT,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SIGN_SECRET,
                                                     I_OPT_TOKEN_JTI_GENERATE, 32,
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,
                                                     I_OPT_SCOPE, SCOPE_LIST,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
                                                     I_OPT_CODE, CODE,
+                                                    I_OPT_OPENID_CONFIG_STRICT, I_STRICT_YES,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CLIENT_SECRET, CLIENT_SECRET), I_OK);
@@ -939,12 +940,13 @@ START_TEST(test_iddawc_token_code_jwt_auth_privkey_error_param)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_PRIVATE_JWT,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SIGN_SECRET,
                                                     I_OPT_TOKEN_JTI_GENERATE, 32,
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,
                                                     I_OPT_SCOPE, SCOPE_LIST,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
                                                     I_OPT_CODE, CODE,
+                                                    I_OPT_OPENID_CONFIG_STRICT, I_STRICT_YES,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
@@ -975,7 +977,7 @@ START_TEST(test_iddawc_token_code_jwt_auth_secret_ok)
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SECRET_JWT,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SIGN_SECRET,
                                                     I_OPT_TOKEN_JTI_GENERATE, 32,
                                                     I_OPT_CLIENT_SIGN_ALG, "HS256",
                                                     I_OPT_CLIENT_SECRET, CLIENT_SECRET,
@@ -1009,7 +1011,7 @@ START_TEST(test_iddawc_token_code_jwt_auth_privkey_ok)
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_PRIVATE_JWT,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SIGN_PRIVKEY,
                                                     I_OPT_TOKEN_JTI_GENERATE, 32,
                                                     I_OPT_CLIENT_SIGN_ALG, "RS256",
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,

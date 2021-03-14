@@ -23,13 +23,13 @@ START_TEST(test_iddawc_revocation_invalid)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_revoke_token(&i_session), I_ERROR_PARAM);
+  ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN), I_ERROR_PARAM);
   
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REVOCATION_ENDPOINT, "http://localhost:8080/revoke"), I_OK);
-  ck_assert_int_eq(i_revoke_token(&i_session), I_ERROR_PARAM);
+  ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN), I_ERROR_PARAM);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REVOCATION_ENDPOINT, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_TARGET, TOKEN), I_OK);
-  ck_assert_int_eq(i_revoke_token(&i_session), I_ERROR_PARAM);
+  ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN), I_ERROR_PARAM);
   
   i_clean_session(&i_session);
   
@@ -50,7 +50,7 @@ START_TEST(test_iddawc_revocation_valid)
                                                   I_OPT_ACCESS_TOKEN, TOKEN,
                                                   I_OPT_TOKEN_TARGET, TOKEN,
                                                   I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_revoke_token(&i_session), I_OK);
+  ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN), I_OK);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
@@ -59,7 +59,7 @@ START_TEST(test_iddawc_revocation_valid)
                                                   I_OPT_ACCESS_TOKEN, TOKEN,
                                                   I_OPT_TOKEN_TARGET, TOKEN "error",
                                                   I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_revoke_token(&i_session), I_OK);
+  ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN), I_OK);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
@@ -68,7 +68,7 @@ START_TEST(test_iddawc_revocation_valid)
                                                   I_OPT_ACCESS_TOKEN, TOKEN "error",
                                                   I_OPT_TOKEN_TARGET, TOKEN,
                                                   I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_revoke_token(&i_session), I_ERROR_PARAM);
+  ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN), I_ERROR_PARAM);
   i_clean_session(&i_session);
   
   ulfius_stop_framework(&instance);

@@ -67,6 +67,8 @@
 #define SUBJECT_TYPE "public"
 #define USERINFO "{\"aud\":\"abcd1234\",\"name\":\"Dave Lopper\"}"
 #define SERVER_KID "server kid"
+#define SERVER_ENC_ALG "RSA-OAEP"
+#define SERVER_ENC "A128GCM"
 #define CLIENT_KID "client kid"
 #define CLIENT_SIGN_ALG "HS256"
 #define CLIENT_ENC_ALG "RSA1_5"
@@ -221,7 +223,7 @@ START_TEST(test_iddawc_set_response_type)
   struct _i_session i_session;
 
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_response_type(&i_session, I_RESPONSE_TYPE_NONE), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_response_type(&i_session, I_RESPONSE_TYPE_NONE), I_OK);
   ck_assert_int_eq(i_set_response_type(&i_session, I_RESPONSE_TYPE_CODE), I_OK);
   ck_assert_int_eq(i_set_response_type(&i_session, I_RESPONSE_TYPE_TOKEN), I_OK);
   ck_assert_int_eq(i_set_response_type(&i_session, I_RESPONSE_TYPE_ID_TOKEN), I_OK);
@@ -346,6 +348,12 @@ START_TEST(test_iddawc_set_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_SERVER_KID, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_SERVER_KID, SERVER_KID), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_SERVER_ENC_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_SERVER_ENC_ALG, SERVER_ENC_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_SERVER_ENC, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_SERVER_ENC, SERVER_ENC), I_OK);
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CLIENT_KID, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CLIENT_KID, CLIENT_KID), I_OK);
@@ -513,6 +521,12 @@ START_TEST(test_iddawc_get_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_SERVER_KID, SERVER_KID), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_KID), SERVER_KID);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_SERVER_ENC_ALG, SERVER_ENC_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC_ALG), SERVER_ENC_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_SERVER_ENC, SERVER_ENC), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC), SERVER_ENC);
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CLIENT_KID, CLIENT_KID), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_KID), CLIENT_KID);
@@ -819,6 +833,8 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
                                                   I_OPT_CLIENT_KID, CLIENT_KID,
                                                   I_OPT_SERVER_KID, SERVER_KID,
+                                                  I_OPT_SERVER_ENC_ALG, SERVER_ENC_ALG,
+                                                  I_OPT_SERVER_ENC, SERVER_ENC,
                                                   I_OPT_CLIENT_SIGN_ALG, CLIENT_SIGN_ALG,
                                                   I_OPT_CLIENT_ENC_ALG, CLIENT_ENC_ALG,
                                                   I_OPT_CLIENT_ENC, CLIENT_ENC,
@@ -856,6 +872,8 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_int_eq(i_set_additional_parameter(&i_session, ADDITIONAL_KEY, ADDITIONAL_VALUE ADDITIONAL_VALUE), I_OK);
   ck_assert_int_eq(i_set_additional_response(&i_session, ADDITIONAL_KEY, ADDITIONAL_VALUE ADDITIONAL_VALUE), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_KID), SERVER_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC_ALG), SERVER_ENC_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC), SERVER_ENC);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_KID), CLIENT_KID);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_SIGN_ALG), CLIENT_SIGN_ALG);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_ENC_ALG), CLIENT_ENC_ALG);
@@ -912,10 +930,12 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_equal(json_object_get(j_export, "jwks"), jwks_empty), 1);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "x5u_flags")), 0);
   ck_assert_ptr_eq(json_object_get(j_export, "openid_config"), NULL);
-  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "openid_config_strict")), I_STRICT_YES);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "openid_config_strict")), I_STRICT_NO);
   ck_assert_ptr_eq(json_object_get(j_export, "issuer"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "userinfo"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "server-kid"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "server-sig-alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "server-enc-alg"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "client-kid"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "sig-alg"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "enc-alg"), NULL);
@@ -979,6 +999,8 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_ISSUER, ISSUER,
                                                     I_OPT_USERINFO, USERINFO,
                                                     I_OPT_CLIENT_KID, CLIENT_KID,
+                                                    I_OPT_SERVER_ENC_ALG, SERVER_ENC_ALG,
+                                                    I_OPT_SERVER_ENC, SERVER_ENC,
                                                     I_OPT_SERVER_KID, SERVER_KID,
                                                     I_OPT_CLIENT_SIGN_ALG, CLIENT_SIGN_ALG,
                                                     I_OPT_CLIENT_ENC_ALG, CLIENT_ENC_ALG,
@@ -1045,6 +1067,8 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "issuer")), ISSUER);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "userinfo")), USERINFO);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "server-kid")), SERVER_KID);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "server-enc-alg")), SERVER_ENC_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "server-enc")), SERVER_ENC);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "client-kid")), CLIENT_KID);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "sig-alg")), CLIENT_SIGN_ALG);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "enc-alg")), CLIENT_ENC_ALG);
@@ -1127,6 +1151,8 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_USERINFO, USERINFO,
                                                     I_OPT_CLIENT_KID, CLIENT_KID,
                                                     I_OPT_SERVER_KID, SERVER_KID,
+                                                    I_OPT_SERVER_ENC_ALG, SERVER_ENC_ALG,
+                                                    I_OPT_SERVER_ENC, SERVER_ENC,
                                                     I_OPT_CLIENT_SIGN_ALG, CLIENT_SIGN_ALG,
                                                     I_OPT_CLIENT_ENC_ALG, CLIENT_ENC_ALG,
                                                     I_OPT_CLIENT_ENC, CLIENT_ENC,
@@ -1194,6 +1220,8 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ISSUER), ISSUER);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERINFO), USERINFO);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_KID), SERVER_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC_ALG), SERVER_ENC_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC), SERVER_ENC);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_KID), CLIENT_KID);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_SIGN_ALG), CLIENT_SIGN_ALG);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_ENC_ALG), CLIENT_ENC_ALG);
@@ -1239,7 +1267,7 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
   str_export = i_export_session_str(&i_session);
-  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":1,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0}");
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":0,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0}");
   o_free(str_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
