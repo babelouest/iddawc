@@ -194,13 +194,13 @@ START_TEST(test_iddawc_userinfo_invalid_parameters)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_ERROR_PARAM);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_ERROR_PARAM);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_ERROR_PARAM);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_ERROR_PARAM);
   i_clean_session(&i_session);
 }
 END_TEST
@@ -217,7 +217,7 @@ START_TEST(test_iddawc_userinfo_invalid_response)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_ERROR_UNAUTHORIZED);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_ERROR_UNAUTHORIZED);
   i_clean_session(&i_session);
   
   ulfius_stop_framework(&instance);
@@ -237,7 +237,7 @@ START_TEST(test_iddawc_userinfo_response_unauthorized)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
                                                     I_OPT_ACCESS_TOKEN, "error",
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_ERROR_UNAUTHORIZED);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_ERROR_UNAUTHORIZED);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO), NULL);
   ck_assert_ptr_eq(i_session.j_userinfo, NULL);
   i_clean_session(&i_session);
@@ -259,7 +259,7 @@ START_TEST(test_iddawc_userinfo_response_empty)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_ERROR);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_ERROR);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO), NULL);
   ck_assert_ptr_eq(i_session.j_userinfo, NULL);
   i_clean_session(&i_session);
@@ -281,7 +281,7 @@ START_TEST(test_iddawc_userinfo_response_char)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO), userinfo_char);
   ck_assert_ptr_eq(i_session.j_userinfo, NULL);
   i_clean_session(&i_session);
@@ -304,7 +304,7 @@ START_TEST(test_iddawc_userinfo_response_json)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   i_clean_session(&i_session);
   json_decref(j_userinfo);
@@ -332,7 +332,7 @@ START_TEST(test_iddawc_userinfo_response_jwt_signed)
                                                     I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk_sign), RHN_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 1), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 1), I_OK);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   i_clean_session(&i_session);
   json_decref(j_userinfo);
@@ -340,35 +340,6 @@ START_TEST(test_iddawc_userinfo_response_jwt_signed)
   ulfius_stop_framework(&instance);
   ulfius_clean_instance(&instance);
   r_jwk_free(jwk_sign);
-}
-END_TEST
-
-START_TEST(test_iddawc_userinfo_response_jwt_encrypted)
-{
-  struct _i_session i_session;
-  struct _u_instance instance;
-  jwk_t * jwk_decrypt;
-  json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
-  
-  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
-  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/userinfo", 0, &callback_openid_userinfo_valid_jwt_encrypted, NULL), U_OK);
-  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
-  ck_assert_int_eq(r_jwk_init(&jwk_decrypt), RHN_OK);
-  ck_assert_int_eq(r_jwk_import_from_json_str(jwk_decrypt, jwk_privkey_rsa_str), RHN_OK);
-  
-  ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
-                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
-                                                    I_OPT_NONE), I_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk_decrypt), RHN_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 1), I_OK);
-  ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
-  i_clean_session(&i_session);
-  json_decref(j_userinfo);
-  
-  ulfius_stop_framework(&instance);
-  ulfius_clean_instance(&instance);
-  r_jwk_free(jwk_decrypt);
 }
 END_TEST
 
@@ -393,7 +364,7 @@ START_TEST(test_iddawc_userinfo_response_jwt_nested)
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk_decrypt), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk_verify), RHN_OK);
-  ck_assert_int_eq(i_load_userinfo(&i_session, 1), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 1), I_OK);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   i_clean_session(&i_session);
   json_decref(j_userinfo);
@@ -419,7 +390,6 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_userinfo_response_char);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_json);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_jwt_signed);
-  tcase_add_test(tc_core, test_iddawc_userinfo_response_jwt_encrypted);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_jwt_nested);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);

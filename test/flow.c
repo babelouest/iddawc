@@ -263,7 +263,7 @@ START_TEST(test_iddawc_token_flow)
   ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   
   // And finally we load user info using the access token
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   
   json_decref(j_userinfo);
@@ -313,7 +313,7 @@ START_TEST(test_iddawc_code_flow)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   // And finally we load user info using the access token
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   
   json_decref(j_userinfo);
@@ -362,7 +362,7 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
                                                     I_OPT_SCOPE, SCOPE_LIST,
                                                     I_OPT_STATE, STATE,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_openid_config(&i_session), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_OK);
   
   // First step: get redirection to login page
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
@@ -377,7 +377,7 @@ START_TEST(test_iddawc_oidc_token_id_token_flow)
   ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);
   
   // And finally we load user info using the access token
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   
   json_decref(j_userinfo);
@@ -414,7 +414,7 @@ START_TEST(test_iddawc_oidc_code_flow)
                                                     I_OPT_SCOPE, SCOPE_LIST,
                                                     I_OPT_STATE, STATE,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_openid_config(&i_session), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_OK);
   
   // First step: get redirection to login page
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
@@ -436,7 +436,7 @@ START_TEST(test_iddawc_oidc_code_flow)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   // And finally we load user info using the access token
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   
   json_decref(j_userinfo);
@@ -487,7 +487,7 @@ START_TEST(test_iddawc_oidc_token_id_token_code_flow)
                                                     I_OPT_SCOPE, SCOPE_LIST,
                                                     I_OPT_STATE, STATE,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_load_openid_config(&i_session), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_OK);
   
   // First step: get redirection to login page
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
@@ -508,7 +508,7 @@ START_TEST(test_iddawc_oidc_token_id_token_code_flow)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   // And finally we load user info using the access token
-  ck_assert_int_eq(i_load_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
   
   json_decref(j_userinfo);

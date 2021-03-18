@@ -604,47 +604,6 @@ START_TEST(test_iddawc_id_token_with_code_access_token)
 }
 END_TEST
 
-START_TEST(test_iddawc_id_token_encrypted)
-{
-  struct _i_session i_session;
-  jwk_t * jwk_decrypt, * jwk_encrypt;
-  jwt_t * jwt;
-  char * grants = NULL, * jwt_str;
-  time_t now;
-  
-  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
-  time(&now);
-  grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
-  ck_assert_ptr_ne(grants, NULL);
-  ck_assert_int_eq(r_jwk_init(&jwk_decrypt), RHN_OK);
-  ck_assert_int_eq(r_jwk_init(&jwk_encrypt), RHN_OK);
-  ck_assert_int_eq(r_jwk_import_from_pem_der(jwk_encrypt, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, public_key, o_strlen((const char *)public_key)), RHN_OK);
-  ck_assert_int_eq(r_jwk_import_from_pem_der(jwk_decrypt, R_X509_TYPE_PRIVKEY, R_FORMAT_PEM, private_key, o_strlen((const char *)private_key)), RHN_OK);
-  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
-  
-  ck_assert_int_eq(r_jwt_set_enc_alg(jwt, R_JWA_ALG_RSA1_5), RHN_OK);
-  ck_assert_int_eq(r_jwt_set_enc(jwt, R_JWA_ENC_A128CBC), RHN_OK);
-  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_encrypted(jwt, jwk_encrypt, 0)), NULL);
-  
-  ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  
-  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ISSUER, ISSUER), I_OK);
-  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN, jwt_str), I_OK);
-  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
-  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk_decrypt), RHN_OK);
-  r_jwk_free(jwk_decrypt);
-  r_jwk_free(jwk_encrypt);
-  
-  ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);
-  
-  o_free(grants);
-  o_free(jwt_str);
-  r_jwt_free(jwt);
-  i_clean_session(&i_session);
-}
-END_TEST
-
 START_TEST(test_iddawc_id_token_nested)
 {
   struct _i_session i_session;
@@ -753,7 +712,6 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_id_token_with_code);
   tcase_add_test(tc_core, test_iddawc_id_token_with_access_token);
   tcase_add_test(tc_core, test_iddawc_id_token_with_code_access_token);
-  tcase_add_test(tc_core, test_iddawc_id_token_encrypted);
   tcase_add_test(tc_core, test_iddawc_id_token_nested);
   tcase_add_test(tc_core, test_iddawc_id_token_invalid_key);
   tcase_set_timeout(tc_core, 30);
