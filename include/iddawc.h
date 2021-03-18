@@ -64,13 +64,13 @@ extern "C"
 #define I_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00010000 ///< access auth endpoint using a JWT encrypted with the client secret
 #define I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x00100000 ///< access auth endpoint using a JWT encrypted with the server public key
 
-#define I_TOKEN_AUTH_METHOD_SECRET_BASIC   0 ///< access token endpoint using HTTP basic auth with client_id and client password
-#define I_TOKEN_AUTH_METHOD_SECRET_POST    1 ///< access token endpoint using secret send in POST parameters
-#define I_TOKEN_AUTH_METHOD_SIGN_SECRET    2 ///< access token endpoint using a JWT signed with the client secret
-#define I_TOKEN_AUTH_METHOD_SIGN_PRIVKEY   3 ///< access token endpoint using a JWT signed with the client private key
-#define I_TOKEN_AUTH_METHOD_ENCRYPT_SECRET 4 ///< access token endpoint using a JWT encrypted with the client secret
-#define I_TOKEN_AUTH_METHOD_ENCRYPT_PUBKEY 5 ///< access token endpoint using a JWT signed with the client private key and encrypted with the server public key or the client secret
-#define I_TOKEN_AUTH_METHOD_NONE           6 ///< access token endpoint using no authentication
+#define I_TOKEN_AUTH_METHOD_NONE           0x00000000 ///< access token endpoint using no authentication
+#define I_TOKEN_AUTH_METHOD_SECRET_BASIC   0x00000001 ///< access token endpoint using HTTP basic auth with client_id and client password
+#define I_TOKEN_AUTH_METHOD_SECRET_POST    0x00000010 ///< access token endpoint using secret send in POST parameters
+#define I_TOKEN_AUTH_METHOD_SIGN_SECRET    0x00000100 ///< access token endpoint using a JWT signed with the client secret
+#define I_TOKEN_AUTH_METHOD_SIGN_PRIVKEY   0x00001000 ///< access token endpoint using a JWT signed with the client private key
+#define I_TOKEN_AUTH_METHOD_ENCRYPT_SECRET 0x00010000 ///< access token endpoint using a JWT encrypted with the client secret
+#define I_TOKEN_AUTH_METHOD_ENCRYPT_PUBKEY 0x00100000 ///< access token endpoint using a JWT signed with the client private key and encrypted with the server public key or the client secret
 
 #define I_STRICT_NO  0 ///< Do not stricly conform to openid config result
 #define I_STRICT_YES 1 ///< Stricly conform to openid config result
@@ -84,6 +84,11 @@ extern "C"
 #define I_INTROSPECT_REVOKE_AUTH_NONE          0 ///< Introspection/Revocation - no authentication
 #define I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN  1 ///< Introspection/Revocation - authentication using access token
 #define I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET 2 ///< Introspection/Revocation - authentication with client credentials
+
+#define I_TOKEN_TYPE_ACCESS_TOKEN  0 ///< 
+#define I_TOKEN_TYPE_ID_TOKEN      1 ///< 
+#define I_TOKEN_TYPE_USERINFO      2 ///< 
+#define I_TOKEN_TYPE_INTROSPECTION 3 ///< 
 
 #define I_HEADER_PREFIX_BEARER "Bearer "
 #define I_HEADER_AUTHORIZATION "Authorization"
@@ -160,7 +165,8 @@ typedef enum {
   I_OPT_PUSHED_AUTH_REQ_ENDPOINT              = 64, ///< absolute url for the pushed authoization endpoint, string
   I_OPT_PUSHED_AUTH_REQ_REQUIRED              = 65, ///< are pushed authorization requests required, boolean
   I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN            = 66, ///< pushed authorization request expiration time in seconds
-  I_OPT_PUSHED_AUTH_REQ_URI                   = 67  ///< request_uri sent by the par endpoint result, string
+  I_OPT_PUSHED_AUTH_REQ_URI                   = 67, ///< request_uri sent by the par endpoint result, string
+  I_OPT_USE_DPOP                              = 68  ///< Generate and use a DPoP when accessing endpoints userinfo, introspection and revocation
 } i_option;
 
 /**
@@ -241,6 +247,7 @@ struct _i_session {
   uint          require_pushed_authorization_requests;
   uint          pushed_authorization_request_expires_in;
   char        * pushed_authorization_request_uri;
+  int           use_dpop;
 };
 
 /**
@@ -546,7 +553,7 @@ int i_import_session_str(struct _i_session * i_session, const char * str_import)
  * @param i_session: a reference to a struct _i_session *
  * @return I_OK on success, an error value on error
  */
-int i_load_openid_config(struct _i_session * i_session);
+int i_get_openid_config(struct _i_session * i_session);
 
 /**
  * Builds the url to GET the auth endpoint
@@ -589,6 +596,15 @@ int i_run_token_request(struct _i_session * i_session);
 int i_verify_id_token(struct _i_session * i_session);
 
 /**
+ * Validates the access_token signature and content if necessary
+ * According to OAuth 2.0 Access Token JWT Profile Draft 12
+ * https://datatracker.ietf.org/doc/html/draft-ietf-oauth-access-token-jwt-12
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_verify_jwt_access_token(struct _i_session * i_session);
+
+/**
  * Loads the userinfo endpoint using the access_token
  * if the result is a JWT, validate the signature 
  * and/or decrypt the token
@@ -598,7 +614,7 @@ int i_verify_id_token(struct _i_session * i_session);
  * @param get_jwt: Request result as a JWT
  * @return I_OK on success, an error value on error
  */
-int i_load_userinfo(struct _i_session * i_session, int get_jwt);
+int i_get_userinfo(struct _i_session * i_session, int get_jwt);
 
 /**
  * Loads the userinfo endpoint using the access_token
@@ -613,7 +629,7 @@ int i_load_userinfo(struct _i_session * i_session, int get_jwt);
  * @param additional_headers: set of additional parameters to add to the request header
  * @return I_OK on success, an error value on error
  */
-int i_load_userinfo_custom(struct _i_session * i_session, const char * http_method, struct _u_map * additional_query, struct _u_map * additional_headers);
+int i_get_userinfo_custom(struct _i_session * i_session, const char * http_method, struct _u_map * additional_query, struct _u_map * additional_headers);
 
 /**
  * Loads the introspection endpoint for the access_token_target
@@ -628,7 +644,7 @@ int i_load_userinfo_custom(struct _i_session * i_session, const char * http_meth
  * @return I_OK on success and if the access_token_target is valid, 
  * I_ERROR_UNAUTHORIZED if the access_token_target is invalid, another error value on error
  */
-int i_introspect_token(struct _i_session * i_session, json_t ** j_result, int authentication, int get_jwt);
+int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result, int authentication, int get_jwt);
 
 /**
  * Loads the revocation endpoint for the access_token_target
