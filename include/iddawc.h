@@ -166,7 +166,8 @@ typedef enum {
   I_OPT_PUSHED_AUTH_REQ_REQUIRED              = 65, ///< are pushed authorization requests required, boolean
   I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN            = 66, ///< pushed authorization request expiration time in seconds
   I_OPT_PUSHED_AUTH_REQ_URI                   = 67, ///< request_uri sent by the par endpoint result, string
-  I_OPT_USE_DPOP                              = 68  ///< Generate and use a DPoP when accessing endpoints userinfo, introspection and revocation
+  I_OPT_USE_DPOP                              = 68, ///< Generate and use a DPoP when accessing endpoints userinfo, introspection and revocation
+  I_OPT_DPOP_KID                              = 69  ///< key id to use when signing a DPoP
 } i_option;
 
 /**
@@ -248,6 +249,7 @@ struct _i_session {
   uint          pushed_authorization_request_expires_in;
   char        * pushed_authorization_request_uri;
   int           use_dpop;
+  char        * dpop_kid;
 };
 
 /**
