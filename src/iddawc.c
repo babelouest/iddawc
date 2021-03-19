@@ -2047,7 +2047,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
   int ret;
   struct _u_request request;
   struct _u_response response;
-  char * bearer = NULL, * token = NULL;
+  char * bearer = NULL, * token = NULL, * dpop_token = NULL;
   const char ** keys;
   size_t i;
   jwt_t * jwt = NULL;
@@ -2076,6 +2076,19 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
 
     bearer = msprintf("Bearer %s", i_session->access_token);
     if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) == U_OK) {
+      // Set DPoP
+      if (i_session->use_dpop) {
+        if ((dpop_token = i_generate_dpop_token(i_session, http_method!=NULL?http_method:"GET", i_session->userinfo_endpoint, 0)) != NULL) {
+          if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_userinfo - Error setting DPoP in header");
+            ret = I_ERROR;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_userinfo - Error i_generate_dpop_token");
+          ret = I_ERROR;
+        }
+        o_free(dpop_token);
+      }
       if (ulfius_send_http_request(&request, &response) == U_OK) {
         if (response.status == 200) {
           if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
@@ -3166,7 +3179,7 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
   int ret;
   struct _u_request request;
   struct _u_response response;
-  char * bearer = NULL;
+  char * bearer = NULL, * dpop_token = NULL;
 
   if (i_session != NULL && o_strlen(i_session->revocation_endpoint) && o_strlen(i_session->token_target)) {
     if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
@@ -3184,6 +3197,19 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
       }
       if (authentication == I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN) {
         if (o_strlen(i_session->access_token)) {
+          // Set DPoP
+          if (i_session->use_dpop) {
+            if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->introspection_endpoint, 0)) != NULL) {
+              if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_DEBUG, "i_revoke_token - Error setting DPoP in header");
+                ret = I_ERROR;
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_DEBUG, "i_revoke_token - Error i_generate_dpop_token");
+              ret = I_ERROR;
+            }
+            o_free(dpop_token);
+          }
           bearer = msprintf("Bearer %s", i_session->access_token);
           if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting bearer token");
@@ -3234,7 +3260,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
   int ret;
   struct _u_request request;
   struct _u_response response;
-  char * bearer = NULL, * token = NULL;
+  char * bearer = NULL, * token = NULL, * dpop_token = NULL;
   jwt_t * jwt = NULL;
   json_t * j_claims;
 
@@ -3255,6 +3281,19 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
       }
       if (authentication == I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN) {
         if (o_strlen(i_session->access_token)) {
+          // Set DPoP
+          if (i_session->use_dpop) {
+            if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->introspection_endpoint, 0)) != NULL) {
+              if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_token_introspection - Error setting DPoP in header");
+                ret = I_ERROR;
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_token_introspection - Error i_generate_dpop_token");
+              ret = I_ERROR;
+            }
+            o_free(dpop_token);
+          }
           bearer = msprintf("Bearer %s", i_session->access_token);
           if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error setting bearer token");
