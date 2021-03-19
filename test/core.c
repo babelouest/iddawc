@@ -100,6 +100,7 @@
 #define PUSHED_AUTH_REQ_EXPIRES_IN 90
 #define PUSHED_AUTH_REQ_URI "parURI1234"
 #define USE_DPOP 1
+#define DPOP_KID "dpop kid"
 
 /**
  * json_t * json_search(json_t * haystack, json_t * needle)
@@ -413,6 +414,9 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_KID, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_KID, DPOP_KID), I_OK);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -586,6 +590,9 @@ START_TEST(test_iddawc_get_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_KID, DPOP_KID), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
 
   i_clean_session(&i_session);
 }
@@ -849,6 +856,7 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
                                                   I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
                                                   I_OPT_USE_DPOP, USE_DPOP,
+                                                  I_OPT_DPOP_KID, DPOP_KID,
                                                   I_OPT_NONE), I_OK);
 
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_STATE), STATE);
@@ -890,6 +898,7 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_INTROSPECTION_ENDPOINT), INTROSPECTION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_USE_DPOP), USE_DPOP);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
 
   i_clean_session(&i_session);
 }
@@ -969,6 +978,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pushed_authorization_request_expires_in")), 0);
   ck_assert_ptr_eq(json_object_get(j_export, "pushed_authorization_request_uri"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "use_dpop")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "dpop_kid"), NULL);
   json_decref(j_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1033,6 +1043,7 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN,
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_USE_DPOP, USE_DPOP,
+                                                    I_OPT_DPOP_KID, DPOP_KID,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1103,6 +1114,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pushed_authorization_request_expires_in")), PUSHED_AUTH_REQ_EXPIRES_IN);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "pushed_authorization_request_uri")), PUSHED_AUTH_REQ_URI);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "use_dpop")), USE_DPOP);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "dpop_kid")), DPOP_KID);
   json_decref(j_export);
 
   json_decref(j_additional);
@@ -1186,6 +1198,7 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN,
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_USE_DPOP, USE_DPOP,
+                                                    I_OPT_DPOP_KID, DPOP_KID,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1257,6 +1270,7 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN), PUSHED_AUTH_REQ_EXPIRES_IN);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_USE_DPOP), USE_DPOP);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   json_decref(j_export);
 
@@ -1341,6 +1355,7 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN,
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_USE_DPOP, USE_DPOP,
+                                                    I_OPT_DPOP_KID, DPOP_KID,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1426,6 +1441,7 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN,
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_USE_DPOP, USE_DPOP,
+                                                    I_OPT_DPOP_KID, DPOP_KID,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1497,6 +1513,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_USE_DPOP), USE_DPOP);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
   o_free(str_import);
   o_free(str_rar);
 
