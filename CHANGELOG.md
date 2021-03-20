@@ -3,9 +3,11 @@
 ## 0.9.9
 
 - Improve OAuth 2.0 Rich Authorization Requests
-- Add `i_set_rich_authorization_request_json_t`, `i_remove_rich_authorization_request_json_t`, `i_manage_registration_client`
+- Add `i_set_rich_authorization_request_json_t`, `i_remove_rich_authorization_request_json_t`, `i_manage_registration_client`, `i_verify_jwt_access_token`
 - Rename `i_set_rich_authorization_request` to `i_set_rich_authorization_request_str`, `i_remove_rich_authorization_request` to `i_remove_rich_authorization_request_str`
 - Supports [OAuth 2.0 Dynamic Client Registration Management Protocol](https://tools.ietf.org/html/rfc7592)
+- Supports encrypted code, refresh tokens and access tokens
+- Improve DPoP support for userinfo, introspection and revocation endpoints
 
 ## 0.9.8
 
