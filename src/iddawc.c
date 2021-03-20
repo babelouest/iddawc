@@ -3874,9 +3874,10 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
   jwk_t * jwk_sign = NULL, * jwk_pub = NULL;
   json_t * j_dpop_pub = NULL;
   int has_error = 0;
-  const char * kid = i_session->dpop_kid!=NULL?i_session->dpop_kid:i_session->client_kid;
+  const char * kid;
 
   if (i_session != NULL && o_strlen(i_session->token_jti) && o_strlen(htu) && o_strlen(htm)) {
+    kid = i_session->dpop_kid!=NULL?i_session->dpop_kid:i_session->client_kid;
     if (r_jwt_init(&jwt_dpop) == RHN_OK) {
       if ((kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, kid)) != NULL) ||
           (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
