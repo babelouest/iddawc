@@ -222,11 +222,11 @@ static int _i_parse_redirect_to_parameters(struct _i_session * i_session, struct
     if (0 == o_strcasecmp(key, "code") && (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE) && o_strlen(u_map_get(map, key))) {
       if (i_session->decrypt_code) {
         if ((payload_dup = _i_decrypt_jwe_token(i_session, u_map_get(map, key))) != NULL) {
-          c_ret = i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, payload_dup);
+          c_ret = i_set_str_parameter(i_session, I_OPT_CODE, payload_dup);
           ret = ret!=I_OK?ret:c_ret;
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_redirect_to_parameters - Error _i_decrypt_jwe_token code");
-          ret = I_ERROR;
+          ret = I_ERROR_PARAM;
         }
         o_free(payload_dup);
         payload_dup = NULL;
@@ -376,7 +376,7 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
             }
             ret = I_OK;
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - Error id_token validation");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - Error token validation");
             ret = I_ERROR;
           }
         } else {
@@ -2368,26 +2368,28 @@ int i_parse_redirect_to(struct _i_session * i_session) {
       o_free(query_dup);
     }
 
-    if (i_get_str_parameter(i_session, I_OPT_STATE) != NULL) {
-      if (o_strcmp(i_get_str_parameter(i_session, I_OPT_STATE), state)) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error state invalid");
+    if (ret == I_OK) {
+      if (i_get_str_parameter(i_session, I_OPT_STATE) != NULL) {
+        if (o_strcmp(i_get_str_parameter(i_session, I_OPT_STATE), state)) {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error state invalid");
+          ret = I_ERROR_SERVER;
+        }
+      }
+
+      if (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_CODE) == NULL) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected code");
         ret = I_ERROR_SERVER;
       }
-    }
 
-    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_CODE) == NULL) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected code");
-      ret = I_ERROR_SERVER;
-    }
+      if (i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN) == NULL) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected access_token");
+        ret = I_ERROR_SERVER;
+      }
 
-    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN) == NULL) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected access_token");
-      ret = I_ERROR_SERVER;
-    }
-
-    if (i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_ID_TOKEN) == NULL) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected id_token");
-      ret = I_ERROR_SERVER;
+      if (i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_ID_TOKEN) == NULL) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected id_token");
+        ret = I_ERROR_SERVER;
+      }
     }
     o_free(state);
   }
