@@ -115,18 +115,54 @@ int callback_oauth2_token_invalid_scope (const struct _u_request * request, stru
 
 int callback_oauth2_token_code_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * result = json_pack("{sssssiss}", 
-                             "access_token", "2YotnFZFEjr1zCsicMWpAA",
+                             "access_token", ACCESS_TOKEN,
                              "token_type", "bearer",
                              "expires_in", 3600,
-                             "refresh_token", "tGzv3JOkF0XG5Qx2TlKWIA");
+                             "refresh_token", REFRESH_TOKEN);
   ulfius_set_json_body_response(response, 200, result);
   json_decref(result);
   return U_CALLBACK_CONTINUE;
 }
 
+int callback_oauth2_token_code_encrypted_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  jwe_t * jwe_at, * jwe_rt;
+  jwk_t * jwk;
+  char * at_t, * rt_t;
+  ck_assert_int_eq(r_jwe_init(&jwe_at), RHN_OK);
+  ck_assert_int_eq(r_jwe_init(&jwe_rt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  
+  ck_assert_int_eq(r_jwe_add_keys(jwe_at, NULL, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwe_set_enc(jwe_at, R_JWA_ENC_A128CBC), RHN_OK);
+  ck_assert_int_eq(r_jwe_set_alg(jwe_at, R_JWA_ALG_RSA1_5), RHN_OK);
+  ck_assert_int_eq(r_jwe_set_payload(jwe_at, (const unsigned char *)ACCESS_TOKEN, o_strlen(ACCESS_TOKEN)), RHN_OK);
+  ck_assert_ptr_ne(NULL, at_t = r_jwe_serialize(jwe_at, NULL, 0));
+  
+  ck_assert_int_eq(r_jwe_add_keys(jwe_rt, NULL, jwk), RHN_OK);
+  ck_assert_int_eq(r_jwe_set_enc(jwe_rt, R_JWA_ENC_A128CBC), RHN_OK);
+  ck_assert_int_eq(r_jwe_set_alg(jwe_rt, R_JWA_ALG_RSA1_5), RHN_OK);
+  ck_assert_int_eq(r_jwe_set_payload(jwe_rt, (const unsigned char *)REFRESH_TOKEN, o_strlen(REFRESH_TOKEN)), RHN_OK);
+  ck_assert_ptr_ne(NULL, rt_t = r_jwe_serialize(jwe_rt, NULL, 0));
+  
+  json_t * result = json_pack("{sssssiss}", 
+                             "access_token", at_t,
+                             "token_type", "bearer",
+                             "expires_in", 3600,
+                             "refresh_token", rt_t);
+  ulfius_set_json_body_response(response, 200, result);
+  json_decref(result);
+  o_free(at_t);
+  o_free(rt_t);
+  r_jwk_free(jwk);
+  r_jwe_free(jwe_at);
+  r_jwe_free(jwe_rt);
+  return U_CALLBACK_CONTINUE;
+}
+
 int callback_oauth2_token_access_token_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * result = json_pack("{sssssi}", 
-                             "access_token", "2YotnFZFEjr1zCsicMWpAA",
+                             "access_token", ACCESS_TOKEN,
                              "token_type", "bearer",
                              "expires_in", 3600);
   ulfius_set_json_body_response(response, 200, result);
@@ -145,10 +181,10 @@ int callback_oauth2_token_jwt_auth_code_ok (const struct _u_request * request, s
       r_jwk_import_from_symmetric_key(jwk, (const unsigned char *)CLIENT_SECRET, o_strlen(CLIENT_SECRET));
       if (r_jwt_verify_signature(jwt, jwk, 0) == RHN_OK) {
         json_t * result = json_pack("{sssssiss}", 
-                                   "access_token", "2YotnFZFEjr1zCsicMWpAA",
+                                   "access_token", ACCESS_TOKEN,
                                    "token_type", "bearer",
                                    "expires_in", 3600,
-                                   "refresh_token", "tGzv3JOkF0XG5Qx2TlKWIA");
+                                   "refresh_token", REFRESH_TOKEN);
         ulfius_set_json_body_response(response, 200, result);
         json_decref(result);
       } else {
@@ -163,10 +199,10 @@ int callback_oauth2_token_jwt_auth_code_ok (const struct _u_request * request, s
       r_jwk_import_from_json_str(jwk, jwk_pubkey_str);
       if (r_jwt_verify_signature(jwt, jwk, 0) == RHN_OK) {
         json_t * result = json_pack("{sssssiss}", 
-                                   "access_token", "2YotnFZFEjr1zCsicMWpAA",
+                                   "access_token", ACCESS_TOKEN,
                                    "token_type", "bearer",
                                    "expires_in", 3600,
-                                   "refresh_token", "tGzv3JOkF0XG5Qx2TlKWIA");
+                                   "refresh_token", REFRESH_TOKEN);
         ulfius_set_json_body_response(response, 200, result);
         json_decref(result);
       } else {
@@ -446,6 +482,74 @@ START_TEST(test_iddawc_token_code_ok)
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_token_code_encrypted_invalid)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  jwk_t * jwk;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_encrypted_ok, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                  I_OPT_CLIENT_ID, CLIENT_ID,
+                                                  I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                  I_OPT_SCOPE, SCOPE_LIST,
+                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                  I_OPT_CODE, CODE,
+                                                  I_OPT_DECRYPT_REFRESH_TOKEN, 1,
+                                                  I_OPT_DECRYPT_ACCESS_TOKEN, 1,
+                                                  I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str_2), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_token_code_encrypted_ok)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  jwk_t * jwk;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_encrypted_ok, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                  I_OPT_CLIENT_ID, CLIENT_ID,
+                                                  I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                  I_OPT_SCOPE, SCOPE_LIST,
+                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                  I_OPT_CODE, CODE,
+                                                  I_OPT_DECRYPT_REFRESH_TOKEN, 1,
+                                                  I_OPT_DECRYPT_ACCESS_TOKEN, 1,
+                                                  I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), REFRESH_TOKEN);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
@@ -1056,6 +1160,8 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_token_code_unsupported_grant_type);
   tcase_add_test(tc_core, test_iddawc_token_code_invalid_scope);
   tcase_add_test(tc_core, test_iddawc_token_code_ok);
+  tcase_add_test(tc_core, test_iddawc_token_code_encrypted_invalid);
+  tcase_add_test(tc_core, test_iddawc_token_code_encrypted_ok);
   tcase_add_test(tc_core, test_iddawc_token_password_invalid_parameters);
   tcase_add_test(tc_core, test_iddawc_token_password_noclient_invalid_request);
   tcase_add_test(tc_core, test_iddawc_token_password_noclient_unsupported_grant_type);
