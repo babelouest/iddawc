@@ -3333,7 +3333,7 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
         if (o_strlen(i_session->access_token)) {
           // Set DPoP
           if (i_session->use_dpop) {
-            if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->introspection_endpoint, 0)) != NULL) {
+            if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->revocation_endpoint, 0)) != NULL) {
               if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
                 y_log_message(Y_LOG_LEVEL_DEBUG, "i_revoke_token - Error setting DPoP in header");
                 ret = I_ERROR;
@@ -3369,9 +3369,10 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
       }
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
-          if (response.status == 400 || response.status == 404 || response.status == 403 || response.status == 401) {
+          if (response.status == 400 || response.status == 404) {
             ret = I_ERROR_PARAM;
-            y_log_message(Y_LOG_LEVEL_DEBUG, "status %d", response.status);
+          } else if (response.status == 403 || response.status == 401) {
+            ret = I_ERROR_UNAUTHORIZED;
           } else if (response.status != 200) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error revoking token: %d", response.status);
             ret = I_ERROR;
