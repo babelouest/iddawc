@@ -1315,6 +1315,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->pushed_authorization_request_uri = NULL;
     i_session->use_dpop = 0;
     i_session->dpop_kid = NULL;
+    i_session->dpop_sign_alg = R_JWA_ALG_UNKNOWN;
     i_session->decrypt_code = 0;
     i_session->decrypt_refresh_token = 0;
     i_session->decrypt_access_token = 0;
@@ -1949,6 +1950,13 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
           i_session->dpop_kid = NULL;
         }
         break;
+      case I_OPT_DPOP_SIGN_ALG:
+        if (o_strlen(s_value)) {
+          i_session->dpop_sign_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->dpop_sign_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error unknown option %d", option);
         ret = I_ERROR_PARAM;
@@ -2065,6 +2073,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_PUSHED_AUTH_REQ_ENDPOINT:
         case I_OPT_PUSHED_AUTH_REQ_URI:
         case I_OPT_DPOP_KID:
+        case I_OPT_DPOP_SIGN_ALG:
           str_value = va_arg(vl, const char *);
           ret = i_set_str_parameter(i_session, option, str_value);
           break;
@@ -2538,6 +2547,9 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_DPOP_KID:
         result = (const char *)i_session->dpop_kid;
+        break;
+      case I_OPT_DPOP_SIGN_ALG:
+        result = r_jwa_alg_to_str(i_session->dpop_sign_alg);
         break;
       default:
         break;
@@ -3276,18 +3288,18 @@ int i_verify_jwt_access_token(struct _i_session * i_session) {
     if (_i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt) == I_OK) {
       if (0 != o_strcmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid typ");
-        ret = I_ERROR;
+        ret = I_ERROR_PARAM;
       } else if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
-                                     R_JWT_CLAIM_EXP, R_JWT_CLAIM_PRESENT,
-                                     R_JWT_CLAIM_NOP) != RHN_OK) {
+                                            R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
+                                            R_JWT_CLAIM_NOP) != RHN_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid claims");
-        ret = I_ERROR;
+        ret = I_ERROR_PARAM;
       } else {
         ret = I_OK;
       }
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error _i_verify_jwt_sig_enc");
-      ret = I_ERROR;
+      ret = I_ERROR_PARAM;
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error r_jwt_init");
@@ -3453,7 +3465,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
                     y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - invalid typ");
                     ret = I_ERROR;
                   } else if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
-                                                 R_JWT_CLAIM_EXP, R_JWT_CLAIM_PRESENT,
+                                                 R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
                                                  R_JWT_CLAIM_NOP) != RHN_OK) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - invalid claims");
                     ret = I_ERROR;
@@ -3477,8 +3489,10 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
             } else {
               *j_result = ulfius_get_json_body_response(&response, NULL);
             }
-          } else if (response.status == 400 || response.status == 404 || response.status == 403 || response.status == 401) {
+          } else if (response.status == 400 || response.status == 404) {
             ret = I_ERROR_PARAM;
+          } else if (response.status == 403 || response.status == 401) {
+            ret = I_ERROR_UNAUTHORIZED;
           } else if (response.status != 200) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error introspecting token");
             ret = I_ERROR;
@@ -3626,7 +3640,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* si si  si }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* si si  si ss* }",
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_str_parameter(i_session, I_OPT_STATE),
@@ -3710,7 +3724,8 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "decrypt_code", i_get_int_parameter(i_session, I_OPT_DECRYPT_CODE),
                          "decrypt_refresh_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_REFRESH_TOKEN),
                          
-                         "decrypt_access_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_ACCESS_TOKEN)
+                         "decrypt_access_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_ACCESS_TOKEN),
+                         "dpop-sig-alg", i_get_str_parameter(i_session, I_OPT_DPOP_SIGN_ALG)
                          );
   }
   return j_return;
@@ -3784,6 +3799,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_PUSHED_AUTH_REQ_URI, json_string_value(json_object_get(j_import, "pushed_authorization_request_uri")),
                                      I_OPT_USE_DPOP, (int)json_integer_value(json_object_get(j_import, "use_dpop")),
                                      I_OPT_DPOP_KID, json_string_value(json_object_get(j_import, "dpop_kid")),
+                                     I_OPT_DPOP_SIGN_ALG, json_string_value(json_object_get(j_import, "dpop-sig-alg")),
                                      I_OPT_DECRYPT_CODE, (int)json_integer_value(json_object_get(j_import, "decrypt_code")),
                                      I_OPT_DECRYPT_REFRESH_TOKEN, (int)json_integer_value(json_object_get(j_import, "decrypt_refresh_token")),
                                      I_OPT_DECRYPT_ACCESS_TOKEN, (int)json_integer_value(json_object_get(j_import, "decrypt_access_token")),
@@ -3863,18 +3879,18 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
     if (r_jwt_init(&jwt_dpop) == RHN_OK) {
       if ((kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, kid)) != NULL) ||
           (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
-        if ((i_session->client_sign_alg == R_JWA_ALG_RS256 || i_session->client_sign_alg == R_JWA_ALG_RS384 || i_session->client_sign_alg == R_JWA_ALG_RS512 ||
-             i_session->client_sign_alg == R_JWA_ALG_PS256 || i_session->client_sign_alg == R_JWA_ALG_PS384 || i_session->client_sign_alg == R_JWA_ALG_PS512)) {
+        if ((i_session->dpop_sign_alg == R_JWA_ALG_RS256 || i_session->dpop_sign_alg == R_JWA_ALG_RS384 || i_session->dpop_sign_alg == R_JWA_ALG_RS512 ||
+             i_session->dpop_sign_alg == R_JWA_ALG_PS256 || i_session->dpop_sign_alg == R_JWA_ALG_PS384 || i_session->dpop_sign_alg == R_JWA_ALG_PS512)) {
           if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key type");
             has_error = 1;
           }
-        } else if (i_session->client_sign_alg == R_JWA_ALG_ES256 || i_session->client_sign_alg == R_JWA_ALG_ES384 || i_session->client_sign_alg == R_JWA_ALG_ES512) {
+        } else if (i_session->dpop_sign_alg == R_JWA_ALG_ES256 || i_session->dpop_sign_alg == R_JWA_ALG_ES384 || i_session->dpop_sign_alg == R_JWA_ALG_ES512) {
           if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_ECDSA|R_KEY_TYPE_PRIVATE))) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key type");
             has_error = 1;
           }
-        } else if (i_session->client_sign_alg == R_JWA_ALG_EDDSA) {
+        } else if (i_session->dpop_sign_alg == R_JWA_ALG_EDDSA) {
           if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key type");
             has_error = 1;
@@ -3891,7 +3907,7 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
         has_error = 1;
       }
       if (jwk_sign != NULL) {
-        r_jwt_set_sign_alg(jwt_dpop, i_session->client_sign_alg);
+        r_jwt_set_sign_alg(jwt_dpop, i_session->dpop_sign_alg);
         if (r_jwk_init(&jwk_pub) == RHN_OK) {
           if (r_jwk_extract_pubkey(jwk_sign, jwk_pub, i_session->x5u_flags) == RHN_OK) {
             if ((j_dpop_pub = r_jwk_export_to_json_t(jwk_pub)) == NULL) {

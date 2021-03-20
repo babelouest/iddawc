@@ -170,7 +170,8 @@ typedef enum {
   I_OPT_DPOP_KID                              = 69, ///< key id to use when signing a DPoP
   I_OPT_DECRYPT_CODE                          = 70, ///< Decrypt code when received by the AS as a JWE
   I_OPT_DECRYPT_REFRESH_TOKEN                 = 71, ///< Decrypt refresh token when received by the AS as a JWE
-  I_OPT_DECRYPT_ACCESS_TOKEN                  = 72  ///< Decrypt access token when received by the AS as a JWE
+  I_OPT_DECRYPT_ACCESS_TOKEN                  = 72, ///< Decrypt access token when received by the AS as a JWE
+  I_OPT_DPOP_SIGN_ALG                         = 73  ///< signature algorithm to use when the client signs a DPoP, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
 } i_option;
 
 /**
@@ -253,6 +254,7 @@ struct _i_session {
   char        * pushed_authorization_request_uri;
   int           use_dpop;
   char        * dpop_kid;
+  jwa_alg       dpop_sign_alg;
   int           decrypt_code;
   int           decrypt_refresh_token;
   int           decrypt_access_token;
