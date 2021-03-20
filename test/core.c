@@ -101,6 +101,7 @@
 #define PUSHED_AUTH_REQ_URI "parURI1234"
 #define USE_DPOP 1
 #define DPOP_KID "dpop kid"
+#define DPOP_SIGN_ALG "RS256"
 #define DECRYPT_CODE 1
 #define DECRYPT_REFRESH_TOKEN 1
 #define DECRYPT_ACCESS_TOKEN 1
@@ -420,6 +421,9 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_KID, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_KID, DPOP_KID), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG), I_OK);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -599,6 +603,9 @@ START_TEST(test_iddawc_get_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_KID, DPOP_KID), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG), DPOP_SIGN_ALG);
 
   i_clean_session(&i_session);
 }
@@ -869,6 +876,7 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
                                                   I_OPT_USE_DPOP, USE_DPOP,
                                                   I_OPT_DPOP_KID, DPOP_KID,
+                                                  I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG,
                                                   I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                   I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                   I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
@@ -914,6 +922,7 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_USE_DPOP), USE_DPOP);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG), DPOP_SIGN_ALG);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
@@ -997,6 +1006,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "pushed_authorization_request_uri"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "use_dpop")), 0);
   ck_assert_ptr_eq(json_object_get(j_export, "dpop_kid"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "dpop-sig-alg"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_code")), 0);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_refresh_token")), 0);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_access_token")), 0);
@@ -1065,6 +1075,7 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_USE_DPOP, USE_DPOP,
                                                     I_OPT_DPOP_KID, DPOP_KID,
+                                                    I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG,
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
@@ -1139,6 +1150,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "pushed_authorization_request_uri")), PUSHED_AUTH_REQ_URI);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "use_dpop")), USE_DPOP);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "dpop_kid")), DPOP_KID);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "dpop-sig-alg")), DPOP_SIGN_ALG);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_code")), DECRYPT_CODE);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_refresh_token")), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_access_token")), DECRYPT_ACCESS_TOKEN);
@@ -1226,6 +1238,7 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_USE_DPOP, USE_DPOP,
                                                     I_OPT_DPOP_KID, DPOP_KID,
+                                                    I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG,
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
@@ -1301,6 +1314,7 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_USE_DPOP), USE_DPOP);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG), DPOP_SIGN_ALG);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
@@ -1389,6 +1403,7 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_USE_DPOP, USE_DPOP,
                                                     I_OPT_DPOP_KID, DPOP_KID,
+                                                    I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG,
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
@@ -1478,6 +1493,7 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
                                                     I_OPT_USE_DPOP, USE_DPOP,
                                                     I_OPT_DPOP_KID, DPOP_KID,
+                                                    I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG,
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
@@ -1553,6 +1569,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_USE_DPOP), USE_DPOP);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG), DPOP_SIGN_ALG);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);

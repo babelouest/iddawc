@@ -271,7 +271,7 @@ START_TEST(test_iddawc_api_request_refresh_not_required_dpop_required)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_EXPIRES_IN, EXPIRES_IN,
                                                     I_OPT_EXPIRES_AT, ((uint)time(NULL))+EXPIRES_IN,
-                                                    I_OPT_CLIENT_SIGN_ALG, "RS256",
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
                                                     I_OPT_TOKEN_JTI_GENERATE, 16,
                                                     I_OPT_NONE), I_OK);
 

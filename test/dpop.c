@@ -43,7 +43,7 @@ START_TEST(test_iddawc_dpop_invalid_parameters)
                                                     I_OPT_NONE), I_OK);
   ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
 
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_CLIENT_SIGN_ALG, "RS256",
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_DPOP_SIGN_ALG, "RS256",
                                                     I_OPT_TOKEN_JTI, NULL,
                                                     I_OPT_NONE), I_OK);
   ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
@@ -65,7 +65,7 @@ START_TEST(test_iddawc_dpop_valid_parameters)
   char * token;
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_CLIENT_SIGN_ALG, "RS256",
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_DPOP_SIGN_ALG, "RS256",
                                                     I_OPT_TOKEN_JTI_GENERATE, 16,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);

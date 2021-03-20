@@ -94,6 +94,17 @@ int callback_openid_userinfo_valid_json (const struct _u_request * request, stru
   return U_CALLBACK_CONTINUE;
 }
 
+int callback_openid_userinfo_valid_json_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), "Bearer " ACCESS_TOKEN) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
+    json_t * j_response = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
+    ulfius_set_json_body_response(response, 200, j_response);
+    json_decref(j_response);
+  } else {
+    response->status = 401;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
 int callback_openid_userinfo_valid_char (const struct _u_request * request, struct _u_response * response, void * user_data) {
   if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), "Bearer " ACCESS_TOKEN)) {
     ulfius_set_string_body_response(response, 200, userinfo_char);
@@ -314,6 +325,65 @@ START_TEST(test_iddawc_userinfo_response_json)
 }
 END_TEST
 
+START_TEST(test_iddawc_userinfo_response_json_dpop)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
+  jwk_t * jwk;
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/userinfo", 0, &callback_openid_userinfo_valid_json_dpop, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
+                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                    I_OPT_USE_DPOP, 1,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_rsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
+  i_clean_session(&i_session);
+  json_decref(j_userinfo);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_userinfo_response_json_dpop_invalid)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  jwk_t * jwk;
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/userinfo", 0, &callback_openid_userinfo_valid_json_dpop, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
+                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                    I_OPT_USE_DPOP, 0,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_rsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_ERROR_UNAUTHORIZED);
+  i_clean_session(&i_session);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_userinfo_response_jwt_signed)
 {
   struct _i_session i_session;
@@ -389,6 +459,8 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_userinfo_response_empty);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_char);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_json);
+  tcase_add_test(tc_core, test_iddawc_userinfo_response_json_dpop);
+  tcase_add_test(tc_core, test_iddawc_userinfo_response_json_dpop_invalid);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_jwt_signed);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_jwt_nested);
   tcase_set_timeout(tc_core, 30);
