@@ -70,6 +70,39 @@ char * rand_string_nonce(char * str, size_t str_size) {
   }
 }
 
+static char * _i_decrypt_jwe_token(struct _i_session * i_session, const char * token) {
+  jwe_t * jwe = NULL;
+  jwk_t * jwk_dec = NULL;
+  char * payload_dup = NULL;
+  const unsigned char * payload;
+  size_t payload_len = 0;
+
+  if (r_jwe_init(&jwe) == RHN_OK) {
+    if (r_jwe_parse(jwe, token, i_session->x5u_flags) == RHN_OK) {
+      if ((i_session->client_kid != NULL && (jwk_dec = r_jwks_get_by_kid(i_session->client_jwks, i_session->client_kid)) != NULL) || (r_jwks_size(i_session->client_jwks) == 1 && (jwk_dec = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
+        if (r_jwe_decrypt(jwe, jwk_dec, i_session->x5u_flags) == RHN_OK) {
+          payload = r_jwe_get_payload(jwe, &payload_len);
+          payload_dup = o_strndup((const char *)payload, payload_len);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_decrypt_jwe_token - Error r_jwe_decrypt");
+        }
+      } else if (!r_jwks_size(i_session->client_jwks)) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_decrypt_jwe_token - Client has no private key");
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_decrypt_jwe_token - Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
+      }
+      r_jwk_free(jwk_dec);
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_decrypt_jwe_token - Error r_jwe_parse");
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "_i_decrypt_jwe_token - Error r_jwe_init");
+  }
+  r_jwe_free(jwe);
+  
+  return payload_dup;
+}
+
 static const char * _i_get_parameter_key(int token_type, const char * key_type) {
   const char * param = NULL;
   switch (token_type) {
@@ -180,24 +213,48 @@ static int _i_parse_redirect_to_parameters(struct _i_session * i_session, struct
   const char ** keys = u_map_enum_keys(map), * key = NULL;
   size_t i;
   int ret = I_OK, c_ret;
-  char * endptr = NULL;
+  char * endptr = NULL, * payload_dup = NULL;
   long expires_in = 0;
   time_t expires_at;
 
   for (i=0; keys[i] != NULL; i++) {
     key = keys[i];
     if (0 == o_strcasecmp(key, "code") && (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE) && o_strlen(u_map_get(map, key))) {
-      c_ret = i_set_str_parameter(i_session, I_OPT_CODE, u_map_get(map, key));
-      ret = ret!=I_OK?ret:c_ret;
+      if (i_session->decrypt_code) {
+        if ((payload_dup = _i_decrypt_jwe_token(i_session, u_map_get(map, key))) != NULL) {
+          c_ret = i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, payload_dup);
+          ret = ret!=I_OK?ret:c_ret;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_redirect_to_parameters - Error _i_decrypt_jwe_token code");
+          ret = I_ERROR;
+        }
+        o_free(payload_dup);
+        payload_dup = NULL;
+      } else {
+        c_ret = i_set_str_parameter(i_session, I_OPT_CODE, u_map_get(map, key));
+        ret = ret!=I_OK?ret:c_ret;
+      }
     } else if (0 == o_strcasecmp(key, "id_token") && i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN && o_strlen(u_map_get(map, key))) {
       c_ret = i_set_str_parameter(i_session, I_OPT_ID_TOKEN, u_map_get(map, key));
       ret = ret!=I_OK?ret:c_ret;
     } else if (0 == o_strcasecmp(key, "access_token") && (i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN) && o_strlen(u_map_get(map, key))) {
-      c_ret = i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, key));
-      ret = ret!=I_OK?ret:c_ret;
-      if (!o_strlen(u_map_get_case(map, "token_type"))) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_redirect_to_parameters - Got parameter token but token_type is missing");
-        ret = ret!=I_OK?ret:I_ERROR_SERVER;
+      if (i_session->decrypt_access_token) {
+        if ((payload_dup = _i_decrypt_jwe_token(i_session, u_map_get(map, key))) != NULL) {
+          c_ret = i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, payload_dup);
+          ret = ret!=I_OK?ret:c_ret;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_redirect_to_parameters - Error _i_decrypt_jwe_token access_token");
+          ret = I_ERROR;
+        }
+        o_free(payload_dup);
+        payload_dup = NULL;
+      } else {
+        c_ret = i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, u_map_get(map, key));
+        ret = ret!=I_OK?ret:c_ret;
+        if (!o_strlen(u_map_get_case(map, "token_type"))) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_redirect_to_parameters - Got parameter token but token_type is missing");
+          ret = ret!=I_OK?ret:I_ERROR_SERVER;
+        }
       }
     } else if (0 == o_strcasecmp(key, "token_type")) {
       c_ret = i_set_str_parameter(i_session, I_OPT_TOKEN_TYPE, u_map_get(map, key));
@@ -342,18 +399,29 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
 }
 
 static int _i_parse_token_response(struct _i_session * i_session, int http_status, json_t * j_response) {
-  int ret = I_OK;
+  int ret = I_OK, res;
   const char * key = NULL;
   json_t * j_element = NULL;
-  char * value;
+  char * value, * payload_dup = NULL;
   jwt_t * jwt = NULL;
 
   if (i_session != NULL && json_is_object(j_response)) {
     if (http_status == 200) {
       if (json_string_length(json_object_get(j_response, "access_token")) &&
           json_string_length(json_object_get(j_response, "token_type"))) {
-        if (i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_response, "access_token"))) == I_OK &&
-            i_set_str_parameter(i_session, I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_response, "token_type"))) == I_OK) {
+        if (i_session->decrypt_access_token) {
+          if ((payload_dup = _i_decrypt_jwe_token(i_session, json_string_value(json_object_get(j_response, "access_token")))) != NULL) {
+            res = i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, payload_dup);
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error _i_decrypt_jwe_token access_token");
+            res = I_ERROR;
+          }
+          o_free(payload_dup);
+          payload_dup = NULL;
+        } else {
+          res = i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_response, "access_token")));
+        }
+        if (res == I_OK && i_set_str_parameter(i_session, I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_response, "token_type"))) == I_OK) {
           // Validate access token signature and decrypt if necessary if it's a JWT
           if (r_jwt_init(&jwt) == RHN_OK && r_jwt_parse(jwt, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), i_session->x5u_flags) == RHN_OK) {
             if (_i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt) != I_OK) {
@@ -369,9 +437,23 @@ static int _i_parse_token_response(struct _i_session * i_session, int http_statu
             y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error setting expires_in");
             ret = I_ERROR;
           }
-          if (json_string_length(json_object_get(j_response, "refresh_token")) && i_set_str_parameter(i_session, I_OPT_REFRESH_TOKEN, json_string_value(json_object_get(j_response, "refresh_token"))) != I_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error setting refresh_token");
-            ret = I_ERROR;
+          if (json_string_length(json_object_get(j_response, "refresh_token"))) {
+            if (i_session->decrypt_refresh_token) {
+              if ((payload_dup = _i_decrypt_jwe_token(i_session, json_string_value(json_object_get(j_response, "refresh_token")))) != NULL) {
+                res = i_set_str_parameter(i_session, I_OPT_REFRESH_TOKEN, payload_dup);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error _i_decrypt_jwe_token access_token");
+                res = I_ERROR;
+              }
+              o_free(payload_dup);
+              payload_dup = NULL;
+            } else {
+              res = i_set_str_parameter(i_session, I_OPT_REFRESH_TOKEN, json_string_value(json_object_get(j_response, "refresh_token")));
+            }
+            if (res != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error setting refresh_token");
+              ret = I_ERROR;
+            }
           }
           if (json_string_length(json_object_get(j_response, "id_token"))) {
             if (i_set_str_parameter(i_session, I_OPT_ID_TOKEN, json_string_value(json_object_get(j_response, "id_token"))) != I_OK) {
@@ -1233,6 +1315,9 @@ int i_init_session(struct _i_session * i_session) {
     i_session->pushed_authorization_request_uri = NULL;
     i_session->use_dpop = 0;
     i_session->dpop_kid = NULL;
+    i_session->decrypt_code = 0;
+    i_session->decrypt_refresh_token = 0;
+    i_session->decrypt_access_token = 0;
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
         if ((res = r_jwks_init(&i_session->server_jwks)) == RHN_OK) {
@@ -1446,6 +1531,15 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
         break;
       case I_OPT_USE_DPOP:
         i_session->use_dpop = i_value;
+        break;
+      case I_OPT_DECRYPT_CODE:
+        i_session->decrypt_code = i_value;
+        break;
+      case I_OPT_DECRYPT_REFRESH_TOKEN:
+        i_session->decrypt_refresh_token = i_value;
+        break;
+      case I_OPT_DECRYPT_ACCESS_TOKEN:
+        i_session->decrypt_access_token = i_value;
         break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
@@ -1917,6 +2011,9 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_PUSHED_AUTH_REQ_REQUIRED:
         case I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN:
         case I_OPT_USE_DPOP:
+        case I_OPT_DECRYPT_CODE:
+        case I_OPT_DECRYPT_REFRESH_TOKEN:
+        case I_OPT_DECRYPT_ACCESS_TOKEN:
           i_value = va_arg(vl, uint);
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
@@ -2207,6 +2304,15 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option) {
         break;
       case I_OPT_USE_DPOP:
         return i_session->use_dpop;
+        break;
+      case I_OPT_DECRYPT_CODE:
+        return i_session->decrypt_code;
+        break;
+      case I_OPT_DECRYPT_REFRESH_TOKEN:
+        return i_session->decrypt_refresh_token;
+        break;
+      case I_OPT_DECRYPT_ACCESS_TOKEN:
+        return i_session->decrypt_access_token;
         break;
       default:
         return 0;
@@ -3518,7 +3624,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* si si  si }",
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_str_parameter(i_session, I_OPT_STATE),
@@ -3598,7 +3704,11 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
 
                          "access_token_payload", i_session->access_token_payload,
                          "use_dpop", i_get_int_parameter(i_session, I_OPT_USE_DPOP),
-                         "dpop_kid", i_get_str_parameter(i_session, I_OPT_DPOP_KID)
+                         "dpop_kid", i_get_str_parameter(i_session, I_OPT_DPOP_KID),
+                         "decrypt_code", i_get_int_parameter(i_session, I_OPT_DECRYPT_CODE),
+                         "decrypt_refresh_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_REFRESH_TOKEN),
+                         
+                         "decrypt_access_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_ACCESS_TOKEN)
                          );
   }
   return j_return;
@@ -3672,6 +3782,9 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_PUSHED_AUTH_REQ_URI, json_string_value(json_object_get(j_import, "pushed_authorization_request_uri")),
                                      I_OPT_USE_DPOP, (int)json_integer_value(json_object_get(j_import, "use_dpop")),
                                      I_OPT_DPOP_KID, json_string_value(json_object_get(j_import, "dpop_kid")),
+                                     I_OPT_DECRYPT_CODE, (int)json_integer_value(json_object_get(j_import, "decrypt_code")),
+                                     I_OPT_DECRYPT_REFRESH_TOKEN, (int)json_integer_value(json_object_get(j_import, "decrypt_refresh_token")),
+                                     I_OPT_DECRYPT_ACCESS_TOKEN, (int)json_integer_value(json_object_get(j_import, "decrypt_access_token")),
                                      I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
