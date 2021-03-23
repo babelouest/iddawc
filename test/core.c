@@ -106,6 +106,9 @@
 #define DECRYPT_REFRESH_TOKEN 1
 #define DECRYPT_ACCESS_TOKEN 1
 
+const char jwks_pubkey_ecdsa_str[] = "{\"keys\":[{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","\
+                                    "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\",\"use\":\"enc\",\"kid\":\"1\"}]}";
+
 /**
  * json_t * json_search(json_t * haystack, json_t * needle)
  * jansson library addon
@@ -934,7 +937,7 @@ END_TEST
 START_TEST(test_iddawc_export_json_t)
 {
   struct _i_session i_session;
-  json_t * j_export, * j_additional = json_pack("{ss}", ADDITIONAL_KEY, ADDITIONAL_VALUE), * j_additional_empty = json_object(), * jwks_empty = json_pack("{s[]}", "keys"), * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * jwks = NULL, * j_auth_request = json_loads(AUTH_REQUEST_1, JSON_DECODE_ANY, NULL);
+  json_t * j_export, * j_additional = json_pack("{ss}", ADDITIONAL_KEY, ADDITIONAL_VALUE), * j_additional_empty = json_object(), * jwks_empty = json_pack("{s[]}", "keys"), * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_auth_request = json_loads(AUTH_REQUEST_1, JSON_DECODE_ANY, NULL);
   json_object_set_new(j_auth_request, "type", json_string(AUTH_REQUEST_TYPE_1));
 
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
@@ -969,7 +972,8 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "id_token"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "id_token_payload"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "auth_method")), I_AUTH_METHOD_GET);
-  ck_assert_int_eq(json_equal(json_object_get(j_export, "jwks"), jwks_empty), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "server_jwks"), jwks_empty), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "client_jwks"), jwks_empty), 1);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "x5u_flags")), 0);
   ck_assert_ptr_eq(json_object_get(j_export, "openid_config"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "openid_config_strict")), I_STRICT_NO);
@@ -1114,7 +1118,8 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "id_token")), ID_TOKEN);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "id_token_payload"), i_session.id_token_payload), 1);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "auth_method")), I_AUTH_METHOD_GET);
-  ck_assert_int_eq(json_equal(json_object_get(j_export, "jwks"), i_session.server_jwks), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "server_jwks"), i_session.server_jwks), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "client_jwks"), i_session.client_jwks), 1);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "x5u_flags")), R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "openid_config"), j_config), 1);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "openid_config_strict")), I_STRICT_NO);
@@ -1160,7 +1165,6 @@ START_TEST(test_iddawc_export_json_t)
   json_decref(j_additional_empty);
   json_decref(jwks_empty);
   json_decref(j_config);
-  json_decref(jwks);
   json_decref(j_auth_request);
   i_clean_session(&i_session);
 }
@@ -1245,6 +1249,8 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
 
   j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
@@ -1319,6 +1325,8 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
+  ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
+  ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
   json_decref(j_export);
 
   json_decref(j_config);
@@ -1339,7 +1347,7 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
   str_export = i_export_session_str(&i_session);
-  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":1,\"jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":0,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":0,\"decrypt_code\":0,\"decrypt_refresh_token\":0,\"decrypt_access_token\":0}");
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":1,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":0,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":0,\"decrypt_code\":0,\"decrypt_refresh_token\":0,\"decrypt_access_token\":0,\"client_jwks\":{\"keys\":[]}}");
   o_free(str_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1408,6 +1416,8 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
 
@@ -1498,6 +1508,8 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
 
@@ -1573,6 +1585,8 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
+  ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
   o_free(str_import);
   o_free(str_rar);
 
