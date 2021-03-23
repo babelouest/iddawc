@@ -564,6 +564,8 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
           ret = I_ERROR;
         }
         json_decref(j_jwks);
+      } else if (response.status == 403 || response.status == 401) {
+        ret = I_ERROR_UNAUTHORIZED;
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error invalid response status: %d", response.status);
         ret = I_ERROR;
@@ -581,7 +583,7 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
 }
 
 static int _i_parse_openid_config(struct _i_session * i_session, int get_jwks) {
-  int ret;
+  int ret, res;
   size_t index = 0;
   json_t * j_element = NULL;
 
@@ -605,7 +607,7 @@ static int _i_parse_openid_config(struct _i_session * i_session, int get_jwks) {
           ret = I_ERROR;
           break;
         }
-        if (get_jwks && _i_load_jwks_endpoint(i_session) != I_OK) {
+        if (get_jwks && (res = _i_load_jwks_endpoint(i_session)) != I_OK && res != I_ERROR_UNAUTHORIZED) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_openid_config - Error _i_load_jwks_endpoint");
           ret = I_ERROR;
           break;
@@ -2117,9 +2119,9 @@ int i_get_openid_config(struct _i_session * i_session) {
     if (ulfius_send_http_request(&request, &response) == U_OK) {
       if (response.status == 200) {
         if ((i_session->openid_config = ulfius_get_json_body_response(&response, NULL)) != NULL) {
-          if (_i_parse_openid_config(i_session, 1) == I_OK) {
+          if ((ret = _i_parse_openid_config(i_session, 1)) == I_OK) {
             ret = I_OK;
-          } else {
+          } else if (ret == I_ERROR) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_get_openid_config - Error _i_parse_openid_config");
             ret = I_ERROR;
           }
@@ -2127,6 +2129,8 @@ int i_get_openid_config(struct _i_session * i_session) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_get_openid_config - Error response not in JSON format");
           ret = I_ERROR;
         }
+      } else if (response.status >= 400 && response.status < 500) {
+        ret = I_ERROR_PARAM;
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_get_openid_config - Error invalid response status: %d", response.status);
         ret = I_ERROR;
@@ -2683,6 +2687,9 @@ int i_build_auth_url_get(struct _i_session * i_session) {
       if (!_i_has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || !_i_has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - grant_types not supported");
       }
+      if (!i_session->auth_method & I_AUTH_METHOD_GET) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - auth method invalid");
+      }
       ret = I_ERROR_PARAM;
     }
   } else {
@@ -2694,21 +2701,6 @@ int i_build_auth_url_get(struct _i_session * i_session) {
       y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_auth_url_get - client_id NULL");
     }
     ret = I_ERROR_PARAM;
-  }
-
-  if (i_session != NULL &&
-      i_session->response_type != I_RESPONSE_TYPE_NONE &&
-      i_session->response_type != I_RESPONSE_TYPE_PASSWORD &&
-      i_session->response_type != I_RESPONSE_TYPE_CLIENT_CREDENTIALS &&
-      i_session->response_type != I_RESPONSE_TYPE_REFRESH_TOKEN &&
-      i_session->response_type != I_RESPONSE_TYPE_DEVICE_CODE &&
-      i_session->redirect_uri != NULL &&
-      i_session->client_id != NULL &&
-      i_session->authorization_endpoint != NULL &&
-      _i_check_strict_parameters(i_session) &&
-      (_i_has_openid_config_parameter_value(i_session, "grant_types_supported", "implicit") || _i_has_openid_config_parameter_value(i_session, "grant_types_supported", "authorization_code")) &&
-      i_session->auth_method & I_AUTH_METHOD_GET) {
-  } else {
   }
 
   return ret;
@@ -3399,7 +3391,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
   jwt_t * jwt = NULL;
   json_t * j_claims;
 
-  if (i_session != NULL && o_strlen(i_session->introspection_endpoint) && o_strlen(i_session->token_target)) {
+  if (i_session != NULL && o_strlen(i_session->introspection_endpoint) && o_strlen(i_session->token_target) && j_result != NULL) {
     if (ulfius_init_request(&request) != U_OK || ulfius_init_response(&response) != U_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error initializing request or response");
       ret = I_ERROR;
@@ -3454,7 +3446,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
       }
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
-          if (response.status == 200 && j_result != NULL) {
+          if (response.status == 200) {
             if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
               if (r_jwt_init(&jwt) == RHN_OK) {
                 token = o_strndup(response.binary_body, response.binary_body_length);
@@ -3641,7 +3633,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* si si  si ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* si si  si ss* so* }",
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_str_parameter(i_session, I_OPT_STATE),
@@ -3678,7 +3670,7 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
 
                          "auth_method", i_get_int_parameter(i_session, I_OPT_AUTH_METHOD),
                          "token_method", i_get_int_parameter(i_session, I_OPT_TOKEN_METHOD),
-                         "jwks", r_jwks_export_to_json_t(i_session->server_jwks),
+                         "server_jwks", r_jwks_export_to_json_t(i_session->server_jwks),
                          "x5u_flags", i_get_int_parameter(i_session, I_OPT_X5U_FLAGS),
                          "openid_config", i_session->openid_config,
 
@@ -3726,7 +3718,8 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "decrypt_refresh_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_REFRESH_TOKEN),
                          
                          "decrypt_access_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_ACCESS_TOKEN),
-                         "dpop-sig-alg", i_get_str_parameter(i_session, I_OPT_DPOP_SIGN_ALG)
+                         "dpop-sig-alg", i_get_str_parameter(i_session, I_OPT_DPOP_SIGN_ALG),
+                         "client_jwks", r_jwks_export_to_json_t(i_session->client_jwks)
                          );
   }
   return j_return;
@@ -3824,8 +3817,12 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
       i_session->id_token_payload = json_deep_copy(json_object_get(j_import, "id_token_payload"));
       i_session->access_token_payload = json_deep_copy(json_object_get(j_import, "access_token_payload"));
       i_session->openid_config = json_deep_copy(json_object_get(j_import, "openid_config"));
-      if (json_object_get(j_import, "jwks") != NULL && (r_jwks_empty(i_session->server_jwks) != RHN_OK || r_jwks_import_from_json_t(i_session->server_jwks, json_object_get(j_import, "jwks")) != RHN_OK)) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t");
+      if (json_object_get(j_import, "server_jwks") != NULL && (r_jwks_empty(i_session->server_jwks) != RHN_OK || r_jwks_import_from_json_t(i_session->server_jwks, json_object_get(j_import, "server_jwks")) != RHN_OK)) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t server_jwks");
+        ret = I_ERROR;
+      }
+      if (json_object_get(j_import, "client_jwks") != NULL && (r_jwks_empty(i_session->client_jwks) != RHN_OK || r_jwks_import_from_json_t(i_session->client_jwks, json_object_get(j_import, "client_jwks")) != RHN_OK)) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t client_jwks");
         ret = I_ERROR;
       }
       json_array_extend(i_session->j_authorization_details, json_object_get(j_import, "authorization_details"));
