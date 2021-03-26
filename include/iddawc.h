@@ -57,20 +57,21 @@ extern "C"
 #define I_RESPONSE_TYPE_REFRESH_TOKEN      0x00100000 ///< Grant type refresh_token
 #define I_RESPONSE_TYPE_DEVICE_CODE        0x01000000 ///< Grant type urn:ietf:params:oauth:grant-type:device_code
 
-#define I_AUTH_METHOD_GET                 0x00000001 ///< access auth endpoint using GET method
-#define I_AUTH_METHOD_POST                0x00000010 ///< access auth endpoint using POST method
-#define I_AUTH_METHOD_JWT_SIGN_SECRET     0x00000100 ///< access auth endpoint using a JWT signed with the client secret
-#define I_AUTH_METHOD_JWT_SIGN_PRIVKEY    0x00001000 ///< access auth endpoint using a JWT signed with the client private key
-#define I_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00010000 ///< access auth endpoint using a JWT encrypted with the client secret
-#define I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x00100000 ///< access auth endpoint using a JWT encrypted with the server public key
+#define I_AUTH_METHOD_GET                 0x00000001 ///< auth endpoint using GET method
+#define I_AUTH_METHOD_POST                0x00000010 ///< auth endpoint using POST method
+#define I_AUTH_METHOD_JWT_SIGN_SECRET     0x00000100 ///< auth endpoint using a JWT signed with the client secret
+#define I_AUTH_METHOD_JWT_SIGN_PRIVKEY    0x00001000 ///< auth endpoint using a JWT signed with the client private key
+#define I_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00010000 ///< auth endpoint using a JWT encrypted with the client secret
+#define I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x00100000 ///< auth endpoint using a JWT encrypted with the server public key
 
-#define I_TOKEN_AUTH_METHOD_NONE           0x00000000 ///< access token endpoint using no authentication
-#define I_TOKEN_AUTH_METHOD_SECRET_BASIC   0x00000001 ///< access token endpoint using HTTP basic auth with client_id and client password
-#define I_TOKEN_AUTH_METHOD_SECRET_POST    0x00000010 ///< access token endpoint using secret send in POST parameters
-#define I_TOKEN_AUTH_METHOD_SIGN_SECRET    0x00000100 ///< access token endpoint using a JWT signed with the client secret
-#define I_TOKEN_AUTH_METHOD_SIGN_PRIVKEY   0x00001000 ///< access token endpoint using a JWT signed with the client private key
-#define I_TOKEN_AUTH_METHOD_ENCRYPT_SECRET 0x00010000 ///< access token endpoint using a JWT encrypted with the client secret
-#define I_TOKEN_AUTH_METHOD_ENCRYPT_PUBKEY 0x00100000 ///< access token endpoint using a JWT signed with the client private key and encrypted with the server public key or the client secret
+#define I_TOKEN_AUTH_METHOD_NONE            0x00000000 ///< token endpoint using no authentication
+#define I_TOKEN_AUTH_METHOD_SECRET_BASIC    0x00000001 ///< token endpoint using HTTP basic auth with client_id and client password
+#define I_TOKEN_AUTH_METHOD_SECRET_POST     0x00000010 ///< token endpoint using secret send in POST parameters
+#define I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE 0x00000100 ///< token endpoint using TLS Certificate authentication
+#define I_TOKEN_AUTH_METHOD_SIGN_SECRET     0x00001000 ///< token endpoint using a JWT signed with the client secret
+#define I_TOKEN_AUTH_METHOD_SIGN_PRIVKEY    0x00010000 ///< token endpoint using a JWT signed with the client private key
+#define I_TOKEN_AUTH_METHOD_ENCRYPT_SECRET  0x00100000 ///< token endpoint using a JWT encrypted with the client secret
+#define I_TOKEN_AUTH_METHOD_ENCRYPT_PUBKEY  0x01000000 ///< token endpoint using a JWT signed with the client private key and encrypted with the server public key or the client secret
 
 #define I_STRICT_NO  0 ///< Do not stricly conform to openid config result
 #define I_STRICT_YES 1 ///< Stricly conform to openid config result
@@ -94,6 +95,13 @@ extern "C"
 #define I_HEADER_AUTHORIZATION "Authorization"
 #define I_BODY_URL_PARAMETER   "access_token"
 #define I_HEADER_DPOP          "DPoP"
+
+#define I_REMOTE_HOST_VERIFY_NONE      0x0000 ///< No TLS Verification
+#define I_REMOTE_HOST_VERIFY_PEER      0x0001 ///< Verify TLS session with peers
+#define I_REMOTE_HOST_VERIFY_HOSTNAME  0x0010 ///< Verify TLS session with hostname
+#define I_REMOTE_PROXY_VERIFY_PEER     0x0100 ///< Verify TLS session with peers
+#define I_REMOTE_PROXY_VERIFY_HOSTNAME 0x1000 ///< Verify TLS session with hostname
+
 /**
  * Options available to set or get properties using
  * i_set_int_parameter, i_set_str_parameter,
@@ -171,7 +179,10 @@ typedef enum {
   I_OPT_DECRYPT_CODE                          = 70, ///< Decrypt code when received by the AS as a JWE
   I_OPT_DECRYPT_REFRESH_TOKEN                 = 71, ///< Decrypt refresh token when received by the AS as a JWE
   I_OPT_DECRYPT_ACCESS_TOKEN                  = 72, ///< Decrypt access token when received by the AS as a JWE
-  I_OPT_DPOP_SIGN_ALG                         = 73  ///< signature algorithm to use when the client signs a DPoP, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
+  I_OPT_DPOP_SIGN_ALG                         = 73, ///< signature algorithm to use when the client signs a DPoP, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
+  I_OPT_TLS_KEY_FILE                          = 74, ///< Path to the private key PEM file to use in a TLS authentication
+  I_OPT_TLS_CERT_FILE                         = 75, ///< Path to the certificate PEM file to use in a TLS authentication
+  I_OPT_REMOTE_CERT_FLAG                      = 76  ///< Flags to use with remote connexions to ignore incorrect certificates, flags available are I_REMOTE_HOST_VERIFY_PEER, I_REMOTE_HOST_VERIFY_HOSTNAME, I_REMOTE_PROXY_VERIFY_PEER, I_REMOTE_PROXY_VERIFY_HOSTNAME, I_REMOTE_HOST_VERIFY_NONE, default is I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME
 } i_option;
 
 /**
@@ -258,6 +269,9 @@ struct _i_session {
   int           decrypt_code;
   int           decrypt_refresh_token;
   int           decrypt_access_token;
+  char        * key_file;
+  char        * cert_file;
+  int           remote_cert_flag;
 };
 
 /**
