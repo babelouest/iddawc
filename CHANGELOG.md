@@ -8,6 +8,7 @@
 - Supports [OAuth 2.0 Dynamic Client Registration Management Protocol](https://tools.ietf.org/html/rfc7592)
 - Supports encrypted code, refresh tokens and access tokens
 - Improve DPoP support for userinfo, introspection and revocation endpoints
+- Implement client TLS authentication
 
 ## 0.9.8
 
