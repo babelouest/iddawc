@@ -10,7 +10,7 @@ jobs:
     - name: install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake pkg-config check libsubunit-dev cppcheck doxygen libsystemd-dev libcurl4-gnutls-dev libmicrohttpd-dev libjansson-dev
+        sudo apt-get install -y cmake pkg-config check libsubunit-dev cppcheck doxygen libsystemd-dev libcurl4-gnutls-dev libmicrohttpd-dev libjansson-dev gnutls-bin
     - name: cppcheck
       run: cppcheck --force --enable=warning,missingInclude --error-exitcode=1 .
     - name: build
@@ -18,5 +18,7 @@ jobs:
         mkdir build
         cd build
         cmake -DBUILD_IDDAWC_TESTING=on ..
+        ln -s ../test/cert/ .
+        ./cert/create-cert.sh || (cat ../test/cert/certtool.log && false)
         make test package
         sudo make install
