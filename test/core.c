@@ -105,6 +105,9 @@
 #define DECRYPT_CODE 1
 #define DECRYPT_REFRESH_TOKEN 1
 #define DECRYPT_ACCESS_TOKEN 1
+#define TLS_KEY_FILE "client.key"
+#define TLS_CERT_FILE "client.pem"
+#define REMOTE_CERT_FLAG 42
 
 const char jwks_pubkey_ecdsa_str[] = "{\"keys\":[{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","\
                                     "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\",\"use\":\"enc\",\"kid\":\"1\"}]}";
@@ -427,6 +430,12 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_KEY_FILE, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_KEY_FILE, TLS_KEY_FILE), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_CERT_FILE, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_CERT_FILE, TLS_CERT_FILE), I_OK);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -457,6 +466,7 @@ START_TEST(test_iddawc_set_int_parameter)
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_DECRYPT_CODE, DECRYPT_CODE), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG), I_OK);
 
   i_clean_session(&i_session);
 }
@@ -610,6 +620,12 @@ START_TEST(test_iddawc_get_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG), DPOP_SIGN_ALG);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_KEY_FILE, TLS_KEY_FILE), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_CERT_FILE, TLS_CERT_FILE), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -660,6 +676,8 @@ START_TEST(test_iddawc_get_int_parameter)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN), I_OK);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
 
   i_clean_session(&i_session);
 }
@@ -883,6 +901,9 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                   I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                   I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                  I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
+                                                  I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
+                                                  I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                   I_OPT_NONE), I_OK);
 
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_STATE), STATE);
@@ -929,6 +950,9 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
 
   i_clean_session(&i_session);
 }
@@ -1014,6 +1038,9 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_code")), 0);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_refresh_token")), 0);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_access_token")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "key_file"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "cert_file"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "remote_cert_flag")), I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME);
   json_decref(j_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1083,6 +1110,9 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
+                                                    I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
+                                                    I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1159,6 +1189,9 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_code")), DECRYPT_CODE);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_refresh_token")), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_access_token")), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "key_file")), TLS_KEY_FILE);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "cert_file")), TLS_CERT_FILE);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "remote_cert_flag")), REMOTE_CERT_FLAG);
   json_decref(j_export);
 
   json_decref(j_additional);
@@ -1246,6 +1279,9 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
+                                                    I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
+                                                    I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1324,6 +1360,9 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
   ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
@@ -1347,7 +1386,7 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
   str_export = i_export_session_str(&i_session);
-  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":1,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":0,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":0,\"decrypt_code\":0,\"decrypt_refresh_token\":0,\"decrypt_access_token\":0,\"client_jwks\":{\"keys\":[]}}");
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":0,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":0,\"decrypt_code\":0,\"decrypt_refresh_token\":0,\"decrypt_access_token\":0,\"client_jwks\":{\"keys\":[]},\"remote_cert_flag\":4369}");
   o_free(str_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1415,6 +1454,9 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
+                                                    I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
+                                                    I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -1507,6 +1549,9 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
+                                                    I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
+                                                    I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -1585,6 +1630,9 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
   ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
   ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
   o_free(str_import);

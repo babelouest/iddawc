@@ -12,3 +12,6 @@ dpop
 api_request
 device
 par
+*.log
+*.crt
+*.key

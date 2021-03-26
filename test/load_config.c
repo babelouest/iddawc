@@ -322,64 +322,64 @@ START_TEST(test_iddawc_configuration_invalid)
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/issuer/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/issuer/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/authorization_endpoint/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/authorization_endpoint/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/jwks_uri/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/jwks_uri/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/response_types_supported/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/response_types_supported/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/subject_types_supported/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/subject_types_supported/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/id_token_signing_alg_values_supported/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/id_token_signing_alg_values_supported/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/404/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/404/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR_PARAM);
+  i_clean_session(&i_session);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8081/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8081/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
-  i_clean_session(&i_session);
-  
-  ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8081/invalid_jwks/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8081/invalid_jwks/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
   i_clean_session(&i_session);
   

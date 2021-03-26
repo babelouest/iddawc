@@ -9,6 +9,33 @@
 
 #define TOKEN "accessTokenXyz1234"
 
+static char * get_file_content(const char * file_path) {
+  char * buffer = NULL;
+  size_t length, res;
+  FILE * f;
+
+  f = fopen (file_path, "rb");
+  if (f) {
+    fseek (f, 0, SEEK_END);
+    length = ftell (f);
+    fseek (f, 0, SEEK_SET);
+    buffer = o_malloc((length+1)*sizeof(char));
+    if (buffer) {
+      res = fread (buffer, 1, length, f);
+      if (res != length) {
+        fprintf(stderr, "fread warning, reading %zu while expecting %zu", res, length);
+      }
+      // Add null character at the end of buffer, just in case
+      buffer[length] = '\0';
+    }
+    fclose (f);
+  } else {
+    fprintf(stderr, "error opening file %s\n", file_path);
+  }
+  
+  return buffer;
+}
+
 const char result[] = "{\"active\":true,\"client_id\":\"l238j323ds-23ij4\",\"username\":\"jdoe\",\"scope\":\"read write dolphin\",\"sub\":\"Z5O3upPC88QrAjx00dis\",\"aud\":\"https://protected.example.net/resource\",\"iss\":\"https://server.example.com/\",\"exp\":1419356238,\"iat\":1419350238,\"extension_field\":\"twenty-seven\"}";
 
 const char jwk_privkey_rsa_str[] = "{\"kty\":\"RSA\",\"n\":\"ALrIdhuABv82Y7K1-LJCXRy1LVdmK9IAHwmmlI-HnOrFeEsSwuCeblUgEpqz_mj7lLtZN0Gnlz-7U0hOpGCeOYXRMn8184YismuCS5PYe"
@@ -39,6 +66,23 @@ const char jwk_privkey_rsa_str[] = "{\"kty\":\"RSA\",\"n\":\"ALrIdhuABv82Y7K1-LJ
 
 int callback_introspect (const struct _u_request * request, struct _u_response * response, void * user_data) {
   if (0 == o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization"))) {
+    if (0 == o_strcmp(TOKEN, u_map_get(request->map_post_body, "token"))) {
+      json_t * j_response = json_loads(result, JSON_DECODE_ANY, NULL);
+      ulfius_set_json_body_response(response, 200, j_response);
+      json_decref(j_response);
+    } else {
+      json_t * j_response = json_loads("{\"active\":false}", JSON_DECODE_ANY, NULL);
+      ulfius_set_json_body_response(response, 200, j_response);
+      json_decref(j_response);
+    }
+  } else {
+    response->status = 403;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_introspect_cert (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  if (request->client_cert != NULL) {
     if (0 == o_strcmp(TOKEN, u_map_get(request->map_post_body, "token"))) {
       json_t * j_response = json_loads(result, JSON_DECODE_ANY, NULL);
       ulfius_set_json_body_response(response, 200, j_response);
@@ -101,11 +145,10 @@ START_TEST(test_iddawc_introspection_valid)
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
-                                                  I_OPT_ACCESS_TOKEN, TOKEN,
-                                                  I_OPT_TOKEN_TARGET, TOKEN,
-                                                  I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
+                                                    I_OPT_ACCESS_TOKEN, TOKEN,
+                                                    I_OPT_TOKEN_TARGET, TOKEN,
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_OK);
   j_expected = json_loads(result, JSON_DECODE_ANY, NULL);
   ck_assert_int_eq(1, json_equal(j_expected, j_result));
@@ -114,11 +157,10 @@ START_TEST(test_iddawc_introspection_valid)
   json_decref(j_expected);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
-                                                  I_OPT_ACCESS_TOKEN, TOKEN,
-                                                  I_OPT_TOKEN_TARGET, TOKEN "error",
-                                                  I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
+                                                    I_OPT_ACCESS_TOKEN, TOKEN,
+                                                    I_OPT_TOKEN_TARGET, TOKEN "error",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_OK);
   j_expected = json_loads("{\"active\":false}", JSON_DECODE_ANY, NULL);
   ck_assert_int_eq(1, json_equal(j_expected, j_result));
@@ -127,12 +169,11 @@ START_TEST(test_iddawc_introspection_valid)
   json_decref(j_expected);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
-                                                  I_OPT_ACCESS_TOKEN, TOKEN "error",
-                                                  I_OPT_TOKEN_TARGET, TOKEN,
-                                                  I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_get_token_introspection(&i_session, NULL, I_INTROSPECT_REVOKE_AUTH_NONE, 0), I_ERROR_UNAUTHORIZED);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
+                                                    I_OPT_ACCESS_TOKEN, TOKEN "error",
+                                                    I_OPT_TOKEN_TARGET, TOKEN,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_NONE, 0), I_ERROR_UNAUTHORIZED);
   i_clean_session(&i_session);
   
   ulfius_stop_framework(&instance);
@@ -151,14 +192,13 @@ START_TEST(test_iddawc_introspection_dpop)
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
-                                                  I_OPT_ACCESS_TOKEN, TOKEN,
-                                                  I_OPT_TOKEN_TARGET, TOKEN,
-                                                  I_OPT_USE_DPOP, 1,
-                                                  I_OPT_TOKEN_JTI_GENERATE, 16,
-                                                  I_OPT_DPOP_SIGN_ALG, "RS256",
-                                                  I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
+                                                    I_OPT_ACCESS_TOKEN, TOKEN,
+                                                    I_OPT_TOKEN_TARGET, TOKEN,
+                                                    I_OPT_USE_DPOP, 1,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_rsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
@@ -171,14 +211,13 @@ START_TEST(test_iddawc_introspection_dpop)
   json_decref(j_expected);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
-                                                  I_OPT_ACCESS_TOKEN, TOKEN,
-                                                  I_OPT_TOKEN_TARGET, TOKEN "error",
-                                                  I_OPT_USE_DPOP, 1,
-                                                  I_OPT_TOKEN_JTI_GENERATE, 16,
-                                                  I_OPT_DPOP_SIGN_ALG, "RS256",
-                                                  I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
+                                                    I_OPT_ACCESS_TOKEN, TOKEN,
+                                                    I_OPT_TOKEN_TARGET, TOKEN "error",
+                                                    I_OPT_USE_DPOP, 1,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_rsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
@@ -191,40 +230,101 @@ START_TEST(test_iddawc_introspection_dpop)
   json_decref(j_expected);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
-                                                  I_OPT_ACCESS_TOKEN, TOKEN "error",
-                                                  I_OPT_TOKEN_TARGET, TOKEN,
-                                                  I_OPT_USE_DPOP, 1,
-                                                  I_OPT_TOKEN_JTI_GENERATE, 16,
-                                                  I_OPT_DPOP_SIGN_ALG, "RS256",
-                                                  I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
+                                                    I_OPT_ACCESS_TOKEN, TOKEN "error",
+                                                    I_OPT_TOKEN_TARGET, TOKEN,
+                                                    I_OPT_USE_DPOP, 1,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_rsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
   r_jwk_free(jwk);
-  ck_assert_int_eq(i_get_token_introspection(&i_session, NULL, I_INTROSPECT_REVOKE_AUTH_NONE, 0), I_ERROR_UNAUTHORIZED);
+  ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_NONE, 0), I_ERROR_UNAUTHORIZED);
   i_clean_session(&i_session);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
-                                                  I_OPT_ACCESS_TOKEN, TOKEN,
-                                                  I_OPT_TOKEN_TARGET, TOKEN,
-                                                  I_OPT_USE_DPOP, 0,
-                                                  I_OPT_TOKEN_JTI_GENERATE, 16,
-                                                  I_OPT_DPOP_SIGN_ALG, "RS256",
-                                                  I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
+                                                    I_OPT_ACCESS_TOKEN, TOKEN,
+                                                    I_OPT_TOKEN_TARGET, TOKEN,
+                                                    I_OPT_USE_DPOP, 0,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_rsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
   r_jwk_free(jwk);
   ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_ERROR_UNAUTHORIZED);
   i_clean_session(&i_session);
-  json_decref(j_result);
   
   ulfius_stop_framework(&instance);
   ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_introspection_cert_valid)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  json_t * j_result = NULL, * j_expected;
+  char * cert = get_file_content("cert/server.crt"), * key = get_file_content("cert/server.key"), * ca = get_file_content("cert/root1.crt");
+
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/introspect", 0, &callback_introspect_cert, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_secure_ca_trust_framework(&instance, key, cert, ca), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "https://localhost:8080/introspect",
+                                                    I_OPT_TOKEN_TARGET, TOKEN,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE,
+                                                    I_OPT_TLS_KEY_FILE, "cert/user1.key",
+                                                    I_OPT_TLS_CERT_FILE, "cert/user1.crt",
+                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_HOST_VERIFY_NONE,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET, 0), I_OK);
+  j_expected = json_loads(result, JSON_DECODE_ANY, NULL);
+  ck_assert_int_eq(1, json_equal(j_expected, j_result));
+  i_clean_session(&i_session);
+  json_decref(j_result);
+  json_decref(j_expected);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+  o_free(cert);
+  o_free(key);
+  o_free(ca);
+}
+END_TEST
+
+START_TEST(test_iddawc_introspection_cert_invalid)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  json_t * j_result = NULL;
+  char * cert = get_file_content("cert/server.crt"), * key = get_file_content("cert/server.key"), * ca = get_file_content("cert/root1.crt");
+
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/introspect", 0, &callback_introspect_cert, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_secure_ca_trust_framework(&instance, key, cert, ca), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "https://localhost:8080/introspect",
+                                                    I_OPT_TOKEN_TARGET, TOKEN,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE,
+                                                    I_OPT_TLS_KEY_FILE, "cert/user2.key",
+                                                    I_OPT_TLS_CERT_FILE, "cert/user2.crt",
+                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_HOST_VERIFY_NONE,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET, 0), I_ERROR_UNAUTHORIZED);
+  i_clean_session(&i_session);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+  o_free(cert);
+  o_free(key);
+  o_free(ca);
 }
 END_TEST
 
@@ -238,6 +338,8 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_introspection_invalid);
   tcase_add_test(tc_core, test_iddawc_introspection_valid);
   tcase_add_test(tc_core, test_iddawc_introspection_dpop);
+  tcase_add_test(tc_core, test_iddawc_introspection_cert_valid);
+  tcase_add_test(tc_core, test_iddawc_introspection_cert_invalid);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
 

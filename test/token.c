@@ -16,6 +16,7 @@
 #define CLIENT_SECRET "secretXyx1234567"
 #define CLIENT_SECRET_ERROR "secretXyx7654321"
 #define TOKEN_ENDPOINT "http://localhost:8080/token"
+#define TOKEN_ENDPOINT_CERT "https://localhost:8080/token"
 #define ACCESS_TOKEN_VALIDATION_ENDPOINT "https://isp.tld/profile"
 #define CODE "codeXyz1234"
 #define REFRESH_TOKEN "refreshXyz1234"
@@ -30,6 +31,33 @@
 #define GLEWLWYD_COOKIE_SESSION "cookieXyz1234"
 #define USERNAME "dev"
 #define USER_PASSWORD "password"
+
+static char * get_file_content(const char * file_path) {
+  char * buffer = NULL;
+  size_t length, res;
+  FILE * f;
+
+  f = fopen (file_path, "rb");
+  if (f) {
+    fseek (f, 0, SEEK_END);
+    length = ftell (f);
+    fseek (f, 0, SEEK_SET);
+    buffer = o_malloc((length+1)*sizeof(char));
+    if (buffer) {
+      res = fread (buffer, 1, length, f);
+      if (res != length) {
+        fprintf(stderr, "fread warning, reading %zu while expecting %zu", res, length);
+      }
+      // Add null character at the end of buffer, just in case
+      buffer[length] = '\0';
+    }
+    fclose (f);
+  } else {
+    fprintf(stderr, "error opening file %s\n", file_path);
+  }
+  
+  return buffer;
+}
 
 const char jwk_privkey_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9EXrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0WTea8n_TQmq9sVHGQtLIFqfblLxbSz_7m4g7_o3WfqlwXkVmCIu1wdzAjZV5BspBGrL0ed5Whpk9-bX69nUDvpcMAaPhuRwZ43e9koVRbVwXCNkne98VAs0_U\",\"e\":\"AQAB\",\"d\":\"AKOVsyDreb5VJRFcuIrrqYWxZqkc37MQTvR1wrE_HAzYp4n-AuAJQT-Sga6WYY-3V53VaG1ZB93GWIHNVCsImJEWPEYUZjTnoeKbOBUzPoPYB3UF5oReJYSp9msEbvGvF9d65fYe4DYkcMl4IK5Uz9hDugrPC4VBOmwyu8-DjLkP8OH-N2-KhJvX_kLKgivfzD3KOp6wryLnKuZYn8N4E6rCiNSfKMgoM60bSHRNi0QHYB2jwqMU5T5EzdpD3Tu_ow6a-sXrW6SG1dtbuStck9hFcQ-QtRCeWoM5pFN8cKOsWBZd1unq-X3gMlCjdXUBUW7BYP44lpYsg1v9l_Ww64E\",\"p\":\"ANmlFUVM-836aC-wK-DekE3s3gl7GZ-9Qca8iKnaIeMszgyaLYkkbYNPpjjsiQHc37IG3axCaywK40PZqODzovL5PnUpwfNrnlMaI042rNaf8q1L4kvaBTkbO9Wbj0sTLMPt1frLQKBRsNDsYamRcL1SwvTC4aI7cgZBrNIBdPiR\",\"q\":\"AP4qYxRNGaI3aeZh5hgKPSGW82X8Ai2MzIKjzSDYmKGcD9HPRV0dAUmDCvqyjwCD6tL9iMtZKPz7VK66-KvV1n91WLMDtRzWs_eFFyDY7BYw47o6IQoZ2RxBT3-7WLhlFflaEner8k23zpGOjZbyzt0SIWRAYR0zlb7LrS_X4fcl\",\"qi\":\"fnlvhYXAn6V0X6gmlwooZUWo9bR7ObChNhrUzMVDOReUVOrzOhlzGhBW1TEFBBr8k44ZWBCTeVEQh--LFHwVvCgEjDBxfjUPUMkeyKZzLhpIUB_cFBAgI7Fyy0yuPpY0mS1PfMt5Y4b6g_JvdBWZZ8VhTcCVG7qDqoH_IJMXPNg\",\"dp\":\"EAsiQUSGf02JJpLG-UGOw5_FUk-XuPW7honZTSP-QX_JBJbM6oIb7IUPjLyq8M82Uio9ZvhSbCG1VQgTcdmj1mNXHk3gtS_msNuJZLeVEBEkU2_3k33TyrzeMUXRT0hvkVXT4zPeZLMA5LW4EUbeV6ZlJqPC_DGDm0B2G9jtpXE\",\"dq\":\"AMTictPUEcpOILO9HG985vPxKeTTfaBpVDbSymDqR_nQmZSOeg3yHQAkCco_rXTZu3rruR7El3K5AlVEMsNxp3IepbIuagrH6qsPpuXkA6YBAzdMNjHL6hnwIbQxnT1h2M7KzklzogRAIT0x706CEmq_06wEDvZ-8j3VKvhHxBwd\",\"kid\":\"1\"}";
 const char jwk_pubkey_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9EXrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0WTea8n_TQmq9sVHGQtLIFqfblLxbSz_7m4g7_o3WfqlwXkVmCIu1wdzAjZV5BspBGrL0ed5Whpk9-bX69nUDvpcMAaPhuRwZ43e9koVRbVwXCNkne98VAs0_U\",\"e\":\"AQAB\",\"kid\":\"1\"}";
@@ -224,6 +252,22 @@ int callback_oauth2_token_jwt_auth_code_ok (const struct _u_request * request, s
     ulfius_set_json_body_response(response, 400, error);
     json_decref(error);
   }
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_oauth2_token_code_cert_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  json_t * result = json_pack("{sssssiss}", 
+                             "access_token", ACCESS_TOKEN,
+                             "token_type", "bearer",
+                             "expires_in", 3600,
+                             "refresh_token", REFRESH_TOKEN);
+  if (request->client_cert != NULL) {
+    ulfius_set_json_body_response(response, 200, result);
+  } else {
+    response->status = 403;
+  }
+  json_decref(result);
+
   return U_CALLBACK_CONTINUE;
 }
 
@@ -602,11 +646,11 @@ START_TEST(test_iddawc_token_password_noclient_invalid_request)
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_invalid_request, NULL), U_OK);
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_PASSWORD,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
-                                                  I_OPT_USERNAME, USERNAME,
-                                                  I_OPT_USER_PASSWORD, USER_PASSWORD,
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_USERNAME, USERNAME,
+                                                    I_OPT_USER_PASSWORD, USER_PASSWORD,
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
@@ -1145,6 +1189,74 @@ START_TEST(test_iddawc_token_code_jwt_auth_privkey_ok)
 }
 END_TEST
 
+START_TEST(test_iddawc_token_code_certificate_ok)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  char * cert = get_file_content("cert/server.crt"), * key = get_file_content("cert/server.key"), * ca = get_file_content("cert/root1.crt");
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_cert_ok, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_secure_ca_trust_framework(&instance, key, cert, ca), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT_CERT,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE,
+                                                    I_OPT_TLS_KEY_FILE, "cert/user1.key",
+                                                    I_OPT_TLS_CERT_FILE, "cert/user1.crt",
+                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_HOST_VERIFY_NONE,
+                                                    I_OPT_CODE, CODE,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+  o_free(cert);
+  o_free(key);
+  o_free(ca);
+}
+END_TEST
+
+START_TEST(test_iddawc_token_code_certificate_invalid)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  char * cert = get_file_content("cert/server.crt"), * key = get_file_content("cert/server.key"), * ca = get_file_content("cert/root1.crt");
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_cert_ok, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_secure_ca_trust_framework(&instance, key, cert, ca), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT_CERT,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE,
+                                                    I_OPT_TLS_KEY_FILE, "cert/user2.key",
+                                                    I_OPT_TLS_CERT_FILE, "cert/user2.crt",
+                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_HOST_VERIFY_NONE,
+                                                    I_OPT_CODE, CODE,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_UNAUTHORIZED);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+  o_free(cert);
+  o_free(key);
+  o_free(ca);
+}
+END_TEST
+
 static Suite *iddawc_suite(void)
 {
   Suite *s;
@@ -1182,6 +1294,8 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_privkey_error_param);
   tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_secret_ok);
   tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_privkey_ok);
+  tcase_add_test(tc_core, test_iddawc_token_code_certificate_ok);
+  tcase_add_test(tc_core, test_iddawc_token_code_certificate_invalid);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
 
