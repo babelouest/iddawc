@@ -52,10 +52,27 @@ unsigned char random_at_most(unsigned char max, int nonce) {
   return x[0]/bin_size;
 }
 
+static int string_use_char_list_only(const char * str, const char * char_list) {
+  int ret = 1;
+  size_t i;
+  
+  if (o_strlen(str) && o_strlen(char_list)) {
+    for (i=0; i<o_strlen(str); i++) {
+      if (o_strchr(char_list, str[i]) == NULL) {
+        ret = 0;
+        break;
+      }
+    }
+  } else {
+    ret = 0;
+  }
+  return ret;
+}
+
 /**
  * Generates a random string used as nonce and store it in str
  */
-char * rand_string_nonce(char * str, size_t str_size) {
+static char * rand_string_nonce(char * str, size_t str_size) {
   const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   size_t n;
 
@@ -510,7 +527,7 @@ static int _i_parse_token_response(struct _i_session * i_session, int http_statu
               if ((payload_dup = _i_decrypt_jwe_token(i_session, json_string_value(json_object_get(j_response, "refresh_token")))) != NULL) {
                 res = i_set_str_parameter(i_session, I_OPT_REFRESH_TOKEN, payload_dup);
               } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error _i_decrypt_jwe_token access_token");
+                y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error _i_decrypt_jwe_token refresh_token");
                 res = I_ERROR;
               }
               o_free(payload_dup);
@@ -526,9 +543,6 @@ static int _i_parse_token_response(struct _i_session * i_session, int http_statu
           if (json_string_length(json_object_get(j_response, "id_token"))) {
             if (i_set_str_parameter(i_session, I_OPT_ID_TOKEN, json_string_value(json_object_get(j_response, "id_token"))) != I_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error setting id_token");
-              ret = I_ERROR;
-            } else if (i_verify_id_token(i_session) != I_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error i_verify_id_token");
               ret = I_ERROR;
             }
           }
@@ -1097,15 +1111,16 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
       ret = I_ERROR_PARAM;
     }
   } else if (i_session->token_method & I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE) {
-    if (i_session->key_file != NULL && i_session->cert_file != NULL) {
+    if (i_session->client_id != NULL && i_session->key_file != NULL && i_session->cert_file != NULL) {
       ulfius_set_request_properties(request, U_OPT_CLIENT_CERT_FILE, i_session->cert_file,
                                              U_OPT_CLIENT_KEY_FILE, i_session->key_file,
+                                             U_OPT_POST_BODY_PARAMETER, "client_id", i_session->client_id,
                                              U_OPT_NONE);
     } else {
       y_log_message(Y_LOG_LEVEL_DEBUG, "_i_add_token_authentication - key_file and cert_file required");
       ret = I_ERROR_PARAM;
     }
-  } else if (i_session->token_method & I_TOKEN_AUTH_METHOD_SIGN_SECRET || i_session->token_method & I_TOKEN_AUTH_METHOD_SIGN_PRIVKEY) {
+  } else if (i_session->token_method & I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET || i_session->token_method & I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY) {
     if (i_session->token_jti != NULL) {
       time(&now);
       r_jwt_init(&jwt);
@@ -1115,7 +1130,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
       r_jwt_set_claim_str_value(jwt, "jti", i_session->token_jti);
       r_jwt_set_claim_int_value(jwt, "exp", now+i_session->token_exp);
       r_jwt_set_claim_int_value(jwt, "iat", now);
-      if (i_session->token_method == I_TOKEN_AUTH_METHOD_SIGN_SECRET) {
+      if (i_session->token_method == I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET) {
         if (i_session->client_secret != NULL) {
           if ((i_session->client_sign_alg == R_JWA_ALG_HS256 || i_session->client_sign_alg == R_JWA_ALG_HS384 || i_session->client_sign_alg == R_JWA_ALG_HS512) && _i_has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
             // signature alg is specified and supported by the server
@@ -1174,7 +1189,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
           ret = I_ERROR_PARAM;
         }
       }
-      if (i_session->token_method & I_TOKEN_AUTH_METHOD_ENCRYPT_SECRET) {
+      if (i_session->token_method & I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET) {
         if (o_strlen(i_session->client_secret)) {
           if (i_session->client_enc != R_JWA_ENC_UNKNOWN && _i_has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_ENC))) {
             enc = i_session->client_enc;
@@ -1243,7 +1258,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
           y_log_message(Y_LOG_LEVEL_ERROR, "Client has no secret");
           ret = I_ERROR_PARAM;
         }
-      } else if (i_session->token_method & I_TOKEN_AUTH_METHOD_ENCRYPT_PUBKEY) {
+      } else if (i_session->token_method & I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_PUBKEY) {
         if ((i_session->server_kid != NULL && (jwk_enc = r_jwks_get_by_kid(i_session->server_jwks, i_session->server_kid)) != NULL) || (r_jwks_size(i_session->server_jwks) == 1 && (jwk_enc = r_jwks_get_at(i_session->server_jwks, 0)) != NULL)) {
           if (i_session->client_enc != R_JWA_ENC_UNKNOWN && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_ENC))) {
             enc = i_session->client_enc;
@@ -1409,6 +1424,8 @@ int i_init_session(struct _i_session * i_session) {
     i_session->decrypt_access_token = 0;
     i_session->key_file = NULL;
     i_session->cert_file = NULL;
+    i_session->pkce_code_verifier = NULL;
+    i_session->pkce_method = I_PKCE_NONE;
     i_session->remote_cert_flag = I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME;
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
@@ -1489,6 +1506,7 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->dpop_kid);
     o_free(i_session->key_file);
     o_free(i_session->cert_file);
+    o_free(i_session->pkce_code_verifier);
     u_map_clean(&i_session->additional_parameters);
     u_map_clean(&i_session->additional_response);
     r_jwks_free(i_session->server_jwks);
@@ -1637,6 +1655,21 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
         break;
       case I_OPT_REMOTE_CERT_FLAG:
         i_session->remote_cert_flag = i_value;
+        break;
+      case I_OPT_PKCE_CODE_VERIFIER_GENERATE:
+        if (i_value >= 43) {
+          char value[i_value+1];
+          value[0] = '\0';
+          rand_string_nonce(value, i_value);
+          value[i_value] = '\0';
+          ret = i_set_str_parameter(i_session, I_OPT_PKCE_CODE_VERIFIER, value);
+        } else {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error invalid PKCE length");
+          ret = I_ERROR_PARAM;
+        }
+        break;
+      case I_OPT_PKCE_METHOD:
+        i_session->pkce_method = i_value;
         break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
@@ -2054,17 +2087,31 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
         }
         break;
       case I_OPT_TLS_KEY_FILE:
+        o_free(i_session->key_file);
         if (o_strlen(s_value)) {
           i_session->key_file = o_strdup(s_value);
         } else {
-          i_session->key_file = R_JWA_ALG_UNKNOWN;
+          i_session->key_file = NULL;
         }
         break;
       case I_OPT_TLS_CERT_FILE:
+        o_free(i_session->cert_file);
         if (o_strlen(s_value)) {
           i_session->cert_file = o_strdup(s_value);
         } else {
-          i_session->cert_file = R_JWA_ALG_UNKNOWN;
+          i_session->cert_file = NULL;
+        }
+        break;
+      case I_OPT_PKCE_CODE_VERIFIER:
+        o_free(i_session->pkce_code_verifier);
+        i_session->pkce_code_verifier = NULL;
+        if (o_strlen(s_value)) {
+          if (o_strlen(s_value) >= 43 && string_use_char_list_only(s_value, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")) {
+            i_session->pkce_code_verifier = o_strdup(s_value);
+          } else {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error invalid PCKCE code verifier");
+            ret = I_ERROR_PARAM;
+          }
         }
         break;
       default:
@@ -2133,6 +2180,8 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_DECRYPT_REFRESH_TOKEN:
         case I_OPT_DECRYPT_ACCESS_TOKEN:
         case I_OPT_REMOTE_CERT_FLAG:
+        case I_OPT_PKCE_CODE_VERIFIER_GENERATE:
+        case I_OPT_PKCE_METHOD:
           i_value = va_arg(vl, uint);
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
@@ -2187,6 +2236,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_DPOP_SIGN_ALG:
         case I_OPT_TLS_KEY_FILE:
         case I_OPT_TLS_CERT_FILE:
+        case I_OPT_PKCE_CODE_VERIFIER:
           str_value = va_arg(vl, const char *);
           ret = i_set_str_parameter(i_session, option, str_value);
           break;
@@ -2441,6 +2491,9 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option) {
       case I_OPT_REMOTE_CERT_FLAG:
         return i_session->remote_cert_flag;
         break;
+      case I_OPT_PKCE_METHOD:
+        return i_session->pkce_method;
+        break;
       default:
         return 0;
         break;
@@ -2675,6 +2728,9 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
       case I_OPT_TLS_CERT_FILE:
         result = (const char *)i_session->cert_file;
         break;
+      case I_OPT_PKCE_CODE_VERIFIER:
+        result = (const char *)i_session->pkce_code_verifier;
+        break;
       default:
         break;
     }
@@ -2719,6 +2775,9 @@ int i_build_auth_url_get(struct _i_session * i_session) {
   char * url = NULL, * escaped = NULL, * tmp = NULL, * jwt = NULL;
   const char ** keys = NULL;
   uint i;
+  unsigned char code_challenge[32] = {0}, code_challenge_encoded[64] = {0};
+  size_t code_challenge_len = 32, code_challenge_encoded_len = 0;
+  gnutls_datum_t hash_data;
 
   if (i_session != NULL && i_session->client_id != NULL) {
     if (i_session->pushed_authorization_request_uri != NULL) {
@@ -2780,6 +2839,27 @@ int i_build_auth_url_get(struct _i_session * i_session) {
           escaped = ulfius_url_encode(i_session->nonce);
           url = mstrcatf(url, "&nonce=%s", escaped);
           o_free(escaped);
+        }
+
+        if (i_session->pkce_method != I_PKCE_NONE) {
+          if (i_session->pkce_method == I_PKCE_METHOD_PLAIN) {
+            escaped = ulfius_url_encode(i_session->pkce_code_verifier);
+            url = mstrcatf(url, "&code_challenge_method=plain&code_challenge=%s", escaped);
+            o_free(escaped);
+          } else if (i_session->pkce_method == I_PKCE_METHOD_S256) {
+            hash_data.data = (unsigned char *)i_session->pkce_code_verifier;
+            hash_data.size = o_strlen(i_session->pkce_code_verifier);
+            if (gnutls_fingerprint(GNUTLS_DIG_SHA256, &hash_data, code_challenge, &code_challenge_len) == GNUTLS_E_SUCCESS) {
+              if (o_base64url_encode(code_challenge, code_challenge_len, code_challenge_encoded, &code_challenge_encoded_len)) {
+                code_challenge_encoded[code_challenge_encoded_len] = '\0';
+                url = mstrcatf(url, "&code_challenge_method=S256&code_challenge=%s", code_challenge_encoded);
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_build_auth_url_get - Error o_base64url_encode");
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_build_auth_url_get - Error gnutls_fingerprint");
+            }
+          }
         }
 
         if (json_array_size(i_session->j_authorization_details)) {
@@ -2992,6 +3072,9 @@ int i_run_token_request(struct _i_session * i_session) {
             ret = I_ERROR;
           }
         }
+        if (i_session->pkce_method != I_PKCE_NONE && o_strlen(i_session->pkce_code_verifier)) {
+          ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "code_verifier", i_session->pkce_code_verifier);
+        }
         if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request)) == I_OK) {
           if (ulfius_send_http_request(&request, &response) == U_OK) {
             if (response.status == 200 || response.status == 400) {
@@ -3130,6 +3213,8 @@ int i_run_token_request(struct _i_session * i_session) {
                     ret = I_ERROR;
                   }
                   json_decref(j_response);
+                } else if (response.status == 403 || response.status == 401) {
+                  ret = I_ERROR_UNAUTHORIZED;
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Invalid response status");
                   ret = I_ERROR;
@@ -3768,7 +3853,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* si si  si ss* so* ss* ss* si }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* so so  so ss* so* ss* ss* si ss* si }",
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_str_parameter(i_session, I_OPT_STATE),
@@ -3849,16 +3934,18 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "access_token_payload", i_session->access_token_payload,
                          "use_dpop", i_get_int_parameter(i_session, I_OPT_USE_DPOP),
                          "dpop_kid", i_get_str_parameter(i_session, I_OPT_DPOP_KID),
-                         "decrypt_code", i_get_int_parameter(i_session, I_OPT_DECRYPT_CODE),
-                         "decrypt_refresh_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_REFRESH_TOKEN),
+                         "decrypt_code", i_get_int_parameter(i_session, I_OPT_DECRYPT_CODE)?json_true():json_false(),
+                         "decrypt_refresh_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_REFRESH_TOKEN)?json_true():json_false(),
                          
-                         "decrypt_access_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_ACCESS_TOKEN),
+                         "decrypt_access_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_ACCESS_TOKEN)?json_true():json_false(),
                          "dpop-sig-alg", i_get_str_parameter(i_session, I_OPT_DPOP_SIGN_ALG),
                          "client_jwks", r_jwks_export_to_json_t(i_session->client_jwks),
                          "key_file", i_get_str_parameter(i_session, I_OPT_TLS_KEY_FILE),
                          "cert_file", i_get_str_parameter(i_session, I_OPT_TLS_CERT_FILE),
                          
-                         "remote_cert_flag", i_get_int_parameter(i_session, I_OPT_REMOTE_CERT_FLAG)
+                         "remote_cert_flag", i_get_int_parameter(i_session, I_OPT_REMOTE_CERT_FLAG),
+                         "pkce_code_verifier", i_get_str_parameter(i_session, I_OPT_PKCE_CODE_VERIFIER),
+                         "pkce_method", i_get_int_parameter(i_session, I_OPT_PKCE_METHOD)
                          );
   }
   return j_return;
@@ -3933,12 +4020,14 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_USE_DPOP, (int)json_integer_value(json_object_get(j_import, "use_dpop")),
                                      I_OPT_DPOP_KID, json_string_value(json_object_get(j_import, "dpop_kid")),
                                      I_OPT_DPOP_SIGN_ALG, json_string_value(json_object_get(j_import, "dpop-sig-alg")),
-                                     I_OPT_DECRYPT_CODE, (int)json_integer_value(json_object_get(j_import, "decrypt_code")),
-                                     I_OPT_DECRYPT_REFRESH_TOKEN, (int)json_integer_value(json_object_get(j_import, "decrypt_refresh_token")),
-                                     I_OPT_DECRYPT_ACCESS_TOKEN, (int)json_integer_value(json_object_get(j_import, "decrypt_access_token")),
+                                     I_OPT_DECRYPT_CODE, json_object_get(j_import, "decrypt_code")==json_true(),
+                                     I_OPT_DECRYPT_REFRESH_TOKEN, json_object_get(j_import, "decrypt_refresh_token")==json_true(),
+                                     I_OPT_DECRYPT_ACCESS_TOKEN, json_object_get(j_import, "decrypt_access_token")==json_true(),
                                      I_OPT_TLS_KEY_FILE, json_string_value(json_object_get(j_import, "key_file")),
                                      I_OPT_TLS_CERT_FILE, json_string_value(json_object_get(j_import, "cert_file")),
                                      I_OPT_REMOTE_CERT_FLAG, (int)json_integer_value(json_object_get(j_import, "remote_cert_flag")),
+                                     I_OPT_PKCE_CODE_VERIFIER, json_string_value(json_object_get(j_import, "pkce_code_verifier")),
+                                     I_OPT_PKCE_METHOD, (int)json_integer_value(json_object_get(j_import, "pkce_method")),
                                      I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {

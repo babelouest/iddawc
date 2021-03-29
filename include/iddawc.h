@@ -68,10 +68,10 @@ extern "C"
 #define I_TOKEN_AUTH_METHOD_SECRET_BASIC    0x00000001 ///< token endpoint using HTTP basic auth with client_id and client password
 #define I_TOKEN_AUTH_METHOD_SECRET_POST     0x00000010 ///< token endpoint using secret send in POST parameters
 #define I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE 0x00000100 ///< token endpoint using TLS Certificate authentication
-#define I_TOKEN_AUTH_METHOD_SIGN_SECRET     0x00001000 ///< token endpoint using a JWT signed with the client secret
-#define I_TOKEN_AUTH_METHOD_SIGN_PRIVKEY    0x00010000 ///< token endpoint using a JWT signed with the client private key
-#define I_TOKEN_AUTH_METHOD_ENCRYPT_SECRET  0x00100000 ///< token endpoint using a JWT encrypted with the client secret
-#define I_TOKEN_AUTH_METHOD_ENCRYPT_PUBKEY  0x01000000 ///< token endpoint using a JWT signed with the client private key and encrypted with the server public key or the client secret
+#define I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET     0x00001000 ///< token endpoint using a JWT signed with the client secret
+#define I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY    0x00010000 ///< token endpoint using a JWT signed with the client private key
+#define I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00100000 ///< token endpoint using a JWT encrypted with the client secret
+#define I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x01000000 ///< token endpoint using a JWT signed with the client private key and encrypted with the server public key or the client secret
 
 #define I_STRICT_NO  0 ///< Do not stricly conform to openid config result
 #define I_STRICT_YES 1 ///< Stricly conform to openid config result
@@ -96,11 +96,15 @@ extern "C"
 #define I_BODY_URL_PARAMETER   "access_token"
 #define I_HEADER_DPOP          "DPoP"
 
-#define I_REMOTE_HOST_VERIFY_NONE      0x0000 ///< No TLS Verification
+#define I_REMOTE_VERIFY_NONE           0x0000 ///< No TLS Verification
 #define I_REMOTE_HOST_VERIFY_PEER      0x0001 ///< Verify TLS session with peers
 #define I_REMOTE_HOST_VERIFY_HOSTNAME  0x0010 ///< Verify TLS session with hostname
 #define I_REMOTE_PROXY_VERIFY_PEER     0x0100 ///< Verify TLS session with peers
 #define I_REMOTE_PROXY_VERIFY_HOSTNAME 0x1000 ///< Verify TLS session with hostname
+
+#define I_PKCE_NONE         0
+#define I_PKCE_METHOD_PLAIN 1
+#define I_PKCE_METHOD_S256  2
 
 /**
  * Options available to set or get properties using
@@ -143,8 +147,8 @@ typedef enum {
   I_OPT_USER_PASSWORD                         = 34, ///< password for password response_types, string
   I_OPT_ISSUER                                = 35, ///< issuer value, string
   I_OPT_USERINFO                              = 36, ///< userinfo result, string
-  I_OPT_NONCE_GENERATE                        = 37, ///< generate a random nonce value
-  I_OPT_STATE_GENERATE                        = 38, ///< generate a random state value
+  I_OPT_NONCE_GENERATE                        = 37, ///< Generate a random nonce value
+  I_OPT_STATE_GENERATE                        = 38, ///< Generate a random state value
   I_OPT_X5U_FLAGS                             = 39, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
   I_OPT_SERVER_KID                            = 40, ///< key id to use if multiple jwk are available on the server, string
   I_OPT_SERVER_ENC_ALG                        = 41, ///< key id to use if multiple jwk are available on the server, string
@@ -154,7 +158,7 @@ typedef enum {
   I_OPT_CLIENT_ENC_ALG                        = 45, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH-ES', 'ECDH-ES+A128KW', 'ECDH-ES+A192KW', 'ECDH-ES+A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2-HS256+A128KW', 'PBES2-HS384+A192KW or 'PBES2-HS512+A256KW', warning: some algorithm may be unavailable depending on Rhonabwy version used
   I_OPT_CLIENT_ENC                            = 46, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC-HS256,' 'A192CBC-HS384,' 'A256CBC-HS512,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
   I_OPT_TOKEN_JTI                             = 47, ///< jti value, string
-  I_OPT_TOKEN_JTI_GENERATE                    = 48, ///< generate a random jti value
+  I_OPT_TOKEN_JTI_GENERATE                    = 48, ///< Generate a random jti value
   I_OPT_TOKEN_EXP                             = 49, ///< JWT token request expiration time in seconds
   I_OPT_TOKEN_TARGET                          = 50, ///< access_token which is the target of a revocation or an introspection, string
   I_OPT_TOKEN_TARGET_TYPE_HINT                = 51, ///< access_token which is the target of a revocation or an introspection, string
@@ -182,7 +186,10 @@ typedef enum {
   I_OPT_DPOP_SIGN_ALG                         = 73, ///< signature algorithm to use when the client signs a DPoP, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
   I_OPT_TLS_KEY_FILE                          = 74, ///< Path to the private key PEM file to use in a TLS authentication
   I_OPT_TLS_CERT_FILE                         = 75, ///< Path to the certificate PEM file to use in a TLS authentication
-  I_OPT_REMOTE_CERT_FLAG                      = 76  ///< Flags to use with remote connexions to ignore incorrect certificates, flags available are I_REMOTE_HOST_VERIFY_PEER, I_REMOTE_HOST_VERIFY_HOSTNAME, I_REMOTE_PROXY_VERIFY_PEER, I_REMOTE_PROXY_VERIFY_HOSTNAME, I_REMOTE_HOST_VERIFY_NONE, default is I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME
+  I_OPT_REMOTE_CERT_FLAG                      = 76, ///< Flags to use with remote connexions to ignore incorrect certificates, flags available are I_REMOTE_HOST_VERIFY_PEER, I_REMOTE_HOST_VERIFY_HOSTNAME, I_REMOTE_PROXY_VERIFY_PEER, I_REMOTE_PROXY_VERIFY_HOSTNAME, I_REMOTE_VERIFY_NONE, default is I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME
+  I_OPT_PKCE_CODE_VERIFIER                    = 77, ///< PKCE code verifier, must be a string of 43 characters minumum only using the characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
+  I_OPT_PKCE_CODE_VERIFIER_GENERATE           = 78, ///< Generate a random PKCE code verifier 
+  I_OPT_PKCE_METHOD                           = 79  ///< PKCE method to use, values available are I_PKCE_NONE (no PKCE, default), I_PKCE_METHOD_PLAIN or I_PKCE_METHOD_S256
 } i_option;
 
 /**
@@ -272,6 +279,8 @@ struct _i_session {
   char        * key_file;
   char        * cert_file;
   int           remote_cert_flag;
+  char        * pkce_code_verifier;
+  int           pkce_method;
 };
 
 /**
