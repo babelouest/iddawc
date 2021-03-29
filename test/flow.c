@@ -151,6 +151,12 @@ int callback_oauth2_redirect_external_auth (const struct _u_request * request, s
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
+  if (user_data != NULL) {
+    ck_assert_ptr_ne(NULL, u_map_get(request->map_url, "code_challenge_method"));
+    ck_assert_ptr_ne(NULL, u_map_get(request->map_url, "code_challenge"));
+    ck_assert_str_eq(u_map_get(request->map_url, "code_challenge_method"), "S256");
+    memcpy(user_data, u_map_get(request->map_url, "code_challenge"), o_strlen(u_map_get(request->map_url, "code_challenge")));
+  }
   return U_CALLBACK_CONTINUE;
 }
 
@@ -167,6 +173,18 @@ int callback_oauth2_token_code_ok (const struct _u_request * request, struct _u_
                              "token_type", "bearer",
                              "expires_in", 3600,
                              "refresh_token", REFRESH_TOKEN);
+  unsigned char code_challenge[32] = {0}, code_challenge_encoded[64] = {0};
+  size_t code_challenge_len = 32, code_challenge_encoded_len = 0;
+  gnutls_datum_t hash_data;
+
+  if (user_data != NULL) {
+    ck_assert_ptr_ne(NULL, u_map_get(request->map_post_body, "code_verifier"));
+    hash_data.data = (unsigned char *)u_map_get(request->map_post_body, "code_verifier");
+    hash_data.size = o_strlen(u_map_get(request->map_post_body, "code_verifier"));
+    ck_assert_int_eq(gnutls_fingerprint(GNUTLS_DIG_SHA256, &hash_data, code_challenge, &code_challenge_len), GNUTLS_E_SUCCESS);
+    ck_assert_int_eq(o_base64url_encode(code_challenge, code_challenge_len, code_challenge_encoded, &code_challenge_encoded_len), 1);
+    ck_assert_int_eq(0, memcmp(code_challenge_encoded, user_data, code_challenge_encoded_len));
+  }
   ulfius_set_json_body_response(response, 200, result);
   json_decref(result);
   return U_CALLBACK_CONTINUE;
@@ -315,6 +333,55 @@ START_TEST(test_iddawc_code_flow)
   // And finally we load user info using the access token
   ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
   ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
+  
+  json_decref(j_userinfo);
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_code_pkce_flow)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
+  char code_challenge[128] = {0};
+  
+  // First step: get redirection to login page
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/auth", 0, &callback_oauth2_redirect_external_auth, code_challenge), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_ok, code_challenge), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_PKCE_CODE_VERIFIER_GENERATE, 43,
+                                                    I_OPT_PKCE_METHOD, I_PKCE_METHOD_S256,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_build_auth_url_get(&i_session), I_OK);
+  ck_assert_ptr_ne(NULL, o_strstr(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), "&code_challenge_method=S256&code_challenge="));
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  
+  // Then the user has logged in the external application, gets redirected with a result, we parse the result
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_CODE CODE "&state=" STATE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  
+  // Run the token request, get the refresh and access tokens
+  ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
   
   json_decref(j_userinfo);
   i_clean_session(&i_session);
@@ -532,6 +599,7 @@ static Suite *iddawc_suite(void)
   tc_core = tcase_create("test_iddawc_flow");
   tcase_add_test(tc_core, test_iddawc_token_flow);
   tcase_add_test(tc_core, test_iddawc_code_flow);
+  tcase_add_test(tc_core, test_iddawc_code_pkce_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_code_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_code_flow);
