@@ -516,13 +516,13 @@ START_TEST(test_iddawc_token_code_ok)
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_ok, NULL), U_OK);
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_CLIENT_ID, CLIENT_ID,
-                                                  I_OPT_CLIENT_SECRET, CLIENT_SECRET,
-                                                  I_OPT_REDIRECT_URI, REDIRECT_URI,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
-                                                  I_OPT_CODE, CODE,
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_CODE, CODE,
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
@@ -1011,10 +1011,10 @@ START_TEST(test_iddawc_token_refresh_token_noclient_invalid_client)
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_invalid_client, NULL), U_OK);
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_REFRESH_TOKEN,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
-                                                  I_OPT_REFRESH_TOKEN, "error",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_REFRESH_TOKEN, "error",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), NULL);
@@ -1038,10 +1038,10 @@ START_TEST(test_iddawc_token_refresh_token_noclient_ok)
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_access_token_ok, NULL), U_OK);
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_REFRESH_TOKEN,
-                                                  I_OPT_SCOPE, SCOPE_LIST,
-                                                  I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
-                                                  I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
@@ -1059,7 +1059,7 @@ START_TEST(test_iddawc_token_code_jwt_auth_secret_error_param)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SIGN_SECRET,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET,
                                                     I_OPT_TOKEN_JTI_GENERATE, 32,
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,
                                                     I_OPT_SCOPE, SCOPE_LIST,
@@ -1088,7 +1088,7 @@ START_TEST(test_iddawc_token_code_jwt_auth_privkey_error_param)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SIGN_SECRET,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET,
                                                     I_OPT_TOKEN_JTI_GENERATE, 32,
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,
                                                     I_OPT_SCOPE, SCOPE_LIST,
@@ -1125,7 +1125,7 @@ START_TEST(test_iddawc_token_code_jwt_auth_secret_ok)
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SIGN_SECRET,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET,
                                                     I_OPT_TOKEN_JTI_GENERATE, 32,
                                                     I_OPT_CLIENT_SIGN_ALG, "HS256",
                                                     I_OPT_CLIENT_SECRET, CLIENT_SECRET,
@@ -1159,7 +1159,7 @@ START_TEST(test_iddawc_token_code_jwt_auth_privkey_ok)
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SIGN_PRIVKEY,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY,
                                                     I_OPT_TOKEN_JTI_GENERATE, 32,
                                                     I_OPT_CLIENT_SIGN_ALG, "RS256",
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,
@@ -1201,12 +1201,13 @@ START_TEST(test_iddawc_token_code_certificate_ok)
   ck_assert_int_eq(ulfius_start_secure_ca_trust_framework(&instance, key, cert, ca), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
                                                     I_OPT_SCOPE, SCOPE_LIST,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT_CERT,
                                                     I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE,
                                                     I_OPT_TLS_KEY_FILE, "cert/user1.key",
                                                     I_OPT_TLS_CERT_FILE, "cert/user1.crt",
-                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_HOST_VERIFY_NONE,
+                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_VERIFY_NONE,
                                                     I_OPT_CODE, CODE,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
@@ -1236,12 +1237,13 @@ START_TEST(test_iddawc_token_code_certificate_invalid)
   ck_assert_int_eq(ulfius_start_secure_ca_trust_framework(&instance, key, cert, ca), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
                                                     I_OPT_SCOPE, SCOPE_LIST,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT_CERT,
                                                     I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE,
                                                     I_OPT_TLS_KEY_FILE, "cert/user2.key",
                                                     I_OPT_TLS_CERT_FILE, "cert/user2.crt",
-                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_HOST_VERIFY_NONE,
+                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_VERIFY_NONE,
                                                     I_OPT_CODE, CODE,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_UNAUTHORIZED);

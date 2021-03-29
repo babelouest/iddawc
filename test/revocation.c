@@ -9,6 +9,8 @@
 
 #define TOKEN "accessTokenXyz1234"
 
+#define CLIENT_ID "client"
+
 static char * get_file_content(const char * file_path) {
   char * buffer = NULL;
   size_t length, res;
@@ -203,9 +205,10 @@ START_TEST(test_iddawc_revocation_cert_valid)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_REVOCATION_ENDPOINT, "https://localhost:8080/revoke",
                                                     I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
                                                     I_OPT_TLS_KEY_FILE, "cert/user1.key",
                                                     I_OPT_TLS_CERT_FILE, "cert/user1.crt",
-                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_HOST_VERIFY_NONE,
+                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_VERIFY_NONE,
                                                     I_OPT_TOKEN_TARGET, TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET), I_OK);
@@ -233,9 +236,10 @@ START_TEST(test_iddawc_revocation_cert_invalid)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_REVOCATION_ENDPOINT, "https://localhost:8080/revoke",
                                                     I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
                                                     I_OPT_TLS_KEY_FILE, "cert/user2.key",
                                                     I_OPT_TLS_CERT_FILE, "cert/user2.crt",
-                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_HOST_VERIFY_NONE,
+                                                    I_OPT_REMOTE_CERT_FLAG, I_REMOTE_VERIFY_NONE,
                                                     I_OPT_TOKEN_TARGET, TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET), I_ERROR_UNAUTHORIZED);
