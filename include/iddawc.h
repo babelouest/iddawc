@@ -263,8 +263,8 @@ struct _i_session {
   json_t      * j_authorization_details;
   char        * device_auth_code;
   char        * device_auth_user_code;
-  char        * device_auth_verifucation_uri;
-  char        * device_auth_verifucation_uri_complete;
+  char        * device_auth_verification_uri;
+  char        * device_auth_verification_uri_complete;
   uint          device_auth_expires_in;
   uint          device_auth_interval;
   uint          require_pushed_authorization_requests;
@@ -693,7 +693,7 @@ int i_revoke_token(struct _i_session * i_session, int authentication);
 
 /**
  * Register a new client using the dynamic registration endpoint
- * Using the access_token for authentication
+ * Using the access_token for authentication if set
  * @param i_session: a reference to a struct _i_session *
  * @param j_parameters: a json_t * object containing the client metadata
  * The metadata content depends on the registration endpoint but at least
@@ -716,6 +716,15 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
  * @return I_OK on success, an error value on error
  */
 int i_manage_registration_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
+
+/**
+ * Gets a client registration using the dynamic registration endpoint
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
+ * @return I_OK on success, an error value on error
+ */
+int i_get_registration_client(struct _i_session * i_session, json_t ** j_result);
 
 /**
  * Generates a DPoP token based on the given parameters and the internal state of the struct _i_session

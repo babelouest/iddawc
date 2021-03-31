@@ -483,6 +483,48 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
   return ret;
 }
 
+static int _i_parse_error_response(struct _i_session * i_session, json_t * j_response) {
+  int ret = I_OK;
+  const char * key = NULL;
+  json_t * j_element = NULL;
+  char * value;
+    
+  if (j_response != NULL) {
+    if (json_string_length(json_object_get(j_response, "error")) && i_set_str_parameter(i_session, I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_response, "error"))) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_error_response - Error setting error");
+      ret = I_ERROR;
+    }
+    if (json_string_length(json_object_get(j_response, "error_description")) && i_set_str_parameter(i_session, I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_response, "error_description"))) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_error_response - Error setting error_description");
+      ret = I_ERROR;
+    }
+    if (json_string_length(json_object_get(j_response, "error_uri")) && i_set_str_parameter(i_session, I_OPT_ERROR_URI, json_string_value(json_object_get(j_response, "error_uri"))) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_error_response - Error setting error_uri");
+      ret = I_ERROR;
+    }
+    json_object_foreach(j_response, key, j_element) {
+      if (0 != o_strcmp("error", key) &&
+          0 != o_strcmp("error_description", key) &&
+          0 != o_strcmp("error_uri", key)) {
+        if (json_is_string(j_element)) {
+          if (i_set_additional_response(i_session, key, json_string_value(j_element)) != I_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_error_response - Error i_set_additional_response %s - %s", key, json_string_value(j_element));
+            ret = I_ERROR;
+          }
+        } else {
+          value = json_dumps(j_element, JSON_ENCODE_ANY);
+          if (i_set_additional_response(i_session, key, value) != I_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_error_response - Error i_set_additional_response %s - %s", key, json_string_value(j_element));
+            ret = I_ERROR;
+          }
+          o_free(value);
+        }
+      }
+    }
+  }
+  return ret;
+}
+
 static int _i_parse_token_response(struct _i_session * i_session, int http_status, json_t * j_response) {
   int ret = I_OK, res;
   const char * key = NULL;
@@ -576,43 +618,15 @@ static int _i_parse_token_response(struct _i_session * i_session, int http_statu
         ret = I_ERROR_PARAM;
       }
     } else if (http_status == 400) {
-      if (json_string_length(json_object_get(j_response, "error"))) {
-        if (i_set_str_parameter(i_session, I_OPT_ERROR, json_string_value(json_object_get(j_response, "error"))) == I_OK) {
-          if (json_string_length(json_object_get(j_response, "error_description")) && i_set_str_parameter(i_session, I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_response, "error_description"))) != I_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error setting error_description");
-            ret = I_ERROR;
-          }
-          if (json_string_length(json_object_get(j_response, "error_uri")) && i_set_str_parameter(i_session, I_OPT_ERROR_URI, json_string_value(json_object_get(j_response, "error_uri"))) != I_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error setting error_uri");
-            ret = I_ERROR;
-          }
-          json_object_foreach(j_response, key, j_element) {
-            if (0 != o_strcmp("error", key) &&
-                0 != o_strcmp("error_description", key) &&
-                0 != o_strcmp("error_uri", key)) {
-              if (json_is_string(j_element)) {
-                if (i_set_additional_response(i_session, key, json_string_value(j_element)) != I_OK) {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error i_set_additional_response %s - %s", key, json_string_value(j_element));
-                  ret = I_ERROR;
-                }
-              } else {
-                value = json_dumps(j_element, JSON_ENCODE_ANY);
-                if (i_set_additional_response(i_session, key, value) != I_OK) {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error i_set_additional_response %s - %s", key, json_string_value(j_element));
-                  ret = I_ERROR;
-                }
-                o_free(value);
-              }
-            }
-          }
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error setting response parameters (2)");
-          ret = I_ERROR;
-        }
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - required response parameters missing (2)");
-        ret = I_ERROR_PARAM;
+      if (_i_parse_error_response(i_session, j_response) != I_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - _i_parse_error_response (1)");
       }
+      ret = I_ERROR_PARAM;
+    } else if (http_status == 401 || http_status == 403) {
+      if (_i_parse_error_response(i_session, j_response) != I_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - _i_parse_error_response (2)");
+      }
+      ret = I_ERROR_UNAUTHORIZED;
     }
   } else {
     ret = I_ERROR_PARAM;
@@ -646,7 +660,7 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
           ret = I_ERROR;
         }
         json_decref(j_jwks);
-      } else if (response.status == 403 || response.status == 401) {
+      } else if (response.status == 401 || response.status == 403) {
         ret = I_ERROR_UNAUTHORIZED;
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error invalid response status: %d", response.status);
@@ -1406,8 +1420,8 @@ int i_init_session(struct _i_session * i_session) {
     i_session->device_authorization_endpoint = NULL;
     i_session->device_auth_code = NULL;
     i_session->device_auth_user_code = NULL;
-    i_session->device_auth_verifucation_uri = NULL;
-    i_session->device_auth_verifucation_uri_complete = NULL;
+    i_session->device_auth_verification_uri = NULL;
+    i_session->device_auth_verification_uri_complete = NULL;
     i_session->device_auth_expires_in = 0;
     i_session->device_auth_interval = 0;
     i_session->end_session_endpoint = NULL;
@@ -1497,8 +1511,8 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->device_authorization_endpoint);
     o_free(i_session->device_auth_code);
     o_free(i_session->device_auth_user_code);
-    o_free(i_session->device_auth_verifucation_uri);
-    o_free(i_session->device_auth_verifucation_uri_complete);
+    o_free(i_session->device_auth_verification_uri);
+    o_free(i_session->device_auth_verification_uri_complete);
     o_free(i_session->end_session_endpoint);
     o_free(i_session->check_session_iframe);
     o_free(i_session->pushed_authorization_request_endpoint);
@@ -2024,19 +2038,19 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
         }
         break;
       case I_OPT_DEVICE_AUTH_VERIFICATION_URI:
-        o_free(i_session->device_auth_verifucation_uri);
+        o_free(i_session->device_auth_verification_uri);
         if (o_strlen(s_value)) {
-          i_session->device_auth_verifucation_uri = o_strdup(s_value);
+          i_session->device_auth_verification_uri = o_strdup(s_value);
         } else {
-          i_session->device_auth_verifucation_uri = NULL;
+          i_session->device_auth_verification_uri = NULL;
         }
         break;
       case I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE:
-        o_free(i_session->device_auth_verifucation_uri_complete);
+        o_free(i_session->device_auth_verification_uri_complete);
         if (o_strlen(s_value)) {
-          i_session->device_auth_verifucation_uri_complete = o_strdup(s_value);
+          i_session->device_auth_verification_uri_complete = o_strdup(s_value);
         } else {
-          i_session->device_auth_verifucation_uri_complete = NULL;
+          i_session->device_auth_verification_uri_complete = NULL;
         }
         break;
       case I_OPT_END_SESSION_ENDPOINT:
@@ -2333,6 +2347,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
   const char ** keys;
   size_t i;
   jwt_t * jwt = NULL;
+  json_t * j_response;
 
   if (i_session != NULL && i_session->userinfo_endpoint != NULL && i_session->access_token != NULL) {
     _i_init_request(i_session, &request);
@@ -2362,22 +2377,23 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
       if (i_session->use_dpop) {
         if ((dpop_token = i_generate_dpop_token(i_session, http_method!=NULL?http_method:"GET", i_session->userinfo_endpoint, 0)) != NULL) {
           if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_userinfo - Error setting DPoP in header");
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_userinfo_custom - Error setting DPoP in header");
             ret = I_ERROR;
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_userinfo - Error i_generate_dpop_token");
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_userinfo_custom - Error i_generate_dpop_token");
           ret = I_ERROR;
         }
         o_free(dpop_token);
       }
       if (ulfius_send_http_request(&request, &response) == U_OK) {
+        j_response = ulfius_get_json_body_response(&response, NULL);
         if (response.status == 200) {
           if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
             if (r_jwt_init(&jwt) == RHN_OK) {
               token = o_strndup(response.binary_body, response.binary_body_length);
               if (_i_verify_jwt_sig_enc(i_session, token, I_TOKEN_TYPE_USERINFO, jwt) != I_OK) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo - Error _i_verify_jwt_sig_enc");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error _i_verify_jwt_sig_enc");
                 ret = I_ERROR;
               } else {
                 json_decref(i_session->j_userinfo);
@@ -2388,7 +2404,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
               }
               o_free(token);
             } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo - Error r_jwt_init");
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error r_jwt_init");
               ret = I_ERROR;
             }
             r_jwt_free(jwt);
@@ -2399,22 +2415,33 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
               i_session->j_userinfo = json_loads(i_session->userinfo, JSON_DECODE_ANY, NULL);
               ret = I_OK;
             } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo - Error getting response");
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error getting response");
               ret = I_ERROR;
             }
           }
+        } else if (response.status == 404) {
+          ret = I_ERROR_PARAM;
+        } else if (response.status == 400) {
+          if (_i_parse_error_response(i_session, j_response) != I_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error _i_parse_error_response (1)");
+          }
+          ret = I_ERROR_PARAM;
         } else if (response.status == 401 || response.status == 403) {
+          if (_i_parse_error_response(i_session, j_response) != I_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error _i_parse_error_response (1)");
+          }
           ret = I_ERROR_UNAUTHORIZED;
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo - Error invalid response status: %d", response.status);
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error invalid response status: %d", response.status);
           ret = I_ERROR;
         }
+        json_decref(j_response);
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo - Error getting userinfo_endpoint");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error getting userinfo_endpoint");
         ret = I_ERROR;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo - Error u_map_put");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error u_map_put");
       ret = I_ERROR;
     }
     o_free(bearer);
@@ -2699,10 +2726,10 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
         result = (const char *)i_session->device_auth_user_code;
         break;
       case I_OPT_DEVICE_AUTH_VERIFICATION_URI:
-        result = (const char *)i_session->device_auth_verifucation_uri;
+        result = (const char *)i_session->device_auth_verification_uri;
         break;
       case I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE:
-        result = (const char *)i_session->device_auth_verifucation_uri_complete;
+        result = (const char *)i_session->device_auth_verification_uri_complete;
         break;
       case I_OPT_END_SESSION_ENDPOINT:
         result = (const char *)i_session->end_session_endpoint;
@@ -3091,8 +3118,16 @@ int i_run_token_request(struct _i_session * i_session) {
                 ret = I_ERROR;
               }
               json_decref(j_response);
-            } else if (response.status == 403) {
-              ret = I_ERROR_UNAUTHORIZED;
+            } else if (response.status == 403 || response.status == 401) {
+              j_response = ulfius_get_json_body_response(&response, NULL);
+              if (_i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Unauthorized");
+                ret = I_ERROR_UNAUTHORIZED;
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error _i_parse_token_response");
+                ret = I_ERROR_PARAM;
+              }
+              json_decref(j_response);
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Invalid response status: %d", response.status);
               y_log_message(Y_LOG_LEVEL_DEBUG, "response body %.*s", response.binary_body_length, response.binary_body);
@@ -3160,6 +3195,16 @@ int i_run_token_request(struct _i_session * i_session) {
                     ret = I_ERROR;
                   }
                   json_decref(j_response);
+                } else if (response.status == 403 || response.status == 401) {
+                  j_response = ulfius_get_json_body_response(&response, NULL);
+                  if (_i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Unauthorized");
+                    ret = I_ERROR_UNAUTHORIZED;
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Error _i_parse_token_response");
+                    ret = I_ERROR_PARAM;
+                  }
+                  json_decref(j_response);
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Invalid response status");
                   ret = I_ERROR;
@@ -3214,7 +3259,15 @@ int i_run_token_request(struct _i_session * i_session) {
                   }
                   json_decref(j_response);
                 } else if (response.status == 403 || response.status == 401) {
-                  ret = I_ERROR_UNAUTHORIZED;
+                  j_response = ulfius_get_json_body_response(&response, NULL);
+                  if (_i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Unauthorized");
+                    ret = I_ERROR_UNAUTHORIZED;
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error _i_parse_token_response");
+                    ret = I_ERROR_PARAM;
+                  }
+                  json_decref(j_response);
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Invalid response status");
                   ret = I_ERROR;
@@ -3268,6 +3321,16 @@ int i_run_token_request(struct _i_session * i_session) {
                     ret = I_ERROR_PARAM;
                   }
                   json_decref(j_response);
+                } else if (response.status == 403 || response.status == 401) {
+                  j_response = ulfius_get_json_body_response(&response, NULL);
+                  if (_i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Unauthorized");
+                    ret = I_ERROR_UNAUTHORIZED;
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Error _i_parse_token_response");
+                    ret = I_ERROR_PARAM;
+                  }
+                  json_decref(j_response);
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Invalid response status");
                   ret = I_ERROR;
@@ -3312,6 +3375,16 @@ int i_run_token_request(struct _i_session * i_session) {
                   } else {
                     y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request device - Error parsing JSON response");
                     ret = I_ERROR;
+                  }
+                  json_decref(j_response);
+                } else if (response.status == 403 || response.status == 401) {
+                  j_response = ulfius_get_json_body_response(&response, NULL);
+                  if (_i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request device - Unauthorized");
+                    ret = I_ERROR_UNAUTHORIZED;
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request device - Error _i_parse_token_response");
+                    ret = I_ERROR_PARAM;
                   }
                   json_decref(j_response);
                 } else {
@@ -3526,6 +3599,7 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
   struct _u_request request;
   struct _u_response response;
   char * bearer = NULL, * dpop_token = NULL;
+  json_t * j_response;
 
   if (i_session != NULL && o_strlen(i_session->revocation_endpoint) && o_strlen(i_session->token_target)) {
     if (_i_init_request(i_session, &request) != U_OK || ulfius_init_response(&response) != U_OK) {
@@ -3581,14 +3655,24 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
       }
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
-          if (response.status == 400 || response.status == 404) {
+          j_response = ulfius_get_json_body_response(&response, NULL);
+          if (response.status == 404) {
             ret = I_ERROR_PARAM;
-          } else if (response.status == 403 || response.status == 401) {
+          } else if (response.status == 400) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_PARAM;
+          } else if (response.status == 401 || response.status == 403) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error _i_parse_error_response (1)");
+            }
             ret = I_ERROR_UNAUTHORIZED;
           } else if (response.status != 200) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error revoking token: %d", response.status);
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error revoking token");
             ret = I_ERROR;
           }
+          json_decref(j_response);
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error sending http request");
           ret = I_ERROR;
@@ -3609,7 +3693,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
   struct _u_response response;
   char * bearer = NULL, * token = NULL, * dpop_token = NULL;
   jwt_t * jwt = NULL;
-  json_t * j_claims;
+  json_t * j_claims, * j_response;
 
   if (i_session != NULL && o_strlen(i_session->introspection_endpoint) && o_strlen(i_session->token_target) && j_result != NULL) {
     if (_i_init_request(i_session, &request) != U_OK || ulfius_init_response(&response) != U_OK) {
@@ -3665,6 +3749,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
       }
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
+          j_response = ulfius_get_json_body_response(&response, NULL);
           if (response.status == 200) {
             if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
               if (r_jwt_init(&jwt) == RHN_OK) {
@@ -3699,16 +3784,25 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
               }
               r_jwt_free(jwt);
             } else {
-              *j_result = ulfius_get_json_body_response(&response, NULL);
+              *j_result = json_incref(j_response);
             }
-          } else if (response.status == 400 || response.status == 404) {
+          } else if (response.status == 404) {
             ret = I_ERROR_PARAM;
-          } else if (response.status == 403 || response.status == 401) {
+          } else if (response.status == 400) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_PARAM;
+          } else if (response.status == 401 || response.status == 403) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error _i_parse_error_response (1)");
+            }
             ret = I_ERROR_UNAUTHORIZED;
           } else if (response.status != 200) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error introspecting token");
             ret = I_ERROR;
           }
+          json_decref(j_response);
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error sending http request");
           ret = I_ERROR;
@@ -3755,8 +3849,8 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
       }
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
+          j_response = ulfius_get_json_body_response(&response, NULL);
           if (response.status == 200) {
-            j_response = ulfius_get_json_body_response(&response, NULL);
             if (update_session) {
               i_set_str_parameter(i_session, I_OPT_CLIENT_ID, json_string_value(json_object_get(j_response, "client_id")));
               i_set_str_parameter(i_session, I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_response, "client_secret")));
@@ -3765,13 +3859,23 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
             if (j_result != NULL) {
               *j_result = json_incref(j_response);
             }
-            json_decref(j_response);
-          } else if (response.status == 400 || response.status == 404 || response.status == 403) {
+          } else if (response.status == 404) {
             ret = I_ERROR_PARAM;
+          } else if (response.status == 400) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_PARAM;
+          } else if (response.status == 401 || response.status == 403) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_UNAUTHORIZED;
           } else if (response.status != 200) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error registering client");
             ret = I_ERROR;
           }
+          json_decref(j_response);
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error sending http request");
           ret = I_ERROR;
@@ -3781,6 +3885,76 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
       ulfius_clean_response(&response);
     }
   } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_register_client - Invalid parameters");
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+int i_get_registration_client(struct _i_session * i_session, json_t ** j_result) {
+  int ret;
+  struct _u_request request;
+  struct _u_response response;
+  char * bearer = NULL;
+  json_t * j_response;
+
+  if (i_session != NULL && o_strlen(i_session->registration_endpoint) && o_strlen(i_session->client_id)) {
+    if (_i_init_request(i_session, &request) != U_OK || ulfius_init_response(&response) != U_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error initializing request or response");
+      ret = I_ERROR;
+    } else {
+      ret = I_OK;
+      if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "GET",
+                                                  U_OPT_HTTP_URL, i_session->registration_endpoint,
+                                                  U_OPT_HTTP_URL_APPEND, "/",
+                                                  U_OPT_HTTP_URL_APPEND, i_session->client_id,
+                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                  U_OPT_NONE) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error setting parameters");
+        ret = I_ERROR;
+      }
+      if (o_strlen(i_session->access_token)) {
+        bearer = msprintf("Bearer %s", i_session->access_token);
+        if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error setting bearer token");
+          ret = I_ERROR;
+        }
+        o_free(bearer);
+      }
+      if (ret == I_OK) {
+        if (ulfius_send_http_request(&request, &response) == U_OK) {
+          j_response = ulfius_get_json_body_response(&response, NULL);
+          if (response.status == 200) {
+            if (j_result != NULL) {
+              *j_result = json_incref(j_response);
+            }
+          } else if (response.status == 404) {
+            ret = I_ERROR_PARAM;
+          } else if (response.status == 400) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_PARAM;
+          } else if (response.status == 401 || response.status == 403) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_UNAUTHORIZED;
+          } else if (response.status != 200) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error registering client %d", response.status);
+            ret = I_ERROR;
+          }
+          json_decref(j_response);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error sending http request");
+          ret = I_ERROR;
+        }
+      }
+      ulfius_clean_request(&request);
+      ulfius_clean_response(&response);
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_registration_client - Invalid parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -3799,7 +3973,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
       ret = I_ERROR;
     } else {
       ret = I_OK;
-      if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+      if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "PUT",
                                                   U_OPT_HTTP_URL, i_session->registration_endpoint,
                                                   U_OPT_HTTP_URL_APPEND, "/",
                                                   U_OPT_HTTP_URL_APPEND, i_session->client_id,
@@ -3819,8 +3993,8 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
       }
       if (ret == I_OK) {
         if (ulfius_send_http_request(&request, &response) == U_OK) {
+          j_response = ulfius_get_json_body_response(&response, NULL);
           if (response.status == 200) {
-            j_response = ulfius_get_json_body_response(&response, NULL);
             if (update_session) {
               i_set_str_parameter(i_session, I_OPT_CLIENT_ID, json_string_value(json_object_get(j_response, "client_id")));
               i_set_str_parameter(i_session, I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_response, "client_secret")));
@@ -3829,13 +4003,23 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
             if (j_result != NULL) {
               *j_result = json_incref(j_response);
             }
-            json_decref(j_response);
-          } else if (response.status == 400 || response.status == 404 || response.status == 403) {
+          } else if (response.status == 404) {
             ret = I_ERROR_PARAM;
+          } else if (response.status == 400) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_PARAM;
+          } else if (response.status == 401 || response.status == 403) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_UNAUTHORIZED;
           } else if (response.status != 200) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error registering client");
             ret = I_ERROR;
           }
+          json_decref(j_response);
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error sending http request");
           ret = I_ERROR;
@@ -3845,6 +4029,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
       ulfius_clean_response(&response);
     }
   } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_manage_registration_client - Invalid parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -3854,6 +4039,7 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
     j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* so so  so ss* so* ss* ss* si ss* si }",
+                         
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_str_parameter(i_session, I_OPT_STATE),
@@ -3916,8 +4102,8 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "device_authorization_endpoint", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT),
                          "device_auth_code", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_CODE),
                          "device_auth_user_code", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_USER_CODE),
-                         "device_auth_verifucation_uri", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI),
-                         "device_auth_verifucation_uri_complete", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE),
+                         "device_auth_verification_uri", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI),
+                         "device_auth_verification_uri_complete", i_get_str_parameter(i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE),
 
                          "device_auth_expires_in", i_get_int_parameter(i_session, I_OPT_DEVICE_AUTH_EXPIRES_IN),
                          "device_auth_interval", i_get_int_parameter(i_session, I_OPT_DEVICE_AUTH_INTERVAL),
@@ -4007,8 +4193,8 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, json_string_value(json_object_get(j_import, "device_authorization_endpoint")),
                                      I_OPT_DEVICE_AUTH_CODE, json_string_value(json_object_get(j_import, "device_auth_code")),
                                      I_OPT_DEVICE_AUTH_USER_CODE, json_string_value(json_object_get(j_import, "device_auth_user_code")),
-                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI, json_string_value(json_object_get(j_import, "device_auth_verifucation_uri")),
-                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, json_string_value(json_object_get(j_import, "device_auth_verifucation_uri_complete")),
+                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI, json_string_value(json_object_get(j_import, "device_auth_verification_uri")),
+                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, json_string_value(json_object_get(j_import, "device_auth_verification_uri_complete")),
                                      I_OPT_DEVICE_AUTH_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "device_auth_expires_in")),
                                      I_OPT_DEVICE_AUTH_INTERVAL, (int)json_integer_value(json_object_get(j_import, "device_auth_interval")),
                                      I_OPT_END_SESSION_ENDPOINT, json_string_value(json_object_get(j_import, "end_session_endpoint")),
