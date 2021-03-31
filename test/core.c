@@ -1041,8 +1041,8 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "device_authorization_endpoint"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "device_auth_code"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "device_auth_user_code"), NULL);
-  ck_assert_ptr_eq(json_object_get(j_export, "device_auth_verifucation_uri"), NULL);
-  ck_assert_ptr_eq(json_object_get(j_export, "device_auth_verifucation_uri_complete"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "device_auth_verification_uri"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "device_auth_verification_uri_complete"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "end_session_endpoint"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "check_session_iframe"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_expires_in")), 0);
@@ -1196,8 +1196,8 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_authorization_endpoint")), DEVICE_AUTHORIZATION_ENDPOINT);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_auth_code")), DEVICE_AUTH_CODE);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_auth_user_code")), DEVICE_AUTH_USER_CODE);
-  ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_auth_verifucation_uri")), DEVICE_AUTH_VERIFICATION_URI);
-  ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_auth_verifucation_uri_complete")), DEVICE_AUTH_VERIFICATION_URI_COMPLETE);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_auth_verification_uri")), DEVICE_AUTH_VERIFICATION_URI);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_auth_verification_uri_complete")), DEVICE_AUTH_VERIFICATION_URI_COMPLETE);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_expires_in")), DEVICE_AUTH_EXPIRES_IN);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "device_auth_interval")), DEVICE_AUTH_INTERVAL);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "end_session_endpoint")), END_SESSION_ENDPOINT);
