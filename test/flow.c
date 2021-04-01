@@ -62,6 +62,10 @@
 #define REQUEST_URI "true"
 #define REQUIRE_REQUEST_REGIS "false"
 #define SUBJECT_TYPE "public"
+#define CLAIM1 "claim1"
+#define CLAIM2 "claim2"
+#define CLAIM1_VALUE "248289761001"
+#define CLAIM1_CONTENT "{\"value\":\""CLAIM1_VALUE"\"}"
 
 const char id_token_pattern[] =
 "{\"amr\":[\"password\"],\"aud\":\"%s\",\"auth_time\":%lld"
@@ -341,6 +345,64 @@ START_TEST(test_iddawc_code_flow)
 }
 END_TEST
 
+START_TEST(test_iddawc_code_claims_flow)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL), * j_claims = json_pack("{s{so}s{s{so}}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, "essential", json_false());
+  char * str_claims = json_dumps(j_claims, JSON_COMPACT), * escaped_claims = ulfius_url_encode(str_claims);
+  
+  // First step: get redirection to login page
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/auth", 0, &callback_oauth2_redirect_external_auth, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/userinfo", 0, &callback_userinfo_valid_json, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_ok, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_FALSE, NULL));
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_int_eq(i_build_auth_url_get(&i_session), I_OK);
+  ck_assert_ptr_ne(NULL, o_strstr(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), escaped_claims));
+  ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
+  
+  // Then the user has loggined in the external application, gets redirected with a result, we parse the result
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_CODE CODE "&state=" STATE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  
+  // Run the token request, get the refresh and access tokens
+  ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  
+  // And finally we load user info using the access token
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
+  
+  json_decref(j_userinfo);
+  json_decref(j_claims);
+  o_free(str_claims);
+  o_free(escaped_claims);
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_code_pkce_flow)
 {
   struct _i_session i_session;
@@ -599,6 +661,7 @@ static Suite *iddawc_suite(void)
   tc_core = tcase_create("test_iddawc_flow");
   tcase_add_test(tc_core, test_iddawc_token_flow);
   tcase_add_test(tc_core, test_iddawc_code_flow);
+  tcase_add_test(tc_core, test_iddawc_code_claims_flow);
   tcase_add_test(tc_core, test_iddawc_code_pkce_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_code_flow);

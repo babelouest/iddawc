@@ -110,6 +110,12 @@
 #define REMOTE_CERT_FLAG 42
 #define PKCE_CODE_VERIFIER "PKCECodeVerifier123456789012345678901234567890"
 #define PKCE_METHOD I_PKCE_METHOD_S256
+#define CLAIM1 "claim1"
+#define CLAIM2 "claim2"
+#define CLAIM1_VALUE "248289761001"
+#define CLAIM2_VALUE "urn:mace:incommon:iap:silver"
+#define CLAIM1_CONTENT "{\"value\":\""CLAIM1_VALUE"\"}"
+#define CLAIM2_CONTENT "{\"values\":[\""CLAIM2_VALUE"\"]}"
 
 const char jwks_pubkey_ecdsa_str[] = "{\"keys\":[{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","\
                                     "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\",\"use\":\"enc\",\"kid\":\"1\"}]}";
@@ -977,10 +983,82 @@ START_TEST(test_iddawc_parameter_list)
 }
 END_TEST
 
+START_TEST(test_iddawc_claims)
+{
+  struct _i_session i_session;
+  json_t * j_claims;
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+
+  ck_assert_ptr_ne(NULL, j_claims = json_pack("{s{}s{}}", "userinfo", "id_token"));
+  ck_assert_int_eq(1, json_equal(j_claims, i_session.j_claims));
+  json_decref(j_claims);
+
+  ck_assert_int_eq(I_ERROR_PARAM, i_add_claim_request(&i_session, 42, CLAIM1, I_CLAIM_ESSENTIAL_NULL, NULL));
+  ck_assert_int_eq(I_ERROR_PARAM, i_add_claim_request(&i_session, I_CLAIM_TARGET_ALL, CLAIM1, 42, NULL));
+  ck_assert_int_eq(I_ERROR_PARAM, i_add_claim_request(&i_session, I_CLAIM_TARGET_ALL, CLAIM1, I_CLAIM_ESSENTIAL_NULL, "error"));
+  ck_assert_int_eq(I_ERROR_PARAM, i_add_claim_request(&i_session, I_CLAIM_TARGET_ALL, CLAIM1, I_CLAIM_ESSENTIAL_NULL, ""));
+  ck_assert_int_eq(I_ERROR_PARAM, i_remove_claim_request(&i_session, 42, CLAIM1));
+  ck_assert_int_eq(I_ERROR_PARAM, i_remove_claim_request(&i_session, I_CLAIM_TARGET_ALL, "error"));
+  ck_assert_int_eq(I_ERROR_PARAM, i_remove_claim_request(&i_session, I_CLAIM_TARGET_ALL, ""));
+
+  i_clean_session(&i_session);
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ALL, CLAIM1, I_CLAIM_ESSENTIAL_NULL, NULL));
+  
+  ck_assert_ptr_ne(NULL, j_claims = json_pack("{s{so}s{so}}", "userinfo", CLAIM1, json_null(), "id_token", CLAIM1, json_null()));
+  ck_assert_int_eq(1, json_equal(j_claims, i_session.j_claims));
+  json_decref(j_claims);
+  
+  i_clean_session(&i_session);
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM1, I_CLAIM_ESSENTIAL_TRUE, NULL));
+  
+  ck_assert_ptr_ne(NULL, j_claims = json_pack("{s{}s{s{so}}}", "userinfo", "id_token", CLAIM1, "essential", json_true()));
+  ck_assert_int_eq(1, json_equal(j_claims, i_session.j_claims));
+  json_decref(j_claims);
+  
+  i_clean_session(&i_session);
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM2, I_CLAIM_ESSENTIAL_FALSE, NULL));
+
+  ck_assert_ptr_ne(NULL, j_claims = json_pack("{s{s{so}}s{}}", "userinfo", CLAIM2, "essential", json_false(), "id_token"));
+  ck_assert_int_eq(1, json_equal(j_claims, i_session.j_claims));
+  json_decref(j_claims);
+
+  i_clean_session(&i_session);
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_IGNORE, CLAIM2_CONTENT));
+
+  ck_assert_ptr_ne(NULL, j_claims = json_pack("{s{so}s{so}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, json_loads(CLAIM2_CONTENT, JSON_DECODE_ANY, NULL)));
+  ck_assert_int_eq(1, json_equal(j_claims, i_session.j_claims));
+  ck_assert_int_eq(I_ERROR_PARAM, i_remove_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM1));
+  ck_assert_int_eq(1, json_equal(j_claims, i_session.j_claims));
+  json_decref(j_claims);
+  
+  ck_assert_ptr_ne(NULL, j_claims = json_pack("{s{so}s{}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token"));
+  ck_assert_int_eq(I_OK, i_remove_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2));
+  ck_assert_int_eq(1, json_equal(j_claims, i_session.j_claims));
+  json_decref(j_claims);
+
+  ck_assert_int_eq(I_OK, i_remove_claim_request(&i_session, I_CLAIM_TARGET_ALL, CLAIM1));
+  ck_assert_ptr_ne(NULL, j_claims = json_pack("{s{}s{}}", "userinfo", "id_token"));
+  ck_assert_int_eq(1, json_equal(j_claims, i_session.j_claims));
+  json_decref(j_claims);
+
+  i_clean_session(&i_session);
+}
+END_TEST
+
 START_TEST(test_iddawc_export_json_t)
 {
   struct _i_session i_session;
-  json_t * j_export, * j_additional = json_pack("{ss}", ADDITIONAL_KEY, ADDITIONAL_VALUE), * j_additional_empty = json_object(), * jwks_empty = json_pack("{s[]}", "keys"), * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_auth_request = json_loads(AUTH_REQUEST_1, JSON_DECODE_ANY, NULL);
+  json_t * j_export, * j_additional = json_pack("{ss}", ADDITIONAL_KEY, ADDITIONAL_VALUE), * j_additional_empty = json_object(), * jwks_empty = json_pack("{s[]}", "keys"), * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_auth_request = json_loads(AUTH_REQUEST_1, JSON_DECODE_ANY, NULL), * j_claims_empty = json_pack("{s{}s{}}", "userinfo", "id_token"), * j_claims = json_pack("{s{so}s{so}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, json_loads(CLAIM2_CONTENT, JSON_DECODE_ANY, NULL));
   json_object_set_new(j_auth_request, "type", json_string(AUTH_REQUEST_TYPE_1));
 
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
@@ -1062,6 +1140,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "remote_cert_flag")), I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME);
   ck_assert_ptr_eq(json_object_get(j_export, "pkce_code_verifier"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pkce_method")), I_PKCE_NONE);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims_empty), 1);
   json_decref(j_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1139,6 +1218,8 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_IGNORE, CLAIM2_CONTENT));
 
   j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
@@ -1217,6 +1298,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "remote_cert_flag")), REMOTE_CERT_FLAG);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "pkce_code_verifier")), PKCE_CODE_VERIFIER);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pkce_method")), PKCE_METHOD);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims), 1);
   json_decref(j_export);
 
   json_decref(j_additional);
@@ -1224,6 +1306,8 @@ START_TEST(test_iddawc_export_json_t)
   json_decref(jwks_empty);
   json_decref(j_config);
   json_decref(j_auth_request);
+  json_decref(j_claims);
+  json_decref(j_claims_empty);
   i_clean_session(&i_session);
 }
 END_TEST
@@ -1231,7 +1315,7 @@ END_TEST
 START_TEST(test_iddawc_import_json_t)
 {
   struct _i_session i_session, i_session_import;
-  json_t * j_export = NULL, * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_userinfo = json_loads(USERINFO, JSON_DECODE_ANY, NULL), * jwks = NULL, * j_auth_request = json_loads(AUTH_REQUEST_1, JSON_DECODE_ANY, NULL);
+  json_t * j_export = NULL, * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_userinfo = json_loads(USERINFO, JSON_DECODE_ANY, NULL), * jwks = NULL, * j_auth_request = json_loads(AUTH_REQUEST_1, JSON_DECODE_ANY, NULL), * j_claims = json_pack("{s{so}s{so}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, json_loads(CLAIM2_CONTENT, JSON_DECODE_ANY, NULL));
   json_object_set_new(j_auth_request, "type", json_string(AUTH_REQUEST_TYPE_1));
 
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
@@ -1314,6 +1398,8 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_IGNORE, CLAIM2_CONTENT));
 
   j_export = i_export_session_json_t(&i_session);
   ck_assert_ptr_ne(j_export, NULL);
@@ -1395,12 +1481,14 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
   ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims), 1);
   json_decref(j_export);
 
   json_decref(j_config);
   json_decref(j_userinfo);
   json_decref(jwks);
   json_decref(j_auth_request);
+  json_decref(j_claims);
   i_clean_session(&i_session);
   i_clean_session(&i_session_import);
 }
@@ -1415,7 +1503,7 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
   str_export = i_export_session_str(&i_session);
-  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":0,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":0,\"decrypt_code\":false,\"decrypt_refresh_token\":false,\"decrypt_access_token\":false,\"client_jwks\":{\"keys\":[]},\"remote_cert_flag\":4369,\"pkce_method\":0}");
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":0,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":0,\"decrypt_code\":false,\"decrypt_refresh_token\":false,\"decrypt_access_token\":false,\"client_jwks\":{\"keys\":[]},\"remote_cert_flag\":4369,\"pkce_method\":0,\"claims\":{\"userinfo\":{},\"id_token\":{}}}");
   o_free(str_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1493,6 +1581,8 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_IGNORE, CLAIM2_CONTENT));
 
   ck_assert_ptr_ne(str_export = i_export_session_str(&i_session), NULL);
   o_free(str_export);
@@ -1507,7 +1597,7 @@ END_TEST
 START_TEST(test_iddawc_import_str)
 {
   struct _i_session i_session, i_session_import;
-  json_t * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_userinfo = json_loads(USERINFO, JSON_DECODE_ANY, NULL), * jwks = NULL;
+  json_t * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_userinfo = json_loads(USERINFO, JSON_DECODE_ANY, NULL), * jwks = NULL, * j_claims = json_pack("{s{so}s{so}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, json_loads(CLAIM2_CONTENT, JSON_DECODE_ANY, NULL));
   char * str_import, * str_rar;
 
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
@@ -1590,6 +1680,8 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_IGNORE, CLAIM2_CONTENT));
 
   str_import = i_export_session_str(&i_session);
   ck_assert_ptr_ne(str_import, NULL);
@@ -1670,12 +1762,14 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PKCE_METHOD), PKCE_METHOD);
   ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
   ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
+  ck_assert_int_eq(json_equal(i_session.j_claims, j_claims), 1);
   o_free(str_import);
   o_free(str_rar);
 
   json_decref(j_config);
   json_decref(j_userinfo);
   json_decref(jwks);
+  json_decref(j_claims);
   i_clean_session(&i_session);
   i_clean_session(&i_session_import);
 }
@@ -1703,6 +1797,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_get_additional_response);
   tcase_add_test(tc_core, test_iddawc_rich_authorization_request);
   tcase_add_test(tc_core, test_iddawc_parameter_list);
+  tcase_add_test(tc_core, test_iddawc_claims);
   tcase_add_test(tc_core, test_iddawc_export_json_t);
   tcase_add_test(tc_core, test_iddawc_import_json_t);
   tcase_add_test(tc_core, test_iddawc_export_str);

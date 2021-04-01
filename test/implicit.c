@@ -31,6 +31,10 @@
 #define ID_TOKEN "idTokenXyz1234"
 #define GLEWLWYD_API_URL "https://glewlwyd.tld/api"
 #define GLEWLWYD_COOKIE_SESSION "cookieXyz1234"
+#define CLAIM1 "claim1"
+#define CLAIM2 "claim2"
+#define CLAIM1_VALUE "248289761001"
+#define CLAIM1_CONTENT "{\"value\":\""CLAIM1_VALUE"\"}"
 
 const char jwk_privkey_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9E"\
                                 "XrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0"\
@@ -255,6 +259,47 @@ int callback_oauth2_code_valid_post_jwt_signed (const struct _u_request * reques
   } else {
     response->status = 400;
   }
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_oauth2_code_valid_post_jwt_signed_with_claims (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  json_t * j_claims = json_pack("{s{so}s{s{so}}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, "essential", json_false()), * j_jwt_claims;
+  if (u_map_get(request->map_post_body, "request") != NULL) {
+    jwt_t * jwt;
+    jwk_t * jwk;
+    r_jwt_init(&jwt);
+    r_jwk_init(&jwk);
+    r_jwt_parse(jwt, u_map_get(request->map_post_body, "request"), 0);
+    ck_assert_ptr_ne(NULL, j_jwt_claims = r_jwt_get_claim_json_t_value(jwt, "claims"));
+    ck_assert_int_eq(1, json_equal(j_jwt_claims, j_claims));
+    json_decref(j_jwt_claims);
+    if (r_jwt_get_sign_alg(jwt) == R_JWA_ALG_HS256) {
+      r_jwk_import_from_symmetric_key(jwk, (const unsigned char *)CLIENT_SECRET, o_strlen(CLIENT_SECRET));
+      if (r_jwt_verify_signature(jwt, jwk, 0) == RHN_OK) {
+        char * redirect = msprintf("%s?code=" CODE "&state=%s", REDIRECT_URI, STATE);
+        u_map_put(response->map_header, "Location", redirect);
+        response->status = 302;
+        o_free(redirect);
+      } else {
+        response->status = 400;
+      }
+    } else {
+      r_jwk_import_from_json_str(jwk, jwk_pubkey_str);
+      if (r_jwt_verify_signature(jwt, jwk, 0) == RHN_OK) {
+        char * redirect = msprintf("%s?code=" CODE "&state=%s", REDIRECT_URI, STATE);
+        u_map_put(response->map_header, "Location", redirect);
+        response->status = 302;
+        o_free(redirect);
+      } else {
+        response->status = 400;
+      }
+    }
+    r_jwt_free(jwt);
+    r_jwk_free(jwk);
+  } else {
+    response->status = 400;
+  }
+  json_decref(j_claims);
   return U_CALLBACK_CONTINUE;
 }
 
@@ -1142,6 +1187,39 @@ START_TEST(test_iddawc_code_valid_post_jwt_sign_secret)
 }
 END_TEST
 
+START_TEST(test_iddawc_code_valid_post_jwt_sign_secret_claims)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/auth", 0, &callback_oauth2_code_valid_post_jwt_signed_with_claims, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_CLIENT_SIGN_ALG, "HS256",
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST|I_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_FALSE, NULL));
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CLIENT_SECRET, CLIENT_SECRET_ERROR), I_OK);
+  ck_assert_int_eq(i_run_auth_request(&i_session), I_ERROR_PARAM);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_code_valid_post_jwt_sign_privkey)
 {
   struct _i_session i_session;
@@ -1356,6 +1434,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_secret_error_param);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_pubkey_error_param);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_secret);
+  tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_secret_claims);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_privkey);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_secret);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_pubkey);
