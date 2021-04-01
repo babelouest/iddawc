@@ -87,6 +87,10 @@ static char * rand_string_nonce(char * str, size_t str_size) {
   }
 }
 
+static int _i_has_claims(struct _i_session * i_session) {
+  return json_object_size(json_object_get(i_session->j_claims, "userinfo")) && json_object_size(json_object_get(i_session->j_claims, "id_token"));
+}
+
 static int _i_init_request(struct _i_session * i_session, struct _u_request * request) {
   int ret, flag_host = 0, flag_proxy = 0;
 
@@ -901,6 +905,10 @@ static char * _i_generate_auth_jwt(struct _i_session * i_session) {
       r_jwt_set_claim_str_value(jwt, keys[i], u_map_get(&i_session->additional_parameters, keys[i]));
     }
 
+    if (_i_has_claims(i_session)) {
+      r_jwt_set_claim_json_t_value(jwt, "claims", i_session->j_claims);
+    }
+
     if (i_session->auth_method & I_AUTH_METHOD_JWT_SIGN_SECRET) {
       if (o_strlen(i_session->client_secret)) {
         if ((i_session->client_sign_alg == R_JWA_ALG_HS256 || i_session->client_sign_alg == R_JWA_ALG_HS384 || i_session->client_sign_alg == R_JWA_ALG_HS512) && _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
@@ -1441,6 +1449,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->pkce_code_verifier = NULL;
     i_session->pkce_method = I_PKCE_NONE;
     i_session->remote_cert_flag = I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME;
+    i_session->j_claims = json_pack("{s{}s{}}", "userinfo", "id_token");
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
         if ((res = r_jwks_init(&i_session->server_jwks)) == RHN_OK) {
@@ -1530,6 +1539,7 @@ void i_clean_session(struct _i_session * i_session) {
     json_decref(i_session->openid_config);
     json_decref(i_session->j_userinfo);
     json_decref(i_session->j_authorization_details);
+    json_decref(i_session->j_claims);
   }
 }
 
@@ -2159,6 +2169,82 @@ int i_set_additional_response(struct _i_session * i_session, const char * s_key,
       ret = I_ERROR;
     }
   } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+int i_add_claim_request(struct _i_session * i_session, int target, const char * claim, int essential, const char * value) {
+  int ret = I_OK;
+  json_t * j_value = NULL;
+  
+  if (i_session != NULL && o_strlen(claim)) {
+    if (target == I_CLAIM_TARGET_ALL || target == I_CLAIM_TARGET_USERINFO || target == I_CLAIM_TARGET_ID_TOKEN) {
+      if (value != NULL) {
+        if ((j_value = json_loads(value, JSON_DECODE_ANY, NULL)) == NULL) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_add_claim_request - Error parsing value");
+          ret = I_ERROR_PARAM;
+        }
+      } else {
+        if (essential == I_CLAIM_ESSENTIAL_NULL) {
+          j_value = json_null();
+        } else if (essential == I_CLAIM_ESSENTIAL_TRUE) {
+          j_value = json_pack("{so}", "essential", json_true());
+        } else if (essential == I_CLAIM_ESSENTIAL_FALSE) {
+          j_value = json_pack("{so}", "essential", json_false());
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_add_claim_request - Invalid essential value");
+          ret = I_ERROR_PARAM;
+        }
+      }
+      if (j_value != NULL) {
+        if (target == I_CLAIM_TARGET_ALL || target == I_CLAIM_TARGET_USERINFO) {
+          json_object_set(json_object_get(i_session->j_claims, "userinfo"), claim, j_value);
+        }
+        if (target == I_CLAIM_TARGET_ALL || target == I_CLAIM_TARGET_ID_TOKEN) {
+          json_object_set(json_object_get(i_session->j_claims, "id_token"), claim, j_value);
+        }
+        json_decref(j_value);
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_add_claim_request - Invalid target value");
+      ret = I_ERROR_PARAM;
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_add_claim_request - Error input parameters");
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+int i_remove_claim_request(struct _i_session * i_session, int target, const char * claim) {
+  int ret = I_OK, found;
+  
+  if (i_session != NULL && o_strlen(claim)) {
+    if (target == I_CLAIM_TARGET_ALL || target == I_CLAIM_TARGET_USERINFO || target == I_CLAIM_TARGET_ID_TOKEN) {
+      found = 0;
+      if (target == I_CLAIM_TARGET_ALL || target == I_CLAIM_TARGET_USERINFO) {
+        if (json_object_get(json_object_get(i_session->j_claims, "userinfo"), claim) != NULL) {
+          json_object_del(json_object_get(i_session->j_claims, "userinfo"), claim);
+          found = 1;
+        }
+      }
+      if (target == I_CLAIM_TARGET_ALL || target == I_CLAIM_TARGET_ID_TOKEN) {
+        if (json_object_get(json_object_get(i_session->j_claims, "id_token"), claim) != NULL) {
+          json_object_del(json_object_get(i_session->j_claims, "id_token"), claim);
+          found = 1;
+        }
+      }
+      if (!found) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_remove_claim_request - Invalid claim value");
+        ret = I_ERROR_PARAM;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_add_claim_request - Invalid target value");
+      ret = I_ERROR_PARAM;
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_remove_claim_request - Error input parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -2866,6 +2952,14 @@ int i_build_auth_url_get(struct _i_session * i_session) {
           escaped = ulfius_url_encode(i_session->nonce);
           url = mstrcatf(url, "&nonce=%s", escaped);
           o_free(escaped);
+        }
+
+        if (_i_has_claims(i_session)) {
+          tmp = json_dumps(i_session->j_claims, JSON_COMPACT);
+          escaped = ulfius_url_encode(tmp);
+          url = mstrcatf(url, "&claims=%s", escaped);
+          o_free(escaped);
+          o_free(tmp);
         }
 
         if (i_session->pkce_method != I_PKCE_NONE) {
@@ -4037,7 +4131,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* so so  so ss* so* ss* ss* si ss* si }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* so so  so ss* so* ss* ss* si ss* si sO* }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -4130,7 +4224,8 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
 
                          "remote_cert_flag", i_get_int_parameter(i_session, I_OPT_REMOTE_CERT_FLAG),
                          "pkce_code_verifier", i_get_str_parameter(i_session, I_OPT_PKCE_CODE_VERIFIER),
-                         "pkce_method", i_get_int_parameter(i_session, I_OPT_PKCE_METHOD)
+                         "pkce_method", i_get_int_parameter(i_session, I_OPT_PKCE_METHOD),
+                         "claims", i_session->j_claims
                          );
   }
   return j_return;
@@ -4240,6 +4335,12 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
       if (json_object_get(j_import, "client_jwks") != NULL && (r_jwks_empty(i_session->client_jwks) != RHN_OK || r_jwks_import_from_json_t(i_session->client_jwks, json_object_get(j_import, "client_jwks")) != RHN_OK)) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t client_jwks");
         ret = I_ERROR;
+      }
+      json_decref(i_session->j_claims);
+      if (json_object_get(j_import, "claims") != NULL) {
+        i_session->j_claims = json_deep_copy(json_object_get(j_import, "claims"));
+      } else {
+        i_session->j_claims = json_pack("{s{}s{}}", "userinfo", "id_token");
       }
       json_array_extend(i_session->j_authorization_details, json_object_get(j_import, "authorization_details"));
     } else {
@@ -4553,6 +4654,7 @@ int i_run_device_auth_request(struct _i_session * i_session) {
   struct _u_request request;
   struct _u_response response;
   json_t * j_response;
+  char * claims;
 
   if (i_session != NULL &&
       i_session->device_authorization_endpoint != NULL &&
@@ -4570,6 +4672,13 @@ int i_run_device_auth_request(struct _i_session * i_session) {
     if (i_session->scope != NULL) {
       ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "scope", i_session->scope, U_OPT_NONE);
     }
+
+    if (_i_has_claims(i_session)) {
+      claims = json_dumps(i_session->j_claims, JSON_COMPACT);
+      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "claims", claims, U_OPT_NONE);
+      o_free(claims);
+    }
+
     if ((res = _i_add_token_authentication(i_session, i_session->device_authorization_endpoint, &request)) == I_OK) {
       if (ulfius_send_http_request(&request, &response) == U_OK) {
         if (response.status == 200 || response.status == 400) {
@@ -4664,6 +4773,12 @@ int i_run_par_request(struct _i_session * i_session) {
 
     if (i_session->nonce != NULL) {
       ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "nonce", i_session->nonce, U_OPT_NONE);
+    }
+
+    if (_i_has_claims(i_session)) {
+      tmp = json_dumps(i_session->j_claims, JSON_COMPACT);
+      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "claims", tmp, U_OPT_NONE);
+      o_free(tmp);
     }
 
     if (json_array_size(i_session->j_authorization_details)) {

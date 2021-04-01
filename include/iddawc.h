@@ -106,6 +106,15 @@ extern "C"
 #define I_PKCE_METHOD_PLAIN 1
 #define I_PKCE_METHOD_S256  2
 
+#define I_CLAIM_TARGET_ALL      0
+#define I_CLAIM_TARGET_USERINFO 1
+#define I_CLAIM_TARGET_ID_TOKEN 2
+
+#define I_CLAIM_ESSENTIAL_NULL   0
+#define I_CLAIM_ESSENTIAL_TRUE   1
+#define I_CLAIM_ESSENTIAL_FALSE  2
+#define I_CLAIM_ESSENTIAL_IGNORE 3
+
 /**
  * Options available to set or get properties using
  * i_set_int_parameter, i_set_str_parameter,
@@ -281,6 +290,7 @@ struct _i_session {
   int           remote_cert_flag;
   char        * pkce_code_verifier;
   int           pkce_method;
+  json_t      * j_claims;
 };
 
 /**
@@ -405,6 +415,31 @@ int i_set_additional_parameter(struct _i_session * i_session, const char * s_key
  * @return I_OK on success, an error value on error
  */
 int i_set_additional_response(struct _i_session * i_session, const char * s_key, const char * s_value);
+
+/**
+ * Adds a claim to the request
+ * @param i_session: a reference to a struct _i_session *
+ * @param target: where the claim should be returned, values available are I_CLAIM_TARGET_ALL,
+ * I_CLAIM_TARGET_USERINFO or I_CLAIM_TARGET_ID_TOKEN
+ * @param claim: the name of the claim
+ * @param essential: is the claim essential value set or null
+ * values available are I_CLAIM_ESSENTIAL_NULL, I_CLAIM_ESSENTIAL_TRUE, I_CLAIM_ESSENTIAL_FALSE
+ * or I_CLAIM_ESSENTIAL_IGNORE
+ * @param value: will override essential parameter if set, sets the claim value
+ * with the content of the value parsed in JSON
+ * @return I_OK on success, an error value on error
+ */
+int i_add_claim_request(struct _i_session * i_session, int target, const char * claim, int essential, const char * value);
+
+/**
+ * Removes a claim from the request
+ * @param i_session: a reference to a struct _i_session *
+ * @param target: where the claim should be returned, values available are I_CLAIM_TARGET_ALL,
+ * I_CLAIM_TARGET_USERINFO or I_CLAIM_TARGET_ID_TOKEN
+ * @param claim: the name of the claim to remove
+ * @return I_OK on success, an error value on error
+ */
+int i_remove_claim_request(struct _i_session * i_session, int target, const char * claim);
 
 /**
  * Adds an authorization request object or replace it if the type already exists
