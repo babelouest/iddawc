@@ -55,7 +55,7 @@ unsigned char random_at_most(unsigned char max, int nonce) {
 static int string_use_char_list_only(const char * str, const char * char_list) {
   int ret = 1;
   size_t i;
-  
+
   if (o_strlen(str) && o_strlen(char_list)) {
     for (i=0; i<o_strlen(str); i++) {
       if (o_strchr(char_list, str[i]) == NULL) {
@@ -184,7 +184,7 @@ static char * _i_decrypt_jwe_token(struct _i_session * i_session, const char * t
     y_log_message(Y_LOG_LEVEL_ERROR, "_i_decrypt_jwe_token - Error r_jwe_init");
   }
   r_jwe_free(jwe);
-  
+
   return payload_dup;
 }
 
@@ -488,9 +488,9 @@ static int _i_parse_error_response(struct _i_session * i_session, json_t * j_res
   const char * key = NULL;
   json_t * j_element = NULL;
   char * value;
-    
+
   if (j_response != NULL) {
-    if (json_string_length(json_object_get(j_response, "error")) && i_set_str_parameter(i_session, I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_response, "error"))) != I_OK) {
+    if (json_string_length(json_object_get(j_response, "error")) && i_set_str_parameter(i_session, I_OPT_ERROR, json_string_value(json_object_get(j_response, "error"))) != I_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_error_response - Error setting error");
       ret = I_ERROR;
     }
@@ -620,13 +620,13 @@ static int _i_parse_token_response(struct _i_session * i_session, int http_statu
     } else if (http_status == 400) {
       if (_i_parse_error_response(i_session, j_response) != I_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - _i_parse_error_response (1)");
+        ret = I_ERROR;
       }
-      ret = I_ERROR_PARAM;
     } else if (http_status == 401 || http_status == 403) {
       if (_i_parse_error_response(i_session, j_response) != I_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - _i_parse_error_response (2)");
+        ret = I_ERROR;
       }
-      ret = I_ERROR_UNAUTHORIZED;
     }
   } else {
     ret = I_ERROR_PARAM;
@@ -3110,7 +3110,7 @@ int i_run_token_request(struct _i_session * i_session) {
                 if (_i_parse_token_response(i_session, response.status, j_response) == I_OK) {
                   ret = response.status == 200?I_OK:I_ERROR_PARAM;
                 } else {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error _i_parse_token_response");
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error _i_parse_token_response (1)");
                   ret = I_ERROR_PARAM;
                 }
               } else {
@@ -3118,14 +3118,13 @@ int i_run_token_request(struct _i_session * i_session) {
                 ret = I_ERROR;
               }
               json_decref(j_response);
-            } else if (response.status == 403 || response.status == 401) {
+            } else if (response.status == 401 || response.status == 403) {
               j_response = ulfius_get_json_body_response(&response, NULL);
+              ret = I_ERROR_UNAUTHORIZED;
               if (_i_parse_token_response(i_session, response.status, j_response) == I_OK) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Unauthorized");
-                ret = I_ERROR_UNAUTHORIZED;
               } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error _i_parse_token_response");
-                ret = I_ERROR_PARAM;
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error _i_parse_token_response (2)");
               }
               json_decref(j_response);
             } else {
@@ -3568,7 +3567,7 @@ int i_verify_id_token(struct _i_session * i_session) {
 int i_verify_jwt_access_token(struct _i_session * i_session) {
   int ret;
   jwt_t * jwt = NULL;
-  
+
   if (r_jwt_init(&jwt) == RHN_OK) {
     if (_i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt) == I_OK) {
       if (0 != o_strcmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
@@ -4039,7 +4038,7 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
     j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  si ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* si ss* so so  so ss* so* ss* ss* si ss* si }",
-                         
+
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
                          "state", i_get_str_parameter(i_session, I_OPT_STATE),
@@ -4122,13 +4121,13 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "dpop_kid", i_get_str_parameter(i_session, I_OPT_DPOP_KID),
                          "decrypt_code", i_get_int_parameter(i_session, I_OPT_DECRYPT_CODE)?json_true():json_false(),
                          "decrypt_refresh_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_REFRESH_TOKEN)?json_true():json_false(),
-                         
+
                          "decrypt_access_token", i_get_int_parameter(i_session, I_OPT_DECRYPT_ACCESS_TOKEN)?json_true():json_false(),
                          "dpop-sig-alg", i_get_str_parameter(i_session, I_OPT_DPOP_SIGN_ALG),
                          "client_jwks", r_jwks_export_to_json_t(i_session->client_jwks),
                          "key_file", i_get_str_parameter(i_session, I_OPT_TLS_KEY_FILE),
                          "cert_file", i_get_str_parameter(i_session, I_OPT_TLS_CERT_FILE),
-                         
+
                          "remote_cert_flag", i_get_int_parameter(i_session, I_OPT_REMOTE_CERT_FLAG),
                          "pkce_code_verifier", i_get_str_parameter(i_session, I_OPT_PKCE_CODE_VERIFIER),
                          "pkce_method", i_get_int_parameter(i_session, I_OPT_PKCE_METHOD)
