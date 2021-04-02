@@ -591,6 +591,10 @@ static int _i_parse_token_response(struct _i_session * i_session, int http_statu
               y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error setting id_token");
               ret = I_ERROR;
             }
+            if (r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_DEBUG, "_i_parse_token_response - Error id_token invalid");
+              ret = I_ERROR_SERVER;
+            }
           }
           json_object_foreach(j_response, key, j_element) {
             if (0 != o_strcmp("access_token", key) &&
