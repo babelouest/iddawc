@@ -1,0 +1,1443 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iddawc OAuth2 Client Tester</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/fork-awesome.min.css">
+    <link rel="stylesheet" href="css/v5-compat.min.css">
+    <link rel="stylesheet" href="css/idwcc.css">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/qrcode.js"></script>
+    <script src="js/iddwc.js"></script>
+    <style>
+      body {
+        padding-top: 40px;
+        padding-bottom: 40px;
+        background-color: #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <h2>Iddawc OAuth2 Client Tester</h2>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="btn-group" role="group">
+            <button class="btn btn-secondary" type="button" id="saveSession">
+              Save Session
+            </button>
+            <button class="btn btn-secondary" type="button" id="exportSession">
+              Export Session
+            </button>
+            <button class="btn btn-secondary" type="button" id="importSession">
+              Import Session
+            </button>
+            <button class="btn btn-secondary" type="button" id="cleanSession">
+              Clean Session
+            </button>
+          </div>
+          <div class="btn-group" role="group">
+            <button class="btn btn-secondary" type="button" id="runAuthBtn">
+              Run Auth
+            </button>
+            <button class="btn btn-secondary" type="button" id="runTokenBtn">
+              Run Token
+            </button>
+            <button class="btn btn-secondary" type="button" id="runDeviceBtn">
+              Run Device Authorization
+            </button>
+            <button class="btn btn-secondary" type="button" id="clearTokenBtn">
+              Clear tokens
+            </button>
+          </div>
+        </div>
+      </div>
+      <hr/>
+      <div class="accordion" id="accordionIdwcc">
+        <div class="card"> <!-- Client -->
+          <div class="card-header" id="headingClient">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseClient" aria-expanded="true" aria-controls="collapseClient">
+                Client
+              </button>
+            </h2>
+          </div>
+          <div id="collapseClient" class="collapse show" aria-labelledby="headingClient" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="client_id">Client ID</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="clientId" id="client_id" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="client_secret">Client secret</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="password" class="form-control idwcc-input idwcc-session" placeHolder="xxx" id="client_secret" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="client_secret-toggle" >
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="redirect_uri">Redirect URI</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com" id="redirect_uri" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="resource_indicator">Resource indicator</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://resource.example.com" id="resource_indicator" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="client_jwks">Client Private Key (JWKS)</label>
+                </div>
+                <div class="col-md-8">
+                  <textarea class="form-control idwcc-input idwcc-session" id="client_jwks" placeHolder="{keys:[{...}]}"></textarea>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="client-kid">Client KID</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="key-1" id="client-kid" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="sig-alg">Token signature algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="sig-alg">
+                    <option>None</option>
+                    <option>HS256</option>
+                    <option>HS384</option>
+                    <option>HS512</option>
+                    <option>RS256</option>
+                    <option>RS384</option>
+                    <option>RS512</option>
+                    <option>ES256</option>
+                    <option>ES384</option>
+                    <option>ES512</option>
+                    <option>EdDSA</option>
+                    <option>PS256</option>
+                    <option>PS384</option>
+                    <option>PS512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="enc-alg">Encrypted token key management algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="enc-alg">
+                    <option>None</option>
+                    <option>RSA1_5</option>
+                    <option>RSA-OAEP</option>
+                    <option>RSA-OAEP-256</option>
+                    <option>A128KW</option>
+                    <option>A192KW</option>
+                    <option>A256KW</option>
+                    <option>DIR</option>
+                    <option>ECDH-ES</option>
+                    <option>ECDH-ES+A128KW</option>
+                    <option>ECDH-ES+A192KW</option>
+                    <option>ECDH-ES+A256KW</option>
+                    <option>A128GCMKW</option>
+                    <option>A192GCMKW</option>
+                    <option>A256GCMKW</option>
+                    <option>PBES2+H256</option>
+                    <option>PBES2+H384</option>
+                    <option>PBES2+H512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="enc">Encrypted token encryption algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="enc">
+                    <option>None</option>
+                    <option>A128CBC-HS256</option>
+                    <option>A192CBC-HS384</option>
+                    <option>A256CBC-HS512</option>
+                    <option>A128GCM</option>
+                    <option>A192GCM</option>
+                    <option>A256GCM</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="dpop_kid">DPoP KID</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="key-2" id="dpop_kid" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="dpop-sig-alg">DPoP signature algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="dpop-sig-alg">
+                    <option>None</option>
+                    <option>HS256</option>
+                    <option>HS384</option>
+                    <option>HS512</option>
+                    <option>RS256</option>
+                    <option>RS384</option>
+                    <option>RS512</option>
+                    <option>ES256</option>
+                    <option>ES384</option>
+                    <option>ES512</option>
+                    <option>EdDSA</option>
+                    <option>PS256</option>
+                    <option>PS384</option>
+                    <option>PS512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="key_file">TLS Key file</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="/path/to/file" id="key_file" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="cert_file">TLS Certificate file</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="/path/to/file" id="cert_file" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label>Remote Server Certificate</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-host-peer">
+                    <label class="form-check-label" for="remote_cert_flag-host-peer">Host verify peer</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-host-name">
+                    <label class="form-check-label" for="remote_cert_flag-host-name">Host verify name</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-proxy-peer">
+                    <label class="form-check-label" for="remote_cert_flag-proxy-peer">Proxy verify peer</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-proxy-name">
+                    <label class="form-check-label" for="remote_cert_flag-proxy-name">Proxy verify name</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Server Configuration -->
+          <div class="card-header" id="headingServerUri">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseServerUri" aria-expanded="false" aria-controls="collapseServerUri">
+                Server Configuration
+              </button>
+            </h2>
+          </div>
+          <div id="collapseServerUri" class="collapse" aria-labelledby="headingServerUrl" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="openid_config_endpoint">Configuration endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/.well-known/openid-configuration" id="openid_config_endpoint" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="openid_config_endpoint-download" >
+                        <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="authorization_endpoint">Auth endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/auth" id="authorization_endpoint" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="authorization_endpoint-plus" data-toggle="collapse" data-target="#authorization_endpoint-collapse" aria-expanded="false" aria-controls="authorization_endpoint-collapse">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse multi-collapse" id="authorization_endpoint-collapse">
+                    <div class="card card-body">
+                      <pre id="authorization_endpoint-details">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="token_endpoint">Token endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/token" id="token_endpoint" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="token_endpoint-plus" data-toggle="collapse" data-target="#token_endpoint-collapse" aria-expanded="false" aria-controls="token_endpoint-collapse">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse multi-collapse" id="token_endpoint-collapse">
+                    <div class="card card-body">
+                      <pre id="token_endpoint-details">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="userinfo_endpoint">Userinfo endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/userinfo" id="userinfo_endpoint" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="userinfo_endpoint-plus" data-toggle="collapse" data-target="#userinfo_endpoint-collapse" aria-expanded="false" aria-controls="userinfo_endpoint-collapse">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse multi-collapse" id="userinfo_endpoint-collapse">
+                    <div class="card card-body">
+                      <pre id="userinfo_endpoint-details">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="revocation_endpoint">Revocation endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/revoke" id="revocation_endpoint" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="revocation_endpoint-plus" data-toggle="collapse" data-target="#revocation_endpoint-collapse" aria-expanded="false" aria-controls="revocation_endpoint-collapse">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse multi-collapse" id="revocation_endpoint-collapse">
+                    <div class="card card-body">
+                      <pre id="revocation_endpoint-details">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="introspection_endpoint">Introspection endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/introspect" id="introspection_endpoint" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="introspection_endpoint-plus" data-toggle="collapse" data-target="#introspection_endpoint-collapse" aria-expanded="false" aria-controls="introspection_endpoint-collapse">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse multi-collapse" id="introspection_endpoint-collapse">
+                    <div class="card card-body">
+                      <pre id="introspection_endpoint-details">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="registration_endpoint">Registration endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/registration" id="registration_endpoint" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="device_authorization_endpoint">Device auth endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/device" id="device_authorization_endpoint" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="device_authorization_endpoint-plus" data-toggle="collapse" data-target="#device_authorization_endpoint-collapse" aria-expanded="false" aria-controls="device_authorization_endpoint-collapse">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse multi-collapse" id="device_authorization_endpoint-collapse">
+                    <div class="card card-body">
+                      <pre id="device_authorization_endpoint-details">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="pushed_authorization_request_endpoint">Pushed auth endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/par" id="pushed_authorization_request_endpoint" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="pushed_authorization_request_endpoint-plus" data-toggle="collapse" data-target="#pushed_authorization_request_endpoint-collapse" aria-expanded="false" aria-controls="pushed_authorization_request_endpoint-collapse">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse multi-collapse" id="pushed_authorization_request_endpoint-collapse">
+                    <div class="card card-body">
+                      <pre id="pushed_authorization_request_endpoint-details">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label>Server Public Keys (digest)</label>
+                </div>
+                <div class="col-md-8">
+                  <button class="btn btn-outline-secondary idwcc-input" type="button" id="server_jwks-plus" data-toggle="collapse" data-target="#server_jwks-collapse" aria-expanded="false" aria-controls="server_jwks-collapse">
+                    <i class="fa fa-plus-square" aria-hidden="true"></i>
+                  </button>
+                  <div class="collapse multi-collapse" id="server_jwks-collapse">
+                    <div class="card card-body">
+                      <pre id="server_jwks_digest">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="server_jwks">Server Public Key (JWKS)</label>
+                </div>
+                <div class="col-md-8">
+                  <textarea class="form-control idwcc-input idwcc-session" id="server_jwks" placeHolder="{keys:[{...}]}"></textarea>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="server-kid">Server KID</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="key-1" id="server-kid" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label>Other configuration details</label>
+                </div>
+                <div class="col-md-8">
+                  <button class="btn btn-outline-secondary idwcc-input" type="button" id="server_config-plus" data-toggle="collapse" data-target="#server_config-collapse" aria-expanded="false" aria-controls="server_config-collapse">
+                    <i class="fa fa-plus-square" aria-hidden="true"></i>
+                  </button>
+                  <div class="collapse multi-collapse" id="server_config-collapse">
+                    <div class="card card-body">
+                      <pre id="server_config">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="openid_config_strict">Use Strict Server Configuration</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="openid_config_strict">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Request -->
+          <div class="card-header" id="headingRequest">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseRequest" aria-expanded="false" aria-controls="collapseRequest">
+                Request
+              </button>
+            </h2>
+          </div>
+          <div id="collapseRequest" class="collapse" aria-labelledby="headingRequest" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="response_type">Response type</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-session" id="response_type">
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="scopes">Scopes</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <select class="form-control" id="scopeSupported">
+                    </select>
+                    <input type="text" class="form-control idwcc-session" placeHolder="openid" id="scope"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="nonce">Nonce</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" id="nonce"/>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" id="nonceGenerate">
+                        <i class="fa fa-cogs" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="state">State</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" id="state"/>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" id="stateGenerate">
+                        <i class="fa fa-cogs" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="token_jti">JTI</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" id="token_jti"/>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" id="jtiGenerate">
+                        <i class="fa fa-cogs" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="auth_method_object">Auth Method</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control" id="auth_method_object">
+                    <option value="1">GET</option>
+                    <option value="2">POST</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="token_method_object">Token Method</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control" id="token_method_object">
+                    <option value="0">None</option>
+                    <option value="1">Basic Authentication</option>
+                    <option value="2">Secret POST</option>
+                    <option value="3">TLS Certificate</option>
+                    <option value="4">JWT</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="auth_object_jwt_signed">Auth JWT Signature</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control" id="auth_object_jwt_signed">
+                    <option value="0">No</option>
+                    <option value="1">Client Secret</option>
+                    <option value="2">Client private key</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="auth_object_jwt_encrypted">Auth JWT Encryption</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control" id="auth_object_jwt_encrypted">
+                    <option value="0">No</option>
+                    <option value="1">Client Secret</option>
+                    <option value="2">Server public key</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="use_dpop">Use DPoP</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="use_dpop">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="use_par">Use Pushed Auth Request</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="use_par">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Tokens -->
+          <div class="card-header" id="headingResponse">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseResponse" aria-expanded="false" aria-controls="collapseResponse">
+                Tokens
+              </button>
+            </h2>
+          </div>
+          <div id="collapseResponse" class="collapse" aria-labelledby="headingResponse" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="code">Code</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-session" id="code"/>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="decrypt_code">
+                    <label class="form-check-label" for="decrypt_code">Decrypt Code</label>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="refresh_token">
+                    Refresh Token
+                  </label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-session" id="refresh_token"/>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="decrypt_refresh_token">
+                    <label class="form-check-label" for="decrypt_refresh_token">Decrypt Refresh Token</label>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="access_token">
+                    Access Token
+                  </label>
+                </div>
+                <div class="col-md-8">
+                  <textarea class="form-control idwcc-session" id="access_token"></textarea>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="decrypt_access_token">
+                    <label class="form-check-label" for="decrypt_access_token">Decrypt Access Token</label>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <button class="btn btn-secondary" type="button" id="access_token-verify">
+                    Verify JWT access token
+                  </button>
+                </div>
+                <div class="col-md-8">
+                  <pre id="access_token_payload">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Claims -->
+          <div class="card-header" id="headingClaims">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseClaims" aria-expanded="false" aria-controls="collapseClaims">
+                Claims
+              </button>
+            </h2>
+          </div>
+          <div id="collapseClaims" class="collapse" aria-labelledby="headingClaims" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="btn-group" role="group">
+                    <button class="btn btn-secondary" type="button" id="addClaimsBtn" title="Add claim">
+                      <i class="fa fa-plus" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-secondary" type="button" id="cleanClaimsBtn" title="Clean claim">
+                      <i class="fa fa-eraser" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-secondary idwcc-input" type="button" id="claims_config-plus" data-toggle="collapse" data-target="#claims_config-collapse" aria-expanded="false" aria-controls="claims_config-collapse">
+                      <i class="fa fa-plus-square" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-8">
+                  <div class="collapse multi-collapse" id="claims_config-collapse">
+                    <div class="card card-body">
+                      <pre id="claims_config">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="col-md-8">
+                  <pre id="claims_payload">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Rich auth request -->
+          <div class="card-header" id="headingRar">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseRar" aria-expanded="false" aria-controls="collapseRar">
+                Rich Auth Request
+              </button>
+            </h2>
+          </div>
+          <div id="collapseRar" class="collapse" aria-labelledby="headingRar" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="btn-group" role="group">
+                    <button class="btn btn-secondary" type="button" id="addRarBtn" title="Add RaR">
+                      <i class="fa fa-plus" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-secondary" type="button" id="cleanRarBtn" title="Clean RaR">
+                      <i class="fa fa-eraser" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="col-md-8">
+                  <pre id="rar_payload">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- ID Token -->
+          <div class="card-header" id="headingIdToken">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseIdToken" aria-expanded="false" aria-controls="collapseIdToken">
+                ID Token
+              </button>
+            </h2>
+          </div>
+          <div id="collapseIdToken" class="collapse" aria-labelledby="headingIdToken" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="id_token">
+                    ID Token
+                  </label>
+                </div>
+                <div class="col-md-8">
+                  <textarea class="form-control idwcc-session" id="id_token"></textarea>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="decrypt_id_token">
+                    <label class="form-check-label" for="decrypt_id_token">Decrypt ID Token</label>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="id_token_payload">ID Token Payload</label>
+                </div>
+                <div class="col-md-8" style="word-wrap: break-word;">
+                  <pre id="id_token_payload">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Userinfo -->
+          <div class="card-header" id="headingUserinfo">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseUserinfo" aria-expanded="false" aria-controls="collapseUserinfo">
+                Userinfo
+              </button>
+            </h2>
+          </div>
+          <div id="collapseUserinfo" class="collapse" aria-labelledby="headingUserinfo" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <button class="btn btn-secondary" type="button" id="userinfo-download">
+                    Payload <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div class="col-md-8">
+                  <pre id="userinfo_payload">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Introspection/Revocation -->
+          <div class="card-header" id="headingIntrospection">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseIntrospection" aria-expanded="false" aria-controls="collapseIntrospection">
+                Introspection/Revocation
+              </button>
+            </h2>
+          </div>
+          <div id="collapseIntrospection" class="collapse" aria-labelledby="headingIntrospection" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="row">
+                    <div class="input-group">
+                      <select id="introspectionType" class="form-control">
+                        <option value="access_token">Access token</option>
+                        <option value="refresh_token">Refresh token</option>
+                        <option value="id_token">ID token</option>
+                      </select>
+                      <div class="input-group-append">
+                        <button class="btn btn-secondary" type="button" id="introspection-btn">
+                          Introspection <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                        </button>
+                        <button class="btn btn-secondary" type="button" id="revocation-btn">
+                          Revocation <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <select id="introspectionAuthType" class="form-control">
+                      <option value="client">Client authentication</option>
+                      <option value="access_token">Access token authentication</option>
+                      <option value="none">No authentication</option>
+                    </select>
+                  </div>
+                  <div class="row">
+                    <textarea class="form-control" id="introspectionAccessToken" placeHolder="authenticator token"></textarea>
+                    <button class="btn btn-secondary" type="button" id="introspectUseCurrentAT">
+                      Use current Access Token
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-8">
+                  <pre id="introspection_payload">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Proof Key for Code Exchange (PKCE) -->
+          <div class="card-header" id="headingPKCE">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapsePKCE" aria-expanded="false" aria-controls="collapsePKCE">
+                Proof Key for Code Exchange (PKCE)
+              </button>
+            </h2>
+          </div>
+          <div id="collapsePKCE" class="collapse" aria-labelledby="headingPKCE" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="pkce_method">PKCE Method</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-session" id="pkce_method">
+                    <option value="0">None</option>
+                    <option value="1">plain</option>
+                    <option value="2">S256</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="pkce_code_verifier">PKCE Code Verifier</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" id="pkce_code_verifier"/>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" id="PKCEGenerate">
+                        <i class="fa fa-cogs" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Device Authorization -->
+          <div class="card-header" id="headingDeviceAuth">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseDeviceAuth" aria-expanded="false" aria-controls="collapseDeviceAuth">
+                Device Authorization
+              </button>
+            </h2>
+          </div>
+          <div id="collapseDeviceAuth" class="collapse" aria-labelledby="headingDeviceAuth" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="device_auth_code">Device Authorization Code</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" id="device_auth_code"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="device_auth_user_code">Device Authorization User Code</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" id="device_auth_user_code"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="device_auth_verification_uri">Device Authorization Verification URI</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" id="device_auth_verification_uri"/>
+                    <div class="input-group-append">
+                      <span class="input-group-text"><a href="#" id="device_auth_verification_uri-link">@</a></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="device_auth_verification_uri_complete">Device Authorization Verification URI Complete</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" id="device_auth_verification_uri_complete" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="device_auth_verification_uri_complete-plus" data-toggle="collapse" data-target="#device_auth_verification_uri_complete-collapse" aria-expanded="false" aria-controls="device_auth_verification_uri_complete-collapse">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse multi-collapse" id="device_auth_verification_uri_complete-collapse">
+                    <div class="card card-body">
+                      <pre id="device_auth_verification_uri_complete-qrcode">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="device_auth_expires_in">Device Authorization Expires In</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="number" min="0" step="1" class="form-control idwcc-session" id="device_auth_expires_in"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="device_auth_interval">Device Authorization Interval</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="number" min="0" step="1" class="form-control idwcc-session" id="device_auth_interval"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="device_auth_interval">Verification Result</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <pre id="device_auth_verifucation-details">
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Client Registration/Management -->
+          <div class="card-header" id="headingClientRegistration">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseClientRegistration" aria-expanded="false" aria-controls="collapseClientRegistration">
+                Client Registration/Management
+              </button>
+            </h2>
+          </div>
+          <div id="collapseClientRegistration" class="collapse" aria-labelledby="headingClientRegistration" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="btn-group" role="group">
+                    <button class="btn btn-secondary" type="button" id="registerClient">
+                      Register
+                    </button>
+                    <button class="btn btn-secondary" type="button" id="manageClient">
+                      Manage registration
+                    </button>
+                    <button class="btn btn-secondary" type="button" id="manageClientGet">
+                      Get registration
+                    </button>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="registerUpdateSession" checked>
+                    <label class="form-check-label" for="registerUpdateSession">Update session with registration results</label>
+                  </div>
+                </div>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="clientRegistrationRedirectUri">Redirect URI</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" id="clientRegistrationRedirectUri"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="clientRegistrationAuthMethod">Authentication method</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control" id="clientRegistrationAuthMethod">
+                    <option value="none">None</option>
+                    <option value="client_secret_basic" selected>Secret Basic</option>
+                    <option value="client_secret_post">Secret Post</option>
+                    <option value="client_secret_jwt">JWT using Client Secret</option>
+                    <option value="private_key_jwt">JWT using private key</option>
+                    <option value="tls_client_auth">TLS Certificate</option>
+                    <option value="self_signed_tls_client_auth">Self Signed TLS Certificate</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label>Grant Types</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="clientRegistrationGrantTypeAuthCode" checked>
+                    <label class="form-check-label" for="clientRegistrationGrantTypeAuthCode">authorization_code</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="clientRegistrationGrantTypePassword">
+                    <label class="form-check-label" for="clientRegistrationGrantTypePassword">password</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="clientRegistrationGrantTypeClientCredentials">
+                    <label class="form-check-label" for="clientRegistrationGrantTypeClientCredentials">client_credentials</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="clientRegistrationGrantTypeRefreshToken">
+                    <label class="form-check-label" for="clientRegistrationGrantTypeRefreshToken">refresh_token</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="clientRegistrationGrantTypeDeleteToken">
+                    <label class="form-check-label" for="clientRegistrationGrantTypeDeleteToken">delete_token</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="clientRegistrationGrantTypeDeviceAuth">
+                    <label class="form-check-label" for="clientRegistrationGrantTypeDeviceAuth">device_authorization</label>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label>Response Types</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="clientRegistrationResponseTypeCode" checked>
+                    <label class="form-check-label" for="clientRegistrationResponseTypeCode">code</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="clientRegistrationResponseToken" checked>
+                    <label class="form-check-label" for="clientRegistrationResponseToken">token</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="clientRegistrationResponseTypeIdToken" checked>
+                    <label class="form-check-label" for="clientRegistrationResponseTypeIdToken">id_token</label>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label>Application Type</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control" id="clientRegistrationAppType">
+                    <option value="web">Web</option>
+                    <option value="native" selected>Native</option>
+                  </select>
+                </div>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="col-md-12">
+                  <label for="access_token">
+                    Additional Parameters
+                  </label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <textarea class="form-control" id="clientRegistrationAdditionalParameters" placeHolder="{&#10;  &#34;redirect_uri&#34;:[&#34;uri1&#34;,&#34;uri2&#34;],&#10;  &#34;response_types&#34;:[&#34;code&#34;,&#34;token&#34;,&#34;id_token&#34;],&#10;  &#34;logo_uri&#34;:&#34;https://...&#34;&#10;}"></textarea>
+                </div>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="form-group form-check">
+                  <input type="checkbox" class="form-check-input" id="useAccessToken">
+                  <label class="form-check-label" for="useAccessToken">Use Access Token for Registration (mandatory for management)</label>
+                </div>
+                <textarea class="form-control" id="clientRegistrationAccessToken" placeHolder="authenticator token"></textarea>
+                <button class="btn btn-secondary" type="button" id="registerUseCurrentAT">
+                  Use current Access Token
+                </button>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="col-md-12">
+                  <label for="access_token">
+                    Raw Result
+                  </label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <pre id="register_payload">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Resource Service Request -->
+          <div class="card-header" id="headingResource">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseResource" aria-expanded="false" aria-controls="collapseResource">
+                Resource Service Request
+              </button>
+            </h2>
+          </div>
+          <div id="collapseResource" class="collapse" aria-labelledby="headingResource" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="resourceHttpMethod">HTTP Method</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <select class="form-control" id="resourceHttpMethodSelect">
+                      <option select></option>
+                      <option>GET</option>
+                      <option>POST</option>
+                      <option>PUT</option>
+                      <option>DELETE</option>
+                      <option>OPTIONS</option>
+                    </select>
+                    <input type="text" class="form-control" placeHolder="GET" id="resourceHttpMethod" value="GET"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="resourceHttpUrl">HTTP URL</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeHolder="https://resource.tld/" id="resourceHttpUrl"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="id_token">
+                    Additional headers
+                  </label>
+                </div>
+                <div class="col-md-8">
+                  <textarea class="form-control" id="resourceHeaders" placeHolder="header1:value1&#10;header2:value2&#10;"></textarea>
+                </div>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="id_token">
+                    Body
+                  </label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control" id="resourceBodyType">
+                    <option select>JSON</option>
+                    <option>URL Encode</option>
+                  </select>
+                  <textarea class="form-control" id="resourceBody" placeHolder="{&#34;key1&#34;:&#34;value1&#34;&#10;&#34;key1&#34;:&#34;value2&#34;}"></textarea>
+                </div>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="btn-group" role="group">
+                    <button class="btn btn-secondary" type="button" id="resourceRun">
+                      Run request <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-secondary" type="button" id="resourceClean">
+                      Clean response <i class="fa fa-eraser" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-8">
+                  <pre id="resource_results">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabelled" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="messageModalLabel">Iddawc OAuth2 Client Tester</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="messageModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="claimModal" tabindex="-1" aria-labelledby="claimModalLabelled" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="claimModalLabel">Add Claim</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-4">
+                <label for="claimName">Name</label>
+              </div>
+              <div class="col-md-8">
+                <input type="text" placeHolder="name" class="form-control" value="" id="claimName" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <label for="claimTarget">Target</label>
+              </div>
+              <div class="col-md-8">
+                <select id="claimTarget" class="form-control">
+                  <option value="All">All</option>
+                  <option value="userinfo">userinfo</option>
+                  <option value="id_token">id_token</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <label for="claimEssential">Essential</label>
+              </div>
+              <div class="col-md-8">
+                <select id="claimEssential" class="form-control">
+                  <option value="null">null</option>
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                  <option value="3">Ignore</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <label for="claimValue">Value</label>
+              </div>
+              <div class="col-md-8">
+                <textarea id="claimValue" class="form-control" placeHolder="value='abcd'"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="claimSave">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="RARModal" tabindex="-1" aria-labelledby="RARModalLabelled" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="RARModalLabel">Add RAR</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-4">
+                <label for="RARType">Type</label>
+              </div>
+              <div class="col-md-8">
+                <input type="text" placeHolder="name" class="form-control" value="" id="RARType" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <label for="RARValue">Value</label>
+              </div>
+              <div class="col-md-8">
+                <textarea id="RARValue" class="form-control" placeHolder="value='abcd'"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="RARSave">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="importFile" style="visibility: hidden;">
+  </body>
+</html>
+<!--
+ * 
+ * idwcc: OAuth2/OIDC client program to test or validate OAuth2/OIDC AS
+ * 
+ * Copyright 2021 Nicolas Mora <mail@babelouest.org>
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
+ * License as published by the Free Software Foundation;
+ * version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU GENERAL PUBLIC LICENSE for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ -->

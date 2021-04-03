@@ -1,0 +1,49 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iddawc OAuth2 Client Tester Callback</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/fork-awesome.min.css">
+    <link rel="stylesheet" href="css/v5-compat.min.css">
+    <link rel="stylesheet" href="css/idwcc.css">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <h5>Consider questioning authority, please.</h5>
+  </body>
+  <script>
+    $( document ).ready(function() {
+      $.ajax({
+        method: "POST",
+        url: "/api/parseRedirectTo",
+        data: { redirectTo: document.location.href }
+      })
+      .always(() => {
+        document.location.href = "/";
+      });
+    });
+  </script>
+</html>
+<!--
+ * 
+ * idwcc: OAuth2/OIDC client program to test or validate OAuth2/OIDC AS
+ * 
+ * Copyright 2021 Nicolas Mora <mail@babelouest.org>
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
+ * License as published by the Free Software Foundation;
+ * version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU GENERAL PUBLIC LICENSE for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ -->

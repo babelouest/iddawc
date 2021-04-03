@@ -1,0 +1,10 @@
+.dropdown {
+   transform-style: preserve-3d;
+   transform: translate3d(0,0,10px) !important;
+}
+
+.dropdown-menu {
+    height: auto !important;
+    position: relative !important;
+    transform: translate3d(0,0,10px) !important;
+}
