@@ -29,6 +29,7 @@
 #define CLAIM2 "claim2"
 #define CLAIM1_VALUE "248289761001"
 #define CLAIM1_CONTENT "{\"value\":\""CLAIM1_VALUE"\"}"
+#define RESOURCE_INDICATOR "https://resource.iddawc.tld/"
 
 const char jwk_privkey_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9EXrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0WTea8n_TQmq9sVHGQtLIFqfblLxbSz_7m4g7_o3WfqlwXkVmCIu1wdzAjZV5BspBGrL0ed5Whpk9-bX69nUDvpcMAaPhuRwZ43e9koVRbVwXCNkne98VAs0_U\",\"e\":\"AQAB\",\"d\":\"AKOVsyDreb5VJRFcuIrrqYWxZqkc37MQTvR1wrE_HAzYp4n-AuAJQT-Sga6WYY-3V53VaG1ZB93GWIHNVCsImJEWPEYUZjTnoeKbOBUzPoPYB3UF5oReJYSp9msEbvGvF9d65fYe4DYkcMl4IK5Uz9hDugrPC4VBOmwyu8-DjLkP8OH-N2-KhJvX_kLKgivfzD3KOp6wryLnKuZYn8N4E6rCiNSfKMgoM60bSHRNi0QHYB2jwqMU5T5EzdpD3Tu_ow6a-sXrW6SG1dtbuStck9hFcQ-QtRCeWoM5pFN8cKOsWBZd1unq-X3gMlCjdXUBUW7BYP44lpYsg1v9l_Ww64E\",\"p\":\"ANmlFUVM-836aC-wK-DekE3s3gl7GZ-9Qca8iKnaIeMszgyaLYkkbYNPpjjsiQHc37IG3axCaywK40PZqODzovL5PnUpwfNrnlMaI042rNaf8q1L4kvaBTkbO9Wbj0sTLMPt1frLQKBRsNDsYamRcL1SwvTC4aI7cgZBrNIBdPiR\",\"q\":\"AP4qYxRNGaI3aeZh5hgKPSGW82X8Ai2MzIKjzSDYmKGcD9HPRV0dAUmDCvqyjwCD6tL9iMtZKPz7VK66-KvV1n91WLMDtRzWs_eFFyDY7BYw47o6IQoZ2RxBT3-7WLhlFflaEner8k23zpGOjZbyzt0SIWRAYR0zlb7LrS_X4fcl\",\"qi\":\"fnlvhYXAn6V0X6gmlwooZUWo9bR7ObChNhrUzMVDOReUVOrzOhlzGhBW1TEFBBr8k44ZWBCTeVEQh--LFHwVvCgEjDBxfjUPUMkeyKZzLhpIUB_cFBAgI7Fyy0yuPpY0mS1PfMt5Y4b6g_JvdBWZZ8VhTcCVG7qDqoH_IJMXPNg\",\"dp\":\"EAsiQUSGf02JJpLG-UGOw5_FUk-XuPW7honZTSP-QX_JBJbM6oIb7IUPjLyq8M82Uio9ZvhSbCG1VQgTcdmj1mNXHk3gtS_msNuJZLeVEBEkU2_3k33TyrzeMUXRT0hvkVXT4zPeZLMA5LW4EUbeV6ZlJqPC_DGDm0B2G9jtpXE\",\"dq\":\"AMTictPUEcpOILO9HG985vPxKeTTfaBpVDbSymDqR_nQmZSOeg3yHQAkCco_rXTZu3rruR7El3K5AlVEMsNxp3IepbIuagrH6qsPpuXkA6YBAzdMNjHL6hnwIbQxnT1h2M7KzklzogRAIT0x706CEmq_06wEDvZ-8j3VKvhHxBwd\",\"kid\":\"1\"}";
 const char jwk_pubkey_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9EXrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0WTea8n_TQmq9sVHGQtLIFqfblLxbSz_7m4g7_o3WfqlwXkVmCIu1wdzAjZV5BspBGrL0ed5Whpk9-bX69nUDvpcMAaPhuRwZ43e9koVRbVwXCNkne98VAs0_U\",\"e\":\"AQAB\",\"kid\":\"1\"}";
@@ -119,7 +120,7 @@ int callback_device_valid (const struct _u_request * request, struct _u_response
   return U_CALLBACK_CONTINUE;
 }
 
-int callback_device_claims_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
+int callback_device_claims_resource_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_error = json_pack("{ss ss ss ss si si}", 
                                "device_code", DEVICE_AUTH_CODE, 
                                "user_code", DEVICE_AUTH_USER_CODE, 
@@ -129,6 +130,7 @@ int callback_device_claims_valid (const struct _u_request * request, struct _u_r
                                "interval", DEVICE_AUTH_INTERVAL), * j_claims = json_pack("{s{so}s{s{so}}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, "essential", json_false());
   char * str_claims = json_dumps(j_claims, JSON_COMPACT);
   ck_assert_str_eq(u_map_get(request->map_post_body, "claims"), str_claims);
+  ck_assert_str_eq(u_map_get(request->map_post_body, "resource"), RESOURCE_INDICATOR);
   ulfius_set_json_body_response(response, 200, j_error);
   json_decref(j_error);
   json_decref(j_claims);
@@ -275,12 +277,12 @@ START_TEST(test_iddawc_device_auth_valid)
 }
 END_TEST
 
-START_TEST(test_iddawc_device_claims_valid)
+START_TEST(test_iddawc_device_claims_resource_valid)
 {
   struct _i_session i_session;
   struct _u_instance instance;
   ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
-  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/device", 0, &callback_device_claims_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/device", 0, &callback_device_claims_resource_valid, NULL), U_OK);
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
@@ -290,6 +292,7 @@ START_TEST(test_iddawc_device_claims_valid)
                                                     I_OPT_AUTH_METHOD, I_TOKEN_AUTH_METHOD_SECRET_BASIC,
                                                     I_OPT_SCOPE, SCOPE,
                                                     I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, DEVICE_AUTHORIZATION_ENDPOINT,
+                                                    I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_FALSE, NULL));
@@ -479,7 +482,7 @@ static Suite *iddawc_suite(void)
   tc_core = tcase_create("test_iddawc_device");
   tcase_add_test(tc_core, test_iddawc_device_auth_invalid_parameters);
   tcase_add_test(tc_core, test_iddawc_device_auth_valid);
-  tcase_add_test(tc_core, test_iddawc_device_claims_valid);
+  tcase_add_test(tc_core, test_iddawc_device_claims_resource_valid);
   tcase_add_test(tc_core, test_iddawc_device_auth_token_invalid);
   tcase_add_test(tc_core, test_iddawc_device_auth_token_valid);
   tcase_add_test(tc_core, test_iddawc_device_auth_encrypted_token_valid);

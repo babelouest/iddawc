@@ -66,6 +66,8 @@
 #define CLAIM2 "claim2"
 #define CLAIM1_VALUE "248289761001"
 #define CLAIM1_CONTENT "{\"value\":\""CLAIM1_VALUE"\"}"
+#define RESOURCE_INDICATOR "https://resource.iddawc.tld/"
+#define RESOURCE_INDICATOR_PARAM "resource=https%3A%2F%2Fresource.iddawc.tld%2F"
 
 const char id_token_pattern[] =
 "{\"amr\":[\"password\"],\"aud\":\"%s\",\"auth_time\":%lld"
@@ -345,7 +347,7 @@ START_TEST(test_iddawc_code_flow)
 }
 END_TEST
 
-START_TEST(test_iddawc_code_claims_flow)
+START_TEST(test_iddawc_code_claims_resource_flow)
 {
   struct _i_session i_session;
   struct _u_instance instance;
@@ -367,12 +369,14 @@ START_TEST(test_iddawc_code_claims_flow)
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
                                                     I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
                                                     I_OPT_STATE, STATE,
+                                                    I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_FALSE, NULL));
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_int_eq(i_build_auth_url_get(&i_session), I_OK);
   ck_assert_ptr_ne(NULL, o_strstr(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), escaped_claims));
+  ck_assert_ptr_ne(NULL, o_strstr(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), RESOURCE_INDICATOR_PARAM));
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
@@ -661,7 +665,7 @@ static Suite *iddawc_suite(void)
   tc_core = tcase_create("test_iddawc_flow");
   tcase_add_test(tc_core, test_iddawc_token_flow);
   tcase_add_test(tc_core, test_iddawc_code_flow);
-  tcase_add_test(tc_core, test_iddawc_code_claims_flow);
+  tcase_add_test(tc_core, test_iddawc_code_claims_resource_flow);
   tcase_add_test(tc_core, test_iddawc_code_pkce_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_code_flow);

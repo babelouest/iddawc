@@ -116,6 +116,7 @@
 #define CLAIM2_VALUE "urn:mace:incommon:iap:silver"
 #define CLAIM1_CONTENT "{\"value\":\""CLAIM1_VALUE"\"}"
 #define CLAIM2_CONTENT "{\"values\":[\""CLAIM2_VALUE"\"]}"
+#define RESOURCE_INDICATOR "https://resource.iddawc.tld/"
 
 const char jwks_pubkey_ecdsa_str[] = "{\"keys\":[{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","\
                                     "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\",\"use\":\"enc\",\"kid\":\"1\"}]}";
@@ -447,6 +448,9 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR), I_OK);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -642,6 +646,9 @@ START_TEST(test_iddawc_get_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER), PKCE_CODE_VERIFIER);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR), RESOURCE_INDICATOR);
 
   i_clean_session(&i_session);
 }
@@ -927,6 +934,7 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                   I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                   I_OPT_PKCE_METHOD, PKCE_METHOD,
+                                                  I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                   I_OPT_NONE), I_OK);
 
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_STATE), STATE);
@@ -978,6 +986,7 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER), PKCE_CODE_VERIFIER);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PKCE_METHOD), PKCE_METHOD);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR), RESOURCE_INDICATOR);
 
   i_clean_session(&i_session);
 }
@@ -1141,6 +1150,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "pkce_code_verifier"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pkce_method")), I_PKCE_NONE);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims_empty), 1);
+  ck_assert_ptr_eq(json_object_get(j_export, "resource_indicator"), NULL);
   json_decref(j_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1215,6 +1225,7 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                     I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
+                                                    I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1287,7 +1298,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "require_pushed_authorization_requests"), json_true());
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pushed_authorization_request_expires_in")), PUSHED_AUTH_REQ_EXPIRES_IN);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "pushed_authorization_request_uri")), PUSHED_AUTH_REQ_URI);
-  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "use_dpop")), USE_DPOP);
+  ck_assert_ptr_eq(json_object_get(j_export, "use_dpop"), json_true());
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "dpop_kid")), DPOP_KID);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "dpop-sig-alg")), DPOP_SIGN_ALG);
   ck_assert_ptr_eq(json_object_get(j_export, "decrypt_code"), json_true());
@@ -1299,6 +1310,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "pkce_code_verifier")), PKCE_CODE_VERIFIER);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pkce_method")), PKCE_METHOD);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims), 1);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "resource_indicator")), RESOURCE_INDICATOR);
   json_decref(j_export);
 
   json_decref(j_additional);
@@ -1393,6 +1405,7 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                     I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
+                                                    I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1478,6 +1491,7 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER), PKCE_CODE_VERIFIER);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PKCE_METHOD), PKCE_METHOD);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR), RESOURCE_INDICATOR);
   ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
   ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
   ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
@@ -1503,7 +1517,7 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
   str_export = i_export_session_str(&i_session);
-  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":0,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":0,\"decrypt_code\":false,\"decrypt_refresh_token\":false,\"decrypt_access_token\":false,\"client_jwks\":{\"keys\":[]},\"remote_cert_flag\":4369,\"pkce_method\":0,\"claims\":{\"userinfo\":{},\"id_token\":{}}}");
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":false,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":false,\"decrypt_code\":false,\"decrypt_refresh_token\":false,\"decrypt_access_token\":false,\"client_jwks\":{\"keys\":[]},\"remote_cert_flag\":4369,\"pkce_method\":0,\"claims\":{\"userinfo\":{},\"id_token\":{}}}");
   o_free(str_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1576,6 +1590,7 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                     I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
+                                                    I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -1675,6 +1690,7 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
                                                     I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
+                                                    I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -1760,6 +1776,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER), PKCE_CODE_VERIFIER);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PKCE_METHOD), PKCE_METHOD);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR), RESOURCE_INDICATOR);
   ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
   ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
   ck_assert_int_eq(json_equal(i_session.j_claims, j_claims), 1);

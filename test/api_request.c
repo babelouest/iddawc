@@ -101,13 +101,13 @@ START_TEST(test_iddawc_api_request_invalid_parameters)
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(ulfius_init_request(&req), I_OK);
-  ck_assert_int_eq(i_perform_api_request(NULL, &req, NULL, 0, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM);
-  ck_assert_int_eq(i_perform_api_request(&i_session, NULL, NULL, 0, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, NULL, 0, 42, 0, 0), I_ERROR_PARAM);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, NULL, 0, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM); // No access token
+  ck_assert_int_eq(i_perform_resource_service_request(NULL, &req, NULL, 0, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, NULL, NULL, 0, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, NULL, 0, 42, 0, 0), I_ERROR_PARAM);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, NULL, 0, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM); // No access token
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, NULL, 0, I_BEARER_TYPE_HEADER, 1, 0), I_ERROR); // No jti
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, NULL, 0, I_BEARER_TYPE_HEADER, 1, 0), I_ERROR); // No jti
   ulfius_clean_request(&req);
   i_clean_session(&i_session);
 }
@@ -130,7 +130,7 @@ START_TEST(test_iddawc_api_request_no_refresh_no_dpop)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
   ck_assert_ptr_ne(NULL, j_control = json_loads(resource_object, JSON_DECODE_ANY, NULL));
   ck_assert_ptr_ne(NULL, j_resp = ulfius_get_json_body_response(&resp, NULL));
   ck_assert_int_eq(1, json_equal(j_control, j_resp));
@@ -164,7 +164,7 @@ START_TEST(test_iddawc_api_request_refresh_not_required_no_dpop)
                                                     I_OPT_EXPIRES_AT, ((uint)time(NULL))+EXPIRES_IN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
   ck_assert_ptr_ne(NULL, j_control = json_loads(resource_object, JSON_DECODE_ANY, NULL));
   ck_assert_ptr_ne(NULL, j_resp = ulfius_get_json_body_response(&resp, NULL));
   ck_assert_int_eq(1, json_equal(j_control, j_resp));
@@ -200,7 +200,7 @@ START_TEST(test_iddawc_api_request_refresh_required_not_available_no_dpop)
                                                     I_OPT_EXPIRES_AT, ((uint)time(NULL))-1,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM);
   
   // Set refresh params
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
@@ -209,7 +209,7 @@ START_TEST(test_iddawc_api_request_refresh_required_not_available_no_dpop)
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM);
 
   i_clean_session(&i_session);
   ulfius_clean_request(&req);
@@ -243,7 +243,7 @@ START_TEST(test_iddawc_api_request_refresh_required_ok_no_dpop)
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
   
   i_clean_session(&i_session);
   ulfius_clean_request(&req);
@@ -280,12 +280,12 @@ START_TEST(test_iddawc_api_request_refresh_not_required_dpop_required)
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
   r_jwk_free(jwk);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 1, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 1, 0), I_OK);
   ck_assert_int_eq(200, resp.status);
   ck_assert_ptr_ne(NULL, j_control = json_loads(resource_object, JSON_DECODE_ANY, NULL));
   ck_assert_ptr_ne(NULL, j_resp = ulfius_get_json_body_response(&resp, NULL));
   ck_assert_int_eq(1, json_equal(j_control, j_resp));
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
   ck_assert_int_eq(401, resp.status);
 
   i_clean_session(&i_session);
@@ -314,45 +314,45 @@ START_TEST(test_iddawc_api_request_test_bearer_type)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
   ck_assert_int_eq(200, resp.status);
   ulfius_clean_response(&resp);
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_BODY, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_BODY, 0, 0), I_OK);
   ck_assert_int_eq(401, resp.status);
   ulfius_clean_response(&resp);
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_URL, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_URL, 0, 0), I_OK);
   ck_assert_int_eq(401, resp.status);
   ulfius_clean_response(&resp);
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
   
   ck_assert_int_eq(ulfius_remove_endpoint_by_val(&instance, DPOP_HTM, NULL, "/object"), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, DPOP_HTM, NULL, "/object", 0, &callback_resource_service_object_at_body, NULL), U_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
   ck_assert_int_eq(401, resp.status);
   ulfius_clean_response(&resp);
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_BODY, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_BODY, 0, 0), I_OK);
   ck_assert_int_eq(200, resp.status);
   ulfius_clean_response(&resp);
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_URL, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_URL, 0, 0), I_OK);
   ck_assert_int_eq(401, resp.status);
   ulfius_clean_response(&resp);
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
 
   ck_assert_int_eq(ulfius_remove_endpoint_by_val(&instance, DPOP_HTM, NULL, "/object"), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, DPOP_HTM, NULL, "/object", 0, &callback_resource_service_object_at_url, NULL), U_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
   ck_assert_int_eq(401, resp.status);
   ulfius_clean_response(&resp);
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_BODY, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_BODY, 0, 0), I_OK);
   ck_assert_int_eq(401, resp.status);
   ulfius_clean_response(&resp);
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
-  ck_assert_int_eq(i_perform_api_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_URL, 0, 0), I_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_URL, 0, 0), I_OK);
   ck_assert_int_eq(200, resp.status);
 
   i_clean_session(&i_session);

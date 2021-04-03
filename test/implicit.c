@@ -35,6 +35,7 @@
 #define CLAIM2 "claim2"
 #define CLAIM1_VALUE "248289761001"
 #define CLAIM1_CONTENT "{\"value\":\""CLAIM1_VALUE"\"}"
+#define RESOURCE_INDICATOR "https://resource.iddawc.tld/"
 
 const char jwk_privkey_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9E"\
                                 "XrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0"\
@@ -262,7 +263,7 @@ int callback_oauth2_code_valid_post_jwt_signed (const struct _u_request * reques
   return U_CALLBACK_CONTINUE;
 }
 
-int callback_oauth2_code_valid_post_jwt_signed_with_claims (const struct _u_request * request, struct _u_response * response, void * user_data) {
+int callback_oauth2_code_valid_post_jwt_signed_with_claims_resource (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_claims = json_pack("{s{so}s{s{so}}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, "essential", json_false()), * j_jwt_claims;
   if (u_map_get(request->map_post_body, "request") != NULL) {
     jwt_t * jwt;
@@ -272,6 +273,7 @@ int callback_oauth2_code_valid_post_jwt_signed_with_claims (const struct _u_requ
     r_jwt_parse(jwt, u_map_get(request->map_post_body, "request"), 0);
     ck_assert_ptr_ne(NULL, j_jwt_claims = r_jwt_get_claim_json_t_value(jwt, "claims"));
     ck_assert_int_eq(1, json_equal(j_jwt_claims, j_claims));
+    ck_assert_str_eq(RESOURCE_INDICATOR, r_jwt_get_claim_str_value(jwt, "resource"));
     json_decref(j_jwt_claims);
     if (r_jwt_get_sign_alg(jwt) == R_JWA_ALG_HS256) {
       r_jwk_import_from_symmetric_key(jwk, (const unsigned char *)CLIENT_SECRET, o_strlen(CLIENT_SECRET));
@@ -1187,14 +1189,14 @@ START_TEST(test_iddawc_code_valid_post_jwt_sign_secret)
 }
 END_TEST
 
-START_TEST(test_iddawc_code_valid_post_jwt_sign_secret_claims)
+START_TEST(test_iddawc_code_valid_post_jwt_sign_secret_claims_resource)
 {
   struct _i_session i_session;
   struct _u_instance instance;
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
-  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/auth", 0, &callback_oauth2_code_valid_post_jwt_signed_with_claims, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/auth", 0, &callback_oauth2_code_valid_post_jwt_signed_with_claims_resource, NULL), U_OK);
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
@@ -1205,6 +1207,7 @@ START_TEST(test_iddawc_code_valid_post_jwt_sign_secret_claims)
                                                     I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
                                                     I_OPT_STATE, STATE,
                                                     I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST|I_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_FALSE, NULL));
@@ -1434,7 +1437,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_secret_error_param);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_pubkey_error_param);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_secret);
-  tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_secret_claims);
+  tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_secret_claims_resource);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_privkey);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_secret);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_pubkey);
