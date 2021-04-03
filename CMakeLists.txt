@@ -34,7 +34,7 @@ set(LIBRARY_VERSION_PATCH "9")
 set(ORCANIA_VERSION_REQUIRED "2.2.0")
 set(YDER_VERSION_REQUIRED "1.4.13")
 set(ULFIUS_VERSION_REQUIRED "2.7.2")
-set(RHONABWY_VERSION_REQUIRED "0.9.99")
+set(RHONABWY_VERSION_REQUIRED "0.9.999")
 
 set(PROJECT_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
 set(PROJECT_VERSION_MAJOR ${LIBRARY_VERSION_MAJOR})
@@ -64,6 +64,7 @@ set(LIBRARY_SOVERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}")
 # cmake modules
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
+set(IDWCC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tools/idwcc)
 
 include(GNUInstallDirs)
 include(CheckSymbolExists)
@@ -246,6 +247,27 @@ endif ()
 target_link_libraries(iddawc ${RHONABWY_LIBRARIES})
 set(LIBS ${LIBS} ${RHONABWY_LIBRARIES})
 
+# build idwcc
+
+option(BUILD_IDWCC "Build idwcc application." ON)
+
+if (BUILD_IDWCC)
+    find_package(Threads REQUIRED)
+    set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    include(FindZLIB)
+    find_package(ZLIB REQUIRED)
+    if (ZLIB_FOUND)
+      set(LIBS ${LIBS} ${ZLIB_LIBRARIES})
+      include_directories(${ZLIB_INCLUDE_DIRS})
+    endif ()
+    add_executable(idwcc ${IDWCC_DIR}/idwcc.c ${INC_DIR}/iddawc.h ${IDWCC_DIR}/http_compression_callback.c ${IDWCC_DIR}/http_compression_callback.h ${IDWCC_DIR}/static_compressed_inmemory_website_callback.c ${IDWCC_DIR}/static_compressed_inmemory_website_callback.h ${PROJECT_BINARY_DIR}/iddawc-cfg.h)
+    set_target_properties(idwcc PROPERTIES SKIP_BUILD_RPATH TRUE)
+    add_dependencies(idwcc iddawc)
+    target_link_libraries(idwcc iddawc ${LIBS} )
+    install(TARGETS idwcc RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    INSTALL(FILES ${IDWCC_DIR}/idwcc.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT runtime)
+endif ()
+
 # documentation
 
 option(BUILD_IDDAWC_DOCUMENTATION "Build the documentation." OFF)
@@ -405,6 +427,7 @@ include(CPack)
 
 message(STATUS "Build testing tree:       ${BUILD_IDDAWC_TESTING}")
 message(STATUS "Install the header files: ${INSTALL_HEADER}")
+message(STATUS "Build idwcc:              ${BUILD_IDWCC}")
 message(STATUS "Build Static library:     ${BUILD_STATIC}")
 message(STATUS "Build RPM package:        ${BUILD_RPM}")
 message(STATUS "Build documentation:      ${BUILD_IDDAWC_DOCUMENTATION}")

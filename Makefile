@@ -20,23 +20,28 @@
 #
 
 LIBIDDAWC_LOCATION=./src
+IDWCC_LOCATION=./tools/idwcc
 TESTS_LOCATION=./test
 
 all:
 	cd $(LIBIDDAWC_LOCATION) && $(MAKE) $*
+	cd $(IDWCC_LOCATION) && $(MAKE) $*
 
 debug:
 	cd $(LIBIDDAWC_LOCATION) && $(MAKE) debug $*
 
 clean:
 	cd $(LIBIDDAWC_LOCATION) && $(MAKE) clean
+	cd $(IDWCC_LOCATION) && $(MAKE) clean
 	cd $(TESTS_LOCATION) && $(MAKE) clean
 
 install:
 	cd $(LIBIDDAWC_LOCATION) && $(MAKE) install
+	cd $(IDWCC_LOCATION) && $(MAKE) install
 
 uninstall:
 	cd $(LIBIDDAWC_LOCATION) && $(MAKE) uninstall
+	cd $(IDWCC_LOCATION) && $(MAKE) uninstall
 
 check:
 	cd $(TESTS_LOCATION) && $(MAKE)
