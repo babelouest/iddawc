@@ -9,6 +9,9 @@
 - Supports encrypted code, refresh tokens and access tokens
 - Improve DPoP support for userinfo, introspection and revocation endpoints
 - Implement client TLS authentication
+- Supports claims in requests
+- rename `i_perform_api_request` to `i_perform_resource_service_request`
+- Add `idwcc`, a program to test iddawc library and server capabilities
 
 ## 0.9.8
 
