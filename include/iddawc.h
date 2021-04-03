@@ -198,7 +198,8 @@ typedef enum {
   I_OPT_REMOTE_CERT_FLAG                      = 76, ///< Flags to use with remote connexions to ignore incorrect certificates, flags available are I_REMOTE_HOST_VERIFY_PEER, I_REMOTE_HOST_VERIFY_HOSTNAME, I_REMOTE_PROXY_VERIFY_PEER, I_REMOTE_PROXY_VERIFY_HOSTNAME, I_REMOTE_VERIFY_NONE, default is I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME
   I_OPT_PKCE_CODE_VERIFIER                    = 77, ///< PKCE code verifier, must be a string of 43 characters minumum only using the characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
   I_OPT_PKCE_CODE_VERIFIER_GENERATE           = 78, ///< Generate a random PKCE code verifier 
-  I_OPT_PKCE_METHOD                           = 79  ///< PKCE method to use, values available are I_PKCE_NONE (no PKCE, default), I_PKCE_METHOD_PLAIN or I_PKCE_METHOD_S256
+  I_OPT_PKCE_METHOD                           = 79, ///< PKCE method to use, values available are I_PKCE_NONE (no PKCE, default), I_PKCE_METHOD_PLAIN or I_PKCE_METHOD_S256
+  I_OPT_RESOURCE_INDICATOR                    = 80  ///< Resource indicator as detailed in the RFC 8707
 } i_option;
 
 /**
@@ -291,6 +292,7 @@ struct _i_session {
   char        * pkce_code_verifier;
   int           pkce_method;
   json_t      * j_claims;
+  char        * resource_indicator;
 };
 
 /**
@@ -788,7 +790,7 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
  * @param dpop_iat: the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used
  * @return I_OK on success, an error value on error
  */
-int i_perform_api_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat);
+int i_perform_resource_service_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat);
 
 /**
  * Executes a pushed authorization request
