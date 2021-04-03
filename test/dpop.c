@@ -31,26 +31,26 @@ START_TEST(test_iddawc_dpop_invalid_parameters)
   jwk_t * jwk;
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
   
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
   r_jwk_free(jwk);
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
   
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_TOKEN_JTI_GENERATE, 16,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_DPOP_SIGN_ALG, "RS256",
                                                     I_OPT_TOKEN_JTI, NULL,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
 
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, NULL, DPOP_HTU, 0, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, NULL, DPOP_HTU, 0));
 
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, NULL, 0, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, NULL, 0));
 
   i_clean_session(&i_session);
   
@@ -72,7 +72,7 @@ START_TEST(test_iddawc_dpop_valid_parameters)
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
   r_jwk_free(jwk);
-  ck_assert_ptr_ne(NULL, token = i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
+  ck_assert_ptr_ne(NULL, token = i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
   ck_assert_int_eq(r_jwt_init(&dpop_jwt), RHN_OK);
   ck_assert_int_eq(r_jwt_parse(dpop_jwt, token, 0), RHN_OK);
   ck_assert_int_eq(r_jwt_verify_signature(dpop_jwt, NULL, 0), RHN_OK);

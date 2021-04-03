@@ -27,7 +27,7 @@
 
 int callback_par_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssi}", "request_uri", REQUEST_URI, "expires_in", EXPIRES_IN);
-  ulfius_set_json_body_response(response, 200, j_response);
+  ulfius_set_json_body_response(response, 201, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
 }
@@ -37,7 +37,7 @@ int callback_par_claims_resource_valid (const struct _u_request * request, struc
   char * str_claims = json_dumps(j_claims, JSON_COMPACT);
   ck_assert_str_eq(u_map_get(request->map_post_body, "claims"), str_claims);
   ck_assert_str_eq(u_map_get(request->map_post_body, "resource"), RESOURCE_INDICATOR);
-  ulfius_set_json_body_response(response, 200, j_response);
+  ulfius_set_json_body_response(response, 201, j_response);
   json_decref(j_claims);
   json_decref(j_response);
   o_free(str_claims);
