@@ -5,3 +5,4 @@
 valgrind*.txt
 *.log
 *-cfg.h
+*.jwks
