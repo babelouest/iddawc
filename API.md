@@ -482,9 +482,10 @@ You can use your client's private key parameters to generate a DPoP token
  * @param htm: The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.)
  * @param htu: The htu claim value, the HTTP url used to access the protected resource (ex: https://resource.tld/object)
  * @param iat: the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used
+ * @param add_pubkey: include the public key in the header for first DPoP proof
  * @return a char * containing the DPoP token signed, must be i_free'd after use
  */
-char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat);
+char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat, int add_pubkey);
 ```
 
 ### Perform a HTTP request to a Resource Service
@@ -511,10 +512,10 @@ If specified, Iddawc will generate and add a DPoP token in the request using the
  * @param dpop_iat: the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used
  * @return I_OK on success, an error value on error
  */
-int i_perform_api_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat);
+int i_perform_resource_service_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat);
 ```
 
-Here is an example of how to use `i_perform_api_request`:
+Here is an example of how to use `i_perform_resource_service_request`:
 
 ```C
 struct _i_session i_session;
@@ -531,7 +532,7 @@ ulfius_init_response(&resp);
 
 ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, "GET", U_OPT_HTTP_URL, "https://resource.tld/object", U_OPT_NONE);
 
-if (i_perform_api_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 1, 0) == I_OK && resp.status == 200) {
+if (i_perform_resource_service_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 1, 0) == I_OK && resp.status == 200) {
   // j_resp contains the JSON response of the protected resource
   j_resp = ulfius_get_json_body_response(&resp, NULL);
 }
