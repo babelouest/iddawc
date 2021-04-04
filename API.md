@@ -2,7 +2,7 @@
 
 Iddawc is a C library used to implement OAuth2/OIDC clients according to the [OAuth2 RFC](https://tools.ietf.org/html/rfc6749) and the [OpenID Connect Specs](https://openid.net/specs/openid-connect-core-1_0.html).
 
-It's based on [Ulfius](https://github.com/babelouest/ulfius) library for the HTTP requests and response management and [Rhonabwy](https://github.com/babelouest/rhonabwy) library for the JWKs management.
+It's based on [Ulfius](https://github.com/babelouest/ulfius) library for the HTTP requests and response management and [Rhonabwy](https://github.com/babelouest/rhonabwy) library for the JOSE management.
 
 Iddawc supports the following features:
 
@@ -13,6 +13,11 @@ Iddawc supports the following features:
 - Parse responses, validate id_token
 - Registering new clients using the `register` endpoint if any
 - Sending signed and or encrypted requests in the `auth` and `token` endpoints
+- Client TLS Authentication available
+- Making Pushed Auth Requests
+- Making Rich Auth Requests
+- Adding claims to requests
+- Sending DPoP proofs
 
 ## Return values
 
@@ -114,8 +119,13 @@ int i_set_result(struct _i_session * i_session, uint i_value);
  * Sets an unsigned integer property value
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to set
- * options availble are I_OPT_RESPONSE_TYPE, I_OPT_RESULT, I_OPT_AUTH_METHOD
- * I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
+ * options availble are I_OPT_RESULT, I_OPT_AUTH_METHOD, I_OPT_TOKEN_METHOD,
+ * I_OPT_EXPIRES_IN, I_OPT_EXPIRES_AT, I_OPT_STATE_GENERATE, I_OPT_NONCE_GENERATE,
+ * I_OPT_X5U_FLAGS, I_OPT_OPENID_CONFIG_STRICT, I_OPT_TOKEN_JTI_GENERATE,
+ * I_OPT_TOKEN_EXP, I_OPT_DEVICE_AUTH_EXPIRES_IN, I_OPT_DEVICE_AUTH_INTERVAL,
+ * I_OPT_PUSHED_AUTH_REQ_REQUIRED, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, I_OPT_USE_DPOP,
+ * I_OPT_DECRYPT_CODE, I_OPT_DECRYPT_REFRESH_TOKEN, I_OPT_DECRYPT_ACCESS_TOKEN,
+ * I_OPT_REMOTE_CERT_FLAG, I_OPT_PKCE_CODE_VERIFIER_GENERATE, I_OPT_PKCE_METHOD
  * @param i_value: The unsigned integer value to set
  * @return I_OK on success, an error value on error
  */
@@ -125,15 +135,25 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
  * Sets a char * property value
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to set
- * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE
+ * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE,
  * I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID,
  * I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT,
- * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR,
- * I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN,
- * I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_GLEWLWYD_API_URL,
- * I_OPT_GLEWLWYD_COOKIE_SESSION, I_OPT_TOKEN_TYPE, I_OPT_USERNAME,
- * I_OPT_USER_PASSWORD, I_OPT_OPENID_CONFIG, I_OPT_ISSUER
- * @param s_value: The char * value to set
+ * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_OPENID_CONFIG, I_OPT_USERINFO_ENDPOINT,
+ * I_OPT_ERROR, I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE,
+ * I_OPT_REFRESH_TOKEN, I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_TOKEN_TYPE,
+ * I_OPT_USERNAME, I_OPT_USER_PASSWORD, I_OPT_ISSUER, I_OPT_USERINFO,
+ * I_OPT_SERVER_KID, I_OPT_SERVER_ENC_ALG, I_OPT_SERVER_ENC, I_OPT_CLIENT_KID,
+ * I_OPT_CLIENT_SIGN_ALG, I_OPT_CLIENT_ENC_ALG, I_OPT_CLIENT_ENC, I_OPT_TOKEN_JTI,
+ * I_OPT_TOKEN_TARGET, I_OPT_TOKEN_TARGET_TYPE_HINT, I_OPT_REVOCATION_ENDPOINT,
+ * I_OPT_INTROSPECTION_ENDPOINT, I_OPT_REGISTRATION_ENDPOINT,
+ * I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, I_OPT_DEVICE_AUTH_CODE,
+ * I_OPT_DEVICE_AUTH_USER_CODE, I_OPT_DEVICE_AUTH_VERIFICATION_URI,
+ * I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, I_OPT_END_SESSION_ENDPOINT,
+ * I_OPT_CHECK_SESSION_IRAME, I_OPT_PUSHED_AUTH_REQ_ENDPOINT,
+ * I_OPT_PUSHED_AUTH_REQ_URI, I_OPT_DPOP_KID, I_OPT_DPOP_SIGN_ALG,
+ * I_OPT_TLS_KEY_FILE, I_OPT_TLS_CERT_FILE, I_OPT_PKCE_CODE_VERIFIER,
+ * I_OPT_RESOURCE_INDICATOR
+ * @param s_value: The const char * value to set
  * @return I_OK on success, an error value on error
  */
 int i_set_str_parameter(struct _i_session * i_session, i_option option, const char * s_value);
@@ -180,8 +200,13 @@ uint i_get_result(struct _i_session * i_session);
  * Returns the integer value of an option
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to get
- * options availble are I_OPT_RESPONSE_TYPE, I_OPT_RESULT, I_OPT_AUTH_METHOD
- * I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
+ * options availble are I_OPT_RESULT, I_OPT_AUTH_METHOD, I_OPT_TOKEN_METHOD,
+ * I_OPT_EXPIRES_IN, I_OPT_EXPIRES_AT, I_OPT_STATE_GENERATE, I_OPT_NONCE_GENERATE,
+ * I_OPT_X5U_FLAGS, I_OPT_OPENID_CONFIG_STRICT, I_OPT_TOKEN_JTI_GENERATE,
+ * I_OPT_TOKEN_EXP, I_OPT_DEVICE_AUTH_EXPIRES_IN, I_OPT_DEVICE_AUTH_INTERVAL,
+ * I_OPT_PUSHED_AUTH_REQ_REQUIRED, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, I_OPT_USE_DPOP,
+ * I_OPT_DECRYPT_CODE, I_OPT_DECRYPT_REFRESH_TOKEN, I_OPT_DECRYPT_ACCESS_TOKEN,
+ * I_OPT_REMOTE_CERT_FLAG, I_OPT_PKCE_CODE_VERIFIER_GENERATE, I_OPT_PKCE_METHOD
  * @return the option value
  */
 uint i_get_int_parameter(struct _i_session * i_session, i_option option);
@@ -190,14 +215,24 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option);
  * Returns the char * value of an option
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to get
- * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE
+ * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE,
  * I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID,
  * I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT,
- * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR,
- * I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN,
- * I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_GLEWLWYD_API_URL,
- * I_OPT_GLEWLWYD_COOKIE_SESSION, I_OPT_TOKEN_TYPE, I_OPT_USERNAME,
- * I_OPT_USER_PASSWORD, I_OPT_OPENID_CONFIG, I_OPT_ISSUER
+ * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_OPENID_CONFIG, I_OPT_USERINFO_ENDPOINT,
+ * I_OPT_ERROR, I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE,
+ * I_OPT_REFRESH_TOKEN, I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_TOKEN_TYPE,
+ * I_OPT_USERNAME, I_OPT_USER_PASSWORD, I_OPT_ISSUER, I_OPT_USERINFO,
+ * I_OPT_SERVER_KID, I_OPT_SERVER_ENC_ALG, I_OPT_SERVER_ENC, I_OPT_CLIENT_KID,
+ * I_OPT_CLIENT_SIGN_ALG, I_OPT_CLIENT_ENC_ALG, I_OPT_CLIENT_ENC, I_OPT_TOKEN_JTI,
+ * I_OPT_TOKEN_TARGET, I_OPT_TOKEN_TARGET_TYPE_HINT, I_OPT_REVOCATION_ENDPOINT,
+ * I_OPT_INTROSPECTION_ENDPOINT, I_OPT_REGISTRATION_ENDPOINT,
+ * I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, I_OPT_DEVICE_AUTH_CODE,
+ * I_OPT_DEVICE_AUTH_USER_CODE, I_OPT_DEVICE_AUTH_VERIFICATION_URI,
+ * I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, I_OPT_END_SESSION_ENDPOINT,
+ * I_OPT_CHECK_SESSION_IRAME, I_OPT_PUSHED_AUTH_REQ_ENDPOINT,
+ * I_OPT_PUSHED_AUTH_REQ_URI, I_OPT_DPOP_KID, I_OPT_DPOP_SIGN_ALG,
+ * I_OPT_TLS_KEY_FILE, I_OPT_TLS_CERT_FILE, I_OPT_PKCE_CODE_VERIFIER,
+ * I_OPT_RESOURCE_INDICATOR
  * @return the char * value of the option, NULL if no value set
  */
 const char * i_get_str_parameter(struct _i_session * i_session, i_option option);
@@ -384,7 +419,7 @@ int i_run_token_request(struct _i_session * i_session);
 
 ### Verify an id_token
 
-If the auth or token endpoints returns an id_token, this one will be parsed, the signature will be verified and the content will be validated to make sure the id_token is valid. You can also manually validate an id_token using the dedicated function. The property `I_OPT_ID_TOKEN` and the public key property must be set.
+If the auth or token endpoints returns an id_token, this one will be parsed, the signature will be verified and the content will be validated to make sure the id_token is valid. You can also manually validate an id_token using the dedicated function. The property `I_OPT_ID_TOKEN` and the public key property must be set. When an id_token is validated, its claims are available in the property `json_t * struct _i_session.id_token_payload`.
 
 ```C
 /**
@@ -395,9 +430,24 @@ If the auth or token endpoints returns an id_token, this one will be parsed, the
 int i_verify_id_token(struct _i_session * i_session);
 ```
 
+### Verify an access_token
+
+If the access_token is a JWT, you can use the function `i_verify_jwt_access_token` to verify its signature. The function will verify the claims `iss` and `iat` only. When an access_token is validated, its claims are available in the property `json_t * struct _i_session.access_token_payload`.
+
+```C
+/**
+ * Validates the access_token signature and content if necessary
+ * According to OAuth 2.0 Access Token JWT Profile Draft 12
+ * https://datatracker.ietf.org/doc/html/draft-ietf-oauth-access-token-jwt-12
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_verify_jwt_access_token(struct _i_session * i_session);
+```
+
 ### Load userinfo
 
-If an access_token is available, you can make a request to the userinfo endpoint to get information about the user. The function `i_load_userinfo_custom` is a more advanced userinfo request where you can specify query or header parameters, to request more claims or the result a signed JWT.
+If an access_token is available, you can make a request to the userinfo endpoint to get information about the user. The function `i_load_userinfo_custom` is a more advanced userinfo request where you can specify query or header parameters, to request more claims or the result as a signed JWT.
 
 ```C
 /**
@@ -470,9 +520,37 @@ If available, you can register a new client. You may have to set a `I_OPT_ACCESS
 int i_register_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
 ```
 
+### Manage clients registration
+
+If available on the AS, you can manage a client registration by changing its metadata or get the client registration metadata. These functions will use the access_token in the session if one is set.
+
+```C
+/**
+ * Manages a client registration using the dynamic registration endpoint
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_parameters: a json_t * object containing the client metadata
+ * The metadata content depends on the registration endpoint but at least
+ * the parameter redirect_uris (array of string) is required to register a new client
+ * @param update_session: if the registration is succesfull, update the session with the new client_id and client_secret
+ * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
+ * @return I_OK on success, an error value on error
+ */
+int i_manage_registration_client(struct _i_session * i_session, json_t * j_parameters, int update_session, json_t ** j_result);
+
+/**
+ * Gets a client registration using the dynamic registration endpoint
+ * Using the access_token for authentication
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
+ * @return I_OK on success, an error value on error
+ */
+int i_get_registration_client(struct _i_session * i_session, json_t ** j_result);
+```
+
 ### Generate a DPoP token
 
-You can use your client's private key parameters to generate a DPoP token
+You can use your client's private key parameters to generate a DPoP token. If you set the session property `I_OPT_USE_DPOP` to true, the functions `i_run_device_auth_request`, `i_run_par_request`, `i_get_userinfo_custom`, `i_get_userinfo`, `i_run_token_request`, `i_revoke_token`, `i_get_token_introspection` or `i_perform_resource_service_request` will add a DPoP header.
 
 ```C
 /**
@@ -532,7 +610,7 @@ ulfius_init_response(&resp);
 
 ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, "GET", U_OPT_HTTP_URL, "https://resource.tld/object", U_OPT_NONE);
 
-if (i_perform_resource_service_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 1, 0) == I_OK && resp.status == 200) {
+if (i_perform_resource_service_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 1) == I_OK && resp.status == 200) {
   // j_resp contains the JSON response of the protected resource
   j_resp = ulfius_get_json_body_response(&resp, NULL);
 }
