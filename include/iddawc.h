@@ -1,9 +1,9 @@
 /**
- * 
+ *
  * Iddawc OAuth2 client library
- * 
+ *
  * iddawc.h: structures and functions declarations
- * 
+ *
  * Copyright 2019-2020 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 #ifndef __IDDAWC_H
@@ -86,10 +86,10 @@ extern "C"
 #define I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN  1 ///< Introspection/Revocation - authentication using access token
 #define I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET 2 ///< Introspection/Revocation - authentication with client credentials
 
-#define I_TOKEN_TYPE_ACCESS_TOKEN  0 ///< 
-#define I_TOKEN_TYPE_ID_TOKEN      1 ///< 
-#define I_TOKEN_TYPE_USERINFO      2 ///< 
-#define I_TOKEN_TYPE_INTROSPECTION 3 ///< 
+#define I_TOKEN_TYPE_ACCESS_TOKEN  0 ///<
+#define I_TOKEN_TYPE_ID_TOKEN      1 ///<
+#define I_TOKEN_TYPE_USERINFO      2 ///<
+#define I_TOKEN_TYPE_INTROSPECTION 3 ///<
 
 #define I_HEADER_PREFIX_BEARER "Bearer "
 #define I_HEADER_AUTHORIZATION "Authorization"
@@ -102,23 +102,23 @@ extern "C"
 #define I_REMOTE_PROXY_VERIFY_PEER     0x0100 ///< Verify TLS session with peers
 #define I_REMOTE_PROXY_VERIFY_HOSTNAME 0x1000 ///< Verify TLS session with hostname
 
-#define I_PKCE_NONE         0
-#define I_PKCE_METHOD_PLAIN 1
-#define I_PKCE_METHOD_S256  2
+#define I_PKCE_NONE         0 ///< No PKCE
+#define I_PKCE_METHOD_PLAIN 1 ///< PKCE using method plain
+#define I_PKCE_METHOD_S256  2 ///< PKCE using method SHA256
 
-#define I_CLAIM_TARGET_ALL      0
-#define I_CLAIM_TARGET_USERINFO 1
-#define I_CLAIM_TARGET_ID_TOKEN 2
+#define I_CLAIM_TARGET_ALL      0 ///< Add claim to userinfo and id_token
+#define I_CLAIM_TARGET_USERINFO 1 ///< Add claim to userinfo
+#define I_CLAIM_TARGET_ID_TOKEN 2 ///< Add claim to id_token
 
-#define I_CLAIM_ESSENTIAL_NULL   0
-#define I_CLAIM_ESSENTIAL_TRUE   1
-#define I_CLAIM_ESSENTIAL_FALSE  2
-#define I_CLAIM_ESSENTIAL_IGNORE 3
+#define I_CLAIM_ESSENTIAL_NULL   0 ///< Set claim value to null
+#define I_CLAIM_ESSENTIAL_TRUE   1 ///< Set claim essential value to true
+#define I_CLAIM_ESSENTIAL_FALSE  2 ///< Set claim essential value to false
+#define I_CLAIM_ESSENTIAL_IGNORE 3 ///< 
 
 /**
  * Options available to set or get properties using
  * i_set_int_parameter, i_set_str_parameter,
- * i_get_int_parameter or i_get_str_parameter
+ * i_get_int_parameter, i_get_str_parameter or i_set_parameter_list
  */
 typedef enum {
   I_OPT_NONE                                  = 0,  ///< Empty option to complete a i_set_parameter_list
@@ -132,12 +132,12 @@ typedef enum {
   I_OPT_CLIENT_ID                             = 8,  ///< client_id, string
   I_OPT_CLIENT_SECRET                         = 9,  ///< client secret, string
   I_OPT_ADDITIONAL_PARAMETER                  = 10, ///< use this option to pass any additional parameter value in the /auth request
-  I_OPT_ADDITIONAL_RESPONSE                   = 11, ///< 
+  I_OPT_ADDITIONAL_RESPONSE                   = 11, ///<
   I_OPT_AUTH_ENDPOINT                         = 12, ///< absolute url for the auth endpoint, string
   I_OPT_TOKEN_ENDPOINT                        = 13, ///< absolute url for the token endpoint, string
   I_OPT_OPENID_CONFIG_ENDPOINT                = 14, ///< absolute url for the .well-known/openid-configuration endpoint, string
   I_OPT_OPENID_CONFIG                         = 15, ///< result of the .well-known/openid-configuration
-  I_OPT_OPENID_CONFIG_STRICT                  = 16, ///< must the .well-known/openid-configuration parameters be strictly 
+  I_OPT_OPENID_CONFIG_STRICT                  = 16, ///< must the .well-known/openid-configuration parameters be strictly
   I_OPT_USERINFO_ENDPOINT                     = 17, ///< absolute url for the userinfo endpoint or equivalent, string
   I_OPT_RESULT                                = 18, ///< result of a request
   I_OPT_ERROR                                 = 19, ///< error value of a failed request, string
@@ -197,7 +197,7 @@ typedef enum {
   I_OPT_TLS_CERT_FILE                         = 75, ///< Path to the certificate PEM file to use in a TLS authentication
   I_OPT_REMOTE_CERT_FLAG                      = 76, ///< Flags to use with remote connexions to ignore incorrect certificates, flags available are I_REMOTE_HOST_VERIFY_PEER, I_REMOTE_HOST_VERIFY_HOSTNAME, I_REMOTE_PROXY_VERIFY_PEER, I_REMOTE_PROXY_VERIFY_HOSTNAME, I_REMOTE_VERIFY_NONE, default is I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME
   I_OPT_PKCE_CODE_VERIFIER                    = 77, ///< PKCE code verifier, must be a string of 43 characters minumum only using the characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
-  I_OPT_PKCE_CODE_VERIFIER_GENERATE           = 78, ///< Generate a random PKCE code verifier 
+  I_OPT_PKCE_CODE_VERIFIER_GENERATE           = 78, ///< Generate a random PKCE code verifier
   I_OPT_PKCE_METHOD                           = 79, ///< PKCE method to use, values available are I_PKCE_NONE (no PKCE, default), I_PKCE_METHOD_PLAIN or I_PKCE_METHOD_S256
   I_OPT_RESOURCE_INDICATOR                    = 80  ///< Resource indicator as detailed in the RFC 8707
 } i_option;
@@ -352,11 +352,11 @@ void i_clean_session(struct _i_session * i_session);
  * Sets response type of a session
  * @param i_session: a reference to a struct _i_session *
  * @param i_value: the response type
- * values available are I_RESPONSE_TYPE_NONE, I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, 
- * I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS
- * and I_RESPONSE_TYPE_REFRESH_TOKEN
- * Values I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN and I_RESPONSE_TYPE_ID_TOKEN can be 
- * stacked if using hybrid flow, example: 
+ * values available are I_RESPONSE_TYPE_NONE, I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN,
+ * I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS,
+ * I_RESPONSE_TYPE_REFRESH_TOKEN and I_RESPONSE_TYPE_DEVICE_CODE
+ * Values I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN and I_RESPONSE_TYPE_ID_TOKEN can be
+ * stacked if using hybrid flow, example:
  * I_RESPONSE_TYPE_CODE | I_RESPONSE_TYPE_TOKEN | I_RESPONSE_TYPE_ID_TOKEN
  * @return I_OK on success, an error value on error
  */
@@ -366,7 +366,7 @@ int i_set_response_type(struct _i_session * i_session, uint i_value);
  * Sets the result of a request
  * @param i_session: a reference to a struct _i_session *
  * @param i_value: the result value
- * Values available are I_OK, I_ERROR, I_ERROR_PARAM, 
+ * Values available are I_OK, I_ERROR, I_ERROR_PARAM,
  * I_ERROR_MEMORY, I_ERROR_UNAUTHORIZED orI_ERROR_SERVER
  * @return I_OK on success, an error value on error
  */
@@ -376,8 +376,13 @@ int i_set_result(struct _i_session * i_session, uint i_value);
  * Sets an unsigned integer property value
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to set
- * options availble are I_OPT_RESPONSE_TYPE, I_OPT_RESULT, I_OPT_AUTH_METHOD
- * I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
+ * options availble are I_OPT_RESULT, I_OPT_AUTH_METHOD, I_OPT_TOKEN_METHOD,
+ * I_OPT_EXPIRES_IN, I_OPT_EXPIRES_AT, I_OPT_STATE_GENERATE, I_OPT_NONCE_GENERATE,
+ * I_OPT_X5U_FLAGS, I_OPT_OPENID_CONFIG_STRICT, I_OPT_TOKEN_JTI_GENERATE,
+ * I_OPT_TOKEN_EXP, I_OPT_DEVICE_AUTH_EXPIRES_IN, I_OPT_DEVICE_AUTH_INTERVAL,
+ * I_OPT_PUSHED_AUTH_REQ_REQUIRED, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, I_OPT_USE_DPOP,
+ * I_OPT_DECRYPT_CODE, I_OPT_DECRYPT_REFRESH_TOKEN, I_OPT_DECRYPT_ACCESS_TOKEN,
+ * I_OPT_REMOTE_CERT_FLAG, I_OPT_PKCE_CODE_VERIFIER_GENERATE, I_OPT_PKCE_METHOD
  * @param i_value: The unsigned integer value to set
  * @return I_OK on success, an error value on error
  */
@@ -387,15 +392,25 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
  * Sets a char * property value
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to set
- * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE
+ * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE,
  * I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID,
  * I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT,
- * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR,
- * I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN,
- * I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_GLEWLWYD_API_URL,
- * I_OPT_GLEWLWYD_COOKIE_SESSION, I_OPT_TOKEN_TYPE, I_OPT_USERNAME,
- * I_OPT_USER_PASSWORD, I_OPT_OPENID_CONFIG, I_OPT_ISSUER
- * @param s_value: The char * value to set
+ * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_OPENID_CONFIG, I_OPT_USERINFO_ENDPOINT,
+ * I_OPT_ERROR, I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE,
+ * I_OPT_REFRESH_TOKEN, I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_TOKEN_TYPE,
+ * I_OPT_USERNAME, I_OPT_USER_PASSWORD, I_OPT_ISSUER, I_OPT_USERINFO,
+ * I_OPT_SERVER_KID, I_OPT_SERVER_ENC_ALG, I_OPT_SERVER_ENC, I_OPT_CLIENT_KID,
+ * I_OPT_CLIENT_SIGN_ALG, I_OPT_CLIENT_ENC_ALG, I_OPT_CLIENT_ENC, I_OPT_TOKEN_JTI,
+ * I_OPT_TOKEN_TARGET, I_OPT_TOKEN_TARGET_TYPE_HINT, I_OPT_REVOCATION_ENDPOINT,
+ * I_OPT_INTROSPECTION_ENDPOINT, I_OPT_REGISTRATION_ENDPOINT,
+ * I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, I_OPT_DEVICE_AUTH_CODE,
+ * I_OPT_DEVICE_AUTH_USER_CODE, I_OPT_DEVICE_AUTH_VERIFICATION_URI,
+ * I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, I_OPT_END_SESSION_ENDPOINT,
+ * I_OPT_CHECK_SESSION_IRAME, I_OPT_PUSHED_AUTH_REQ_ENDPOINT,
+ * I_OPT_PUSHED_AUTH_REQ_URI, I_OPT_DPOP_KID, I_OPT_DPOP_SIGN_ALG,
+ * I_OPT_TLS_KEY_FILE, I_OPT_TLS_CERT_FILE, I_OPT_PKCE_CODE_VERIFIER,
+ * I_OPT_RESOURCE_INDICATOR
+ * @param s_value: The const char * value to set
  * @return I_OK on success, an error value on error
  */
 int i_set_str_parameter(struct _i_session * i_session, i_option option, const char * s_value);
@@ -444,7 +459,7 @@ int i_add_claim_request(struct _i_session * i_session, int target, const char * 
 int i_remove_claim_request(struct _i_session * i_session, int target, const char * claim);
 
 /**
- * Adds an authorization request object or replace it if the type already exists
+ * Adds an rich authorization request object in JSON format or replace it if the type already exists
  * @param i_session: a reference to a struct _i_session *
  * @param type: the type of the authorization request
  * @param j_value: the authorization request, must be a JSON object
@@ -453,7 +468,7 @@ int i_remove_claim_request(struct _i_session * i_session, int target, const char
 int i_set_rich_authorization_request_json_t(struct _i_session * i_session, const char * type, json_t * j_value);
 
 /**
- * Adds an authorization request object or replace it if the type already exists
+ * Adds an rich authorization request object in stringified JSON format or replace it if the type already exists
  * @param i_session: a reference to a struct _i_session *
  * @param type: the type of the authorization request
  * @param value: the authorization request, must be a stringified JSON object
@@ -489,11 +504,11 @@ char * i_get_rich_authorization_request_str(struct _i_session * i_session, const
  * Returns the response type of the current session
  * @param i_session: a reference to a struct _i_session *
  * @return a value among the following:
- * I_RESPONSE_TYPE_NONE, I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, 
+ * I_RESPONSE_TYPE_NONE, I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN,
  * I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS
  * and I_RESPONSE_TYPE_REFRESH_TOKEN
- * Values I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN and I_RESPONSE_TYPE_ID_TOKEN can be 
- * stacked if using hybrid flow, example: 
+ * Values I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN and I_RESPONSE_TYPE_ID_TOKEN can be
+ * stacked if using hybrid flow, example:
  * I_RESPONSE_TYPE_CODE | I_RESPONSE_TYPE_TOKEN | I_RESPONSE_TYPE_ID_TOKEN
  */
 uint i_get_response_type(struct _i_session * i_session);
@@ -509,8 +524,13 @@ uint i_get_result(struct _i_session * i_session);
  * Returns the integer value of an option
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to get
- * options availble are I_OPT_RESPONSE_TYPE, I_OPT_RESULT, I_OPT_AUTH_METHOD
- * I_OPT_EXPIRES_IN, I_OPT_OPENID_CONFIG_STRICT
+ * options availble are I_OPT_RESULT, I_OPT_AUTH_METHOD, I_OPT_TOKEN_METHOD,
+ * I_OPT_EXPIRES_IN, I_OPT_EXPIRES_AT, I_OPT_STATE_GENERATE, I_OPT_NONCE_GENERATE,
+ * I_OPT_X5U_FLAGS, I_OPT_OPENID_CONFIG_STRICT, I_OPT_TOKEN_JTI_GENERATE,
+ * I_OPT_TOKEN_EXP, I_OPT_DEVICE_AUTH_EXPIRES_IN, I_OPT_DEVICE_AUTH_INTERVAL,
+ * I_OPT_PUSHED_AUTH_REQ_REQUIRED, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, I_OPT_USE_DPOP,
+ * I_OPT_DECRYPT_CODE, I_OPT_DECRYPT_REFRESH_TOKEN, I_OPT_DECRYPT_ACCESS_TOKEN,
+ * I_OPT_REMOTE_CERT_FLAG, I_OPT_PKCE_CODE_VERIFIER_GENERATE, I_OPT_PKCE_METHOD
  * @return the option value
  */
 uint i_get_int_parameter(struct _i_session * i_session, i_option option);
@@ -519,14 +539,24 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option);
  * Returns the char * value of an option
  * @param i_session: a reference to a struct _i_session *
  * @param option: the option to get
- * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE
+ * options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE,
  * I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID,
  * I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT,
- * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR,
- * I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN,
- * I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_GLEWLWYD_API_URL,
- * I_OPT_GLEWLWYD_COOKIE_SESSION, I_OPT_TOKEN_TYPE, I_OPT_USERNAME,
- * I_OPT_USER_PASSWORD, I_OPT_OPENID_CONFIG, I_OPT_ISSUER
+ * I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_OPENID_CONFIG, I_OPT_USERINFO_ENDPOINT,
+ * I_OPT_ERROR, I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE,
+ * I_OPT_REFRESH_TOKEN, I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_TOKEN_TYPE,
+ * I_OPT_USERNAME, I_OPT_USER_PASSWORD, I_OPT_ISSUER, I_OPT_USERINFO,
+ * I_OPT_SERVER_KID, I_OPT_SERVER_ENC_ALG, I_OPT_SERVER_ENC, I_OPT_CLIENT_KID,
+ * I_OPT_CLIENT_SIGN_ALG, I_OPT_CLIENT_ENC_ALG, I_OPT_CLIENT_ENC, I_OPT_TOKEN_JTI,
+ * I_OPT_TOKEN_TARGET, I_OPT_TOKEN_TARGET_TYPE_HINT, I_OPT_REVOCATION_ENDPOINT,
+ * I_OPT_INTROSPECTION_ENDPOINT, I_OPT_REGISTRATION_ENDPOINT,
+ * I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, I_OPT_DEVICE_AUTH_CODE,
+ * I_OPT_DEVICE_AUTH_USER_CODE, I_OPT_DEVICE_AUTH_VERIFICATION_URI,
+ * I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, I_OPT_END_SESSION_ENDPOINT,
+ * I_OPT_CHECK_SESSION_IRAME, I_OPT_PUSHED_AUTH_REQ_ENDPOINT,
+ * I_OPT_PUSHED_AUTH_REQ_URI, I_OPT_DPOP_KID, I_OPT_DPOP_SIGN_ALG,
+ * I_OPT_TLS_KEY_FILE, I_OPT_TLS_CERT_FILE, I_OPT_PKCE_CODE_VERIFIER,
+ * I_OPT_RESOURCE_INDICATOR
  * @return the char * value of the option, NULL if no value set
  */
 const char * i_get_str_parameter(struct _i_session * i_session, i_option option);
@@ -569,8 +599,8 @@ json_t * i_get_server_jwks(struct _i_session * i_session);
  * the syntax is the option followed by the value(s) required by the option
  * The list must be ended by a I_OPT_NONE
  * Example:
- * i_set_parameter_list(i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE, 
- * I_OPT_SCOPE, "scope1", I_OPT_STATE, "abcd", I_OPT_CLIENT_ID, "client1", 
+ * i_set_parameter_list(i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+ * I_OPT_SCOPE, "scope1", I_OPT_STATE, "abcd", I_OPT_CLIENT_ID, "client1",
  * I_OPT_AUTH_ENDPOINT, "https://auth2.tld/auth", I_OPT_NONE);
  * @return I_OK on success, an error value on error
  */
@@ -676,7 +706,7 @@ int i_verify_jwt_access_token(struct _i_session * i_session);
 
 /**
  * Loads the userinfo endpoint using the access_token
- * if the result is a JWT, validate the signature 
+ * if the result is a JWT, validate the signature
  * and/or decrypt the token
  * sets the result to i_session->userinfo as char *
  * and i_session->j_userinfo as json_t * if the result is in JSON format
@@ -689,7 +719,7 @@ int i_get_userinfo(struct _i_session * i_session, int get_jwt);
 /**
  * Loads the userinfo endpoint using the access_token
  * with custom parameters
- * if the result is a JWT, validate the signature 
+ * if the result is a JWT, validate the signature
  * and/or decrypt the token
  * sets the result to i_session->userinfo as char *
  * and i_session->j_userinfo as json_t * if the result is in JSON format
@@ -711,7 +741,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
  * I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN,
  * I_INTROSPECT_REVOKE_AUTH_CLIENT_TARGET
  * @param get_jwt: Request result as a JWT
- * @return I_OK on success and if the access_token_target is valid, 
+ * @return I_OK on success and if the access_token_target is valid,
  * I_ERROR_UNAUTHORIZED if the access_token_target is invalid, another error value on error
  */
 int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result, int authentication, int get_jwt);
