@@ -35,7 +35,7 @@
 #include "static_compressed_inmemory_website_callback.h"
 #include "http_compression_callback.h"
 
-#define _IDWCC_VERSION "0.1"
+#define _IDWCC_VERSION "0.9"
 #define _DEFAULT_PORT 4398
 #define PREFIX_STATIC "/"
 
@@ -58,7 +58,7 @@ static void print_help(FILE * output, const char * command) {
   fprintf(output, "\tTCP Port number to listen to, default %d\n", _DEFAULT_PORT);
   fprintf(output, "-f, --session-file <PATH>\n");
   fprintf(output, "\tLoad session file specified by <PATH>\n");
-  fprintf(output, "-b, --bind-localhost [yes|no]\n");
+  fprintf(output, "-b, --bind-localhost [true|false]\n");
   fprintf(output, "\tBind to localhost only, default true\n");
   fprintf(output, "-h, --help\n");
   fprintf(output, "\tdisplay this help and exit\n");
