@@ -391,20 +391,20 @@ static int _i_parse_redirect_to_parameters(struct _i_session * i_session, struct
 static int _i_has_openid_config_parameter_value(struct _i_session * i_session, const char * parameter, const char * value) {
   int ret;
   size_t index = 0;
-  json_t * j_element = NULL;
+  json_t * j_element = NULL, * j_param;
 
   if (i_session != NULL) {
     if (i_session->openid_config_strict) {
-      if (i_session->openid_config != NULL && json_object_get(i_session->openid_config, parameter) != NULL) {
+      if (i_session->openid_config != NULL && (j_param = json_object_get(i_session->openid_config, parameter)) != NULL) {
         if (json_is_string(json_object_get(i_session->openid_config, parameter))) {
-          if (0 == o_strcmp(value, json_string_value(json_object_get(i_session->openid_config, parameter)))) {
+          if (0 == o_strcmp(value, json_string_value(j_param))) {
             ret = 1;
           } else {
             ret = 0;
           }
-        } else if (json_is_array(json_object_get(i_session->openid_config, parameter))) {
+        } else if (json_is_array(j_param)) {
           ret = 0;
-          json_array_foreach(json_object_get(i_session->openid_config, parameter), index, j_element) {
+          json_array_foreach(j_param, index, j_element) {
             if (0 == o_strcmp(value, json_string_value(j_element))) {
               ret = 1;
             }
@@ -413,7 +413,7 @@ static int _i_has_openid_config_parameter_value(struct _i_session * i_session, c
           ret = 0;
         }
       } else {
-        ret = 0;
+        ret = 1;
       }
     } else {
       ret = 1;
