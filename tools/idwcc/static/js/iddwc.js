@@ -983,6 +983,26 @@ $( document ).ready(function() {
     if (currentSession.access_token_payload) {
       $("#access_token_payload").empty().html(JSON.stringify(currentSession.access_token_payload, null, 2));
     }
+    
+    $("#additionalParameters").val("");
+    Object.keys(currentSession.additional_parameters).forEach((param) => {
+      var value = currentSession.additional_parameters[param];
+      
+      if (param === "display") {
+        $("#additionalParametersDisplay").val(value);
+      } else if (param === "prompt") {
+        $("#additionalParametersPrompt").val(value);
+      } else if (param === "ui_locales") {
+        $("#additionalParametersUiLocales").val(value);
+      } else {
+        var addParam = $("#additionalParameters").val();
+        if (addParam) {
+          $("#additionalParameters").val(addParam+"\n"+param+":"+value);
+        } else {
+          $("#additionalParameters").val(param+":"+value);
+        }
+      }
+    });
   }
 
   function saveSession() {
@@ -1060,6 +1080,32 @@ $( document ).ready(function() {
     currentSession.decrypt_access_token = $("#decrypt_access_token").prop("checked");
     currentSession.use_dpop = $("#use_dpop").prop("checked");
     currentSession.openid_config_strict = $("#openid_config_strict").prop("checked");
+    
+    if ($("#additionalParameters").val()) {
+      currentSession.additional_parameters = {};
+      $("#additionalParameters").val().split("\n").forEach((param) => {
+        if (param) {
+          var vals = param.split(":");
+          if (vals.length >= 2) {
+            currentSession.additional_parameters[vals[0]] = vals[1];
+          } else {
+            currentSession.additional_parameters[vals[0]] = null;
+          }
+        }
+      });
+    }
+
+    if ($("#additionalParametersDisplay").val()) {
+      currentSession.additional_parameters.display = $("#additionalParametersDisplay").val();
+    }
+
+    if ($("#additionalParametersPrompt").val()) {
+      currentSession.additional_parameters.prompt = $("#additionalParametersPrompt").val();
+    }
+
+    if ($("#additionalParametersUiLocales").val()) {
+      currentSession.additional_parameters.ui_locales = $("#additionalParametersUiLocales").val();
+    }
 
     return $.ajax({
       method: "POST",
