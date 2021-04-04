@@ -59,8 +59,6 @@ $(function() {
 Functions</h2></td></tr>
 <tr class="memitem:afca11f3d5e92b5b9f23c90d79f6a3d45"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8c.html#afca11f3d5e92b5b9f23c90d79f6a3d45">random_at_most</a> (unsigned char max, int nonce)</td></tr>
 <tr class="separator:afca11f3d5e92b5b9f23c90d79f6a3d45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef6f7548408806417e9b75fe8544103f"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8c.html#aef6f7548408806417e9b75fe8544103f">rand_string_nonce</a> (char *str, size_t str_size)</td></tr>
-<tr class="separator:aef6f7548408806417e9b75fe8544103f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga74a3452a89fef139072602162847ae49"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#ga74a3452a89fef139072602162847ae49">i_global_init</a> ()</td></tr>
 <tr class="separator:ga74a3452a89fef139072602162847ae49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac94619aa9efbbe5ca77e2e5d7908ec18"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#gac94619aa9efbbe5ca77e2e5d7908ec18">i_global_close</a> ()</td></tr>
@@ -83,14 +81,18 @@ Functions</h2></td></tr>
 <tr class="separator:ga1ae5ceaf789edcc3826b94d22460ea36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae80f8aac03211943b854c3aede3fee6b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gae80f8aac03211943b854c3aede3fee6b">i_set_additional_response</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key, const char *s_value)</td></tr>
 <tr class="separator:gae80f8aac03211943b854c3aede3fee6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3035629c423fc3e07bff25491823fa84"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga3035629c423fc3e07bff25491823fa84">i_add_claim_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, int target, const char *claim, int essential, const char *value)</td></tr>
+<tr class="separator:ga3035629c423fc3e07bff25491823fa84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1d47798f519e77216512c50e2e203108"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga1d47798f519e77216512c50e2e203108">i_remove_claim_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, int target, const char *claim)</td></tr>
+<tr class="separator:ga1d47798f519e77216512c50e2e203108"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga74f0a21ec2933521d50a93062a2ff522"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga74f0a21ec2933521d50a93062a2ff522">i_set_parameter_list</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session,...)</td></tr>
 <tr class="separator:ga74f0a21ec2933521d50a93062a2ff522"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf719b590f20f10e11ecf36d803f0ac6f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gaf719b590f20f10e11ecf36d803f0ac6f">i_load_openid_config</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:gaf719b590f20f10e11ecf36d803f0ac6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga71428e3bcc19f2ae742c8fe36e5428b7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga71428e3bcc19f2ae742c8fe36e5428b7">i_load_userinfo</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:ga71428e3bcc19f2ae742c8fe36e5428b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga290ed5c2e464ae32e423c21c00765d8e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga290ed5c2e464ae32e423c21c00765d8e">i_load_userinfo_custom</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *http_method, struct _u_map *additional_query, struct _u_map *additional_headers)</td></tr>
-<tr class="separator:ga290ed5c2e464ae32e423c21c00765d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa93fb87ef370ffce18d3713c07947c88"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gaa93fb87ef370ffce18d3713c07947c88">i_get_openid_config</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:gaa93fb87ef370ffce18d3713c07947c88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4e23ab9e9fadbafe410e85ed743842f9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga4e23ab9e9fadbafe410e85ed743842f9">i_get_userinfo</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, int get_jwt)</td></tr>
+<tr class="separator:ga4e23ab9e9fadbafe410e85ed743842f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga45f8e6c84679edeadb9aad1ec8501b4e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga45f8e6c84679edeadb9aad1ec8501b4e">i_get_userinfo_custom</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *http_method, struct _u_map *additional_query, struct _u_map *additional_headers)</td></tr>
+<tr class="separator:ga45f8e6c84679edeadb9aad1ec8501b4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga8ec512e6c051ca609bb506be8e0646bc"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga8ec512e6c051ca609bb506be8e0646bc">i_get_response_type</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga8ec512e6c051ca609bb506be8e0646bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga110fe3fcde671327f9c787049208a3f2"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga110fe3fcde671327f9c787049208a3f2">i_get_result</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
@@ -105,6 +107,10 @@ Functions</h2></td></tr>
 <tr class="separator:ga66e2e3a7c63f92eb6bd60553ebe5f0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga72f1f165ce3101bb70be9cb007a6f6ad"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga72f1f165ce3101bb70be9cb007a6f6ad">i_get_additional_response</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *s_key)</td></tr>
 <tr class="separator:ga72f1f165ce3101bb70be9cb007a6f6ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9e3b09bc9efb664f73369c1c347585a5"><td class="memItemLeft" align="right" valign="top">json_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga9e3b09bc9efb664f73369c1c347585a5">i_get_server_configuration</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga9e3b09bc9efb664f73369c1c347585a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4587ca3263c3403d85d44f5539e535d4"><td class="memItemLeft" align="right" valign="top">json_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga4587ca3263c3403d85d44f5539e535d4">i_get_server_jwks</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga4587ca3263c3403d85d44f5539e535d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga1a31bc20153cb660fe8224563cd96bb1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga1a31bc20153cb660fe8224563cd96bb1">i_build_auth_url_get</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga1a31bc20153cb660fe8224563cd96bb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2db60e3de3bb62e5cbfc114f1c8449db"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga2db60e3de3bb62e5cbfc114f1c8449db">i_run_auth_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
@@ -113,12 +119,16 @@ Functions</h2></td></tr>
 <tr class="separator:gaf251643a2384c854091a2df0314aac8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga625e48c5675c530f8612bd91526a1847"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga625e48c5675c530f8612bd91526a1847">i_verify_id_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga625e48c5675c530f8612bd91526a1847"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga418b5be2b1d81f405a5602d9b865b82c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga418b5be2b1d81f405a5602d9b865b82c">i_revoke_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
-<tr class="separator:ga418b5be2b1d81f405a5602d9b865b82c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf950f7340cb07382ee8dcb2e2d9b86f3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gaf950f7340cb07382ee8dcb2e2d9b86f3">i_introspect_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t **j_result)</td></tr>
-<tr class="separator:gaf950f7340cb07382ee8dcb2e2d9b86f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4dc04864a6edebd89a20fe6297e73fb9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga4dc04864a6edebd89a20fe6297e73fb9">i_verify_jwt_access_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:ga4dc04864a6edebd89a20fe6297e73fb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga168ed1f7be1c7a0e41720f29ab44fcd2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga168ed1f7be1c7a0e41720f29ab44fcd2">i_revoke_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, int authentication)</td></tr>
+<tr class="separator:ga168ed1f7be1c7a0e41720f29ab44fcd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab91ef3aa9f3a5ad51884cf0b7693f595"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gab91ef3aa9f3a5ad51884cf0b7693f595">i_get_token_introspection</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t **j_result, int authentication, int get_jwt)</td></tr>
+<tr class="separator:gab91ef3aa9f3a5ad51884cf0b7693f595"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gae4b42399eedec1b1a73eaea95c22ce51">i_register_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_parameters, int update_session, json_t **j_result)</td></tr>
 <tr class="separator:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5d47fb47d1fea0aaecbd8da8e2230654"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga5d47fb47d1fea0aaecbd8da8e2230654">i_get_registration_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t **j_result)</td></tr>
+<tr class="separator:ga5d47fb47d1fea0aaecbd8da8e2230654"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad361385c6da3d496994306ec5b37b37e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gad361385c6da3d496994306ec5b37b37e">i_manage_registration_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_parameters, int update_session, json_t **j_result)</td></tr>
 <tr class="separator:gad361385c6da3d496994306ec5b37b37e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6a91e08727240c3ccd774fa9eb97e520"><td class="memItemLeft" align="right" valign="top">json_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga6a91e08727240c3ccd774fa9eb97e520">i_export_session_json_t</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
@@ -131,8 +141,8 @@ Functions</h2></td></tr>
 <tr class="separator:gaa45189c5e0c9cf9c53130973a9c7901a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4276d0948b5f70cc6fed9c4c177d119d"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga4276d0948b5f70cc6fed9c4c177d119d">i_generate_dpop_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *htm, const char *htu, time_t iat)</td></tr>
 <tr class="separator:ga4276d0948b5f70cc6fed9c4c177d119d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga069cc2c92fee719ee529c22a5eb93653"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga069cc2c92fee719ee529c22a5eb93653">i_perform_api_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, struct _u_request *http_request, struct _u_response *http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat)</td></tr>
-<tr class="separator:ga069cc2c92fee719ee529c22a5eb93653"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga287c866466f6b7ed0beea1854f72b0e2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga287c866466f6b7ed0beea1854f72b0e2">i_perform_resource_service_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, struct _u_request *http_request, struct _u_response *http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat)</td></tr>
+<tr class="separator:ga287c866466f6b7ed0beea1854f72b0e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf05fd86b5ffe6fa2bdc3d9d16c30cec0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gaf05fd86b5ffe6fa2bdc3d9d16c30cec0">i_set_rich_authorization_request_str</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *type, const char *value)</td></tr>
 <tr class="separator:gaf05fd86b5ffe6fa2bdc3d9d16c30cec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga05dc2e87b4a5a74321b2990b4089de65"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga05dc2e87b4a5a74321b2990b4089de65">i_set_rich_authorization_request_json_t</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *type, json_t *j_value)</td></tr>
@@ -181,35 +191,6 @@ Functions</h2></td></tr>
 <p>This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GENERAL PUBLIC LICENSE for more details.</p>
 <p>You should have received a copy of the GNU General Public License along with this library. If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
 <p>Generates a random long integer between 0 and max </p>
-
-</div>
-</div>
-<a id="aef6f7548408806417e9b75fe8544103f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aef6f7548408806417e9b75fe8544103f">&#9670;&nbsp;</a></span>rand_string_nonce()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">char* rand_string_nonce </td>
-          <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>str</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>str_size</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Generates a random string used as nonce and store it in str </p>
 
 </div>
 </div>

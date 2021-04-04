@@ -1,0 +1,276 @@
+==10950== Memcheck, a memory error detector
+==10950== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==10950== Using Valgrind-3.14.0 and LibVEX; rerun with -h for copyright info
+==10950== Command: ./idwcc
+==10950== 
+==10950== 
+==10950== HEAP SUMMARY:
+==10950==     in use at exit: 88,601 bytes in 667 blocks
+==10950==   total heap usage: 3,871 allocs, 3,204 frees, 634,252 bytes allocated
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 1 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E139F9: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 2 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13A19: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 3 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13A39: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 4 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13A59: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 5 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13A79: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 6 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13A99: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 7 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13AB9: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 8 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13AD9: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 9 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13AF9: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 10 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13B19: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 11 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13B39: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 12 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13BDA: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 13 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13BFA: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 14 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13C1A: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 32 bytes in 1 blocks are still reachable in loss record 15 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x4D65872: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4E13C3A: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D6A5: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 40 bytes in 1 blocks are still reachable in loss record 16 of 23
+==10950==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==10950==    by 0x4D53350: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D663: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 40 bytes in 1 blocks are still reachable in loss record 17 of 23
+==10950==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==10950==    by 0x4D53350: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D4D678: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 48 bytes in 6 blocks are still reachable in loss record 18 of 23
+==10950==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==10950==    by 0x57B3A93: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x57B507B: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x58793A4: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x58793F8: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x587942D: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x57B39D9: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x57B48CE: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x57B0788: gcry_control (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x5B29793: libssh2_init (in /usr/lib/x86_64-linux-gnu/libssh2.so.1.0.1)
+==10950==    by 0x5115B77: ??? (in /usr/lib/x86_64-linux-gnu/libcurl-gnutls.so.4.5.0)
+==10950==    by 0x5115D47: curl_easy_init (in /usr/lib/x86_64-linux-gnu/libcurl-gnutls.so.4.5.0)
+==10950== 
+==10950== 102 bytes in 5 blocks are still reachable in loss record 19 of 23
+==10950==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==10950==    by 0x5454D40: ??? (in /usr/lib/x86_64-linux-gnu/libtasn1.so.6.5.5)
+==10950==    by 0x5455FA1: asn1_array2tree (in /usr/lib/x86_64-linux-gnu/libtasn1.so.6.5.5)
+==10950==    by 0x4D4D5D4: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 144 bytes in 6 blocks are still reachable in loss record 20 of 23
+==10950==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==10950==    by 0x57B3A93: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x57B507B: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x58793C1: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x587942D: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x57B39D9: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x57B48CE: ??? (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x57B0788: gcry_control (in /usr/lib/x86_64-linux-gnu/libgcrypt.so.20.2.4)
+==10950==    by 0x5B29793: libssh2_init (in /usr/lib/x86_64-linux-gnu/libssh2.so.1.0.1)
+==10950==    by 0x5115B77: ??? (in /usr/lib/x86_64-linux-gnu/libcurl-gnutls.so.4.5.0)
+==10950==    by 0x5115D47: curl_easy_init (in /usr/lib/x86_64-linux-gnu/libcurl-gnutls.so.4.5.0)
+==10950==    by 0x4A607AD: ulfius_send_http_streaming_request (u_send_request.c:207)
+==10950== 
+==10950== 1,411 bytes in 65 blocks are still reachable in loss record 21 of 23
+==10950==    at 0x483577F: malloc (vg_replace_malloc.c:299)
+==10950==    by 0x5454D40: ??? (in /usr/lib/x86_64-linux-gnu/libtasn1.so.6.5.5)
+==10950==    by 0x5455FA1: asn1_array2tree (in /usr/lib/x86_64-linux-gnu/libtasn1.so.6.5.5)
+==10950==    by 0x4D4D558: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 13,680 bytes in 90 blocks are still reachable in loss record 22 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x5454A26: ??? (in /usr/lib/x86_64-linux-gnu/libtasn1.so.6.5.5)
+==10950==    by 0x5455F69: asn1_array2tree (in /usr/lib/x86_64-linux-gnu/libtasn1.so.6.5.5)
+==10950==    by 0x4D4D5D4: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== 72,656 bytes in 478 blocks are still reachable in loss record 23 of 23
+==10950==    at 0x4837B65: calloc (vg_replace_malloc.c:752)
+==10950==    by 0x5454A26: ??? (in /usr/lib/x86_64-linux-gnu/libtasn1.so.6.5.5)
+==10950==    by 0x5455F69: asn1_array2tree (in /usr/lib/x86_64-linux-gnu/libtasn1.so.6.5.5)
+==10950==    by 0x4D4D558: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x4D235F0: ??? (in /usr/lib/x86_64-linux-gnu/libgnutls.so.30.23.2)
+==10950==    by 0x400F379: call_init.part.0 (dl-init.c:72)
+==10950==    by 0x400F475: call_init (dl-init.c:118)
+==10950==    by 0x400F475: _dl_init (dl-init.c:119)
+==10950==    by 0x40010C9: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.28.so)
+==10950== 
+==10950== LEAK SUMMARY:
+==10950==    definitely lost: 0 bytes in 0 blocks
+==10950==    indirectly lost: 0 bytes in 0 blocks
+==10950==      possibly lost: 0 bytes in 0 blocks
+==10950==    still reachable: 88,601 bytes in 667 blocks
+==10950==         suppressed: 0 bytes in 0 blocks
+==10950== 
+==10950== For counts of detected and suppressed errors, rerun with: -v
+==10950== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
