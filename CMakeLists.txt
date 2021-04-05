@@ -263,9 +263,10 @@ if (BUILD_IDWCC)
     add_executable(idwcc ${IDWCC_DIR}/idwcc.c ${INC_DIR}/iddawc.h ${IDWCC_DIR}/http_compression_callback.c ${IDWCC_DIR}/http_compression_callback.h ${IDWCC_DIR}/static_compressed_inmemory_website_callback.c ${IDWCC_DIR}/static_compressed_inmemory_website_callback.h ${PROJECT_BINARY_DIR}/iddawc-cfg.h)
     set_target_properties(idwcc PROPERTIES SKIP_BUILD_RPATH TRUE)
     add_dependencies(idwcc iddawc)
-    target_link_libraries(idwcc iddawc ${LIBS} )
+    target_link_libraries(idwcc iddawc ${LIBS})
     install(TARGETS idwcc RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-    INSTALL(FILES ${IDWCC_DIR}/idwcc.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT runtime)
+    install(FILES ${IDWCC_DIR}/idwcc.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT runtime)
+    install(DIRECTORY ${IDWCC_DIR}/webapp/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/idwcc/webapp/ COMPONENT runtime)
 endif ()
 
 # documentation
