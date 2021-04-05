@@ -23,6 +23,8 @@ IDDAWC_INCLUDE=../../include
 IDDAWC_LOCATION=../../src
 DESTDIR=/usr/local
 IDDAWC_LIBRARY=../../src/libiddawc.so
+IDDAWC_VERSION=$(shell curl -s https://api.github.com/repos/babelouest/iddawc/releases/latest | grep tag_name | cut -d '"' -f 4 | cut -c 2-)
+ALPINE_VERSION=3.13.4
 
 CFLAGS+=-c -Wall -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS)
 LIBS=-lc -liddawc -L$(IDDAWC_LOCATION) $(shell pkg-config --libs liborcania) $(shell pkg-config --libs libyder) $(shell pkg-config --libs libulfius) $(shell pkg-config --libs jansson) -lpthread -lz
@@ -35,6 +37,9 @@ all: ADDITIONALFLAGS= -O3
 
 clean:
 	rm -f *.o idwcc
+	rm -f iddawc-dev-full_*_alpine_*_x86_64.tar.gz
+	docker rmi -f babelouest/idwcc:latest babelouest/idwcc:$(IDDAWC_VERSION)
+	docker system prune -f
 
 debug: idwcc
 
@@ -58,10 +63,20 @@ uninstall:
 	rm -f $(DESTDIR)/bin/idwcc
 
 test: idwcc
-	LD_LIBRARY_PATH=$(IDDAWC_LOCATION): ./idwcc
+	LD_LIBRARY_PATH=$(IDDAWC_LOCATION): ./idwcc -w webapp
 
 memcheck: debug
-	LD_LIBRARY_PATH=$(IDDAWC_LOCATION): valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./idwcc 2>valgrind.txt
+	LD_LIBRARY_PATH=$(IDDAWC_LOCATION): valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./idwcc -w webapp 2>valgrind.txt
 
 manpage: idwcc
 	help2man ./idwcc -s 1 -n "OAuth2/OIDC client program to test or validate OAuth2/OIDC AS." > idwcc.1
+
+iddawc-dev-full_$(IDDAWC_VERSION)_alpine_$(ALPINE_VERSION)_x86_64.tar.gz:
+	wget https://github.com/babelouest/iddawc/releases/download/v${IDDAWC_VERSION}/iddawc-dev-full_$(IDDAWC_VERSION)_alpine_$(ALPINE_VERSION)_x86_64.tar.gz
+
+docker-build: iddawc-dev-full_$(IDDAWC_VERSION)_alpine_$(ALPINE_VERSION)_x86_64.tar.gz
+	docker build -t babelouest/idwcc:$(IDDAWC_VERSION) --build-arg IDDAWC_VERSION=$(IDDAWC_VERSION) --build-arg ALPINE_VERSION=$(ALPINE_VERSION) .
+	docker tag babelouest/idwcc:$(IDDAWC_VERSION) babelouest/idwcc:latest
+
+docker-run:
+	docker run -it --rm -p 4398:4398 babelouest/idwcc:latest
