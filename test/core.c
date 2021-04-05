@@ -1792,6 +1792,273 @@ START_TEST(test_iddawc_import_str)
 }
 END_TEST
 
+START_TEST(test_iddawc_import_multiple)
+{
+  struct _i_session i_session, i_session_import;
+  json_t * j_export = NULL, * j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL), * j_userinfo = json_loads(USERINFO, JSON_DECODE_ANY, NULL), * jwks = NULL, * j_auth_request = json_loads(AUTH_REQUEST_1, JSON_DECODE_ANY, NULL), * j_claims = json_pack("{s{so}s{so}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, json_loads(CLAIM2_CONTENT, JSON_DECODE_ANY, NULL));
+  json_object_set_new(j_auth_request, "type", json_string(AUTH_REQUEST_TYPE_1));
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_init_session(&i_session_import), I_OK);
+
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_NONCE, NONCE,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_REDIRECT_TO, REDIRECT_TO,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_ADDITIONAL_PARAMETER, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, OPENID_CONFIG_ENDPOINT,
+                                                    I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                                    I_OPT_RESULT, I_ERROR_UNAUTHORIZED,
+                                                    I_OPT_ERROR, ERROR,
+                                                    I_OPT_ERROR_DESCRIPTION, ERROR_DESCRIPTION,
+                                                    I_OPT_ERROR_URI, ERROR_URI,
+                                                    I_OPT_CODE, CODE,
+                                                    I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
+                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                    I_OPT_TOKEN_TYPE, TOKEN_TYPE,
+                                                    I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                    I_OPT_EXPIRES_AT, EXPIRES_AT,
+                                                    I_OPT_ID_TOKEN, ID_TOKEN,
+                                                    I_OPT_USERNAME, USERNAME,
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_GET,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SECRET_POST,
+                                                    I_OPT_USER_PASSWORD, USER_PASSWORD,
+                                                    I_OPT_ADDITIONAL_RESPONSE, ADDITIONAL_KEY, ADDITIONAL_VALUE,
+                                                    I_OPT_X5U_FLAGS, R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT,
+                                                    I_OPT_OPENID_CONFIG, openid_configuration_valid,
+                                                    I_OPT_OPENID_CONFIG_STRICT, I_STRICT_NO,
+                                                    I_OPT_ISSUER, ISSUER,
+                                                    I_OPT_USERINFO, USERINFO,
+                                                    I_OPT_CLIENT_KID, CLIENT_KID,
+                                                    I_OPT_SERVER_KID, SERVER_KID,
+                                                    I_OPT_SERVER_ENC_ALG, SERVER_ENC_ALG,
+                                                    I_OPT_SERVER_ENC, SERVER_ENC,
+                                                    I_OPT_CLIENT_SIGN_ALG, CLIENT_SIGN_ALG,
+                                                    I_OPT_CLIENT_ENC_ALG, CLIENT_ENC_ALG,
+                                                    I_OPT_CLIENT_ENC, CLIENT_ENC,
+                                                    I_OPT_TOKEN_JTI, TOKEN_JTI,
+                                                    I_OPT_TOKEN_EXP, TOKEN_EXP,
+                                                    I_OPT_TOKEN_TARGET, TOKEN_TARGET,
+                                                    I_OPT_TOKEN_TARGET_TYPE_HINT, TOKEN_TARGET_TYPE_HINT,
+                                                    I_OPT_REVOCATION_ENDPOINT, REVOCATION_ENDPOINT,
+                                                    I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
+                                                    I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
+                                                    I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, DEVICE_AUTHORIZATION_ENDPOINT,
+                                                    I_OPT_DEVICE_AUTH_CODE, DEVICE_AUTH_CODE,
+                                                    I_OPT_DEVICE_AUTH_USER_CODE, DEVICE_AUTH_USER_CODE,
+                                                    I_OPT_DEVICE_AUTH_VERIFICATION_URI, DEVICE_AUTH_VERIFICATION_URI,
+                                                    I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, DEVICE_AUTH_VERIFICATION_URI_COMPLETE,
+                                                    I_OPT_DEVICE_AUTH_EXPIRES_IN, DEVICE_AUTH_EXPIRES_IN,
+                                                    I_OPT_DEVICE_AUTH_INTERVAL, DEVICE_AUTH_INTERVAL,
+                                                    I_OPT_END_SESSION_ENDPOINT, END_SESSION_ENDPOINT,
+                                                    I_OPT_CHECK_SESSION_IRAME, CHECK_SESSION_IRAME,
+                                                    I_OPT_PUSHED_AUTH_REQ_ENDPOINT, PUSHED_AUTH_REQ_ENDPOINT,
+                                                    I_OPT_PUSHED_AUTH_REQ_REQUIRED, PUSHED_AUTH_REQ_REQUIRED,
+                                                    I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, PUSHED_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_PUSHED_AUTH_REQ_URI, PUSHED_AUTH_REQ_URI,
+                                                    I_OPT_USE_DPOP, USE_DPOP,
+                                                    I_OPT_DPOP_KID, DPOP_KID,
+                                                    I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG,
+                                                    I_OPT_DECRYPT_CODE, DECRYPT_CODE,
+                                                    I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
+                                                    I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
+                                                    I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
+                                                    I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
+                                                    I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
+                                                    I_OPT_PKCE_METHOD, PKCE_METHOD,
+                                                    I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
+                                                    I_OPT_NONE), I_OK);
+  i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
+  ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
+  ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
+  ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_IGNORE, CLAIM2_CONTENT));
+
+  j_export = i_export_session_json_t(&i_session);
+  ck_assert_ptr_ne(j_export, NULL);
+  
+  ck_assert_int_eq(i_import_session_json_t(&i_session_import, j_export), I_OK);
+  ck_assert_int_eq(i_get_response_type(&i_session_import), I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_SCOPE), SCOPE_LIST);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_NONCE), NONCE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_STATE), STATE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REDIRECT_URI), REDIRECT_URI);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REDIRECT_TO), REDIRECT_TO);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CLIENT_ID), CLIENT_ID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CLIENT_SECRET), CLIENT_SECRET);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERNAME), USERNAME);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USER_PASSWORD), USER_PASSWORD);
+  ck_assert_str_eq(i_get_additional_parameter(&i_session_import, ADDITIONAL_KEY), ADDITIONAL_VALUE);
+  ck_assert_str_eq(i_get_additional_response(&i_session_import, ADDITIONAL_KEY), ADDITIONAL_VALUE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_AUTH_ENDPOINT), AUTH_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TOKEN_ENDPOINT), TOKEN_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_OPENID_CONFIG_ENDPOINT), OPENID_CONFIG_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERINFO_ENDPOINT), USERINFO_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_RESULT), I_ERROR_UNAUTHORIZED);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ERROR), ERROR);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ERROR_DESCRIPTION), ERROR_DESCRIPTION);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ERROR_URI), ERROR_URI);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CODE), CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REFRESH_TOKEN), REFRESH_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TOKEN_TYPE), TOKEN_TYPE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_EXPIRES_IN), EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_EXPIRES_AT), EXPIRES_AT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ID_TOKEN), ID_TOKEN);
+  ck_assert_int_eq(json_equal(i_session_import.id_token_payload, i_session.id_token_payload), 1);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_TOKEN_METHOD), I_TOKEN_AUTH_METHOD_SECRET_POST);
+  ck_assert_int_eq(json_equal(i_session_import.server_jwks, i_session.server_jwks), 1);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_X5U_FLAGS), R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT);
+  ck_assert_int_eq(json_equal(i_session_import.openid_config, j_config), 1);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_OPENID_CONFIG_STRICT), I_STRICT_NO);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ISSUER), ISSUER);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERINFO), USERINFO);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_KID), SERVER_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC_ALG), SERVER_ENC_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC), SERVER_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_KID), CLIENT_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_SIGN_ALG), CLIENT_SIGN_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_ENC_ALG), CLIENT_ENC_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_ENC), CLIENT_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_JTI), TOKEN_JTI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_TOKEN_EXP), TOKEN_EXP);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TARGET), TOKEN_TARGET);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TARGET_TYPE_HINT), TOKEN_TARGET_TYPE_HINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REVOCATION_ENDPOINT), REVOCATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_INTROSPECTION_ENDPOINT), INTROSPECTION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT), DEVICE_AUTHORIZATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_CODE), DEVICE_AUTH_CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_USER_CODE), DEVICE_AUTH_USER_CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI), DEVICE_AUTH_VERIFICATION_URI);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE), DEVICE_AUTH_VERIFICATION_URI_COMPLETE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DEVICE_AUTH_EXPIRES_IN), DEVICE_AUTH_EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DEVICE_AUTH_INTERVAL), DEVICE_AUTH_INTERVAL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_END_SESSION_ENDPOINT), END_SESSION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME), CHECK_SESSION_IRAME);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT), PUSHED_AUTH_REQ_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED), PUSHED_AUTH_REQ_REQUIRED);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN), PUSHED_AUTH_REQ_EXPIRES_IN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_USE_DPOP), USE_DPOP);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG), DPOP_SIGN_ALG);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER), PKCE_CODE_VERIFIER);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PKCE_METHOD), PKCE_METHOD);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR), RESOURCE_INDICATOR);
+  ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
+  ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
+  ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims), 1);
+  
+  ck_assert_int_eq(i_import_session_json_t(&i_session_import, j_export), I_OK);
+  ck_assert_int_eq(i_get_response_type(&i_session_import), I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_SCOPE), SCOPE_LIST);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_NONCE), NONCE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_STATE), STATE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REDIRECT_URI), REDIRECT_URI);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REDIRECT_TO), REDIRECT_TO);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CLIENT_ID), CLIENT_ID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CLIENT_SECRET), CLIENT_SECRET);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERNAME), USERNAME);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USER_PASSWORD), USER_PASSWORD);
+  ck_assert_str_eq(i_get_additional_parameter(&i_session_import, ADDITIONAL_KEY), ADDITIONAL_VALUE);
+  ck_assert_str_eq(i_get_additional_response(&i_session_import, ADDITIONAL_KEY), ADDITIONAL_VALUE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_AUTH_ENDPOINT), AUTH_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TOKEN_ENDPOINT), TOKEN_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_OPENID_CONFIG_ENDPOINT), OPENID_CONFIG_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERINFO_ENDPOINT), USERINFO_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_RESULT), I_ERROR_UNAUTHORIZED);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ERROR), ERROR);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ERROR_DESCRIPTION), ERROR_DESCRIPTION);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ERROR_URI), ERROR_URI);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CODE), CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REFRESH_TOKEN), REFRESH_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ACCESS_TOKEN), ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TOKEN_TYPE), TOKEN_TYPE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_EXPIRES_IN), EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_EXPIRES_AT), EXPIRES_AT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ID_TOKEN), ID_TOKEN);
+  ck_assert_int_eq(json_equal(i_session_import.id_token_payload, i_session.id_token_payload), 1);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_AUTH_METHOD), I_AUTH_METHOD_GET);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_TOKEN_METHOD), I_TOKEN_AUTH_METHOD_SECRET_POST);
+  ck_assert_int_eq(json_equal(i_session_import.server_jwks, i_session.server_jwks), 1);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_X5U_FLAGS), R_FLAG_IGNORE_SERVER_CERTIFICATE|R_FLAG_FOLLOW_REDIRECT);
+  ck_assert_int_eq(json_equal(i_session_import.openid_config, j_config), 1);
+  ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_OPENID_CONFIG_STRICT), I_STRICT_NO);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ISSUER), ISSUER);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_USERINFO), USERINFO);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_KID), SERVER_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC_ALG), SERVER_ENC_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_SERVER_ENC), SERVER_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_KID), CLIENT_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_SIGN_ALG), CLIENT_SIGN_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_ENC_ALG), CLIENT_ENC_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CLIENT_ENC), CLIENT_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_JTI), TOKEN_JTI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_TOKEN_EXP), TOKEN_EXP);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TARGET), TOKEN_TARGET);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TARGET_TYPE_HINT), TOKEN_TARGET_TYPE_HINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REVOCATION_ENDPOINT), REVOCATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_INTROSPECTION_ENDPOINT), INTROSPECTION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT), DEVICE_AUTHORIZATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_CODE), DEVICE_AUTH_CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_USER_CODE), DEVICE_AUTH_USER_CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI), DEVICE_AUTH_VERIFICATION_URI);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE), DEVICE_AUTH_VERIFICATION_URI_COMPLETE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DEVICE_AUTH_EXPIRES_IN), DEVICE_AUTH_EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DEVICE_AUTH_INTERVAL), DEVICE_AUTH_INTERVAL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_END_SESSION_ENDPOINT), END_SESSION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CHECK_SESSION_IRAME), CHECK_SESSION_IRAME);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_ENDPOINT), PUSHED_AUTH_REQ_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_REQUIRED), PUSHED_AUTH_REQ_REQUIRED);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN), PUSHED_AUTH_REQ_EXPIRES_IN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PUSHED_AUTH_REQ_URI), PUSHED_AUTH_REQ_URI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_USE_DPOP), USE_DPOP);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG), DPOP_SIGN_ALG);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER), PKCE_CODE_VERIFIER);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PKCE_METHOD), PKCE_METHOD);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR), RESOURCE_INDICATOR);
+  ck_assert_int_eq(json_equal(i_session_import.j_userinfo, j_userinfo), 1);
+  ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
+  ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
+  ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims), 1);
+  
+  json_decref(j_export);
+
+  json_decref(j_config);
+  json_decref(j_userinfo);
+  json_decref(jwks);
+  json_decref(j_auth_request);
+  json_decref(j_claims);
+  i_clean_session(&i_session);
+  i_clean_session(&i_session_import);
+}
+END_TEST
+
 static Suite *iddawc_suite(void)
 {
   Suite *s;
@@ -1819,6 +2086,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_import_json_t);
   tcase_add_test(tc_core, test_iddawc_export_str);
   tcase_add_test(tc_core, test_iddawc_import_str);
+  tcase_add_test(tc_core, test_iddawc_import_multiple);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
 
