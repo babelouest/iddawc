@@ -26,7 +26,7 @@ IDDAWC_LIBRARY=../../src/libiddawc.so
 IDDAWC_VERSION=$(shell curl -s https://api.github.com/repos/babelouest/iddawc/releases/latest | grep tag_name | cut -d '"' -f 4 | cut -c 2-)
 ALPINE_VERSION=3.13.4
 
-CFLAGS+=-c -Wall -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS)
+CFLAGS+=-c -Wall -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS) -DWEBAPP_PATH=\"$(DESTDIR)/share/idwcc/webapp/\"
 LIBS=-lc -liddawc -L$(IDDAWC_LOCATION) $(shell pkg-config --libs liborcania) $(shell pkg-config --libs libyder) $(shell pkg-config --libs libulfius) $(shell pkg-config --libs jansson) -lpthread -lz
 VALGRIND_COMMAND=valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes
 OBJECTS=idwcc.o static_compressed_inmemory_website_callback.o http_compression_callback.o
@@ -55,12 +55,13 @@ idwcc: $(OBJECTS)
 	$(CC) -o $@ $^ $(LIBS) $(LDFLAGS)
 
 install: idwcc
-	mkdir -p $(DESTDIR)/bin $(DESTDIR)/man/man1/
+	mkdir -p $(DESTDIR)/bin $(DESTDIR)/man/man1/ $(DESTDIR)/share/idwcc/
 	install -m755 idwcc $(DESTDIR)/bin
 	install -m644 idwcc.1 $(DESTDIR)/man/man1/
+	cp -R webapp/ $(DESTDIR)/share/idwcc/
 
 uninstall:
-	rm -f $(DESTDIR)/bin/idwcc
+	rm -f $(DESTDIR)/bin/idwcc $(DESTDIR)/man/man1/idwcc.1 $(DESTDIR)/share/idwcc/
 
 test: idwcc
 	LD_LIBRARY_PATH=$(IDDAWC_LOCATION): ./idwcc -w webapp
