@@ -4363,8 +4363,11 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
           return ret;
         }
       }
+      json_decref(i_session->id_token_payload);
       i_session->id_token_payload = json_deep_copy(json_object_get(j_import, "id_token_payload"));
+      json_decref(i_session->access_token_payload);
       i_session->access_token_payload = json_deep_copy(json_object_get(j_import, "access_token_payload"));
+      json_decref(i_session->openid_config);
       i_session->openid_config = json_deep_copy(json_object_get(j_import, "openid_config"));
       if (json_object_get(j_import, "server_jwks") != NULL && (r_jwks_empty(i_session->server_jwks) != RHN_OK || r_jwks_import_from_json_t(i_session->server_jwks, json_object_get(j_import, "server_jwks")) != RHN_OK)) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t server_jwks");
