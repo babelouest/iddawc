@@ -92,6 +92,12 @@ int main() {
 }
 ```
 
+# Idwcc - Universal OAuth2/OIDC client
+
+Client program to test or validate an OAuth2/OIDC authorization server configuration.
+
+![idwcc](tools/idwcc/idwcc.png)
+
 ## Install
 
 Iddawc is available in the following distributions.
@@ -102,7 +108,7 @@ Iddawc is available in the following distributions.
 
 Iddawc is based on [GnuTLS](https://www.gnutls.org/), [Jansson](http://www.digip.org/jansson/), [zlib](https://www.zlib.net/), [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/), [libcurl](https://curl.haxx.se/libcurl/) and libsystemd (if possible), you must install those libraries first before building Iddawc.
 
-GnuTLS 3.6 minimum is required for `ECDSA`, `Ed25519 (EDDSA)` and `RSA-PSS` JWT signatures.
+GnuTLS 3.6 minimum is required for JWT signed with `ECDSA`, `Ed25519 (EDDSA)` and `RSA-PSS` signatures.
 
 ## Prerequisites
 
@@ -133,6 +139,7 @@ $ make && sudo make install
 
 The available options for CMake are:
 - `-DWITH_JOURNALD=[on|off]` (default `on`): Build with journald (SystemD) support
+- `-DBUILD_IDWCC=[on|off]` (default `on`): Build idwcc
 - `-BUILD_IDDAWC_TESTING=[on|off]` (default `off`): Build unit tests
 - `-DINSTALL_HEADER=[on|off]` (default `on`): Install header file `iddawc.h`
 - `-DBUILD_RPM=[on|off]` (default `off`): Build RPM package when running `make package`
