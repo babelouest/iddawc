@@ -1,9 +1,9 @@
 /**
- * 
+ *
  * idwcc: OAuth2/OIDC client program to test or validate OAuth2/OIDC AS
- * 
+ *
  * Copyright 2021 Nicolas Mora <mail@babelouest.org>
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
  * License as published by the Free Software Foundation;
@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 #include <unistd.h>
@@ -38,8 +38,16 @@
 #define _IDWCC_VERSION "0.9"
 #define _DEFAULT_PORT 4398
 #define PREFIX_STATIC "/"
+#ifndef WEBAPP_PATH
+  #define WEBAPP_PATH "/usr/share/idwcc/webapp"
+#endif
 
 #define CHUNK 0x4000
+
+struct _callback_struct {
+  struct _i_session * session;
+  const char * webapp_path;
+};
 
 static void print_help(FILE * output, const char * command) {
   fprintf(output, "idwcc - OAuth2/OIDC client program to test or validate OAuth2/OIDC AS.\n");
@@ -60,6 +68,8 @@ static void print_help(FILE * output, const char * command) {
   fprintf(output, "\tLoad session file specified by <PATH>\n");
   fprintf(output, "-b, --bind-localhost [true|false]\n");
   fprintf(output, "\tBind to localhost only, default true\n");
+  fprintf(output, "-w, --webapp-path [path]\n");
+  fprintf(output, "\tUse path to access webapp files, default %s\n", WEBAPP_PATH);
   fprintf(output, "-h, --help\n");
   fprintf(output, "\tdisplay this help and exit\n");
   fprintf(output, "-v, --version\n");
@@ -90,7 +100,7 @@ static void callback_static_file_uncompressed_stream_free(void * cls) {
 static int _i_load_session(struct _i_session * session, json_t * j_new_session) {
   int ret = 1;
   char * tmp;
-  
+
   if (i_import_session_json_t(session, j_new_session) == I_OK) {
     ret = 1;
   } else {
@@ -105,17 +115,17 @@ static int _i_load_session(struct _i_session * session, json_t * j_new_session) 
 static int _i_load_session_file(struct _i_session * session, const char * file) {
   json_t * j_new_session = json_load_file(file, JSON_DECODE_ANY, NULL);
   int ret;
-  
+
   ret = _i_load_session(session, j_new_session);
   json_decref(j_new_session);
-  
+
   return ret;
 }
 
 static int callback_get_session(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _i_session * session = (struct _i_session *)user_data;
   json_t * j_session = i_export_session_json_t(session);
-  
+
   ulfius_set_response_properties(response, U_OPT_STATUS, 200, U_OPT_JSON_BODY, j_session, U_OPT_NONE);
   json_decref(j_session);
   return U_CALLBACK_CONTINUE;
@@ -124,7 +134,7 @@ static int callback_get_session(const struct _u_request * request, struct _u_res
 static int callback_save_session(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _i_session * session = (struct _i_session *)user_data;
   json_t * j_session = ulfius_get_json_body_request(request, NULL), * j_return;
-  
+
   if (j_session != NULL) {
     if (json_object_size(j_session)) {
       if (i_import_session_json_t(session, j_session) != I_OK) {
@@ -149,7 +159,7 @@ static int callback_save_session(const struct _u_request * request, struct _u_re
 
 static int callback_generate(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _i_session * session = (struct _i_session *)user_data;
-  
+
   if (0 == o_strcmp("nonce", u_map_get(request->map_post_body, "property"))) {
     i_set_int_parameter(session, I_OPT_NONCE_GENERATE, 32);
   } else if (0 == o_strcmp("state", u_map_get(request->map_post_body, "property"))) {
@@ -166,7 +176,7 @@ static int callback_run_auth(const struct _u_request * request, struct _u_respon
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
   json_t * j_return;
-  
+
   if (i_get_str_parameter(session, I_OPT_NONCE) == NULL) {
     i_set_int_parameter(session, I_OPT_NONCE_GENERATE, 32);
   }
@@ -229,7 +239,7 @@ static int callback_run_token(const struct _u_request * request, struct _u_respo
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
   json_t * j_return;
-  
+
   if (session->token_method & (I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET|I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY) && !o_strlen(i_get_str_parameter(session, I_OPT_TOKEN_JTI))) {
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
   }
@@ -252,7 +262,7 @@ static int callback_run_device_auth(const struct _u_request * request, struct _u
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
   json_t * j_return;
-  
+
   if (session->token_method & (I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET|I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY) && !o_strlen(i_get_str_parameter(session, I_OPT_TOKEN_JTI))) {
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
   }
@@ -276,7 +286,7 @@ static int callback_revoke_token(const struct _u_request * request, struct _u_re
   int ret, auth = I_INTROSPECT_REVOKE_AUTH_NONE;
   char * save_at = o_strdup(i_get_str_parameter(session, I_OPT_ACCESS_TOKEN));
   json_t * j_return;
-  
+
   if (session->use_dpop) {
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
   }
@@ -308,7 +318,7 @@ static int callback_introspect_token(const struct _u_request * request, struct _
   int ret, auth = I_INTROSPECT_REVOKE_AUTH_NONE;
   json_t * j_result = NULL, * j_return;
   char * save_at = o_strdup(i_get_str_parameter(session, I_OPT_ACCESS_TOKEN));
-  
+
   if (session->use_dpop) {
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
   }
@@ -341,17 +351,18 @@ static int callback_introspect_token(const struct _u_request * request, struct _
 }
 
 static int callback_redirect_uri(const struct _u_request * request, struct _u_response * response, void * user_data) {
-  struct _i_session * session = (struct _i_session *)user_data;
+  struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
+  char * path = msprintf("%s/callback.html", callback_struct->webapp_path);
   size_t length;
   FILE * f;
-  
+
   if (u_map_get(request->map_url, "code") != NULL) {
-    i_set_str_parameter(session, I_OPT_CODE, u_map_get(request->map_url, "code"));
+    i_set_str_parameter(callback_struct->session, I_OPT_CODE, u_map_get(request->map_url, "code"));
     u_map_put(response->map_header, "Location", "/");
     response->status = 302;
   } else {
-    if (access("static/callback.html", F_OK) != -1) {
-      f = fopen ("static/callback.html", "rb");
+    if (access(path, F_OK) != -1) {
+      f = fopen (path, "rb");
       if (f) {
         u_map_put(response->map_header, "Content-Type", "text/html");
         fseek (f, 0, SEEK_END);
@@ -365,13 +376,14 @@ static int callback_redirect_uri(const struct _u_request * request, struct _u_re
       response->status = 404;
     }
   }
+  o_free(path);
   return U_CALLBACK_CONTINUE;
 }
 
 static int callback_parse_redirect_to(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
-  
+
   if (u_map_get(request->map_post_body, "redirectTo") != NULL) {
     i_set_str_parameter(session, I_OPT_REDIRECT_TO, u_map_get(request->map_post_body, "redirectTo"));
     if ((ret = i_parse_redirect_to(session)) != I_OK && ret != I_ERROR) {
@@ -390,7 +402,7 @@ static int callback_parse_redirect_to(const struct _u_request * request, struct 
 static int callback_config_download(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
-  
+
   if ((ret = i_get_openid_config(session)) == I_ERROR_PARAM) {
     ulfius_set_string_body_response(response, 400, "Invalid configuration endpoint");
   } else if (ret != I_OK) {
@@ -403,7 +415,7 @@ static int callback_config_download(const struct _u_request * request, struct _u
 static int callback_userinfo_download(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
-  
+
   if (session->use_dpop) {
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
   }
@@ -423,7 +435,7 @@ static int callback_client_register(const struct _u_request * request, struct _u
   int ret;
   json_t * j_result = NULL, * j_return, * j_parameters = json_loads(u_map_get(request->map_post_body, "parameters"), JSON_DECODE_ANY, NULL);
   char * save_at = o_strdup(i_get_str_parameter(session, I_OPT_ACCESS_TOKEN));
-  
+
   if (0 == o_strcmp("access_token", u_map_get(request->map_post_body, "authentication"))) {
     i_set_str_parameter(session, I_OPT_ACCESS_TOKEN, u_map_get(request->map_post_body, "access_token"));
   }
@@ -455,7 +467,7 @@ static int callback_client_manage_registration(const struct _u_request * request
   int ret;
   json_t * j_result = NULL, * j_return, * j_parameters = json_loads(u_map_get(request->map_post_body, "parameters"), JSON_DECODE_ANY, NULL);
   char * save_at = o_strdup(i_get_str_parameter(session, I_OPT_ACCESS_TOKEN));
-  
+
   i_set_str_parameter(session, I_OPT_ACCESS_TOKEN, u_map_get(request->map_post_body, "access_token"));
   if ((ret = i_manage_registration_client(session, j_parameters, 0==o_strcmp("1", u_map_get(request->map_post_body, "update")), &j_result)) == I_OK) {
     ulfius_set_json_body_response(response, 200, j_result);
@@ -485,7 +497,7 @@ static int callback_client_get_registration(const struct _u_request * request, s
   int ret;
   json_t * j_result = NULL, * j_return;
   char * save_at = o_strdup(i_get_str_parameter(session, I_OPT_ACCESS_TOKEN));
-  
+
   i_set_str_parameter(session, I_OPT_ACCESS_TOKEN, u_map_get(request->map_url, "access_token"));
   if ((ret = i_get_registration_client(session, &j_result)) == I_OK) {
     ulfius_set_json_body_response(response, 200, j_result);
@@ -513,7 +525,7 @@ static int callback_access_token_verify(const struct _u_request * request, struc
   struct _i_session * session = (struct _i_session *)user_data;
   json_t * j_return;
   int ret;
-  
+
   if ((ret = i_verify_jwt_access_token(session)) == I_ERROR_PARAM) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error params");
     j_return = json_pack("{ss? ss? ss?}", "error", i_get_str_parameter(session, I_OPT_ERROR), "error_description", i_get_str_parameter(session, I_OPT_ERROR_DESCRIPTION), "error_uri", i_get_str_parameter(session, I_OPT_ERROR_URI));
@@ -534,11 +546,11 @@ static int callback_resource_request(const struct _u_request * request, struct _
   size_t i;
   struct _u_request req;
   struct _u_response resp;
-  
+
   if (j_params != NULL) {
     ulfius_init_request(&req);
     ulfius_init_response(&resp);
-    
+
     ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, json_string_value(json_object_get(j_params, "method")),
                                         U_OPT_HTTP_URL, json_string_value(json_object_get(j_params, "url")),
                                         U_OPT_NONE);
@@ -605,17 +617,19 @@ int main(int argc, char ** argv) {
   struct _u_instance instance;
   unsigned int port = _DEFAULT_PORT;
   unsigned long int s_port;
-  char * endptr = NULL;
+  char * endptr = NULL, * webapp_path = NULL;
   int next_option, exit_loop = 0, ret = 0, bind_localhost = 1;
   struct _i_session session;
   struct _u_compressed_inmemory_website_config file_config;
   struct sockaddr_in bind_address;
-  
-  const char * short_options = "p:f:b:v::h";
+  struct _callback_struct callback_struct;
+
+  const char * short_options = "p:f:b:w:v::h";
   static const struct option long_options[]= {
     {"port", required_argument, NULL, 'p'},
     {"session-file", required_argument, NULL, 'f'},
     {"bind-localhost", required_argument, NULL, 'b'},
+    {"webapp-path", required_argument, NULL, 'w'},
     {"version", no_argument, NULL, 'v'},
     {"help", no_argument, NULL, 'h'},
     {NULL, 0, NULL, 0}
@@ -626,7 +640,7 @@ int main(int argc, char ** argv) {
 
   do {
     next_option = getopt_long(argc, argv, short_options, long_options, NULL);
-    
+
     switch (next_option) {
       case 'p':
         s_port = strtoul(optarg, &endptr, 10);
@@ -649,6 +663,9 @@ int main(int argc, char ** argv) {
         if (0 == o_strcasecmp("no", optarg) || 0 == o_strcasecmp("false", optarg) || 0 == o_strcasecmp("0", optarg) || 0 == o_strcasecmp("hellno", optarg)) {
           bind_localhost = 0;
         }
+        break;
+      case 'w':
+        webapp_path = o_strdup(optarg);
         break;
       case 'v':
         fprintf(stdout, "%s %s\n", argv[0], _IDWCC_VERSION);
@@ -688,11 +705,19 @@ int main(int argc, char ** argv) {
         u_map_put(&file_config.mime_types, ".json", "application/json");
         u_map_put(&file_config.mime_types, ".ico", "image/x-icon");
         u_map_put(&file_config.mime_types, "*", "application/octet-stream");
-        file_config.files_path = "static";
+        if (webapp_path != NULL) {
+          file_config.files_path = webapp_path;
+          callback_struct.webapp_path = webapp_path;
+        } else {
+          file_config.files_path = WEBAPP_PATH;
+          callback_struct.webapp_path = WEBAPP_PATH;
+        }
         file_config.url_prefix = PREFIX_STATIC;
         file_config.allow_cache_compressed = 0;
         file_config.allow_gzip = 1;
         file_config.allow_deflate = 1;
+
+        callback_struct.session = &session;
 
         ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/session", 0, &callback_get_session, &session);
         ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/session", 0, &callback_save_session, &session);
@@ -709,7 +734,7 @@ int main(int argc, char ** argv) {
         ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/register", 0, &callback_client_get_registration, &session);
         ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/register", 0, &callback_client_manage_registration, &session);
         ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/resourceRequest", 0, &callback_resource_request, &session);
-        ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/callback", 0, &callback_redirect_uri, &session);
+        ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/callback", 0, &callback_redirect_uri, &callback_struct);
         ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/parseRedirectTo", 0, &callback_parse_redirect_to, &session);
         ulfius_add_endpoint_by_val(&instance, "*", "/api", "*", 1, &callback_http_compression, NULL);
         ulfius_add_endpoint_by_val(&instance, "GET", PREFIX_STATIC, "*", 0, &callback_static_compressed_inmemory_website, &file_config);
@@ -717,7 +742,7 @@ int main(int argc, char ** argv) {
         ulfius_set_default_endpoint(&instance, &callback_default, NULL);
         ulfius_start_framework(&instance);
 
-        y_log_message(Y_LOG_LEVEL_INFO, "Start idwcc on port %u, url: http://localhost:%u/", port, port);
+        y_log_message(Y_LOG_LEVEL_INFO, "Start idwcc on port %u, webapp path: %s, url: http://localhost:%u/", port, file_config.files_path, port);
         y_log_message(Y_LOG_LEVEL_INFO, "Press <enter> to quit");
         getchar();
         ulfius_stop_framework(&instance);
@@ -732,6 +757,7 @@ int main(int argc, char ** argv) {
   }
   i_clean_session(&session);
   y_close_logs();
+  o_free(webapp_path);
 
   return ret;
 }
