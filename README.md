@@ -96,9 +96,24 @@ int main() {
 
 Client program to test or validate an OAuth2/OIDC authorization server configuration.
 
+idwcc is installed by default if you use the precompiled packages or if you build with CMake.
+
+## Run Idwcc
+
+To run idwcc, use the `idwcc` command or the docker image if you don't want to install iddawc and its dependencies:
+
+```shell
+$ # run locally
+$ idwcc
+$ # run docker instance
+$ docker run -it --rm -p 4398:4398 babelouest/idwcc:latest
+```
+
+More information in the [idwcc README](tools/idwcc/README.md).
+
 ![idwcc](tools/idwcc/idwcc.png)
 
-## Install
+# Install
 
 Iddawc is available in the following distributions.
 
