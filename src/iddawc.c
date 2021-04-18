@@ -646,7 +646,7 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
   int ret;
   struct _u_request request;
   struct _u_response response;
-  json_t * j_jwks;
+  json_t * j_jwks = NULL;
 
   if (i_session != NULL && json_string_length(json_object_get(i_session->openid_config, "jwks_uri"))) {
     _i_init_request(i_session, &request);
@@ -657,14 +657,18 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
                                             U_OPT_HTTP_URL, json_string_value(json_object_get(i_session->openid_config, "jwks_uri")),
                                             U_OPT_NONE);
     if (ulfius_send_http_request(&request, &response) == U_OK) {
-      if (response.status == 200) {
-        j_jwks = ulfius_get_json_body_response(&response, NULL);
-        r_jwks_free(i_session->server_jwks);
-        r_jwks_init(&i_session->server_jwks);
-        if (r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
-          ret = I_OK;
+      if (response.status == 200 && (NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), ULFIUS_HTTP_ENCODING_JSON) || NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), I_CONTENT_TYPE_JWKS))) {
+        if ((j_jwks = json_loadb(response.binary_body, response.binary_body_length, JSON_DECODE_ANY, NULL)) != NULL) {
+          r_jwks_free(i_session->server_jwks);
+          r_jwks_init(&i_session->server_jwks);
+          if (r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
+            ret = I_OK;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error r_jwks_import_from_str");
+            ret = I_ERROR;
+          }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error r_jwks_import_from_str");
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error loading jwks content");
           ret = I_ERROR;
         }
         json_decref(j_jwks);

@@ -93,6 +93,7 @@ extern "C"
 
 #define I_HEADER_PREFIX_BEARER "Bearer "
 #define I_HEADER_AUTHORIZATION "Authorization"
+#define I_CONTENT_TYPE_JWKS    "application/jwk-set+json"
 #define I_BODY_URL_PARAMETER   "access_token"
 #define I_HEADER_DPOP          "DPoP"
 
