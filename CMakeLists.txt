@@ -25,12 +25,12 @@ endif()
 
 # library info
 
-set(PROJECT_DESCRIPTION "Handle the flow of OAuth2 and OpenID Connect authentication process from the client side")
+set(PROJECT_DESCRIPTION "OAuth2/OIDC client library")
 set(PROJECT_HOMEPAGE_URL "https://github.com/babelouest/iddawc/")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/iddawc/issues")
-set(LIBRARY_VERSION_MAJOR "0")
-set(LIBRARY_VERSION_MINOR "9")
-set(LIBRARY_VERSION_PATCH "9")
+set(LIBRARY_VERSION_MAJOR "1")
+set(LIBRARY_VERSION_MINOR "0")
+set(LIBRARY_VERSION_PATCH "0")
 set(ORCANIA_VERSION_REQUIRED "2.2.0")
 set(YDER_VERSION_REQUIRED "1.4.13")
 set(ULFIUS_VERSION_REQUIRED "2.7.2")

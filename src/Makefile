@@ -19,7 +19,7 @@
 # License along with this library.	If not, see <http://www.gnu.org/licenses/>.
 #
 PROJECT_NAME=iddawc
-PROJECT_DESCRIPTION=OAuth2 client library
+PROJECT_DESCRIPTION=OAuth2-OIDC client library
 PROJECT_BUGREPORT_PATH=https://github.com/babelouest/iddawc/issues
 PKGCONF_REQ=
 PKGCONF_REQ_PRIVATE=
@@ -35,9 +35,9 @@ LIBS=-L$(DESTDIR)/lib -lc -lulfius -lyder -lorcania -lrhonabwy -lgnutls -ljansso
 SONAME=-soname
 OBJECTS=iddawc.o
 OUTPUT=libiddawc.so
-VERSION_MAJOR=0
-VERSION_MINOR=9
-VERSION_PATCH=9
+VERSION_MAJOR=1
+VERSION_MINOR=0
+VERSION_PATCH=0
 
 .PHONY: all clean
 

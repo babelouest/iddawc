@@ -1,5 +1,10 @@
 # Iddawc Changelog
 
+## 1.0
+
+- Improve `i_verify_jwt_access_token` by adding parameter `aud` to check if required
+- Add `i_set_server_jwks`, `i_get_client_jwks`, `i_set_client_jwks`, `i_verify_dpop_proof`
+
 ## 0.9.9
 
 - Improve OAuth 2.0 Rich Authorization Requests
