@@ -526,7 +526,7 @@ static int callback_access_token_verify(const struct _u_request * request, struc
   json_t * j_return;
   int ret;
 
-  if ((ret = i_verify_jwt_access_token(session)) == I_ERROR_PARAM) {
+  if ((ret = i_verify_jwt_access_token(session, NULL)) == I_ERROR_PARAM) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error params");
     j_return = json_pack("{ss? ss? ss?}", "error", i_get_str_parameter(session, I_OPT_ERROR), "error_description", i_get_str_parameter(session, I_OPT_ERROR_DESCRIPTION), "error_uri", i_get_str_parameter(session, I_OPT_ERROR_URI));
     ulfius_set_json_body_response(response, 400, j_return);
