@@ -79,7 +79,6 @@ START_TEST(test_iddawc_dpop_valid_parameters)
   r_jwt_free(dpop_jwt);
   i_clean_session(&i_session);
   o_free(token);
-  
 }
 END_TEST
 
