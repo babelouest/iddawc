@@ -474,11 +474,11 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
         }
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - Error invalid jwt signature");
-        ret = I_ERROR;
+        ret = I_ERROR_UNAUTHORIZED;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - Error parsing id_token");
-      ret = I_ERROR;
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_jwt_access_token - Error parsing access_token");
+      ret = I_ERROR_PARAM;
     }
   } else {
     ret = I_ERROR_PARAM;
@@ -2908,6 +2908,42 @@ json_t * i_get_server_jwks(struct _i_session * i_session) {
   }
 }
 
+int i_set_server_jwks(struct _i_session * i_session, json_t * j_jwks) {
+  int ret;
+  if (i_session != NULL) {
+    if (r_jwks_empty(i_session->server_jwks) == RHN_OK && r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
+      ret = I_OK;
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_set_server_jwks - Error importing jwks");
+    }
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+json_t * i_get_client_jwks(struct _i_session * i_session) {
+  if (i_session != NULL) {
+    return r_jwks_export_to_json_t(i_session->client_jwks);
+  } else {
+    return NULL;
+  }
+}
+
+int i_set_client_jwks(struct _i_session * i_session, json_t * j_jwks) {
+  int ret;
+  if (i_session != NULL) {
+    if (r_jwks_empty(i_session->client_jwks) == RHN_OK && r_jwks_import_from_json_t(i_session->client_jwks, j_jwks) == RHN_OK) {
+      ret = I_OK;
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_set_client_jwks - Error importing jwks");
+    }
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
 int i_build_auth_url_get(struct _i_session * i_session) {
   int ret;
   char * url = NULL, * escaped = NULL, * tmp = NULL, * jwt = NULL;
@@ -3698,12 +3734,12 @@ int i_verify_id_token(struct _i_session * i_session) {
   return ret;
 }
 
-int i_verify_jwt_access_token(struct _i_session * i_session) {
-  int ret;
+int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud) {
+  int ret, res;
   jwt_t * jwt = NULL;
 
   if (r_jwt_init(&jwt) == RHN_OK) {
-    if (_i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt) == I_OK) {
+    if ((res = _i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt)) == I_OK) {
       if (0 != o_strcmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid typ");
         ret = I_ERROR_PARAM;
@@ -3713,11 +3749,20 @@ int i_verify_jwt_access_token(struct _i_session * i_session) {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid claims");
         ret = I_ERROR_PARAM;
       } else {
-        ret = I_OK;
+        if (!o_strlen(aud) || r_jwt_validate_claims(jwt, R_JWT_CLAIM_AUD, aud) == RHN_OK) {
+          json_decref(i_session->access_token_payload);
+          i_session->access_token_payload = r_jwt_get_full_claims_json_t(jwt);
+          ret = I_OK;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid claim aud");
+          ret = I_ERROR_PARAM;
+        }
       }
-    } else {
+    } else if (res == I_ERROR) {
       y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error _i_verify_jwt_sig_enc");
       ret = I_ERROR_PARAM;
+    } else {
+      ret = res;
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error r_jwt_init");
@@ -4601,6 +4646,111 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
     y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error input parameters");
     ret = I_ERROR_PARAM;
   }
+  return ret;
+}
+
+int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char * htu, time_t max_iat, const char * jkt) {
+  json_t * j_header = NULL;
+  jwt_t * dpop_jwt = NULL;
+  jwa_alg alg;
+  jwk_t * jwk_header = NULL;
+  char * jkt_from_token = NULL;
+  time_t now;
+  int ret;
+  
+  if (r_jwt_init(&dpop_jwt) == RHN_OK) {
+    if (r_jwt_parse(dpop_jwt, dpop_header, R_FLAG_IGNORE_REMOTE) == RHN_OK) {
+      if (r_jwt_verify_signature(dpop_jwt, NULL, R_FLAG_IGNORE_REMOTE) == RHN_OK) {
+        ret = I_OK;
+        do {
+          if (0 != o_strcmp("dpop+jwt", r_jwt_get_header_str_value(dpop_jwt, "typ"))) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid typ");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+          if ((alg = r_jwt_get_sign_alg(dpop_jwt)) != R_JWA_ALG_RS256 && alg != R_JWA_ALG_RS384 && alg != R_JWA_ALG_RS512 &&
+              alg != R_JWA_ALG_ES256 && alg != R_JWA_ALG_ES384 && alg != R_JWA_ALG_ES512 && 
+              alg != R_JWA_ALG_PS256 && alg != R_JWA_ALG_PS384 && alg != R_JWA_ALG_PS512 &&
+              alg != R_JWA_ALG_EDDSA && alg != R_JWA_ALG_ES256K) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid sign_alg");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+          if ((j_header = r_jwt_get_full_header_json_t(dpop_jwt)) == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_dpop_proof - Error r_jwt_get_full_header_json_t");
+            ret = I_ERROR;
+            break;
+          }
+          if (json_object_get(j_header, "x5c") != NULL || json_object_get(j_header, "x5u") != NULL) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid header, x5c or x5u present");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+          if (r_jwk_init(&jwk_header) != RHN_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_dpop_proof - Error r_jwk_init");
+            ret = I_ERROR;
+            break;
+          }
+          if (r_jwk_import_from_json_t(jwk_header, json_object_get(j_header, "jwk")) != RHN_OK) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid jwk property in header");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+          if (!o_strlen(r_jwt_get_claim_str_value(dpop_jwt, "jti"))) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid jti");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+          if (0 != o_strcmp(htm, r_jwt_get_claim_str_value(dpop_jwt, "htm"))) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid htm");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+          if (0 != o_strcmp(htu, r_jwt_get_claim_str_value(dpop_jwt, "htu"))) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid htu");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+          time(&now);
+          if (max_iat) {
+            if (((time_t)r_jwt_get_claim_int_value(dpop_jwt, "iat"))+max_iat < now) {
+              y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Expired iat");
+              ret = I_ERROR_UNAUTHORIZED;
+              break;
+            }
+          }
+          if ((time_t)r_jwt_get_claim_int_value(dpop_jwt, "iat") > now) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid iat");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+          if ((jkt_from_token = r_jwk_thumbprint(jwk_header, R_JWK_THUMB_SHA256, R_FLAG_IGNORE_REMOTE)) == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_dpop_proof - Error r_jwk_thumbprint");
+            ret = I_ERROR;
+            break;
+          }
+          if (0 != o_strcmp(jkt, jkt_from_token)) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - jkt value doesn't match");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+        } while (0);
+        json_decref(j_header);
+        r_jwk_free(jwk_header);
+        o_free(jkt_from_token);
+      } else {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid signature");
+        ret = I_ERROR_UNAUTHORIZED;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid DPoP token");
+      ret = I_ERROR_UNAUTHORIZED;
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_dpop_proof - Error r_jwt_init");
+    ret = I_ERROR;
+  }
+  r_jwt_free(dpop_jwt);
   return ret;
 }
 
