@@ -432,7 +432,7 @@ int i_verify_id_token(struct _i_session * i_session);
 
 ### Verify an access_token
 
-If the access_token is a JWT, you can use the function `i_verify_jwt_access_token` to verify its signature. The function will verify the claims `iss` and `iat` only. When an access_token is validated, its claims are available in the property `json_t * struct _i_session.access_token_payload`.
+If the access_token is a JWT, you can use the function `i_verify_jwt_access_token` to verify its signature. The function will verify the claims `iss`, `iat` and `aud`. When an access_token is validated, its claims are available in the property `json_t * struct _i_session.access_token_payload`.
 
 ```C
 /**
@@ -440,9 +440,10 @@ If the access_token is a JWT, you can use the function `i_verify_jwt_access_toke
  * According to OAuth 2.0 Access Token JWT Profile Draft 12
  * https://datatracker.ietf.org/doc/html/draft-ietf-oauth-access-token-jwt-12
  * @param i_session: a reference to a struct _i_session *
+ * @param aud: the aud claim to verify, set to NULL to ignore aud claim
  * @return I_OK on success, an error value on error
  */
-int i_verify_jwt_access_token(struct _i_session * i_session);
+int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud);
 ```
 
 ### Load userinfo
