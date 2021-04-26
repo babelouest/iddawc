@@ -593,6 +593,29 @@ json_t * i_get_server_configuration(struct _i_session * i_session);
 json_t * i_get_server_jwks(struct _i_session * i_session);
 
 /**
+ * Gets the server configuration
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_jwks: the server public JWKS in json_t * format
+ * @return I_OK on success, an error value on error
+ */
+int i_set_server_jwks(struct _i_session * i_session, json_t * j_jwks);
+
+/**
+ * Gets the client configuration
+ * @param i_session: a reference to a struct _i_session *
+ * @return the client public JWKS in json_t * format
+ */
+json_t * i_get_client_jwks(struct _i_session * i_session);
+
+/**
+ * Gets the client configuration
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_jwks: the client public JWKS in json_t * format
+ * @return I_OK on success, an error value on error
+ */
+int i_set_client_jwks(struct _i_session * i_session, json_t * j_jwks);
+
+/**
  * Sets a list of parameters to a session
  * @param i_session: a reference to a struct _i_session *
  * the list of parameters to set
@@ -701,9 +724,10 @@ int i_verify_id_token(struct _i_session * i_session);
  * According to OAuth 2.0 Access Token JWT Profile Draft 12
  * https://datatracker.ietf.org/doc/html/draft-ietf-oauth-access-token-jwt-12
  * @param i_session: a reference to a struct _i_session *
+ * @param aud: the aud claim to verify, set to NULL to ignore aud claim
  * @return I_OK on success, an error value on error
  */
-int i_verify_jwt_access_token(struct _i_session * i_session);
+int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud);
 
 /**
  * Loads the userinfo endpoint using the access_token
@@ -804,6 +828,16 @@ int i_get_registration_client(struct _i_session * i_session, json_t ** j_result)
  * @return a char * containing the DPoP token signed, must be i_free'd after use
  */
 char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat);
+
+/**
+ * Verifies the dpop_header is valid with the jkt specified
+ * @param dpop_header: the dpop header in a serialized JWT format
+ * @param htm: The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.)
+ * @param htu: The htu claim value, the HTTP url used to access the protected resource (ex: https://resource.tld/object)
+ * @param max_iat: the maximum age of the dpop, based on the claim iat, if set to 0, no expiration date will be checked
+ * @param jkt: the signature identifier specified by the access_token
+ */
+int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char * htu, time_t max_iat, const char * jkt);
 
 /**
  * Sends an HTTP request to a REST API using the access token to authenticate
