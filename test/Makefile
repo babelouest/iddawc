@@ -21,7 +21,7 @@ MEMCHECK=0
 all: test
 
 clean:
-	rm -f *.o $(TARGET) valgrind-*.txt
+	rm -f *.o $(TARGET) valgrind-*.txt *.log
 
 $(IDDAWC_LIBRARY): $(IDDAWC_INCLUDE)/iddawc.h $(IDDAWC_LOCATION)/iddawc.c
 	cd $(IDDAWC_LOCATION) && $(MAKE) debug
