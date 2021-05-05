@@ -3745,11 +3745,15 @@ int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud) {
         ret = I_ERROR_PARAM;
       } else if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
                                             R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
+                                            R_JWT_CLAIM_SUB, NULL,
+                                            R_JWT_CLAIM_IAT, R_JWT_CLAIM_NOW,
+                                            R_JWT_CLAIM_JTI, NULL,
+                                            R_JWT_CLAIM_STR, "client_id", NULL,
                                             R_JWT_CLAIM_NOP) != RHN_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid claims");
         ret = I_ERROR_PARAM;
       } else {
-        if (!o_strlen(aud) || r_jwt_validate_claims(jwt, R_JWT_CLAIM_AUD, aud) == RHN_OK) {
+        if (!o_strlen(aud) || r_jwt_validate_claims(jwt, R_JWT_CLAIM_AUD, aud, R_JWT_CLAIM_NOP) == RHN_OK) {
           json_decref(i_session->access_token_payload);
           i_session->access_token_payload = r_jwt_get_full_claims_json_t(jwt);
           ret = I_OK;
