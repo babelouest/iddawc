@@ -38,14 +38,14 @@ int main() {
 
   i_init_session(&i_session);
   i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_ID_TOKEN|I_RESPONSE_TYPE_CODE,
-                                                        I_OPT_OPENID_CONFIG_ENDPOINT, CONFIG_ENDPOINT,
-                                                        I_OPT_CLIENT_ID, CLIENT_ID,
-                                                        I_OPT_CLIENT_SECRET, CLIENT_SECRET,
-                                                        I_OPT_REDIRECT_URI, REDIRECT_URI,
-                                                        I_OPT_SCOPE, SCOPE,
-                                                        I_OPT_STATE_GENERATE, 16,
-                                                        I_OPT_NONCE_GENERATE, 32,
-                                                        I_OPT_NONE);
+                                   I_OPT_OPENID_CONFIG_ENDPOINT, CONFIG_ENDPOINT,
+                                   I_OPT_CLIENT_ID, CLIENT_ID,
+                                   I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                   I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                   I_OPT_SCOPE, SCOPE,
+                                   I_OPT_STATE_GENERATE, 16,
+                                   I_OPT_NONCE_GENERATE, 32,
+                                   I_OPT_NONE);
   if (i_load_openid_config(&i_session) != I_OK) {
     y_log_message(Y_LOG_LEVEL_DEBUG, "Error loading openid config");
     i_clean_session(&i_session);

@@ -39,15 +39,15 @@ int main() {
 
   i_init_session(&i_session);
   i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                        I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
-                                                        I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
-                                                        I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
-                                                        I_OPT_CLIENT_ID, CLIENT_ID,
-                                                        I_OPT_CLIENT_SECRET, CLIENT_SECRET,
-                                                        I_OPT_REDIRECT_URI, REDIRECT_URI,
-                                                        I_OPT_SCOPE, SCOPE,
-                                                        I_OPT_STATE_GENERATE, 16,
-                                                        I_OPT_NONE);
+                                   I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                   I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                   I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
+                                   I_OPT_CLIENT_ID, CLIENT_ID,
+                                   I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                   I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                   I_OPT_SCOPE, SCOPE,
+                                   I_OPT_STATE_GENERATE, 16,
+                                   I_OPT_NONE);
   // First step: get redirection to login page
   if ((ret = i_run_auth_request(&i_session)) != I_OK) {
     y_log_message(Y_LOG_LEVEL_DEBUG, "Error running auth request: %d", ret);
