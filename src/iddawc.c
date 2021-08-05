@@ -429,12 +429,14 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
 
   if (i_session != NULL && token != NULL) {
     if (r_jwt_parse(jwt, token, i_session->x5u_flags) == RHN_OK) {
-      if (_i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "signing_alg_values_supported"), r_jwa_alg_to_str(r_jwt_get_sign_alg(jwt)))) {
+      if (r_jwt_get_sign_alg(jwt) != R_JWA_ALG_NONE &&
+          _i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "signing_alg_values_supported"), r_jwa_alg_to_str(r_jwt_get_sign_alg(jwt)))) {
         if (r_jwt_add_sign_jwks(jwt, NULL, i_session->server_jwks) == RHN_OK && r_jwt_add_enc_jwks(jwt, i_session->client_jwks, NULL) == RHN_OK) {
           if (jwt->type == R_JWT_TYPE_SIGN) {
             res = r_jwt_verify_signature(jwt, NULL, i_session->x5u_flags);
           } else if (jwt->type == R_JWT_TYPE_NESTED_SIGN_THEN_ENCRYPT) {
-            if (_i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_alg_values_supported"), r_jwa_alg_to_str(r_jwt_get_enc_alg(jwt))) && _i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_enc_values_supported"), r_jwa_enc_to_str(r_jwt_get_enc(jwt)))) {
+            if (_i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_alg_values_supported"), r_jwa_alg_to_str(r_jwt_get_enc_alg(jwt))) &&
+                _i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_enc_values_supported"), r_jwa_enc_to_str(r_jwt_get_enc(jwt)))) {
               res = r_jwt_decrypt_verify_signature_nested(jwt, NULL, i_session->x5u_flags, NULL, i_session->x5u_flags);
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - Error invalid jwt encryption");
