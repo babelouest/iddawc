@@ -1409,8 +1409,8 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
-  ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
-  ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_IGNORE, CLAIM2_CONTENT));
 
@@ -1592,8 +1592,8 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
                                                     I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
-  ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
@@ -1692,8 +1692,8 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
                                                     I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
-  ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
@@ -1877,8 +1877,8 @@ START_TEST(test_iddawc_import_multiple)
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
-  ck_assert_int_eq(r_jwks_import_from_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
-  ck_assert_int_eq(r_jwks_import_from_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_IGNORE, CLAIM2_CONTENT));
 
