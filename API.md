@@ -49,7 +49,6 @@ void i_global_close();
 Usually, a log message is displayed to explain more specifically what happened on error. The log manager used is [Yder](https://github.com/babelouest/yder). You can enable Yder log messages on the console with the following command at the beginning of your program:
 
 ```C
-
 int main() {
   y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc client program");
   
@@ -277,6 +276,21 @@ int i_remove_rich_authorization_request(struct _i_session * i_session, const cha
  * @return a char * containing a JSON stringified exported session, must be i_free'd after use, or NULL if not found
  */
 char * i_get_rich_authorization_request(struct _i_session * i_session, const char * type);
+
+/**
+ * Sets a list of parameters to a session
+ * @param i_session: a reference to a struct _i_session *
+ * the list of parameters to set
+ * Uses a variable-length parameter list
+ * the syntax is the option followed by the value(s) required by the option
+ * The list must be ended by a I_OPT_NONE
+ * Example:
+ * i_set_parameter_list(i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+ * I_OPT_SCOPE, "scope1", I_OPT_STATE, "abcd", I_OPT_CLIENT_ID, "client1",
+ * I_OPT_AUTH_ENDPOINT, "https://auth2.tld/auth", I_OPT_NONE);
+ * @return I_OK on success, an error value on error
+ */
+int i_set_parameter_list(struct _i_session * i_session, ...);
 ```
 
 ### Import or export sessions
@@ -391,7 +405,9 @@ int i_run_device_auth_request(struct _i_session * i_session);
 
 ### Build and run pushed authorization requests and parse results
 
-If you need to run a device authorization request, you need to use the function `i_run_par_request`, and the other parameters as if the request was a normal `auth` request (`response_type`, `client_id`, `scope`, `redirect_uri`, authenticaiton type, etc.). On success, the parameters `I_OPT_PUSHED_AUTH_REQ_URI` and `I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN` will be automatically set. Then the function `i_build_auth_url_get` will build an auth url using the request_uri and client_id parameters only.
+To run a device authorization request, you need to use the function `i_run_par_request`, and the other parameters as if the request was a normal `auth` request (`response_type`, `client_id`, `scope`, `redirect_uri`, authenticaiton type, etc.).
+
+On success, the parameters `I_OPT_PUSHED_AUTH_REQ_URI` and `I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN` will be automatically set. Then the function `i_build_auth_url_get` will build an auth url using the request_uri and client_id parameters only.
 
 ```C
 /**
@@ -405,7 +421,7 @@ int i_run_par_request(struct _i_session * i_session);
 
 ### Build and run token requests and parse results
 
-If you need to execute a request in the token endpoint, to get a refresh token from a code or refresh a token for example, 
+To execute a request in the token endpoint, get a refresh token from a code or refresh a token, 
 
 ```C
 /**
@@ -419,7 +435,11 @@ int i_run_token_request(struct _i_session * i_session);
 
 ### Verify an id_token
 
-If the auth or token endpoints returns an id_token, this one will be parsed, the signature will be verified and the content will be validated to make sure the id_token is valid. You can also manually validate an id_token using the dedicated function. The property `I_OPT_ID_TOKEN` and the public key property must be set. When an id_token is validated, its claims are available in the property `json_t * struct _i_session.id_token_payload`.
+If the auth or token endpoints returns an id_token, this one will be parsed, the signature will be verified and the content will be validated to make sure the id_token is valid.
+
+You can also manually validate an id_token using the dedicated function. The property `I_OPT_ID_TOKEN` and the public key property must be set.
+
+When an id_token is validated, its claims are available in the property `json_t * struct _i_session.id_token_payload`.
 
 ```C
 /**
@@ -432,7 +452,11 @@ int i_verify_id_token(struct _i_session * i_session);
 
 ### Verify an access_token
 
-If the access_token is a JWT, you can use the function `i_verify_jwt_access_token` to verify its signature. The function will verify the claims `iss`, `iat` and `aud`. When an access_token is validated, its claims are available in the property `json_t * struct _i_session.access_token_payload`.
+If the access_token is a JWT, you can use the function `i_verify_jwt_access_token` to verify its signature and content. The access token must use the format specified in the [JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-access-token-jwt-13) standard.
+
+The function will verify the claims `iss`, `iat` and `aud`.
+
+When an access_token is validated, its claims are available in the property `json_t * struct _i_session.access_token_payload`.
 
 ```C
 /**
@@ -448,7 +472,9 @@ int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud);
 
 ### Load userinfo
 
-If an access_token is available, you can make a request to the userinfo endpoint to get information about the user. The function `i_load_userinfo_custom` is a more advanced userinfo request where you can specify query or header parameters, to request more claims or the result as a signed JWT.
+If an access_token is available, you can make a request to the userinfo endpoint to get information about the user.
+
+The function `i_load_userinfo_custom` is a more advanced userinfo request where you can specify query or header parameters, to request more claims or the result as a signed JWT.
 
 ```C
 /**
@@ -504,7 +530,9 @@ int i_revoke_token(struct _i_session * i_session);
 
 ### Register new clients
 
-If available, you can register a new client. You may have to set a `I_OPT_ACCESS_TOKEN` property, depending on the server configuration. If `update_session` is true and the registration is successful, the properties `I_OPT_CLIENT_ID` and `I_OPT_CLIENT_SECRET` will be set to the session, and the first `redirect_to` entry will be used as `I_OPT_REDIRECT_TO` value.
+You can register a new client using this dedicated functions.
+
+You may have to set a `I_OPT_ACCESS_TOKEN` property, depending on the server configuration. If `update_session` is true and the registration is successful, the properties `I_OPT_CLIENT_ID` and `I_OPT_CLIENT_SECRET` will be set to the session, and the first `redirect_to` entry will be used as `I_OPT_REDIRECT_TO` value.
 
 ```C
 /**
@@ -523,7 +551,7 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
 
 ### Manage clients registration
 
-If available on the AS, you can manage a client registration by changing its metadata or get the client registration metadata. These functions will use the access_token in the session if one is set.
+You can manage a client registration by changing its metadata or get the client registration metadata. These functions will use the access_token in the session if one is set.
 
 ```C
 /**
@@ -570,8 +598,11 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
 ### Perform a HTTP request to a Resource Service
 
 This features uses Ulfius' `ulfius_send_http_request` function to proceed. This function requires at least a `struct _u_request` with all the request parameters.
+
 Iddawc will add the access token previously obtained to the HTTP request using the [Bearer usage](https://tools.ietf.org/html/rfc6750) specified.
+
 If the access token is expired, Iddawc will attempt to refresh the token.
+
 If specified, Iddawc will generate and add a DPoP token in the request using the request parameters.
 
 ```C
