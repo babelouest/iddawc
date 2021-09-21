@@ -92,6 +92,20 @@ const char jwk_privkey_rsa_str_2[] = "{\"kty\":\"RSA\",\"n\":\"0vx7agoebGcQSuuPi
                                      "6huUUvMfBcMpn8lqeW6vzznYY5SSQF7pMdC_agI3nG8Ibp1BUb0JUiraRNqUfLhcQb_d9GF4Dh7e74WbRsobRonujTYN1xCaP6TO61jvWrX-L18txXw494Q_cg"\
                                      "k\",\"qi\":\"GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_m"\
                                      "HZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU\",\"alg\":\"RS256\",\"kid\":\"2011-04-29\"}";
+const char jwk_privkey_fool_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9E"\
+                                    "XrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0"\
+                                    "WTea8n_TQmq9sVHGQtLIFqfblLxbSz_7m4g7_o3WfqlwXkVmCIu1wdzAjZV5BspBGrL0ed5Whpk9-bX69nUDvpcMAaPhuRwZ43e9koVRbVwXCNkne98VAs0_U\""\
+                                    ",\"e\":\"AQAB\",\"d\":\"AKOVsyDreb5VJRFcuIrrqYWxZqkc37MQTvR1wrE_HAzYp4n-AuAJQT-Sga6WYY-3V53VaG1ZB93GWIHNVCsImJEWPEYUZjTnoeK"\
+                                    "bOBUzPoPYB3UF5oReJYSp9msEbvGvF9d65fYe4DYkcMl4IK5Uz9hDugrPC4VBOmwyu8-DjLkP8OH-N2-KhJvX_kLKgivfzD3KOp6wryLnKuZYn8N4E6rCiNSfKM"\
+                                    "goM60bSHRNi0QHYB2jwqMU5T5EzdpD3Tu_ow6a-sXrW6SG1dtbuStck9hFcQ-QtRCeWoM5pFN8cKOsWBZd1unq-X3gMlCjdXUBUW7BYP44lpYsg1v9l_Ww64E\""\
+                                    ",\"p\":\"ANmlFUVM-836aC-wK-DekE3s3gl7GZ-9Qca8iKnaIeMszgyaLYkkbYNPpjjsiQHc37IG3axCaywK40PZqODzovL5PnUpwfNrnlMaI042rNaf8q1L4k"\
+                                    "vaBTkbO9Wbj0sTLMPt1frLQKBRsNDsYamRcL1SwvTC4aI7cgZBrNIBdPiR\",\"q\":\"AP4qYxRNGaI3aeZh5hgKPSGW82X8Ai2MzIKjzSDYmKGcD9HPRV0dAU"\
+                                    "mDCvqyjwCD6tL9iMtZKPz7VK66-KvV1n91WLMDtRzWs_eFFyDY7BYw47o6IQoZ2RxBT3-7WLhlFflaEner8k23zpGOjZbyzt0SIWRAYR0zlb7LrS_X4fcl\",\""\
+                                    "qi\":\"fnlvhYXAn6V0X6gmlwooZUWo9bR7ObChNhrUzMVDOReUVOrzOhlzGhBW1TEFBBr8k44ZWBCTeVEQh--LFHwVvCgEjDBxfjUPUMkeyKZzLhpIUB_cFBAg"\
+                                    "I7Fyy0yuPpY0mS1PfMt5Y4b6g_JvdBWZZ8VhTcCVG7qDqoH_IJMXPNg\",\"dp\":\"EAsiQUSGf02JJpLG-UGOw5_FUk-XuPW7honZTSP-QX_JBJbM6oIb7IUP"\
+                                    "jLyq8M82Uio9ZvhSbCG1VQgTcdmj1mNXHk3gtS_msNuJZLeVEBEkU2_3k33TyrzeMUXRT0hvkVXT4zPeZLMA5LW4EUbeV6ZlJqPC_DGDm0B2G9jtpXE\",\"dq"\
+                                    "\":\"AMTictPUEcpOILO9HG985vPxKeTTfaBpVDbSymDqR_nQmZSOeg3yHQAkCco_rXTZu3rruR7El3K5AlVEMsNxp3IepbIuagrH6qsPpuXkA6YBAzdMNjHL6h"\
+                                    "nwIbQxnT1h2M7KzklzogRAIT0x706CEmq_06wEDvZ-8j3VKvhHxBwd\",\"kid\":\"1\"}";
 
 START_TEST(test_iddawc_id_token_invalid_iss)
 {
@@ -702,6 +716,54 @@ START_TEST(test_iddawc_id_token_invalid_key)
 }
 END_TEST
 
+START_TEST(test_iddawc_id_token_fooled_key)
+{
+  struct _i_session i_session;
+  jwk_t * jwk, * jwk_sign, * jwk_pub;
+  jwt_t * jwt;
+  json_t * j_jwk;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk_sign), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk_pub), RHN_OK);
+  
+  time(&now);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk_sign, jwk_pubkey_rsa_str_2), RHN_OK);
+  grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_fool_str), RHN_OK);
+  ck_assert_int_eq(r_jwk_set_property_str(jwk, "kid", r_jwk_get_property_str(jwk_sign, "kid")), RHN_OK);
+  ck_assert_int_eq(r_jwk_extract_pubkey(jwk, jwk_pub, 0), RHN_OK);
+  ck_assert_ptr_ne(j_jwk = r_jwk_export_to_json_t(jwk_pub), NULL);
+  ck_assert_int_eq(r_jwt_set_header_json_t_value(jwt, "jwk", j_jwk), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256), RHN_OK);
+  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed(jwt, jwk, 0)), NULL);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ISSUER, ISSUER), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN, jwt_str), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), jwt_str);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk_sign), RHN_OK);
+  
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR);
+  
+  json_decref(j_jwk);
+  r_jwk_free(jwk);
+  r_jwk_free(jwk_sign);
+  r_jwk_free(jwk_pub);
+  o_free(grants);
+  o_free(jwt_str);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
 START_TEST(test_iddawc_access_token_invalid_iss)
 {
   struct _i_session i_session;
@@ -1188,6 +1250,54 @@ START_TEST(test_iddawc_access_token)
 }
 END_TEST
 
+START_TEST(test_iddawc_access_token_fooled_key)
+{
+  struct _i_session i_session;
+  jwk_t * jwk, * jwk_sign, * jwk_pub;
+  jwt_t * jwt;
+  json_t * j_jwk;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk_sign), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk_pub), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_pem_der(jwk_sign, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, public_key, o_strlen((const char *)public_key)), RHN_OK);
+  time(&now);
+  grants = msprintf(access_token_pattern, (long long)now, (long long)(now + EXPIRES_IN), ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_header_str_value(jwt, "typ", "at+jwt"), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_fool_str), RHN_OK);
+  ck_assert_int_eq(r_jwk_set_property_str(jwk, "kid", r_jwk_get_property_str(jwk_sign, "kid")), RHN_OK);
+  ck_assert_int_eq(r_jwk_extract_pubkey(jwk, jwk_pub, 0), RHN_OK);
+  ck_assert_ptr_ne(j_jwk = r_jwk_export_to_json_t(jwk_pub), NULL);
+  ck_assert_int_eq(r_jwt_set_header_json_t_value(jwt, "jwk", j_jwk), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256), RHN_OK);
+  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed(jwt, jwk, 0)), NULL);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ISSUER, ISSUER), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN, jwt_str), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), jwt_str);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk_sign), RHN_OK);
+  
+  ck_assert_int_eq(i_verify_jwt_access_token(&i_session, NULL), I_ERROR_PARAM);
+  
+  json_decref(j_jwk);
+  r_jwk_free(jwk);
+  r_jwk_free(jwk_sign);
+  r_jwk_free(jwk_pub);
+  o_free(grants);
+  o_free(jwt_str);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
 START_TEST(test_iddawc_access_token_invalid_aud)
 {
   struct _i_session i_session;
@@ -1292,6 +1402,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_id_token_with_code_access_token);
   tcase_add_test(tc_core, test_iddawc_id_token_nested);
   tcase_add_test(tc_core, test_iddawc_id_token_invalid_key);
+  tcase_add_test(tc_core, test_iddawc_id_token_fooled_key);
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_typ);
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_iss);
   tcase_add_test(tc_core, test_iddawc_access_token_missing_iss);
@@ -1304,6 +1415,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_exp);
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_iat);
   tcase_add_test(tc_core, test_iddawc_access_token);
+  tcase_add_test(tc_core, test_iddawc_access_token_fooled_key);
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_aud);
   tcase_add_test(tc_core, test_iddawc_access_token_aud);
   tcase_set_timeout(tc_core, 30);
