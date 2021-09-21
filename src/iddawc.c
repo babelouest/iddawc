@@ -167,7 +167,7 @@ static char * _i_decrypt_jwe_token(struct _i_session * i_session, const char * t
   size_t payload_len = 0;
 
   if (r_jwe_init(&jwe) == RHN_OK) {
-    if (r_jwe_parse(jwe, token, i_session->x5u_flags) == RHN_OK) {
+    if (r_jwe_advanced_parse(jwe, token, R_PARSE_NONE, i_session->x5u_flags) == RHN_OK) {
       if ((i_session->client_kid != NULL && (jwk_dec = r_jwks_get_by_kid(i_session->client_jwks, i_session->client_kid)) != NULL) || (r_jwks_size(i_session->client_jwks) == 1 && (jwk_dec = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
         if (r_jwe_decrypt(jwe, jwk_dec, i_session->x5u_flags) == RHN_OK) {
           payload = r_jwe_get_payload(jwe, &payload_len);
@@ -182,7 +182,7 @@ static char * _i_decrypt_jwe_token(struct _i_session * i_session, const char * t
       }
       r_jwk_free(jwk_dec);
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "_i_decrypt_jwe_token - Error r_jwe_parse");
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_decrypt_jwe_token - Error r_jwe_advanced_parse");
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "_i_decrypt_jwe_token - Error r_jwe_init");
@@ -426,18 +426,24 @@ static int _i_has_openid_config_parameter_value(struct _i_session * i_session, c
 
 static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * token, int token_type, jwt_t * jwt) {
   int ret = I_ERROR_PARAM, res = RHN_ERROR;
+  jwk_t * jwk_sign;
 
   if (i_session != NULL && token != NULL) {
-    if (r_jwt_parse(jwt, token, i_session->x5u_flags) == RHN_OK) {
+    if (r_jwt_advanced_parse(jwt, token, R_PARSE_NONE, i_session->x5u_flags) == RHN_OK) {
       if (r_jwt_get_sign_alg(jwt) != R_JWA_ALG_NONE &&
           _i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "signing_alg_values_supported"), r_jwa_alg_to_str(r_jwt_get_sign_alg(jwt)))) {
-        if (r_jwt_add_sign_jwks(jwt, NULL, i_session->server_jwks) == RHN_OK && r_jwt_add_enc_jwks(jwt, i_session->client_jwks, NULL) == RHN_OK) {
+        if (r_jwks_size(i_session->server_jwks) > 1) {
+          jwk_sign = r_jwks_get_by_kid(i_session->server_jwks, r_jwt_get_header_str_value(jwt, "kid"));
+        } else {
+          jwk_sign = r_jwks_get_at(i_session->server_jwks, 0);
+        }
+        if (r_jwt_add_enc_jwks(jwt, i_session->client_jwks, NULL) == RHN_OK) {
           if (jwt->type == R_JWT_TYPE_SIGN) {
-            res = r_jwt_verify_signature(jwt, NULL, i_session->x5u_flags);
+            res = r_jwt_verify_signature(jwt, jwk_sign, i_session->x5u_flags);
           } else if (jwt->type == R_JWT_TYPE_NESTED_SIGN_THEN_ENCRYPT) {
             if (_i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_alg_values_supported"), r_jwa_alg_to_str(r_jwt_get_enc_alg(jwt))) &&
                 _i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_enc_values_supported"), r_jwa_enc_to_str(r_jwt_get_enc(jwt)))) {
-              res = r_jwt_decrypt_verify_signature_nested(jwt, NULL, i_session->x5u_flags, NULL, i_session->x5u_flags);
+              res = r_jwt_decrypt_verify_signature_nested(jwt, jwk_sign, i_session->x5u_flags, NULL, i_session->x5u_flags);
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - Error invalid jwt encryption");
               res = I_ERROR;
@@ -474,6 +480,7 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
           y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - Error Adding JWKS to jwt");
           ret = I_ERROR;
         }
+        r_jwk_free(jwk_sign);
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - Error invalid jwt signature");
         ret = I_ERROR_UNAUTHORIZED;
@@ -556,7 +563,7 @@ static int _i_parse_token_response(struct _i_session * i_session, int http_statu
         }
         if (res == I_OK && i_set_str_parameter(i_session, I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_response, "token_type"))) == I_OK) {
           // Validate access token signature and decrypt if necessary if it's a JWT
-          if (r_jwt_init(&jwt) == RHN_OK && r_jwt_parse(jwt, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), i_session->x5u_flags) == RHN_OK) {
+          if (r_jwt_init(&jwt) == RHN_OK && r_jwt_advanced_parse(jwt, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), R_PARSE_NONE, i_session->x5u_flags) == RHN_OK) {
             if (_i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt) != I_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_token_response - Error _i_verify_jwt_sig_enc");
               ret = I_ERROR;
@@ -4665,7 +4672,7 @@ int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char *
   int ret;
   
   if (r_jwt_init(&dpop_jwt) == RHN_OK) {
-    if (r_jwt_parse(dpop_jwt, dpop_header, R_FLAG_IGNORE_REMOTE) == RHN_OK) {
+    if (r_jwt_advanced_parse(dpop_jwt, dpop_header, R_PARSE_HEADER_JWK, R_FLAG_IGNORE_REMOTE) == RHN_OK) {
       if (r_jwt_verify_signature(dpop_jwt, NULL, R_FLAG_IGNORE_REMOTE) == RHN_OK) {
         ret = I_OK;
         do {
