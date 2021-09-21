@@ -1,5 +1,10 @@
 # Iddawc Changelog
 
+## 1.0.1
+
+- Improve tokens parse and verification
+- Add DPoP tests
+
 ## 1.0.0
 
 - Improve `i_verify_jwt_access_token` by adding parameter `aud` to check if required
