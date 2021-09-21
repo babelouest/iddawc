@@ -361,16 +361,14 @@ static int callback_redirect_uri(const struct _u_request * request, struct _u_re
     u_map_put(response->map_header, "Location", "/");
     response->status = 302;
   } else {
-    if (access(path, F_OK) != -1) {
-      f = fopen (path, "rb");
-      if (f) {
-        u_map_put(response->map_header, "Content-Type", "text/html");
-        fseek (f, 0, SEEK_END);
-        length = ftell (f);
-        fseek (f, 0, SEEK_SET);
-        if (ulfius_set_stream_response(response, 200, callback_static_file_uncompressed_stream, callback_static_file_uncompressed_stream_free, length, CHUNK, f) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "callback_redirect_uri File Server - Error ulfius_set_stream_response");
-        }
+    f = fopen (path, "rb");
+    if (f) {
+      u_map_put(response->map_header, "Content-Type", "text/html");
+      fseek (f, 0, SEEK_END);
+      length = ftell (f);
+      fseek (f, 0, SEEK_SET);
+      if (ulfius_set_stream_response(response, 200, callback_static_file_uncompressed_stream, callback_static_file_uncompressed_stream_free, length, CHUNK, f) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "callback_redirect_uri File Server - Error ulfius_set_stream_response");
       }
     } else {
       response->status = 404;

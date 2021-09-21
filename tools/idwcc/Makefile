@@ -67,7 +67,7 @@ test: idwcc
 	LD_LIBRARY_PATH=$(IDDAWC_LOCATION): ./idwcc -w webapp
 
 memcheck: debug
-	LD_LIBRARY_PATH=$(IDDAWC_LOCATION): valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./idwcc -w webapp 2>valgrind.txt
+	LD_LIBRARY_PATH=$(IDDAWC_LOCATION): $(VALGRIND_COMMAND) ./idwcc -w webapp 2>valgrind.txt
 
 manpage: idwcc
 	help2man ./idwcc -s 1 -n "OAuth2/OIDC client program to test or validate OAuth2/OIDC AS." > idwcc.1
