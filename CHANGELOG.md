@@ -2,7 +2,7 @@
 
 ## 1.0.1
 
-- Improve tokens parse and verification
+- Improve tokens parsing and verification
 - Add DPoP tests
 
 ## 1.0.0
