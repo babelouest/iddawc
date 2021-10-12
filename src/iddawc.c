@@ -3617,33 +3617,34 @@ int i_verify_id_token(struct _i_session * i_session) {
                                          R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
                                          R_JWT_CLAIM_IAT, R_JWT_CLAIM_NOW,
                                          R_JWT_CLAIM_NOP) == RHN_OK) {
+            switch (r_jwt_get_sign_alg(jwt)) {
+              case R_JWA_ALG_HS256:
+              case R_JWA_ALG_RS256:
+              case R_JWA_ALG_ES256:
+              case R_JWA_ALG_PS256:
+              case R_JWA_ALG_EDDSA:
+              case R_JWA_ALG_ES256K:
+                alg = GNUTLS_DIG_SHA256;
+                break;
+              case R_JWA_ALG_HS384:
+              case R_JWA_ALG_RS384:
+              case R_JWA_ALG_ES384:
+              case R_JWA_ALG_PS384:
+                alg = GNUTLS_DIG_SHA384;
+                break;
+              case R_JWA_ALG_HS512:
+              case R_JWA_ALG_RS512:
+              case R_JWA_ALG_ES512:
+              case R_JWA_ALG_PS512:
+                alg = GNUTLS_DIG_SHA384;
+                break;
+              default:
+                alg = GNUTLS_DIG_UNKNOWN;
+                break;
+            }
             ret = I_OK;
             if (json_object_get(i_session->id_token_payload, "at_hash") != NULL) {
               if (i_session->access_token != NULL) {
-                switch (r_jwt_get_sign_alg(jwt)) {
-                  case R_JWA_ALG_HS256:
-                  case R_JWA_ALG_RS256:
-                  case R_JWA_ALG_ES256:
-                  case R_JWA_ALG_PS256:
-                  case R_JWA_ALG_EDDSA:
-                    alg = GNUTLS_DIG_SHA256;
-                    break;
-                  case R_JWA_ALG_HS384:
-                  case R_JWA_ALG_RS384:
-                  case R_JWA_ALG_ES384:
-                  case R_JWA_ALG_PS384:
-                    alg = GNUTLS_DIG_SHA384;
-                    break;
-                  case R_JWA_ALG_HS512:
-                  case R_JWA_ALG_RS512:
-                  case R_JWA_ALG_ES512:
-                  case R_JWA_ALG_PS512:
-                    alg = GNUTLS_DIG_SHA384;
-                    break;
-                  default:
-                    alg = GNUTLS_DIG_UNKNOWN;
-                    break;
-                }
                 if (alg != GNUTLS_DIG_UNKNOWN) {
                   hash_data.data = (unsigned char*)i_session->access_token;
                   hash_data.size = o_strlen(i_session->access_token);
@@ -3672,30 +3673,6 @@ int i_verify_id_token(struct _i_session * i_session) {
             }
             if (json_object_get(i_session->id_token_payload, "c_hash") != NULL) {
               if (i_session->code != NULL) {
-                switch (r_jwt_get_sign_alg(jwt)) {
-                  case R_JWA_ALG_HS256:
-                  case R_JWA_ALG_RS256:
-                  case R_JWA_ALG_ES256:
-                  case R_JWA_ALG_PS256:
-                  case R_JWA_ALG_EDDSA:
-                    alg = GNUTLS_DIG_SHA256;
-                    break;
-                  case R_JWA_ALG_HS384:
-                  case R_JWA_ALG_RS384:
-                  case R_JWA_ALG_ES384:
-                  case R_JWA_ALG_PS384:
-                    alg = GNUTLS_DIG_SHA384;
-                    break;
-                  case R_JWA_ALG_HS512:
-                  case R_JWA_ALG_RS512:
-                  case R_JWA_ALG_ES512:
-                  case R_JWA_ALG_PS512:
-                    alg = GNUTLS_DIG_SHA384;
-                    break;
-                  default:
-                    alg = GNUTLS_DIG_UNKNOWN;
-                    break;
-                }
                 if (alg != GNUTLS_DIG_UNKNOWN) {
                   hash_data.data = (unsigned char*)i_session->code;
                   hash_data.size = o_strlen(i_session->code);
