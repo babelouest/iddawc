@@ -45,7 +45,7 @@ int main() {
                                    I_OPT_STATE_GENERATE, 16,
                                    I_OPT_NONCE_GENERATE, 32,
                                    I_OPT_NONE);
-  if ((ret = i_load_openid_config(&i_session)) != I_OK) {
+  if ((ret = i_get_openid_config(&i_session)) != I_OK) {
     y_log_message(Y_LOG_LEVEL_DEBUG, "Error loading openid-configuration: %d", ret);
     i_clean_session(&i_session);
     return 1;
@@ -78,7 +78,7 @@ int main() {
   }
   
   // And finally we load user info using the access token
-  if (i_load_userinfo(&i_session) != I_OK) {
+  if (i_get_userinfo(&i_session, 0) != I_OK) {
     y_log_message(Y_LOG_LEVEL_DEBUG, "Error loading userinfo");
     i_clean_session(&i_session);
     return 1;
