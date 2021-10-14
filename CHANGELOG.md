@@ -1,5 +1,10 @@
 # Iddawc Changelog
 
+## 1.1.0
+
+- Add `i_run_ciba_request`
+- Improve client registration
+
 ## 1.0.1
 
 - Improve tokens parsing and verification
