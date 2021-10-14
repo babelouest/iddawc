@@ -347,7 +347,7 @@ When available, you can load the Openid Config endpoint. This will parse the res
  * @param i_session: a reference to a struct _i_session *
  * @return I_OK on success, an error value on error
  */
-int i_load_openid_config(struct _i_session * i_session);
+int i_get_openid_config(struct _i_session * i_session);
 ```
 
 ### Build and run auth request and parse results
@@ -479,19 +479,20 @@ The function `i_load_userinfo_custom` is a more advanced userinfo request where 
 ```C
 /**
  * Loads the userinfo endpoint using the access_token
- * if the result is a JWT, validate the signature 
+ * if the result is a JWT, validate the signature
  * and/or decrypt the token
  * sets the result to i_session->userinfo as char *
  * and i_session->j_userinfo as json_t * if the result is in JSON format
  * @param i_session: a reference to a struct _i_session *
+ * @param get_jwt: Request result as a JWT
  * @return I_OK on success, an error value on error
  */
-int i_load_userinfo(struct _i_session * i_session);
+int i_get_userinfo(struct _i_session * i_session, int get_jwt);
 
 /**
  * Loads the userinfo endpoint using the access_token
  * with custom parameters
- * if the result is a JWT, validate the signature 
+ * if the result is a JWT, validate the signature
  * and/or decrypt the token
  * sets the result to i_session->userinfo as char *
  * and i_session->j_userinfo as json_t * if the result is in JSON format
@@ -501,7 +502,7 @@ int i_load_userinfo(struct _i_session * i_session);
  * @param additional_headers: set of additional parameters to add to the request header
  * @return I_OK on success, an error value on error
  */
-int i_load_userinfo_custom(struct _i_session * i_session, const char * http_method, struct _u_map * additional_query, struct _u_map * additional_headers);
+int i_get_userinfo_custom(struct _i_session * i_session, const char * http_method, struct _u_map * additional_query, struct _u_map * additional_headers);
 ```
 
 ### Introspect or revoke tokens
