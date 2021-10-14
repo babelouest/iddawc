@@ -71,7 +71,7 @@
 #define SERVER_ENC "A128GCM"
 #define CLIENT_KID "client kid"
 #define CLIENT_SIGN_ALG "HS256"
-#define CLIENT_ENC_ALG "RSA1_5"
+#define CLIENT_ENC_ALG "RSA-OAEP-256"
 #define CLIENT_ENC "A128CBC-HS256"
 #define TOKEN_JTI "jtiXyz1234"
 #define TOKEN_EXP 42
@@ -117,6 +117,37 @@
 #define CLAIM1_CONTENT "{\"value\":\""CLAIM1_VALUE"\"}"
 #define CLAIM2_CONTENT "{\"values\":[\""CLAIM2_VALUE"\"]}"
 #define RESOURCE_INDICATOR "https://resource.iddawc.tld/"
+#define ACCESS_TOKEN_SIGNING_ALG "RS256"
+#define ACCESS_TOKEN_ENCRYPTION_ALG "RSA-OAEP"
+#define ACCESS_TOKEN_ENCRYPTION_ENC "A128CBC-HS256"
+#define ID_TOKEN_SIGNING_ALG "RS384"
+#define ID_TOKEN_ENCRYPTION_ALG "RSA-OAEP-256"
+#define ID_TOKEN_ENCRYPTION_ENC "A192CBC-HS384"
+#define USERINFO_SIGNING_ALG "RS512"
+#define USERINFO_ENCRYPTION_ALG "A128KW"
+#define USERINFO_ENCRYPTION_ENC "A256CBC-HS512"
+#define REQUEST_OBJECT_SIGNING_ALG "ES256"
+#define REQUEST_OBJECT_ENCRYPTION_ALG "A192KW"
+#define REQUEST_OBJECT_ENCRYPTION_ENC "A128GCM"
+#define TOKEN_ENDPOINT_SIGNING_ALG "ES384"
+#define TOKEN_ENDPOINT_ENCRYPTION_ALG "A256KW"
+#define TOKEN_ENDPOINT_ENCRYPTION_ENC "A192GCM"
+#define CIBA_REQUEST_SIGNING_ALG "ES512"
+#define CIBA_REQUEST_ENCRYPTION_ALG "ECDH-ES+A128KW"
+#define CIBA_REQUEST_ENCRYPTION_ENC "A256GCM"
+#define AUTH_RESPONSE_SIGNING_ALG "PS256"
+#define AUTH_RESPONSE_ENCRYPTION_ALG "ECDH-ES+A192KW"
+#define AUTH_RESPONSE_ENCRYPTION_ENC "A192CBC-HS384"
+#define CIBA_ENDPOINT "https://isp.tld/ciba"
+#define CIBA_USER_CODE "CIBAUserCode"
+#define CIBA_LOGIN_HINT "{\"username\":\"ciba\"}"
+#define CIBA_LOGIN_HINT_KID "ciba kid"
+#define CIBA_BINDING_MESSAGE "CIBABindingMessage"
+#define CIBA_CLIENT_NOTIFICATION_TOKEN "CIBAClientNotificationToken123456789012345678901234567890"
+#define CIBA_AUTH_REQ_ID "CIBAAuthReqId123456789012345678901234567890"
+#define CIBA_CLIENT_NOTIFICATION_ENDPOINT "https://iddawc.tld/cb"
+#define CIBA_AUTH_REQ_EXPIRES_IN 145
+#define CIBA_AUTH_REQ_INTERVAL 4
 
 const char jwks_pubkey_ecdsa_str[] = "{\"keys\":[{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","\
                                     "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\",\"use\":\"enc\",\"kid\":\"1\"}]}";
@@ -451,6 +482,93 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_SIGNING_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_SIGNING_ALG, ACCESS_TOKEN_SIGNING_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, ACCESS_TOKEN_ENCRYPTION_ENC), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, ACCESS_TOKEN_ENCRYPTION_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_SIGNING_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_SIGNING_ALG, ID_TOKEN_SIGNING_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ENC, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ENC, ID_TOKEN_ENCRYPTION_ENC), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ALG, ID_TOKEN_ENCRYPTION_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_USERINFO_SIGNING_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_USERINFO_SIGNING_ALG, USERINFO_SIGNING_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ENC, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ENC, USERINFO_ENCRYPTION_ENC), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ALG, USERINFO_ENCRYPTION_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_SIGNING_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_SIGNING_ALG, REQUEST_OBJECT_SIGNING_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, REQUEST_OBJECT_ENCRYPTION_ENC), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, REQUEST_OBJECT_ENCRYPTION_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, TOKEN_ENDPOINT_SIGNING_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, TOKEN_ENDPOINT_ENCRYPTION_ENC), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, TOKEN_ENDPOINT_ENCRYPTION_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_REQUEST_SIGNING_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_REQUEST_SIGNING_ALG, CIBA_REQUEST_SIGNING_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, CIBA_REQUEST_ENCRYPTION_ENC), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, CIBA_REQUEST_ENCRYPTION_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_SIGNING_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_SIGNING_ALG, AUTH_RESPONSE_SIGNING_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, AUTH_RESPONSE_ENCRYPTION_ENC), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, AUTH_RESPONSE_ENCRYPTION_ALG), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_ENDPOINT, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_USER_CODE, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_USER_CODE, CIBA_USER_CODE), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_KID, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_KID, CIBA_LOGIN_HINT_KID), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT), I_OK);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -485,6 +603,11 @@ START_TEST(test_iddawc_set_int_parameter)
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER_GENERATE, 32), I_ERROR_PARAM);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER_GENERATE, 43), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_PKCE_METHOD, PKCE_METHOD), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_MODE, I_CIBA_MODE_PING), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JWT), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE, 32), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL), I_OK);
 
   i_clean_session(&i_session);
 }
@@ -650,6 +773,93 @@ START_TEST(test_iddawc_get_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR), RESOURCE_INDICATOR);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_SIGNING_ALG, ACCESS_TOKEN_SIGNING_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_SIGNING_ALG), ACCESS_TOKEN_SIGNING_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, ACCESS_TOKEN_ENCRYPTION_ENC), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC), ACCESS_TOKEN_ENCRYPTION_ENC);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, ACCESS_TOKEN_ENCRYPTION_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG), ACCESS_TOKEN_ENCRYPTION_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_SIGNING_ALG, ID_TOKEN_SIGNING_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_SIGNING_ALG), ID_TOKEN_SIGNING_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ENC, ID_TOKEN_ENCRYPTION_ENC), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ENC), ID_TOKEN_ENCRYPTION_ENC);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ALG, ID_TOKEN_ENCRYPTION_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ALG), ID_TOKEN_ENCRYPTION_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_USERINFO_SIGNING_ALG, USERINFO_SIGNING_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_SIGNING_ALG), USERINFO_SIGNING_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ENC, USERINFO_ENCRYPTION_ENC), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ENC), USERINFO_ENCRYPTION_ENC);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ALG, USERINFO_ENCRYPTION_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ALG), USERINFO_ENCRYPTION_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_SIGNING_ALG, REQUEST_OBJECT_SIGNING_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_SIGNING_ALG), REQUEST_OBJECT_SIGNING_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, REQUEST_OBJECT_ENCRYPTION_ENC), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC), REQUEST_OBJECT_ENCRYPTION_ENC);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, REQUEST_OBJECT_ENCRYPTION_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG), REQUEST_OBJECT_ENCRYPTION_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, TOKEN_ENDPOINT_SIGNING_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG), TOKEN_ENDPOINT_SIGNING_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, TOKEN_ENDPOINT_ENCRYPTION_ENC), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC), TOKEN_ENDPOINT_ENCRYPTION_ENC);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, TOKEN_ENDPOINT_ENCRYPTION_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG), TOKEN_ENDPOINT_ENCRYPTION_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_REQUEST_SIGNING_ALG, CIBA_REQUEST_SIGNING_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_SIGNING_ALG), CIBA_REQUEST_SIGNING_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, CIBA_REQUEST_ENCRYPTION_ENC), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC), CIBA_REQUEST_ENCRYPTION_ENC);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, CIBA_REQUEST_ENCRYPTION_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG), CIBA_REQUEST_ENCRYPTION_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_SIGNING_ALG, AUTH_RESPONSE_SIGNING_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_SIGNING_ALG), AUTH_RESPONSE_SIGNING_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, AUTH_RESPONSE_ENCRYPTION_ENC), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC), AUTH_RESPONSE_ENCRYPTION_ENC);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, AUTH_RESPONSE_ENCRYPTION_ALG), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG), AUTH_RESPONSE_ENCRYPTION_ALG);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ENDPOINT), CIBA_ENDPOINT);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_USER_CODE, CIBA_USER_CODE), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_USER_CODE), CIBA_USER_CODE);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT), CIBA_LOGIN_HINT);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_KID, CIBA_LOGIN_HINT_KID), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_KID), CIBA_LOGIN_HINT_KID);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE), CIBA_BINDING_MESSAGE);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -706,6 +916,16 @@ START_TEST(test_iddawc_get_int_parameter)
   ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER), NULL);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_PKCE_METHOD, PKCE_METHOD), I_OK);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PKCE_METHOD), PKCE_METHOD);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_MODE, I_CIBA_MODE_PING), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_MODE), I_CIBA_MODE_PING);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JWT), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_FORMAT), I_CIBA_LOGIN_HINT_FORMAT_JWT);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE, 32), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), NULL);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
 
   i_clean_session(&i_session);
 }
@@ -935,6 +1155,39 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                   I_OPT_PKCE_METHOD, PKCE_METHOD,
                                                   I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
+                                                  I_OPT_ACCESS_TOKEN_SIGNING_ALG, ACCESS_TOKEN_SIGNING_ALG,
+                                                  I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, ACCESS_TOKEN_ENCRYPTION_ALG,
+                                                  I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, ACCESS_TOKEN_ENCRYPTION_ENC,
+                                                  I_OPT_ID_TOKEN_SIGNING_ALG, ID_TOKEN_SIGNING_ALG,
+                                                  I_OPT_ID_TOKEN_ENCRYPTION_ALG, ID_TOKEN_ENCRYPTION_ALG,
+                                                  I_OPT_ID_TOKEN_ENCRYPTION_ENC, ID_TOKEN_ENCRYPTION_ENC,
+                                                  I_OPT_USERINFO_SIGNING_ALG, USERINFO_SIGNING_ALG,
+                                                  I_OPT_USERINFO_ENCRYPTION_ALG, USERINFO_ENCRYPTION_ALG,
+                                                  I_OPT_USERINFO_ENCRYPTION_ENC, USERINFO_ENCRYPTION_ENC,
+                                                  I_OPT_REQUEST_OBJECT_SIGNING_ALG, REQUEST_OBJECT_SIGNING_ALG,
+                                                  I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, REQUEST_OBJECT_ENCRYPTION_ALG,
+                                                  I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, REQUEST_OBJECT_ENCRYPTION_ENC,
+                                                  I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, TOKEN_ENDPOINT_SIGNING_ALG,
+                                                  I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, TOKEN_ENDPOINT_ENCRYPTION_ALG,
+                                                  I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, TOKEN_ENDPOINT_ENCRYPTION_ENC,
+                                                  I_OPT_CIBA_REQUEST_SIGNING_ALG, CIBA_REQUEST_SIGNING_ALG,
+                                                  I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, CIBA_REQUEST_ENCRYPTION_ALG,
+                                                  I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, CIBA_REQUEST_ENCRYPTION_ENC,
+                                                  I_OPT_AUTH_RESPONSE_SIGNING_ALG, AUTH_RESPONSE_SIGNING_ALG,
+                                                  I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, AUTH_RESPONSE_ENCRYPTION_ALG,
+                                                  I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, AUTH_RESPONSE_ENCRYPTION_ENC,
+                                                  I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                  I_OPT_CIBA_MODE, I_CIBA_MODE_PING,
+                                                  I_OPT_CIBA_USER_CODE, CIBA_USER_CODE,
+                                                  I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                  I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JWT,
+                                                  I_OPT_CIBA_LOGIN_HINT_KID, CIBA_LOGIN_HINT_KID,
+                                                  I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                  I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
+                                                  I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
+                                                  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
+                                                  I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
                                                   I_OPT_NONE), I_OK);
 
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_STATE), STATE);
@@ -987,6 +1240,39 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_PKCE_CODE_VERIFIER), PKCE_CODE_VERIFIER);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_PKCE_METHOD), PKCE_METHOD);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_RESOURCE_INDICATOR), RESOURCE_INDICATOR);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_SIGNING_ALG), ACCESS_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC), ACCESS_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG), ACCESS_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_SIGNING_ALG), ID_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ENC), ID_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ALG), ID_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_SIGNING_ALG), USERINFO_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ENC), USERINFO_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ALG), USERINFO_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_SIGNING_ALG), REQUEST_OBJECT_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC), REQUEST_OBJECT_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG), REQUEST_OBJECT_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG), TOKEN_ENDPOINT_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC), TOKEN_ENDPOINT_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG), TOKEN_ENDPOINT_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_SIGNING_ALG), CIBA_REQUEST_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC), CIBA_REQUEST_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG), CIBA_REQUEST_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_SIGNING_ALG), AUTH_RESPONSE_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC), AUTH_RESPONSE_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG), AUTH_RESPONSE_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ENDPOINT), CIBA_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_MODE), I_CIBA_MODE_PING);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_USER_CODE), CIBA_USER_CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT), CIBA_LOGIN_HINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_FORMAT), I_CIBA_LOGIN_HINT_FORMAT_JWT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_KID), CIBA_LOGIN_HINT_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE), CIBA_BINDING_MESSAGE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
 
   i_clean_session(&i_session);
 }
@@ -1151,6 +1437,39 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pkce_method")), I_PKCE_NONE);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims_empty), 1);
   ck_assert_ptr_eq(json_object_get(j_export, "resource_indicator"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "access_token_signing_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "access_token_encryption_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "access_token_encryption_enc"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "id_token_signing_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "id_token_encryption_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "id_token_encryption_enc"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "userinfo_signing_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "userinfo_encryption_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "userinfo_encryption_enc"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "request_object_signing_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "request_object_encryption_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "request_object_encryption_enc"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "token_endpoint_signing_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "token_endpoint_encryption_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "token_endpoint_encryption_enc"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_request_signing_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_request_encryption_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_request_encryption_enc"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "auth_response_signing_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "auth_response_encryption_alg"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "auth_response_encryption_enc"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_endpoint"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_mode")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_user_code"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_login_hint"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_login_hint_format")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_login_hint_kid"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_binding_message"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_client_notification_token"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_auth_req_id"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_client_notification_endpoint"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_auth_req_expires_in")), 0);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_auth_req_interval")), 0);
   json_decref(j_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1226,14 +1545,46 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
                                                     I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
+                                                    I_OPT_ACCESS_TOKEN_SIGNING_ALG, ACCESS_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, ACCESS_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, ACCESS_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_ID_TOKEN_SIGNING_ALG, ID_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ALG, ID_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ENC, ID_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_USERINFO_SIGNING_ALG, USERINFO_SIGNING_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ALG, USERINFO_ENCRYPTION_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ENC, USERINFO_ENCRYPTION_ENC,
+                                                    I_OPT_REQUEST_OBJECT_SIGNING_ALG, REQUEST_OBJECT_SIGNING_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, REQUEST_OBJECT_ENCRYPTION_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, REQUEST_OBJECT_ENCRYPTION_ENC,
+                                                    I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, TOKEN_ENDPOINT_SIGNING_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, TOKEN_ENDPOINT_ENCRYPTION_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, TOKEN_ENDPOINT_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_REQUEST_SIGNING_ALG, CIBA_REQUEST_SIGNING_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, CIBA_REQUEST_ENCRYPTION_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, CIBA_REQUEST_ENCRYPTION_ENC,
+                                                    I_OPT_AUTH_RESPONSE_SIGNING_ALG, AUTH_RESPONSE_SIGNING_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, AUTH_RESPONSE_ENCRYPTION_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, AUTH_RESPONSE_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                    I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
+                                                    I_OPT_CIBA_USER_CODE, CIBA_USER_CODE,
+                                                    I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JWT,
+                                                    I_OPT_CIBA_LOGIN_HINT_KID, CIBA_LOGIN_HINT_KID,
+                                                    I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
+                                                    I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_USERINFO, CLAIM1, I_CLAIM_ESSENTIAL_IGNORE, CLAIM1_CONTENT));
   ck_assert_int_eq(I_OK, i_add_claim_request(&i_session, I_CLAIM_TARGET_ID_TOKEN, CLAIM2, I_CLAIM_ESSENTIAL_IGNORE, CLAIM2_CONTENT));
 
-  j_export = i_export_session_json_t(&i_session);
-  ck_assert_ptr_ne(j_export, NULL);
+  ck_assert_ptr_ne(j_export = i_export_session_json_t(&i_session), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "response_type")), I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "scope")), SCOPE_LIST);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "nonce")), NONCE);
@@ -1311,6 +1662,39 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "pkce_method")), PKCE_METHOD);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims), 1);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "resource_indicator")), RESOURCE_INDICATOR);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "access_token_signing_alg")), ACCESS_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "access_token_encryption_alg")), ACCESS_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "access_token_encryption_enc")), ACCESS_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "id_token_signing_alg")), ID_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "id_token_encryption_alg")), ID_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "id_token_encryption_enc")), ID_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "userinfo_signing_alg")), USERINFO_SIGNING_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "userinfo_encryption_alg")), USERINFO_ENCRYPTION_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "userinfo_encryption_enc")), USERINFO_ENCRYPTION_ENC);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "request_object_signing_alg")), REQUEST_OBJECT_SIGNING_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "request_object_encryption_alg")), REQUEST_OBJECT_ENCRYPTION_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "request_object_encryption_enc")), REQUEST_OBJECT_ENCRYPTION_ENC);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "token_endpoint_signing_alg")), TOKEN_ENDPOINT_SIGNING_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "token_endpoint_encryption_alg")), TOKEN_ENDPOINT_ENCRYPTION_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "token_endpoint_encryption_enc")), TOKEN_ENDPOINT_ENCRYPTION_ENC);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_request_signing_alg")), CIBA_REQUEST_SIGNING_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_request_encryption_alg")), CIBA_REQUEST_ENCRYPTION_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_request_encryption_enc")), CIBA_REQUEST_ENCRYPTION_ENC);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "auth_response_signing_alg")), AUTH_RESPONSE_SIGNING_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "auth_response_encryption_alg")), AUTH_RESPONSE_ENCRYPTION_ALG);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "auth_response_encryption_enc")), AUTH_RESPONSE_ENCRYPTION_ENC);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_endpoint")), CIBA_ENDPOINT);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_mode")), I_CIBA_MODE_POLL);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_user_code")), CIBA_USER_CODE);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_login_hint")), CIBA_LOGIN_HINT);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_login_hint_format")), I_CIBA_LOGIN_HINT_FORMAT_JWT);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_login_hint_kid")), CIBA_LOGIN_HINT_KID);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_binding_message")), CIBA_BINDING_MESSAGE);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_client_notification_token")), CIBA_CLIENT_NOTIFICATION_TOKEN);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_auth_req_id")), CIBA_AUTH_REQ_ID);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_client_notification_endpoint")), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_auth_req_expires_in")), CIBA_AUTH_REQ_EXPIRES_IN);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_auth_req_interval")), CIBA_AUTH_REQ_INTERVAL);
   json_decref(j_export);
 
   json_decref(j_additional);
@@ -1406,6 +1790,39 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
                                                     I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
+                                                    I_OPT_ACCESS_TOKEN_SIGNING_ALG, ACCESS_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, ACCESS_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, ACCESS_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_ID_TOKEN_SIGNING_ALG, ID_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ALG, ID_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ENC, ID_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_USERINFO_SIGNING_ALG, USERINFO_SIGNING_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ALG, USERINFO_ENCRYPTION_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ENC, USERINFO_ENCRYPTION_ENC,
+                                                    I_OPT_REQUEST_OBJECT_SIGNING_ALG, REQUEST_OBJECT_SIGNING_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, REQUEST_OBJECT_ENCRYPTION_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, REQUEST_OBJECT_ENCRYPTION_ENC,
+                                                    I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, TOKEN_ENDPOINT_SIGNING_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, TOKEN_ENDPOINT_ENCRYPTION_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, TOKEN_ENDPOINT_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_REQUEST_SIGNING_ALG, CIBA_REQUEST_SIGNING_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, CIBA_REQUEST_ENCRYPTION_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, CIBA_REQUEST_ENCRYPTION_ENC,
+                                                    I_OPT_AUTH_RESPONSE_SIGNING_ALG, AUTH_RESPONSE_SIGNING_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, AUTH_RESPONSE_ENCRYPTION_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, AUTH_RESPONSE_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                    I_OPT_CIBA_MODE, I_CIBA_MODE_PING,
+                                                    I_OPT_CIBA_USER_CODE, CIBA_USER_CODE,
+                                                    I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JWT,
+                                                    I_OPT_CIBA_LOGIN_HINT_KID, CIBA_LOGIN_HINT_KID,
+                                                    I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
+                                                    I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1496,6 +1913,39 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
   ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims), 1);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_SIGNING_ALG), ACCESS_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC), ACCESS_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG), ACCESS_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_SIGNING_ALG), ID_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ENC), ID_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ALG), ID_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_SIGNING_ALG), USERINFO_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ENC), USERINFO_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ALG), USERINFO_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_SIGNING_ALG), REQUEST_OBJECT_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC), REQUEST_OBJECT_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG), REQUEST_OBJECT_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG), TOKEN_ENDPOINT_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC), TOKEN_ENDPOINT_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG), TOKEN_ENDPOINT_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_SIGNING_ALG), CIBA_REQUEST_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC), CIBA_REQUEST_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG), CIBA_REQUEST_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_SIGNING_ALG), AUTH_RESPONSE_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC), AUTH_RESPONSE_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG), AUTH_RESPONSE_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ENDPOINT), CIBA_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_MODE), I_CIBA_MODE_PING);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_USER_CODE), CIBA_USER_CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT), CIBA_LOGIN_HINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_FORMAT), I_CIBA_LOGIN_HINT_FORMAT_JWT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_KID), CIBA_LOGIN_HINT_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE), CIBA_BINDING_MESSAGE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
   json_decref(j_export);
 
   json_decref(j_config);
@@ -1517,7 +1967,7 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
   str_export = i_export_session_str(&i_session);
-  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":false,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":false,\"decrypt_code\":false,\"decrypt_refresh_token\":false,\"decrypt_access_token\":false,\"client_jwks\":{\"keys\":[]},\"remote_cert_flag\":4369,\"pkce_method\":0,\"claims\":{\"userinfo\":{},\"id_token\":{}}}");
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":false,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":false,\"decrypt_code\":false,\"decrypt_refresh_token\":false,\"decrypt_access_token\":false,\"client_jwks\":{\"keys\":[]},\"remote_cert_flag\":4369,\"pkce_method\":0,\"claims\":{\"userinfo\":{},\"id_token\":{}},\"ciba_mode\":0,\"ciba_login_hint_format\":0,\"ciba_auth_req_expires_in\":0,\"ciba_auth_req_interval\":0}");
   o_free(str_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1591,6 +2041,39 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
                                                     I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
+                                                    I_OPT_ACCESS_TOKEN_SIGNING_ALG, ACCESS_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, ACCESS_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, ACCESS_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_ID_TOKEN_SIGNING_ALG, ID_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ALG, ID_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ENC, ID_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_USERINFO_SIGNING_ALG, USERINFO_SIGNING_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ALG, USERINFO_ENCRYPTION_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ENC, USERINFO_ENCRYPTION_ENC,
+                                                    I_OPT_REQUEST_OBJECT_SIGNING_ALG, REQUEST_OBJECT_SIGNING_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, REQUEST_OBJECT_ENCRYPTION_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, REQUEST_OBJECT_ENCRYPTION_ENC,
+                                                    I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, TOKEN_ENDPOINT_SIGNING_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, TOKEN_ENDPOINT_ENCRYPTION_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, TOKEN_ENDPOINT_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_REQUEST_SIGNING_ALG, CIBA_REQUEST_SIGNING_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, CIBA_REQUEST_ENCRYPTION_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, CIBA_REQUEST_ENCRYPTION_ENC,
+                                                    I_OPT_AUTH_RESPONSE_SIGNING_ALG, AUTH_RESPONSE_SIGNING_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, AUTH_RESPONSE_ENCRYPTION_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, AUTH_RESPONSE_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                    I_OPT_CIBA_MODE, I_CIBA_MODE_PING,
+                                                    I_OPT_CIBA_USER_CODE, CIBA_USER_CODE,
+                                                    I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JWT,
+                                                    I_OPT_CIBA_LOGIN_HINT_KID, CIBA_LOGIN_HINT_KID,
+                                                    I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
+                                                    I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -1691,6 +2174,39 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
                                                     I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
+                                                    I_OPT_ACCESS_TOKEN_SIGNING_ALG, ACCESS_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, ACCESS_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, ACCESS_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_ID_TOKEN_SIGNING_ALG, ID_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ALG, ID_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ENC, ID_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_USERINFO_SIGNING_ALG, USERINFO_SIGNING_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ALG, USERINFO_ENCRYPTION_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ENC, USERINFO_ENCRYPTION_ENC,
+                                                    I_OPT_REQUEST_OBJECT_SIGNING_ALG, REQUEST_OBJECT_SIGNING_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, REQUEST_OBJECT_ENCRYPTION_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, REQUEST_OBJECT_ENCRYPTION_ENC,
+                                                    I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, TOKEN_ENDPOINT_SIGNING_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, TOKEN_ENDPOINT_ENCRYPTION_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, TOKEN_ENDPOINT_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_REQUEST_SIGNING_ALG, CIBA_REQUEST_SIGNING_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, CIBA_REQUEST_ENCRYPTION_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, CIBA_REQUEST_ENCRYPTION_ENC,
+                                                    I_OPT_AUTH_RESPONSE_SIGNING_ALG, AUTH_RESPONSE_SIGNING_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, AUTH_RESPONSE_ENCRYPTION_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, AUTH_RESPONSE_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                    I_OPT_CIBA_MODE, I_CIBA_MODE_PING,
+                                                    I_OPT_CIBA_USER_CODE, CIBA_USER_CODE,
+                                                    I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JWT,
+                                                    I_OPT_CIBA_LOGIN_HINT_KID, CIBA_LOGIN_HINT_KID,
+                                                    I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
+                                                    I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -1780,6 +2296,39 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
   ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
   ck_assert_int_eq(json_equal(i_session.j_claims, j_claims), 1);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_SIGNING_ALG), ACCESS_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC), ACCESS_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG), ACCESS_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_SIGNING_ALG), ID_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ENC), ID_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ALG), ID_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_SIGNING_ALG), USERINFO_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ENC), USERINFO_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ALG), USERINFO_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_SIGNING_ALG), REQUEST_OBJECT_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC), REQUEST_OBJECT_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG), REQUEST_OBJECT_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG), TOKEN_ENDPOINT_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC), TOKEN_ENDPOINT_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG), TOKEN_ENDPOINT_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_SIGNING_ALG), CIBA_REQUEST_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC), CIBA_REQUEST_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG), CIBA_REQUEST_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_SIGNING_ALG), AUTH_RESPONSE_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC), AUTH_RESPONSE_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG), AUTH_RESPONSE_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ENDPOINT), CIBA_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_MODE), I_CIBA_MODE_PING);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_USER_CODE), CIBA_USER_CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT), CIBA_LOGIN_HINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_FORMAT), I_CIBA_LOGIN_HINT_FORMAT_JWT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_KID), CIBA_LOGIN_HINT_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE), CIBA_BINDING_MESSAGE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
   o_free(str_import);
   o_free(str_rar);
 
@@ -1874,6 +2423,39 @@ START_TEST(test_iddawc_import_multiple)
                                                     I_OPT_PKCE_CODE_VERIFIER, PKCE_CODE_VERIFIER,
                                                     I_OPT_PKCE_METHOD, PKCE_METHOD,
                                                     I_OPT_RESOURCE_INDICATOR, RESOURCE_INDICATOR,
+                                                    I_OPT_ACCESS_TOKEN_SIGNING_ALG, ACCESS_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, ACCESS_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, ACCESS_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_ID_TOKEN_SIGNING_ALG, ID_TOKEN_SIGNING_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ALG, ID_TOKEN_ENCRYPTION_ALG,
+                                                    I_OPT_ID_TOKEN_ENCRYPTION_ENC, ID_TOKEN_ENCRYPTION_ENC,
+                                                    I_OPT_USERINFO_SIGNING_ALG, USERINFO_SIGNING_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ALG, USERINFO_ENCRYPTION_ALG,
+                                                    I_OPT_USERINFO_ENCRYPTION_ENC, USERINFO_ENCRYPTION_ENC,
+                                                    I_OPT_REQUEST_OBJECT_SIGNING_ALG, REQUEST_OBJECT_SIGNING_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, REQUEST_OBJECT_ENCRYPTION_ALG,
+                                                    I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, REQUEST_OBJECT_ENCRYPTION_ENC,
+                                                    I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, TOKEN_ENDPOINT_SIGNING_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, TOKEN_ENDPOINT_ENCRYPTION_ALG,
+                                                    I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, TOKEN_ENDPOINT_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_REQUEST_SIGNING_ALG, CIBA_REQUEST_SIGNING_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, CIBA_REQUEST_ENCRYPTION_ALG,
+                                                    I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, CIBA_REQUEST_ENCRYPTION_ENC,
+                                                    I_OPT_AUTH_RESPONSE_SIGNING_ALG, AUTH_RESPONSE_SIGNING_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, AUTH_RESPONSE_ENCRYPTION_ALG,
+                                                    I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, AUTH_RESPONSE_ENCRYPTION_ENC,
+                                                    I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                    I_OPT_CIBA_MODE, I_CIBA_MODE_PING,
+                                                    I_OPT_CIBA_USER_CODE, CIBA_USER_CODE,
+                                                    I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JWT,
+                                                    I_OPT_CIBA_LOGIN_HINT_KID, CIBA_LOGIN_HINT_KID,
+                                                    I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
+                                                    I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
+                                                    I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -2046,6 +2628,39 @@ START_TEST(test_iddawc_import_multiple)
   ck_assert_int_eq(r_jwks_size(i_session.server_jwks), 1);
   ck_assert_int_eq(r_jwks_size(i_session.client_jwks), 1);
   ck_assert_int_eq(json_equal(json_object_get(j_export, "claims"), j_claims), 1);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_SIGNING_ALG), ACCESS_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC), ACCESS_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG), ACCESS_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_SIGNING_ALG), ID_TOKEN_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ENC), ID_TOKEN_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_ENCRYPTION_ALG), ID_TOKEN_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_SIGNING_ALG), USERINFO_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ENC), USERINFO_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_USERINFO_ENCRYPTION_ALG), USERINFO_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_SIGNING_ALG), REQUEST_OBJECT_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC), REQUEST_OBJECT_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG), REQUEST_OBJECT_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG), TOKEN_ENDPOINT_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC), TOKEN_ENDPOINT_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG), TOKEN_ENDPOINT_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_SIGNING_ALG), CIBA_REQUEST_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC), CIBA_REQUEST_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG), CIBA_REQUEST_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_SIGNING_ALG), AUTH_RESPONSE_SIGNING_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC), AUTH_RESPONSE_ENCRYPTION_ENC);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG), AUTH_RESPONSE_ENCRYPTION_ALG);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ENDPOINT), CIBA_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_MODE), I_CIBA_MODE_PING);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_USER_CODE), CIBA_USER_CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT), CIBA_LOGIN_HINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_FORMAT), I_CIBA_LOGIN_HINT_FORMAT_JWT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_LOGIN_HINT_KID), CIBA_LOGIN_HINT_KID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE), CIBA_BINDING_MESSAGE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
   
   json_decref(j_export);
 
