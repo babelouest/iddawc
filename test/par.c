@@ -243,7 +243,7 @@ static Suite *iddawc_suite(void)
   Suite *s;
   TCase *tc_core;
 
-  s = suite_create("Iddawc pushed authrozation requests tests");
+  s = suite_create("Iddawc pushed authorization requests tests");
   tc_core = tcase_create("test_iddawc_par");
   tcase_add_test(tc_core, test_iddawc_par_invalid_parameters);
   tcase_add_test(tc_core, test_iddawc_par_valid);
