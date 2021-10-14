@@ -811,6 +811,12 @@ static int _i_parse_openid_config(struct _i_session * i_session, int get_jwks) {
           ret = I_ERROR;
         }
       }
+      if (json_string_length(json_object_get(i_session->openid_config, "backchannel_authentication_endpoint"))) {
+        if (i_set_str_parameter(i_session, I_OPT_CIBA_ENDPOINT, json_string_value(json_object_get(i_session->openid_config, "backchannel_authentication_endpoint"))) != I_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_openid_config - Error setting backchannel_authentication_endpoint");
+          ret = I_ERROR;
+        }
+      }
       if (json_string_length(json_object_get(i_session->openid_config, "end_session_endpoint"))) {
         if (i_set_str_parameter(i_session, I_OPT_END_SESSION_ENDPOINT, json_string_value(json_object_get(i_session->openid_config, "end_session_endpoint"))) != I_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_openid_config - Error setting end_session_endpoint");
