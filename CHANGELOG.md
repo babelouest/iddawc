@@ -2,7 +2,7 @@
 
 ## 1.1.0
 
-- Add `i_run_ciba_request`
+- Add `i_run_ciba_request` and implement [OpenID Connect Client-Initiated Backchannel Authentication Flow](https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html)
 - Improve client registration
 
 ## 1.0.1
