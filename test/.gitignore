@@ -12,6 +12,7 @@ dpop
 api_request
 device
 par
+ciba
 *.log
 *.crt
 *.key
