@@ -338,6 +338,7 @@ if (BUILD_IDDAWC_TESTING)
             api_request
             device
             par
+            ciba
             )
 
         configure_file(
