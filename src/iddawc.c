@@ -70,6 +70,21 @@ static int string_use_char_list_only(const char * str, const char * char_list) {
 }
 
 /**
+ * return true if the JSON array has a element matching value
+ */
+static int _i_json_array_has_string(json_t * j_array, const char * value) {
+  json_t * j_element = NULL;
+  size_t index = 0;
+
+  json_array_foreach(j_array, index, j_element) {
+    if (json_is_string(j_element) && 0 == o_strcmp(value, json_string_value(j_element))) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+/**
  * Generates a random string used as nonce and store it in str
  */
 static char * rand_string_nonce(char * str, size_t str_size) {
@@ -153,6 +168,12 @@ static const char * _i_get_endpoint(struct _i_session * i_session, const char * 
       return endpoint;
     } else {
       return i_session->pushed_authorization_request_endpoint;
+    }
+  } else if (0 == o_strcmp("ciba", endpoint_id)) {
+    if (use_tls && (endpoint = json_string_value(json_object_get(json_object_get(i_session->openid_config, "mtls_endpoint_aliases"), "backchannel_authentication_endpoint"))) != NULL) {
+      return endpoint;
+    } else {
+      return i_session->ciba_endpoint;
     }
   } else {
     return NULL;
@@ -1171,6 +1192,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
       r_jwt_set_claim_str_value(jwt, "aud", aud);
       r_jwt_set_claim_str_value(jwt, "jti", i_session->token_jti);
       r_jwt_set_claim_int_value(jwt, "exp", now+i_session->token_exp);
+      r_jwt_set_claim_int_value(jwt, "nbf", now);
       r_jwt_set_claim_int_value(jwt, "iat", now);
       if (i_session->token_method == I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET) {
         if (i_session->client_secret != NULL) {
@@ -1471,6 +1493,39 @@ int i_init_session(struct _i_session * i_session) {
     i_session->remote_cert_flag = I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME;
     i_session->j_claims = json_pack("{s{}s{}}", "userinfo", "id_token");
     i_session->resource_indicator = NULL;
+    i_session->access_token_signing_alg = R_JWA_ALG_UNKNOWN;
+    i_session->access_token_encryption_alg = R_JWA_ALG_UNKNOWN;
+    i_session->access_token_encryption_enc = R_JWA_ENC_UNKNOWN;
+    i_session->id_token_signing_alg = R_JWA_ALG_UNKNOWN;
+    i_session->id_token_encryption_alg = R_JWA_ALG_UNKNOWN;
+    i_session->id_token_encryption_enc = R_JWA_ENC_UNKNOWN;
+    i_session->userinfo_signing_alg = R_JWA_ALG_UNKNOWN;
+    i_session->userinfo_encryption_alg = R_JWA_ALG_UNKNOWN;
+    i_session->userinfo_encryption_enc = R_JWA_ENC_UNKNOWN;
+    i_session->request_object_signing_alg = R_JWA_ALG_UNKNOWN;
+    i_session->request_object_encryption_alg = R_JWA_ALG_UNKNOWN;
+    i_session->request_object_encryption_enc = R_JWA_ENC_UNKNOWN;
+    i_session->token_endpoint_signing_alg = R_JWA_ALG_UNKNOWN;
+    i_session->token_endpoint_encryption_alg = R_JWA_ALG_UNKNOWN;
+    i_session->token_endpoint_encryption_enc = R_JWA_ENC_UNKNOWN;
+    i_session->ciba_request_signing_alg = R_JWA_ALG_UNKNOWN;
+    i_session->ciba_request_encryption_alg = R_JWA_ALG_UNKNOWN;
+    i_session->ciba_request_encryption_enc = R_JWA_ENC_UNKNOWN;
+    i_session->auth_response_signing_alg = R_JWA_ALG_UNKNOWN;
+    i_session->auth_response_encryption_alg = R_JWA_ALG_UNKNOWN;
+    i_session->auth_response_encryption_enc = R_JWA_ENC_UNKNOWN;
+    i_session->ciba_endpoint = NULL;
+    i_session->ciba_mode = I_CIBA_MODE_NONE;
+    i_session->ciba_user_code = NULL;
+    i_session->ciba_login_hint = NULL;
+    i_session->ciba_login_hint_format = I_CIBA_LOGIN_HINT_FORMAT_JSON;
+    i_session->ciba_login_hint_kid = NULL;
+    i_session->ciba_binding_message = NULL;
+    i_session->ciba_client_notification_token = NULL;
+    i_session->ciba_auth_req_id = NULL;
+    i_session->ciba_client_notification_endpoint = NULL;
+    i_session->ciba_auth_req_expires_in = 0;
+    i_session->ciba_auth_req_interval = 0;
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
         if ((res = r_jwks_init(&i_session->server_jwks)) == RHN_OK) {
@@ -1552,6 +1607,14 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->cert_file);
     o_free(i_session->pkce_code_verifier);
     o_free(i_session->resource_indicator);
+    o_free(i_session->ciba_endpoint);
+    o_free(i_session->ciba_user_code);
+    o_free(i_session->ciba_login_hint);
+    o_free(i_session->ciba_login_hint_kid);
+    o_free(i_session->ciba_binding_message);
+    o_free(i_session->ciba_client_notification_token );
+    o_free(i_session->ciba_auth_req_id);
+    o_free(i_session->ciba_client_notification_endpoint);
     u_map_clean(&i_session->additional_parameters);
     u_map_clean(&i_session->additional_response);
     r_jwks_free(i_session->server_jwks);
@@ -1587,6 +1650,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
           case I_RESPONSE_TYPE_CLIENT_CREDENTIALS:
           case I_RESPONSE_TYPE_REFRESH_TOKEN:
           case I_RESPONSE_TYPE_DEVICE_CODE:
+          case I_RESPONSE_TYPE_CIBA:
           case I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_ID_TOKEN:
           case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN:
           case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_CODE:
@@ -1630,7 +1694,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
         i_session->openid_config_strict = i_value;
         break;
       case I_OPT_STATE_GENERATE:
-        if (i_value) {
+        if (i_value > 0) {
           char value[i_value+1];
           value[0] = '\0';
           rand_string_nonce(value, i_value);
@@ -1669,7 +1733,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
         i_session->x5u_flags = i_value;
         break;
       case I_OPT_TOKEN_EXP:
-        if (i_value > 0) {
+        if (i_value) {
           i_session->token_exp = i_value;
         } else {
           ret = I_ERROR_PARAM;
@@ -1716,6 +1780,30 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_v
         break;
       case I_OPT_PKCE_METHOD:
         i_session->pkce_method = i_value;
+        break;
+      case I_OPT_CIBA_MODE:
+        i_session->ciba_mode = i_value;
+        break;
+      case I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE:
+        if (i_value >= 22 && i_value <= 1024) {
+          char value[i_value+1];
+          value[0] = '\0';
+          rand_string_nonce(value, i_value);
+          value[i_value] = '\0';
+          ret = i_set_str_parameter(i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, value);
+        } else {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error invalid client_notification_token length");
+          ret = I_ERROR_PARAM;
+        }
+        break;
+      case I_OPT_CIBA_LOGIN_HINT_FORMAT:
+        i_session->ciba_login_hint_format = i_value;
+        break;
+      case I_OPT_CIBA_AUTH_REQ_EXPIRES_IN:
+        i_session->ciba_auth_req_expires_in = i_value;
+        break;
+      case I_OPT_CIBA_AUTH_REQ_INTERVAL:
+        i_session->ciba_auth_req_interval = i_value;
         break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
@@ -2168,6 +2256,217 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
           i_session->resource_indicator = NULL;
         }
         break;
+      case I_OPT_ACCESS_TOKEN_SIGNING_ALG:
+        if (o_strlen(s_value)) {
+          i_session->access_token_signing_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->access_token_signing_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG:
+        if (o_strlen(s_value)) {
+          i_session->access_token_encryption_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->access_token_encryption_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC:
+        if (o_strlen(s_value)) {
+          i_session->access_token_encryption_enc = r_str_to_jwa_enc(s_value);
+        } else {
+          i_session->access_token_encryption_enc = R_JWA_ENC_UNKNOWN;
+        }
+        break;
+      case I_OPT_ID_TOKEN_SIGNING_ALG:
+        if (o_strlen(s_value)) {
+          i_session->id_token_signing_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->id_token_signing_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_ID_TOKEN_ENCRYPTION_ALG:
+        if (o_strlen(s_value)) {
+          i_session->id_token_encryption_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->id_token_encryption_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_ID_TOKEN_ENCRYPTION_ENC:
+        if (o_strlen(s_value)) {
+          i_session->id_token_encryption_enc = r_str_to_jwa_enc(s_value);
+        } else {
+          i_session->id_token_encryption_enc = R_JWA_ENC_UNKNOWN;
+        }
+        break;
+      case I_OPT_USERINFO_SIGNING_ALG:
+        if (o_strlen(s_value)) {
+          i_session->userinfo_signing_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->userinfo_signing_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_USERINFO_ENCRYPTION_ALG:
+        if (o_strlen(s_value)) {
+          i_session->userinfo_encryption_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->userinfo_encryption_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_USERINFO_ENCRYPTION_ENC:
+        if (o_strlen(s_value)) {
+          i_session->userinfo_encryption_enc = r_str_to_jwa_enc(s_value);
+        } else {
+          i_session->userinfo_encryption_enc = R_JWA_ENC_UNKNOWN;
+        }
+        break;
+      case I_OPT_REQUEST_OBJECT_SIGNING_ALG:
+        if (o_strlen(s_value)) {
+          i_session->request_object_signing_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->request_object_signing_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG:
+        if (o_strlen(s_value)) {
+          i_session->request_object_encryption_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->request_object_encryption_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC:
+        if (o_strlen(s_value)) {
+          i_session->request_object_encryption_enc = r_str_to_jwa_enc(s_value);
+        } else {
+          i_session->request_object_encryption_enc = R_JWA_ENC_UNKNOWN;
+        }
+        break;
+      case I_OPT_TOKEN_ENDPOINT_SIGNING_ALG:
+        if (o_strlen(s_value)) {
+          i_session->token_endpoint_signing_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->token_endpoint_signing_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG:
+        if (o_strlen(s_value)) {
+          i_session->token_endpoint_encryption_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->token_endpoint_encryption_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC:
+        if (o_strlen(s_value)) {
+          i_session->token_endpoint_encryption_enc = r_str_to_jwa_enc(s_value);
+        } else {
+          i_session->token_endpoint_encryption_enc = R_JWA_ENC_UNKNOWN;
+        }
+        break;
+      case I_OPT_CIBA_REQUEST_SIGNING_ALG:
+        if (o_strlen(s_value)) {
+          i_session->ciba_request_signing_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->ciba_request_signing_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_CIBA_REQUEST_ENCRYPTION_ALG:
+        if (o_strlen(s_value)) {
+          i_session->ciba_request_encryption_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->ciba_request_encryption_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_CIBA_REQUEST_ENCRYPTION_ENC:
+        if (o_strlen(s_value)) {
+          i_session->ciba_request_encryption_enc = r_str_to_jwa_enc(s_value);
+        } else {
+          i_session->ciba_request_encryption_enc = R_JWA_ENC_UNKNOWN;
+        }
+        break;
+      case I_OPT_AUTH_RESPONSE_SIGNING_ALG:
+        if (o_strlen(s_value)) {
+          i_session->auth_response_signing_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->auth_response_signing_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG:
+        if (o_strlen(s_value)) {
+          i_session->auth_response_encryption_alg = r_str_to_jwa_alg(s_value);
+        } else {
+          i_session->auth_response_encryption_alg = R_JWA_ALG_UNKNOWN;
+        }
+        break;
+      case I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC:
+        if (o_strlen(s_value)) {
+          i_session->auth_response_encryption_enc = r_str_to_jwa_enc(s_value);
+        } else {
+          i_session->auth_response_encryption_enc = R_JWA_ENC_UNKNOWN;
+        }
+        break;
+      case I_OPT_CIBA_ENDPOINT:
+        o_free(i_session->ciba_endpoint);
+        if (o_strlen(s_value)) {
+          i_session->ciba_endpoint = o_strdup(s_value);
+        } else {
+          i_session->ciba_endpoint = NULL;
+        }
+        break;
+      case I_OPT_CIBA_USER_CODE:
+        o_free(i_session->ciba_user_code);
+        if (o_strlen(s_value)) {
+          i_session->ciba_user_code = o_strdup(s_value);
+        } else {
+          i_session->ciba_user_code = NULL;
+        }
+        break;
+      case I_OPT_CIBA_LOGIN_HINT:
+        o_free(i_session->ciba_login_hint);
+        if (o_strlen(s_value)) {
+          i_session->ciba_login_hint = o_strdup(s_value);
+        } else {
+          i_session->ciba_login_hint = NULL;
+        }
+        break;
+      case I_OPT_CIBA_LOGIN_HINT_KID:
+        o_free(i_session->ciba_login_hint_kid);
+        if (o_strlen(s_value)) {
+          i_session->ciba_login_hint_kid = o_strdup(s_value);
+        } else {
+          i_session->ciba_login_hint_kid = NULL;
+        }
+        break;
+      case I_OPT_CIBA_BINDING_MESSAGE:
+        o_free(i_session->ciba_binding_message);
+        if (o_strlen(s_value)) {
+          i_session->ciba_binding_message = o_strdup(s_value);
+        } else {
+          i_session->ciba_binding_message = NULL;
+        }
+        break;
+      case I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN:
+        o_free(i_session->ciba_client_notification_token);
+        if (o_strlen(s_value)) {
+          i_session->ciba_client_notification_token = o_strdup(s_value);
+        } else {
+          i_session->ciba_client_notification_token = NULL;
+        }
+        break;
+      case I_OPT_CIBA_AUTH_REQ_ID:
+        o_free(i_session->ciba_auth_req_id);
+        if (o_strlen(s_value)) {
+          i_session->ciba_auth_req_id = o_strdup(s_value);
+        } else {
+          i_session->ciba_auth_req_id = NULL;
+        }
+        break;
+      case I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT:
+        o_free(i_session->ciba_client_notification_endpoint);
+        if (o_strlen(s_value)) {
+          i_session->ciba_client_notification_endpoint = o_strdup(s_value);
+        } else {
+          i_session->ciba_client_notification_endpoint = NULL;
+        }
+        break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error unknown option %d", option);
         ret = I_ERROR_PARAM;
@@ -2312,6 +2611,11 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_REMOTE_CERT_FLAG:
         case I_OPT_PKCE_CODE_VERIFIER_GENERATE:
         case I_OPT_PKCE_METHOD:
+        case I_OPT_CIBA_MODE:
+        case I_OPT_CIBA_LOGIN_HINT_FORMAT:
+        case I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE:
+        case I_OPT_CIBA_AUTH_REQ_EXPIRES_IN:
+        case I_OPT_CIBA_AUTH_REQ_INTERVAL:
           i_value = va_arg(vl, uint);
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
@@ -2368,6 +2672,35 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_TLS_CERT_FILE:
         case I_OPT_PKCE_CODE_VERIFIER:
         case I_OPT_RESOURCE_INDICATOR:
+        case I_OPT_ACCESS_TOKEN_SIGNING_ALG:
+        case I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG:
+        case I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC:
+        case I_OPT_ID_TOKEN_SIGNING_ALG:
+        case I_OPT_ID_TOKEN_ENCRYPTION_ALG:
+        case I_OPT_ID_TOKEN_ENCRYPTION_ENC:
+        case I_OPT_USERINFO_SIGNING_ALG:
+        case I_OPT_USERINFO_ENCRYPTION_ALG:
+        case I_OPT_USERINFO_ENCRYPTION_ENC:
+        case I_OPT_REQUEST_OBJECT_SIGNING_ALG:
+        case I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG:
+        case I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC:
+        case I_OPT_TOKEN_ENDPOINT_SIGNING_ALG:
+        case I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG:
+        case I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC:
+        case I_OPT_CIBA_REQUEST_SIGNING_ALG:
+        case I_OPT_CIBA_REQUEST_ENCRYPTION_ALG:
+        case I_OPT_CIBA_REQUEST_ENCRYPTION_ENC:
+        case I_OPT_AUTH_RESPONSE_SIGNING_ALG:
+        case I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG:
+        case I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC:
+        case I_OPT_CIBA_ENDPOINT:
+        case I_OPT_CIBA_USER_CODE:
+        case I_OPT_CIBA_LOGIN_HINT:
+        case I_OPT_CIBA_LOGIN_HINT_KID:
+        case I_OPT_CIBA_BINDING_MESSAGE:
+        case I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN:
+        case I_OPT_CIBA_AUTH_REQ_ID:
+        case I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT:
           str_value = va_arg(vl, const char *);
           ret = i_set_str_parameter(i_session, option, str_value);
           break;
@@ -2638,6 +2971,18 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option) {
       case I_OPT_PKCE_METHOD:
         return i_session->pkce_method;
         break;
+      case I_OPT_CIBA_MODE:
+        return i_session->ciba_mode;
+        break;
+      case I_OPT_CIBA_LOGIN_HINT_FORMAT:
+        return i_session->ciba_login_hint_format;
+        break;
+      case I_OPT_CIBA_AUTH_REQ_EXPIRES_IN:
+        return i_session->ciba_auth_req_expires_in;
+        break;
+      case I_OPT_CIBA_AUTH_REQ_INTERVAL:
+        return i_session->ciba_auth_req_interval;
+        break;
       default:
         return 0;
         break;
@@ -2877,6 +3222,93 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_RESOURCE_INDICATOR:
         result = (const char *)i_session->resource_indicator;
+        break;
+      case I_OPT_ACCESS_TOKEN_SIGNING_ALG:
+        result = r_jwa_alg_to_str(i_session->access_token_signing_alg);
+        break;
+      case I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG:
+        result = r_jwa_alg_to_str(i_session->access_token_encryption_alg);
+        break;
+      case I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC:
+        result = r_jwa_enc_to_str(i_session->access_token_encryption_enc);
+        break;
+      case I_OPT_ID_TOKEN_SIGNING_ALG:
+        result = r_jwa_alg_to_str(i_session->id_token_signing_alg);
+        break;
+      case I_OPT_ID_TOKEN_ENCRYPTION_ALG:
+        result = r_jwa_alg_to_str(i_session->id_token_encryption_alg);
+        break;
+      case I_OPT_ID_TOKEN_ENCRYPTION_ENC:
+        result = r_jwa_enc_to_str(i_session->id_token_encryption_enc);
+        break;
+      case I_OPT_USERINFO_SIGNING_ALG:
+        result = r_jwa_alg_to_str(i_session->userinfo_signing_alg);
+        break;
+      case I_OPT_USERINFO_ENCRYPTION_ALG:
+        result = r_jwa_alg_to_str(i_session->userinfo_encryption_alg);
+        break;
+      case I_OPT_USERINFO_ENCRYPTION_ENC:
+        result = r_jwa_enc_to_str(i_session->userinfo_encryption_enc);
+        break;
+      case I_OPT_REQUEST_OBJECT_SIGNING_ALG:
+        result = r_jwa_alg_to_str(i_session->request_object_signing_alg);
+        break;
+      case I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG:
+        result = r_jwa_alg_to_str(i_session->request_object_encryption_alg);
+        break;
+      case I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC:
+        result = r_jwa_enc_to_str(i_session->request_object_encryption_enc);
+        break;
+      case I_OPT_TOKEN_ENDPOINT_SIGNING_ALG:
+        result = r_jwa_alg_to_str(i_session->token_endpoint_signing_alg);
+        break;
+      case I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG:
+        result = r_jwa_alg_to_str(i_session->token_endpoint_encryption_alg);
+        break;
+      case I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC:
+        result = r_jwa_enc_to_str(i_session->token_endpoint_encryption_enc);
+        break;
+      case I_OPT_CIBA_REQUEST_SIGNING_ALG:
+        result = r_jwa_alg_to_str(i_session->ciba_request_signing_alg);
+        break;
+      case I_OPT_CIBA_REQUEST_ENCRYPTION_ALG:
+        result = r_jwa_alg_to_str(i_session->ciba_request_encryption_alg);
+        break;
+      case I_OPT_CIBA_REQUEST_ENCRYPTION_ENC:
+        result = r_jwa_enc_to_str(i_session->ciba_request_encryption_enc);
+        break;
+      case I_OPT_AUTH_RESPONSE_SIGNING_ALG:
+        result = r_jwa_alg_to_str(i_session->auth_response_signing_alg);
+        break;
+      case I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG:
+        result = r_jwa_alg_to_str(i_session->auth_response_encryption_alg);
+        break;
+      case I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC:
+        result = r_jwa_enc_to_str(i_session->auth_response_encryption_enc);
+        break;
+      case I_OPT_CIBA_ENDPOINT:
+        result = (const char *)i_session->ciba_endpoint;
+        break;
+      case I_OPT_CIBA_USER_CODE:
+        result = (const char *)i_session->ciba_user_code;
+        break;
+      case I_OPT_CIBA_LOGIN_HINT:
+        result = (const char *)i_session->ciba_login_hint;
+        break;
+      case I_OPT_CIBA_LOGIN_HINT_KID:
+        result = (const char *)i_session->ciba_login_hint_kid;
+        break;
+      case I_OPT_CIBA_BINDING_MESSAGE:
+        result = (const char *)i_session->ciba_binding_message;
+        break;
+      case I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN:
+        result = (const char *)i_session->ciba_client_notification_token;
+        break;
+      case I_OPT_CIBA_AUTH_REQ_ID:
+        result = (const char *)i_session->ciba_auth_req_id;
+        break;
+      case I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT:
+        result = (const char *)i_session->ciba_client_notification_endpoint;
         break;
       default:
         break;
@@ -3583,6 +4015,62 @@ int i_run_token_request(struct _i_session * i_session) {
             ret = I_ERROR_PARAM;
           }
           break;
+        case I_RESPONSE_TYPE_CIBA:
+          if (i_session->ciba_auth_req_id != NULL) {
+            _i_init_request(i_session, &request);
+            ulfius_init_response(&response);
+            ulfius_set_request_properties(&request,
+                                          U_OPT_HTTP_VERB, "POST",
+                                          U_OPT_HTTP_URL, _i_get_endpoint(i_session, "token"),
+                                          U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                          U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                          U_OPT_POST_BODY_PARAMETER, "grant_type", "urn:openid:params:grant-type:ciba",
+                                          U_OPT_POST_BODY_PARAMETER, "auth_req_id", i_session->ciba_auth_req_id,
+                                          U_OPT_NONE);
+            if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request)) == I_OK) {
+              if (ulfius_send_http_request(&request, &response) == U_OK) {
+                if (response.status == 200 || response.status == 400) {
+                  j_response = ulfius_get_json_body_response(&response, NULL);
+                  if (j_response != NULL) {
+                    if (_i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                      ret = response.status == 200?I_OK:I_ERROR_PARAM;
+                    } else {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Error _i_parse_token_response");
+                      ret = I_ERROR_PARAM;
+                    }
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Error parsing JSON response");
+                    ret = I_ERROR;
+                  }
+                  json_decref(j_response);
+                } else if (response.status == 403 || response.status == 401) {
+                  j_response = ulfius_get_json_body_response(&response, NULL);
+                  if (_i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Unauthorized");
+                    ret = I_ERROR_UNAUTHORIZED;
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Error _i_parse_token_response");
+                    ret = I_ERROR_PARAM;
+                  }
+                  json_decref(j_response);
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Invalid response status");
+                  ret = I_ERROR;
+                }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Error sending token request");
+                ret = I_ERROR;
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Error _i_add_token_authentication");
+              ret = res;
+            }
+            ulfius_clean_request(&request);
+            ulfius_clean_response(&response);
+          } else {
+            ret = I_ERROR_PARAM;
+          }
+          break;
         default:
           ret = I_ERROR_PARAM;
           break;
@@ -4019,71 +4507,163 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
   struct _u_request request;
   struct _u_response response;
   char * bearer = NULL;
-  json_t * j_response;
+  json_t * j_response, * j_copy_parameters;
 
-  if (i_session != NULL && o_strlen(i_session->registration_endpoint) && json_string_length(json_array_get(json_object_get(j_parameters, "redirect_uris"), 0))) {
-    if (_i_init_request(i_session, &request) != U_OK || ulfius_init_response(&response) != U_OK) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error initializing request or response");
-      ret = I_ERROR;
-    } else {
-      ret = I_OK;
-      if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
-                                                  U_OPT_HTTP_URL, i_session->registration_endpoint,
-                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
-                                                  U_OPT_JSON_BODY, j_parameters,
-                                                  U_OPT_NONE) != U_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting parameters");
+  if (j_parameters != NULL) {
+    j_copy_parameters = json_deep_copy(j_parameters);
+  } else {
+    j_copy_parameters = json_object();
+  }
+  if (i_session != NULL && o_strlen(i_session->registration_endpoint)) {
+    if (!json_is_array(json_object_get(j_copy_parameters, "redirect_uris"))) {
+      json_object_set_new(j_copy_parameters, "redirect_uris", json_array());
+    }
+    if (i_session->redirect_uri != NULL && !_i_json_array_has_string(json_object_get(j_copy_parameters, "redirect_uris"), i_session->redirect_uri)) {
+      json_array_append_new(json_object_get(j_copy_parameters, "redirect_uris"), json_string(i_session->redirect_uri));
+    }
+    if (i_session->access_token_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "access_token_signing_alg", json_string(r_jwa_alg_to_str(i_session->access_token_signing_alg)));
+    }
+    if (i_session->access_token_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "access_token_encryption_alg", json_string(r_jwa_alg_to_str(i_session->access_token_encryption_alg)));
+    }
+    if (i_session->access_token_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "access_token_encryption_enc", json_string(r_jwa_enc_to_str(i_session->access_token_encryption_enc)));
+    }
+    if (i_session->id_token_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "id_token_signing_alg", json_string(r_jwa_alg_to_str(i_session->id_token_signing_alg)));
+    }
+    if (i_session->id_token_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "id_token_encryption_alg", json_string(r_jwa_alg_to_str(i_session->id_token_encryption_alg)));
+    }
+    if (i_session->id_token_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "id_token_encryption_enc", json_string(r_jwa_enc_to_str(i_session->id_token_encryption_enc)));
+    }
+    if (i_session->userinfo_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "userinfo_signing_alg", json_string(r_jwa_alg_to_str(i_session->userinfo_signing_alg)));
+    }
+    if (i_session->userinfo_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "userinfo_encryption_alg", json_string(r_jwa_alg_to_str(i_session->userinfo_encryption_alg)));
+    }
+    if (i_session->userinfo_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "userinfo_encryption_enc", json_string(r_jwa_enc_to_str(i_session->userinfo_encryption_enc)));
+    }
+    if (i_session->request_object_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "request_object_signing_alg", json_string(r_jwa_alg_to_str(i_session->request_object_signing_alg)));
+    }
+    if (i_session->request_object_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "request_object_encryption_alg", json_string(r_jwa_alg_to_str(i_session->request_object_encryption_alg)));
+    }
+    if (i_session->request_object_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "request_object_encryption_enc", json_string(r_jwa_enc_to_str(i_session->request_object_encryption_enc)));
+    }
+    if (i_session->token_endpoint_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "token_endpoint_signing_alg", json_string(r_jwa_alg_to_str(i_session->token_endpoint_signing_alg)));
+    }
+    if (i_session->token_endpoint_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "token_endpoint_encryption_alg", json_string(r_jwa_alg_to_str(i_session->token_endpoint_encryption_alg)));
+    }
+    if (i_session->token_endpoint_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "token_endpoint_encryption_enc", json_string(r_jwa_enc_to_str(i_session->token_endpoint_encryption_enc)));
+    }
+    if (i_session->ciba_request_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "ciba_request_signing_alg", json_string(r_jwa_alg_to_str(i_session->ciba_request_signing_alg)));
+    }
+    if (i_session->ciba_request_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "ciba_request_encryption_alg", json_string(r_jwa_alg_to_str(i_session->ciba_request_encryption_alg)));
+    }
+    if (i_session->ciba_request_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "ciba_request_encryption_enc", json_string(r_jwa_enc_to_str(i_session->ciba_request_encryption_enc)));
+    }
+    if (i_session->auth_response_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "auth_response_signing_alg", json_string(r_jwa_alg_to_str(i_session->auth_response_signing_alg)));
+    }
+    if (i_session->auth_response_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "auth_response_encryption_alg", json_string(r_jwa_alg_to_str(i_session->auth_response_encryption_alg)));
+    }
+    if (i_session->auth_response_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "auth_response_encryption_enc", json_string(r_jwa_enc_to_str(i_session->auth_response_encryption_enc)));
+    }
+    if (i_session->ciba_mode == I_CIBA_MODE_POLL) {
+      json_object_set_new(j_copy_parameters, "backchannel_token_delivery_mode", json_string("poll"));
+    }
+    if (i_session->ciba_mode == I_CIBA_MODE_PING) {
+      json_object_set_new(j_copy_parameters, "backchannel_token_delivery_mode", json_string("ping"));
+    }
+    if (i_session->ciba_mode == I_CIBA_MODE_PUSH) {
+      json_object_set_new(j_copy_parameters, "backchannel_token_delivery_mode", json_string("push"));
+    }
+    if (i_session->ciba_client_notification_endpoint != NULL) {
+      json_object_set_new(j_copy_parameters, "backchannel_client_notification_endpoint", json_string(i_session->ciba_client_notification_endpoint));
+    }
+    if (json_string_length(json_array_get(json_object_get(j_copy_parameters, "redirect_uris"), 0))) {
+      if (_i_init_request(i_session, &request) != U_OK || ulfius_init_response(&response) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error initializing request or response");
         ret = I_ERROR;
-      }
-      if (o_strlen(i_session->access_token)) {
-        bearer = msprintf("Bearer %s", i_session->access_token);
-        if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting bearer token");
+      } else {
+        ret = I_OK;
+        if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
+                                                    U_OPT_HTTP_URL, i_session->registration_endpoint,
+                                                    U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                    U_OPT_JSON_BODY, j_copy_parameters,
+                                                    U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting parameters");
           ret = I_ERROR;
         }
-        o_free(bearer);
-      }
-      if (ret == I_OK) {
-        if (ulfius_send_http_request(&request, &response) == U_OK) {
-          j_response = ulfius_get_json_body_response(&response, NULL);
-          if (response.status == 200) {
-            if (update_session) {
-              i_set_str_parameter(i_session, I_OPT_CLIENT_ID, json_string_value(json_object_get(j_response, "client_id")));
-              i_set_str_parameter(i_session, I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_response, "client_secret")));
-              i_set_str_parameter(i_session, I_OPT_REDIRECT_URI, json_string_value(json_array_get(json_object_get(j_response, "redirect_uris"), 0)));
-            }
-            if (j_result != NULL) {
-              *j_result = json_incref(j_response);
-            }
-          } else if (response.status == 404) {
-            ret = I_ERROR_PARAM;
-          } else if (response.status == 400) {
-            if (_i_parse_error_response(i_session, j_response) != I_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (1)");
-            }
-            ret = I_ERROR_PARAM;
-          } else if (response.status == 401 || response.status == 403) {
-            if (_i_parse_error_response(i_session, j_response) != I_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (1)");
-            }
-            ret = I_ERROR_UNAUTHORIZED;
-          } else if (response.status != 200) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error registering client");
+        if (o_strlen(i_session->access_token)) {
+          bearer = msprintf("Bearer %s", i_session->access_token);
+          if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting bearer token");
             ret = I_ERROR;
           }
-          json_decref(j_response);
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error sending http request");
-          ret = I_ERROR;
+          o_free(bearer);
         }
+        if (ret == I_OK) {
+          if (ulfius_send_http_request(&request, &response) == U_OK) {
+            j_response = ulfius_get_json_body_response(&response, NULL);
+            if (response.status == 200) {
+              if (update_session) {
+                i_set_str_parameter(i_session, I_OPT_CLIENT_ID, json_string_value(json_object_get(j_response, "client_id")));
+                i_set_str_parameter(i_session, I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_response, "client_secret")));
+                i_set_str_parameter(i_session, I_OPT_REDIRECT_URI, json_string_value(json_array_get(json_object_get(j_response, "redirect_uris"), 0)));
+              }
+              if (j_result != NULL) {
+                *j_result = json_incref(j_response);
+              }
+            } else if (response.status == 404) {
+              ret = I_ERROR_PARAM;
+            } else if (response.status == 400) {
+              if (_i_parse_error_response(i_session, j_response) != I_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (1)");
+              }
+              ret = I_ERROR_PARAM;
+            } else if (response.status == 401 || response.status == 403) {
+              if (_i_parse_error_response(i_session, j_response) != I_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (1)");
+              }
+              ret = I_ERROR_UNAUTHORIZED;
+            } else if (response.status != 200) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error registering client");
+              ret = I_ERROR;
+            }
+            json_decref(j_response);
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error sending http request");
+            ret = I_ERROR;
+          }
+        }
+        ulfius_clean_request(&request);
+        ulfius_clean_response(&response);
       }
-      ulfius_clean_request(&request);
-      ulfius_clean_response(&response);
+    } else {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "i_register_client - Invalid parameters, no redirect_uris specified");
+      ret = I_ERROR_PARAM;
     }
   } else {
     y_log_message(Y_LOG_LEVEL_DEBUG, "i_register_client - Invalid parameters");
     ret = I_ERROR_PARAM;
   }
+  json_decref(j_copy_parameters);
   return ret;
 }
 
@@ -4161,9 +4741,95 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
   struct _u_request request;
   struct _u_response response;
   char * bearer = NULL;
-  json_t * j_response;
+  json_t * j_response, * j_copy_parameters;
 
-  if (i_session != NULL && o_strlen(i_session->registration_endpoint) && o_strlen(i_session->client_id) && json_string_length(json_array_get(json_object_get(j_parameters, "redirect_uris"), 0))) {
+  if (j_parameters != NULL) {
+    j_copy_parameters = json_deep_copy(j_parameters);
+  } else {
+    j_copy_parameters = json_object();
+  }
+  if (i_session != NULL && o_strlen(i_session->registration_endpoint)) {
+    if (!json_is_array(json_object_get(j_copy_parameters, "redirect_uris"))) {
+      json_object_set_new(j_copy_parameters, "redirect_uris", json_array());
+    }
+    if (i_session->redirect_uri != NULL && !_i_json_array_has_string(json_object_get(j_copy_parameters, "redirect_uris"), i_session->redirect_uri)) {
+      json_array_append_new(json_object_get(j_copy_parameters, "redirect_uris"), json_string(i_session->redirect_uri));
+    }
+    if (i_session->access_token_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "access_token_signing_alg", json_string(r_jwa_alg_to_str(i_session->access_token_signing_alg)));
+    }
+    if (i_session->access_token_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "access_token_encryption_alg", json_string(r_jwa_alg_to_str(i_session->access_token_encryption_alg)));
+    }
+    if (i_session->access_token_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "access_token_encryption_enc", json_string(r_jwa_enc_to_str(i_session->access_token_encryption_enc)));
+    }
+    if (i_session->id_token_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "id_token_signing_alg", json_string(r_jwa_alg_to_str(i_session->id_token_signing_alg)));
+    }
+    if (i_session->id_token_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "id_token_encryption_alg", json_string(r_jwa_alg_to_str(i_session->id_token_encryption_alg)));
+    }
+    if (i_session->id_token_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "id_token_encryption_enc", json_string(r_jwa_enc_to_str(i_session->id_token_encryption_enc)));
+    }
+    if (i_session->userinfo_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "userinfo_signing_alg", json_string(r_jwa_alg_to_str(i_session->userinfo_signing_alg)));
+    }
+    if (i_session->userinfo_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "userinfo_encryption_alg", json_string(r_jwa_alg_to_str(i_session->userinfo_encryption_alg)));
+    }
+    if (i_session->userinfo_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "userinfo_encryption_enc", json_string(r_jwa_enc_to_str(i_session->userinfo_encryption_enc)));
+    }
+    if (i_session->request_object_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "request_object_signing_alg", json_string(r_jwa_alg_to_str(i_session->request_object_signing_alg)));
+    }
+    if (i_session->request_object_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "request_object_encryption_alg", json_string(r_jwa_alg_to_str(i_session->request_object_encryption_alg)));
+    }
+    if (i_session->request_object_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "request_object_encryption_enc", json_string(r_jwa_enc_to_str(i_session->request_object_encryption_enc)));
+    }
+    if (i_session->token_endpoint_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "token_endpoint_signing_alg", json_string(r_jwa_alg_to_str(i_session->token_endpoint_signing_alg)));
+    }
+    if (i_session->token_endpoint_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "token_endpoint_encryption_alg", json_string(r_jwa_alg_to_str(i_session->token_endpoint_encryption_alg)));
+    }
+    if (i_session->token_endpoint_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "token_endpoint_encryption_enc", json_string(r_jwa_enc_to_str(i_session->token_endpoint_encryption_enc)));
+    }
+    if (i_session->ciba_request_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "ciba_request_signing_alg", json_string(r_jwa_alg_to_str(i_session->ciba_request_signing_alg)));
+    }
+    if (i_session->ciba_request_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "ciba_request_encryption_alg", json_string(r_jwa_alg_to_str(i_session->ciba_request_encryption_alg)));
+    }
+    if (i_session->ciba_request_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "ciba_request_encryption_enc", json_string(r_jwa_enc_to_str(i_session->ciba_request_encryption_enc)));
+    }
+    if (i_session->auth_response_signing_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "auth_response_signing_alg", json_string(r_jwa_alg_to_str(i_session->auth_response_signing_alg)));
+    }
+    if (i_session->auth_response_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "auth_response_encryption_alg", json_string(r_jwa_alg_to_str(i_session->auth_response_encryption_alg)));
+    }
+    if (i_session->auth_response_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      json_object_set_new(j_copy_parameters, "auth_response_encryption_enc", json_string(r_jwa_enc_to_str(i_session->auth_response_encryption_enc)));
+    }
+    if (i_session->ciba_mode == I_CIBA_MODE_POLL) {
+      json_object_set_new(j_copy_parameters, "backchannel_token_delivery_mode", json_string("poll"));
+    }
+    if (i_session->ciba_mode == I_CIBA_MODE_PING) {
+      json_object_set_new(j_copy_parameters, "backchannel_token_delivery_mode", json_string("ping"));
+    }
+    if (i_session->ciba_mode == I_CIBA_MODE_PUSH) {
+      json_object_set_new(j_copy_parameters, "backchannel_token_delivery_mode", json_string("push"));
+    }
+    if (i_session->ciba_client_notification_endpoint != NULL) {
+      json_object_set_new(j_copy_parameters, "backchannel_client_notification_endpoint", json_string(i_session->ciba_client_notification_endpoint));
+    }
     if (_i_init_request(i_session, &request) != U_OK || ulfius_init_response(&response) != U_OK) {
       y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error initializing request or response");
       ret = I_ERROR;
@@ -4174,7 +4840,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
                                                   U_OPT_HTTP_URL_APPEND, "/",
                                                   U_OPT_HTTP_URL_APPEND, i_session->client_id,
                                                   U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
-                                                  U_OPT_JSON_BODY, j_parameters,
+                                                  U_OPT_JSON_BODY, j_copy_parameters,
                                                   U_OPT_NONE) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error setting parameters");
         ret = I_ERROR;
@@ -4228,13 +4894,14 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
     y_log_message(Y_LOG_LEVEL_DEBUG, "i_manage_registration_client - Invalid parameters");
     ret = I_ERROR_PARAM;
   }
+  json_decref(j_copy_parameters);
   return ret;
 }
 
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss* si si }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -4329,7 +4996,50 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "pkce_code_verifier", i_get_str_parameter(i_session, I_OPT_PKCE_CODE_VERIFIER),
                          "pkce_method", i_get_int_parameter(i_session, I_OPT_PKCE_METHOD),
                          "claims", i_session->j_claims,
-                         "resource_indicator", i_session->resource_indicator
+                         "resource_indicator", i_session->resource_indicator,
+                         
+                         "access_token_signing_alg", i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN_SIGNING_ALG),
+                         "access_token_encryption_alg", i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG),
+                         "access_token_encryption_enc", i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC),
+                         
+                         "id_token_signing_alg", i_get_str_parameter(i_session, I_OPT_ID_TOKEN_SIGNING_ALG),
+                         "id_token_encryption_alg", i_get_str_parameter(i_session, I_OPT_ID_TOKEN_ENCRYPTION_ALG),
+                         "id_token_encryption_enc", i_get_str_parameter(i_session, I_OPT_ID_TOKEN_ENCRYPTION_ENC),
+                         
+                         "userinfo_signing_alg", i_get_str_parameter(i_session, I_OPT_USERINFO_SIGNING_ALG),
+                         "userinfo_encryption_alg", i_get_str_parameter(i_session, I_OPT_USERINFO_ENCRYPTION_ALG),
+                         "userinfo_encryption_enc", i_get_str_parameter(i_session, I_OPT_USERINFO_ENCRYPTION_ENC),
+                         
+                         "request_object_signing_alg", i_get_str_parameter(i_session, I_OPT_REQUEST_OBJECT_SIGNING_ALG),
+                         "request_object_encryption_alg", i_get_str_parameter(i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG),
+                         "request_object_encryption_enc", i_get_str_parameter(i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC),
+                         
+                         "token_endpoint_signing_alg", i_get_str_parameter(i_session, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG),
+                         "token_endpoint_encryption_alg", i_get_str_parameter(i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG),
+                         "token_endpoint_encryption_enc", i_get_str_parameter(i_session, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC),
+                         
+                         "ciba_request_signing_alg", i_get_str_parameter(i_session, I_OPT_CIBA_REQUEST_SIGNING_ALG),
+                         "ciba_request_encryption_alg", i_get_str_parameter(i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG),
+                         "ciba_request_encryption_enc", i_get_str_parameter(i_session, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC),
+                         
+                         "auth_response_signing_alg", i_get_str_parameter(i_session, I_OPT_AUTH_RESPONSE_SIGNING_ALG),
+                         "auth_response_encryption_alg", i_get_str_parameter(i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG),
+                         "auth_response_encryption_enc", i_get_str_parameter(i_session, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC),
+                         
+                         "ciba_endpoint", i_get_str_parameter(i_session, I_OPT_CIBA_ENDPOINT),
+                         "ciba_mode", i_get_int_parameter(i_session, I_OPT_CIBA_MODE),
+                         "ciba_user_code", i_get_str_parameter(i_session, I_OPT_CIBA_USER_CODE),
+                         "ciba_login_hint", i_get_str_parameter(i_session, I_OPT_CIBA_LOGIN_HINT),
+                         "ciba_login_hint_format", i_get_int_parameter(i_session, I_OPT_CIBA_LOGIN_HINT_FORMAT),
+                         
+                         "ciba_binding_message", i_get_str_parameter(i_session, I_OPT_CIBA_BINDING_MESSAGE),
+                         "ciba_client_notification_token", i_get_str_parameter(i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN),
+                         "ciba_auth_req_id", i_get_str_parameter(i_session, I_OPT_CIBA_AUTH_REQ_ID),
+                         "ciba_login_hint_kid", i_get_str_parameter(i_session, I_OPT_CIBA_LOGIN_HINT_KID),
+                         "ciba_client_notification_endpoint", i_get_str_parameter(i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT),
+                         
+                         "ciba_auth_req_expires_in", i_get_int_parameter(i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN),
+                         "ciba_auth_req_interval", i_get_int_parameter(i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL)
                          );
   }
   return j_return;
@@ -4413,6 +5123,39 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_PKCE_CODE_VERIFIER, json_string_value(json_object_get(j_import, "pkce_code_verifier")),
                                      I_OPT_PKCE_METHOD, (int)json_integer_value(json_object_get(j_import, "pkce_method")),
                                      I_OPT_RESOURCE_INDICATOR, json_string_value(json_object_get(j_import, "resource_indicator")),
+                                     I_OPT_ACCESS_TOKEN_SIGNING_ALG, json_string_value(json_object_get(j_import, "access_token_signing_alg")),
+                                     I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "access_token_encryption_alg")),
+                                     I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "access_token_encryption_enc")),
+                                     I_OPT_ID_TOKEN_SIGNING_ALG, json_string_value(json_object_get(j_import, "id_token_signing_alg")),
+                                     I_OPT_ID_TOKEN_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "id_token_encryption_alg")),
+                                     I_OPT_ID_TOKEN_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "id_token_encryption_enc")),
+                                     I_OPT_USERINFO_SIGNING_ALG, json_string_value(json_object_get(j_import, "userinfo_signing_alg")),
+                                     I_OPT_USERINFO_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "userinfo_encryption_alg")),
+                                     I_OPT_USERINFO_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "userinfo_encryption_enc")),
+                                     I_OPT_REQUEST_OBJECT_SIGNING_ALG, json_string_value(json_object_get(j_import, "request_object_signing_alg")),
+                                     I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "request_object_encryption_alg")),
+                                     I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "request_object_encryption_enc")),
+                                     I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, json_string_value(json_object_get(j_import, "token_endpoint_signing_alg")),
+                                     I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "token_endpoint_encryption_alg")),
+                                     I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "token_endpoint_encryption_enc")),
+                                     I_OPT_CIBA_REQUEST_SIGNING_ALG, json_string_value(json_object_get(j_import, "ciba_request_signing_alg")),
+                                     I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "ciba_request_encryption_alg")),
+                                     I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "ciba_request_encryption_enc")),
+                                     I_OPT_AUTH_RESPONSE_SIGNING_ALG, json_string_value(json_object_get(j_import, "auth_response_signing_alg")),
+                                     I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "auth_response_encryption_alg")),
+                                     I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "auth_response_encryption_enc")),
+                                     I_OPT_CIBA_ENDPOINT, json_string_value(json_object_get(j_import, "ciba_endpoint")),
+                                     I_OPT_CIBA_MODE, (int)json_integer_value(json_object_get(j_import, "ciba_mode")),
+                                     I_OPT_CIBA_USER_CODE, json_string_value(json_object_get(j_import, "ciba_user_code")),
+                                     I_OPT_CIBA_LOGIN_HINT, json_string_value(json_object_get(j_import, "ciba_login_hint")),
+                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, (int)json_integer_value(json_object_get(j_import, "ciba_login_hint_format")),
+                                     I_OPT_CIBA_LOGIN_HINT_KID, json_string_value(json_object_get(j_import, "ciba_login_hint_kid")),
+                                     I_OPT_CIBA_BINDING_MESSAGE, json_string_value(json_object_get(j_import, "ciba_binding_message")),
+                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, json_string_value(json_object_get(j_import, "ciba_client_notification_token")),
+                                     I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_import, "ciba_auth_req_id")),
+                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, json_string_value(json_object_get(j_import, "ciba_client_notification_endpoint")),
+                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "ciba_auth_req_expires_in")),
+                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, (int)json_integer_value(json_object_get(j_import, "ciba_auth_req_interval")),
                                      I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
@@ -5047,6 +5790,206 @@ int i_run_par_request(struct _i_session * i_session) {
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_par_request - Error _i_add_token_authentication");
       ret = res;
+    }
+    ulfius_clean_request(&request);
+    ulfius_clean_response(&response);
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+int i_run_ciba_request(struct _i_session * i_session) {
+  int ret = I_OK, res;
+  struct _u_request request;
+  struct _u_response response;
+  json_t * j_response, * j_login_hint = NULL;
+  char * tmp = NULL;
+  const char ** key = NULL;
+  int i;
+  jwt_t * jwt = NULL;
+  jwk_t * jwk_sign = NULL;
+  jwa_alg sign_alg = R_JWA_ALG_UNKNOWN;
+
+  if (i_session != NULL &&
+      i_session->ciba_endpoint != NULL &&
+      (((i_session->ciba_mode == I_CIBA_MODE_PING || i_session->ciba_mode == I_CIBA_MODE_PUSH) && i_session->ciba_client_notification_token != NULL) || i_session->ciba_mode == I_CIBA_MODE_POLL) &&
+      _i_check_strict_parameters(i_session) &&
+      i_session->ciba_login_hint != NULL &&
+      i_session->client_id != NULL) {
+    _i_init_request(i_session, &request);
+    ulfius_init_response(&response);
+
+    if (u_map_count(&i_session->additional_parameters)) {
+      key = u_map_enum_keys(&i_session->additional_parameters);
+      for (i=0; key[i]!=NULL; i++) {
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, key[i], u_map_get(&i_session->additional_parameters, key[i]), U_OPT_NONE);
+      }
+    }
+
+    ulfius_set_request_properties(&request,
+                                  U_OPT_HTTP_VERB, "POST",
+                                  U_OPT_HTTP_URL, _i_get_endpoint(i_session, "ciba"),
+                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                  U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                  U_OPT_POST_BODY_PARAMETER, "client_id", i_session->client_id,
+                                  U_OPT_NONE);
+
+    if (i_session->ciba_mode != I_CIBA_MODE_POLL) {
+      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "client_notification_token", i_session->ciba_client_notification_token, U_OPT_NONE);
+    }
+    
+    do {
+      if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_JSON) {
+        if ((j_login_hint = json_loads(i_session->ciba_login_hint, JSON_DECODE_ANY, NULL)) != NULL) {
+          tmp = json_dumps(j_login_hint, JSON_COMPACT);
+          ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "login_hint", tmp, U_OPT_NONE);
+          o_free(tmp);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error parsing login_hint");
+          ret = I_ERROR_PARAM;
+          break;
+        }
+      }
+      
+      if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_JWT) {
+        r_jwt_init(&jwt);
+        if (r_jwt_set_full_claims_json_str(jwt, i_session->ciba_login_hint) == RHN_OK) {
+          if (i_session->token_method == I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET) {
+            if (i_session->client_secret != NULL) {
+              if ((i_session->client_sign_alg == R_JWA_ALG_HS256 || i_session->client_sign_alg == R_JWA_ALG_HS384 || i_session->client_sign_alg == R_JWA_ALG_HS512) && _i_has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                // signature alg is specified and supported by the server
+                sign_alg = i_session->client_sign_alg;
+              } else if (i_session->client_sign_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "token_endpoint_auth_signing_alg_values_supported"))) {
+                // no signtature alg specified, use one supported by the server
+                if (_i_has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS256")) {
+                  sign_alg = R_JWA_ALG_HS256;
+                } else if (_i_has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS384")) {
+                  sign_alg = R_JWA_ALG_HS384;
+                } else if (_i_has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", "HS512")) {
+                  sign_alg = R_JWA_ALG_HS512;
+                }
+              }
+              if (sign_alg != R_JWA_ALG_UNKNOWN) {
+                r_jwt_set_sign_alg(jwt, sign_alg);
+                r_jwk_init(&jwk_sign);
+                r_jwk_import_from_symmetric_key(jwk_sign, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
+                ret = I_ERROR_PARAM;
+                break;
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Client has no secret");
+              ret = I_ERROR_PARAM;
+              break;
+            }
+          } else {
+            if ((i_session->ciba_login_hint_kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, i_session->ciba_login_hint_kid)) != NULL) || (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
+              if ((i_session->client_sign_alg == R_JWA_ALG_RS256 || i_session->client_sign_alg == R_JWA_ALG_RS384 || i_session->client_sign_alg == R_JWA_ALG_RS512 ||
+                   i_session->client_sign_alg == R_JWA_ALG_PS256 || i_session->client_sign_alg == R_JWA_ALG_PS384 || i_session->client_sign_alg == R_JWA_ALG_PS512) &&
+                   _i_has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+                  ret = I_ERROR_PARAM;
+                  break;
+                }
+              } else if ((i_session->client_sign_alg == R_JWA_ALG_ES256 || i_session->client_sign_alg == R_JWA_ALG_ES384 || i_session->client_sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+                  ret = I_ERROR_PARAM;
+                  break;
+                }
+              } else if (i_session->client_sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, "token_endpoint_auth_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+                  ret = I_ERROR_PARAM;
+                  break;
+                }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
+                ret = I_ERROR_PARAM;
+                break;
+              }
+              r_jwt_set_sign_alg(jwt, i_session->client_sign_alg);
+            } else if (!r_jwks_size(i_session->client_jwks)) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Client has no private key ");
+              ret = I_ERROR_PARAM;
+              break;
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
+              ret = I_ERROR_PARAM;
+              break;
+            }
+          }
+          if (ret == I_OK) {
+            tmp = r_jwt_serialize_signed(jwt, jwk_sign, i_session->x5u_flags);
+            ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "login_hint_token", tmp, U_OPT_NONE);
+            o_free(tmp);
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error parsing login_hint");
+          ret = I_ERROR_PARAM;
+          break;
+        }
+      }
+
+      if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN) {
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "id_token_hint", i_session->ciba_login_hint, U_OPT_NONE);
+      }
+      
+      if (i_session->ciba_binding_message != NULL) {
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "binding_message", i_session->ciba_binding_message, U_OPT_NONE);
+      }
+      
+      if (i_session->ciba_user_code != NULL) {
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "user_code", i_session->ciba_user_code, U_OPT_NONE);
+      }
+    } while (0);
+    r_jwt_free(jwt);
+    r_jwk_free(jwk_sign);
+    json_decref(j_login_hint);
+
+    if (ret == I_OK) {
+      if ((res = _i_add_token_authentication(i_session, i_session->pushed_authorization_request_endpoint, &request)) == I_OK) {
+        if (ulfius_send_http_request(&request, &response) == U_OK) {
+          if (response.status == 200 || response.status == 400) {
+            j_response = ulfius_get_json_body_response(&response, NULL);
+            if (j_response != NULL) {
+              if (response.status == 200) {
+                i_set_parameter_list(i_session,
+                                     I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_response, "auth_req_id")),
+                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (uint)json_integer_value(json_object_get(j_response, "expires_in")),
+                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, (uint)json_integer_value(json_object_get(j_response, "expires_in")),
+                                     I_OPT_NONE);
+                ret = I_OK;
+              } else {
+                i_set_parameter_list(i_session,
+                                     I_OPT_ERROR, json_string_value(json_object_get(j_response, "error")),
+                                     I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_response, "error_description")),
+                                     I_OPT_ERROR_URI, json_string_value(json_object_get(j_response, "error_uri")),
+                                     I_OPT_NONE);
+                ret = I_ERROR_PARAM;
+              }
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error parsing JSON response");
+              ret = I_ERROR;
+            }
+            json_decref(j_response);
+          } else if (response.status == 403 || response.status == 401) {
+            ret = I_ERROR_UNAUTHORIZED;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Invalid response status");
+            ret = I_ERROR;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error sending token request");
+          ret = I_ERROR;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error _i_add_token_authentication");
+        ret = res;
+      }
     }
     ulfius_clean_request(&request);
     ulfius_clean_response(&response);

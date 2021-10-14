@@ -56,6 +56,7 @@ extern "C"
 #define I_RESPONSE_TYPE_CLIENT_CREDENTIALS 0x00010000 ///< Grant type client_credentials
 #define I_RESPONSE_TYPE_REFRESH_TOKEN      0x00100000 ///< Grant type refresh_token
 #define I_RESPONSE_TYPE_DEVICE_CODE        0x01000000 ///< Grant type urn:ietf:params:oauth:grant-type:device_code
+#define I_RESPONSE_TYPE_CIBA               0x10000000 ///< Grant type urn:openid:params:grant-type:ciba
 
 #define I_AUTH_METHOD_GET                 0x00000001 ///< auth endpoint using GET method
 #define I_AUTH_METHOD_POST                0x00000010 ///< auth endpoint using POST method
@@ -64,10 +65,10 @@ extern "C"
 #define I_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00010000 ///< auth endpoint using a JWT encrypted with the client secret
 #define I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x00100000 ///< auth endpoint using a JWT encrypted with the server public key
 
-#define I_TOKEN_AUTH_METHOD_NONE            0x00000000 ///< token endpoint using no authentication
-#define I_TOKEN_AUTH_METHOD_SECRET_BASIC    0x00000001 ///< token endpoint using HTTP basic auth with client_id and client password
-#define I_TOKEN_AUTH_METHOD_SECRET_POST     0x00000010 ///< token endpoint using secret send in POST parameters
-#define I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE 0x00000100 ///< token endpoint using TLS Certificate authentication
+#define I_TOKEN_AUTH_METHOD_NONE                0x00000000 ///< token endpoint using no authentication
+#define I_TOKEN_AUTH_METHOD_SECRET_BASIC        0x00000001 ///< token endpoint using HTTP basic auth with client_id and client password
+#define I_TOKEN_AUTH_METHOD_SECRET_POST         0x00000010 ///< token endpoint using secret send in POST parameters
+#define I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE     0x00000100 ///< token endpoint using TLS Certificate authentication
 #define I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET     0x00001000 ///< token endpoint using a JWT signed with the client secret
 #define I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY    0x00010000 ///< token endpoint using a JWT signed with the client private key
 #define I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00100000 ///< token endpoint using a JWT encrypted with the client secret
@@ -116,91 +117,134 @@ extern "C"
 #define I_CLAIM_ESSENTIAL_FALSE  2 ///< Set claim essential value to false
 #define I_CLAIM_ESSENTIAL_IGNORE 3 ///< 
 
+#define I_CIBA_MODE_NONE 0
+#define I_CIBA_MODE_POLL 1
+#define I_CIBA_MODE_PING 2
+#define I_CIBA_MODE_PUSH 3
+
+#define I_CIBA_LOGIN_HINT_FORMAT_JSON     0
+#define I_CIBA_LOGIN_HINT_FORMAT_JWT      1
+#define I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN 2
+
 /**
  * Options available to set or get properties using
  * i_set_int_parameter, i_set_str_parameter,
  * i_get_int_parameter, i_get_str_parameter or i_set_parameter_list
  */
 typedef enum {
-  I_OPT_NONE                                  = 0,  ///< Empty option to complete a i_set_parameter_list
-  I_OPT_RESPONSE_TYPE                         = 1,  ///< response_type, values available are I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS and I_RESPONSE_TYPE_REFRESH_TOKEN
-  I_OPT_SCOPE                                 = 2,  ///< scope values, string, multiple scopes must be separated by a space character: "scope1 openid"
-  I_OPT_SCOPE_APPEND                          = 3,  ///< append another scope value to the scope list, string
-  I_OPT_STATE                                 = 4,  ///< state value, string
-  I_OPT_NONCE                                 = 5,  ///< nonce value, string
-  I_OPT_REDIRECT_URI                          = 6,  ///< redirect_uri, string
-  I_OPT_REDIRECT_TO                           = 7,  ///< url where the oauth2 is redirected to after a /auth request
-  I_OPT_CLIENT_ID                             = 8,  ///< client_id, string
-  I_OPT_CLIENT_SECRET                         = 9,  ///< client secret, string
-  I_OPT_ADDITIONAL_PARAMETER                  = 10, ///< use this option to pass any additional parameter value in the /auth request
-  I_OPT_ADDITIONAL_RESPONSE                   = 11, ///<
-  I_OPT_AUTH_ENDPOINT                         = 12, ///< absolute url for the auth endpoint, string
-  I_OPT_TOKEN_ENDPOINT                        = 13, ///< absolute url for the token endpoint, string
-  I_OPT_OPENID_CONFIG_ENDPOINT                = 14, ///< absolute url for the .well-known/openid-configuration endpoint, string
-  I_OPT_OPENID_CONFIG                         = 15, ///< result of the .well-known/openid-configuration
-  I_OPT_OPENID_CONFIG_STRICT                  = 16, ///< must the .well-known/openid-configuration parameters be strictly
-  I_OPT_USERINFO_ENDPOINT                     = 17, ///< absolute url for the userinfo endpoint or equivalent, string
-  I_OPT_RESULT                                = 18, ///< result of a request
-  I_OPT_ERROR                                 = 19, ///< error value of a failed request, string
-  I_OPT_ERROR_DESCRIPTION                     = 20, ///< error description of a failed request, string
-  I_OPT_ERROR_URI                             = 21, ///< error uri of a failed request, string
-  I_OPT_CODE                                  = 22, ///< code given after a succesfull auth request using the response_type I_RESPONSE_TYPE_CODE
-  I_OPT_REFRESH_TOKEN                         = 23, ///< refresh token given after a succesfull token request using the proper response_type
-  I_OPT_ACCESS_TOKEN                          = 24, ///< access token given after a succesfull auth or token request using the proper response_type
-  I_OPT_ID_TOKEN                              = 25, ///< id_token given after a succesfull auth or token request using the proper response_type
-  I_OPT_AUTH_METHOD                           = 28, ///< Authentication method to use with the auth endpoint, values available are I_AUTH_METHOD_GET, I_AUTH_METHOD_POST, I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY, values I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY can be combined with I_AUTH_METHOD_GET or I_AUTH_METHOD_POST
-  I_OPT_TOKEN_METHOD                          = 29, ///< Authentication method to use with the token endpoint, values available are I_TOKEN_AUTH_METHOD_SECRET_BASIC, I_TOKEN_AUTH_METHOD_SECRET_POST, I_TOKEN_AUTH_METHOD_SECRET_JWT, I_TOKEN_AUTH_METHOD_PRIVATE_JWT, I_TOKEN_AUTH_METHOD_NONE
-  I_OPT_TOKEN_TYPE                            = 30, ///< token_type value after a succesfull auth or token request, string
-  I_OPT_EXPIRES_IN                            = 31, ///< expires_in value after a succesfull auth or token request, integer
-  I_OPT_EXPIRES_AT                            = 32, ///< expires_at value after a succesfull auth or token request, time_t
-  I_OPT_USERNAME                              = 33, ///< username for password response_types, string
-  I_OPT_USER_PASSWORD                         = 34, ///< password for password response_types, string
-  I_OPT_ISSUER                                = 35, ///< issuer value, string
-  I_OPT_USERINFO                              = 36, ///< userinfo result, string
-  I_OPT_NONCE_GENERATE                        = 37, ///< Generate a random nonce value
-  I_OPT_STATE_GENERATE                        = 38, ///< Generate a random state value
-  I_OPT_X5U_FLAGS                             = 39, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
-  I_OPT_SERVER_KID                            = 40, ///< key id to use if multiple jwk are available on the server, string
-  I_OPT_SERVER_ENC_ALG                        = 41, ///< key id to use if multiple jwk are available on the server, string
-  I_OPT_SERVER_ENC                            = 42, ///< key id to use if multiple jwk are available on the server, string
-  I_OPT_CLIENT_KID                            = 43, ///< key id to use if multiple jwk are available on the client, string
-  I_OPT_CLIENT_SIGN_ALG                       = 44, ///< signature algorithm to use when the client signs a request in a JWT, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
-  I_OPT_CLIENT_ENC_ALG                        = 45, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH-ES', 'ECDH-ES+A128KW', 'ECDH-ES+A192KW', 'ECDH-ES+A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2-HS256+A128KW', 'PBES2-HS384+A192KW or 'PBES2-HS512+A256KW', warning: some algorithm may be unavailable depending on Rhonabwy version used
-  I_OPT_CLIENT_ENC                            = 46, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC-HS256,' 'A192CBC-HS384,' 'A256CBC-HS512,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
-  I_OPT_TOKEN_JTI                             = 47, ///< jti value, string
-  I_OPT_TOKEN_JTI_GENERATE                    = 48, ///< Generate a random jti value
-  I_OPT_TOKEN_EXP                             = 49, ///< JWT token request expiration time in seconds
-  I_OPT_TOKEN_TARGET                          = 50, ///< access_token which is the target of a revocation or an introspection, string
-  I_OPT_TOKEN_TARGET_TYPE_HINT                = 51, ///< access_token which is the target of a revocation or an introspection, string
-  I_OPT_REVOCATION_ENDPOINT                   = 52, ///< absolute url for the revocation endpoint, string
-  I_OPT_INTROSPECTION_ENDPOINT                = 53, ///< absolute url for the introspection endpoint, string
-  I_OPT_REGISTRATION_ENDPOINT                 = 54, ///< absolute url for the client registration endpoint, string
-  I_OPT_DEVICE_AUTHORIZATION_ENDPOINT         = 55, ///< absolute url for the pushed authorization endpoint, string
-  I_OPT_DEVICE_AUTH_CODE                      = 56, ///< device authorization code sent by the AS
-  I_OPT_DEVICE_AUTH_USER_CODE                 = 57, ///< device authorization user code sent by the AS
-  I_OPT_DEVICE_AUTH_VERIFICATION_URI          = 58, ///< device authorization verification URI sent by the AS
-  I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE = 59, ///< device authorization verification URI complete sent by the AS
-  I_OPT_DEVICE_AUTH_EXPIRES_IN                = 60, ///< device authorization code expiration sent by the AS
-  I_OPT_DEVICE_AUTH_INTERVAL                  = 61, ///< device authorization code verification interval sent by the AS
-  I_OPT_END_SESSION_ENDPOINT                  = 62, ///< absolute url for the end session endpoint, string
-  I_OPT_CHECK_SESSION_IRAME                   = 63, ///< absolute url for the check session iframe, string
-  I_OPT_PUSHED_AUTH_REQ_ENDPOINT              = 64, ///< absolute url for the pushed authoization endpoint, string
-  I_OPT_PUSHED_AUTH_REQ_REQUIRED              = 65, ///< are pushed authorization requests required, boolean
-  I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN            = 66, ///< pushed authorization request expiration time in seconds
-  I_OPT_PUSHED_AUTH_REQ_URI                   = 67, ///< request_uri sent by the par endpoint result, string
-  I_OPT_USE_DPOP                              = 68, ///< Generate and use a DPoP when accessing endpoints userinfo, introspection and revocation
-  I_OPT_DPOP_KID                              = 69, ///< key id to use when signing a DPoP
-  I_OPT_DECRYPT_CODE                          = 70, ///< Decrypt code when received by the AS as a JWE
-  I_OPT_DECRYPT_REFRESH_TOKEN                 = 71, ///< Decrypt refresh token when received by the AS as a JWE
-  I_OPT_DECRYPT_ACCESS_TOKEN                  = 72, ///< Decrypt access token when received by the AS as a JWE
-  I_OPT_DPOP_SIGN_ALG                         = 73, ///< signature algorithm to use when the client signs a DPoP, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
-  I_OPT_TLS_KEY_FILE                          = 74, ///< Path to the private key PEM file to use in a TLS authentication
-  I_OPT_TLS_CERT_FILE                         = 75, ///< Path to the certificate PEM file to use in a TLS authentication
-  I_OPT_REMOTE_CERT_FLAG                      = 76, ///< Flags to use with remote connexions to ignore incorrect certificates, flags available are I_REMOTE_HOST_VERIFY_PEER, I_REMOTE_HOST_VERIFY_HOSTNAME, I_REMOTE_PROXY_VERIFY_PEER, I_REMOTE_PROXY_VERIFY_HOSTNAME, I_REMOTE_VERIFY_NONE, default is I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME
-  I_OPT_PKCE_CODE_VERIFIER                    = 77, ///< PKCE code verifier, must be a string of 43 characters minumum only using the characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
-  I_OPT_PKCE_CODE_VERIFIER_GENERATE           = 78, ///< Generate a random PKCE code verifier
-  I_OPT_PKCE_METHOD                           = 79, ///< PKCE method to use, values available are I_PKCE_NONE (no PKCE, default), I_PKCE_METHOD_PLAIN or I_PKCE_METHOD_S256
-  I_OPT_RESOURCE_INDICATOR                    = 80  ///< Resource indicator as detailed in the RFC 8707
+  I_OPT_NONE                                    = 0,  ///< Empty option to complete a i_set_parameter_list
+  I_OPT_RESPONSE_TYPE                           = 1,  ///< response_type, values available are I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, I_RESPONSE_TYPE_ID_TOKEN, I_RESPONSE_TYPE_PASSWORD, I_RESPONSE_TYPE_CLIENT_CREDENTIALS and I_RESPONSE_TYPE_REFRESH_TOKEN
+  I_OPT_SCOPE                                   = 2,  ///< scope values, string, multiple scopes must be separated by a space character: "scope1 openid"
+  I_OPT_SCOPE_APPEND                            = 3,  ///< append another scope value to the scope list, string
+  I_OPT_STATE                                   = 4,  ///< state value, string
+  I_OPT_NONCE                                   = 5,  ///< nonce value, string
+  I_OPT_REDIRECT_URI                            = 6,  ///< redirect_uri, string
+  I_OPT_REDIRECT_TO                             = 7,  ///< url where the oauth2 is redirected to after a /auth request
+  I_OPT_CLIENT_ID                               = 8,  ///< client_id, string
+  I_OPT_CLIENT_SECRET                           = 9,  ///< client secret, string
+  I_OPT_ADDITIONAL_PARAMETER                    = 10, ///< use this option to pass any additional parameter value in the /auth request
+  I_OPT_ADDITIONAL_RESPONSE                     = 11, ///<
+  I_OPT_AUTH_ENDPOINT                           = 12, ///< absolute url for the auth endpoint, string
+  I_OPT_TOKEN_ENDPOINT                          = 13, ///< absolute url for the token endpoint, string
+  I_OPT_OPENID_CONFIG_ENDPOINT                  = 14, ///< absolute url for the .well-known/openid-configuration endpoint, string
+  I_OPT_OPENID_CONFIG                           = 15, ///< result of the .well-known/openid-configuration
+  I_OPT_OPENID_CONFIG_STRICT                    = 16, ///< must the .well-known/openid-configuration parameters be strictly
+  I_OPT_USERINFO_ENDPOINT                       = 17, ///< absolute url for the userinfo endpoint or equivalent, string
+  I_OPT_RESULT                                  = 18, ///< result of a request
+  I_OPT_ERROR                                   = 19, ///< error value of a failed request, string
+  I_OPT_ERROR_DESCRIPTION                       = 20, ///< error description of a failed request, string
+  I_OPT_ERROR_URI                               = 21, ///< error uri of a failed request, string
+  I_OPT_CODE                                    = 22, ///< code given after a succesfull auth request using the response_type I_RESPONSE_TYPE_CODE
+  I_OPT_REFRESH_TOKEN                           = 23, ///< refresh token given after a succesfull token request using the proper response_type
+  I_OPT_ACCESS_TOKEN                            = 24, ///< access token given after a succesfull auth or token request using the proper response_type
+  I_OPT_ID_TOKEN                                = 25, ///< id_token given after a succesfull auth or token request using the proper response_type
+  I_OPT_AUTH_METHOD                             = 28, ///< Authentication method to use with the auth endpoint, values available are I_AUTH_METHOD_GET, I_AUTH_METHOD_POST, I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY, values I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY can be combined with I_AUTH_METHOD_GET or I_AUTH_METHOD_POST
+  I_OPT_TOKEN_METHOD                            = 29, ///< Authentication method to use with the token endpoint, values available are I_TOKEN_AUTH_METHOD_SECRET_BASIC, I_TOKEN_AUTH_METHOD_SECRET_POST, I_TOKEN_AUTH_METHOD_SECRET_JWT, I_TOKEN_AUTH_METHOD_PRIVATE_JWT, I_TOKEN_AUTH_METHOD_NONE
+  I_OPT_TOKEN_TYPE                              = 30, ///< token_type value after a succesfull auth or token request, string
+  I_OPT_EXPIRES_IN                              = 31, ///< expires_in value after a succesfull auth or token request, integer
+  I_OPT_EXPIRES_AT                              = 32, ///< expires_at value after a succesfull auth or token request, time_t
+  I_OPT_USERNAME                                = 33, ///< username for password response_types, string
+  I_OPT_USER_PASSWORD                           = 34, ///< password for password response_types, string
+  I_OPT_ISSUER                                  = 35, ///< issuer value, string
+  I_OPT_USERINFO                                = 36, ///< userinfo result, string
+  I_OPT_NONCE_GENERATE                          = 37, ///< Generate a random nonce value
+  I_OPT_STATE_GENERATE                          = 38, ///< Generate a random state value
+  I_OPT_X5U_FLAGS                               = 39, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
+  I_OPT_SERVER_KID                              = 40, ///< key id to use if multiple jwk are available on the server, string
+  I_OPT_SERVER_ENC_ALG                          = 41, ///< Key management algorithm to use when sending encrypted messages to the AS
+  I_OPT_SERVER_ENC                              = 42, ///< Encryption algorithm to use when sending encrypted messages to the AS
+  I_OPT_CLIENT_KID                              = 43, ///< key id to use if multiple jwk are available on the client, string
+  I_OPT_CLIENT_SIGN_ALG                         = 44, ///< signature algorithm to use when the client signs a request in a JWT, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
+  I_OPT_CLIENT_ENC_ALG                          = 45, ///< key encryption algorithm to use when the client encrypts a request in a JWT, values available are 'RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256', 'A128KW', 'A192KW', 'A256KW', 'DIR', 'ECDH-ES', 'ECDH-ES+A128KW', 'ECDH-ES+A192KW', 'ECDH-ES+A256KW', 'A128GCMKW', 'A192GCMKW', 'A256GCMKW', 'PBES2-HS256+A128KW', 'PBES2-HS384+A192KW or 'PBES2-HS512+A256KW', warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_CLIENT_ENC                              = 46, ///< data encryption algorithm to use when the client encrypts a request in a JWT, values available are 'A128CBC-HS256,' 'A192CBC-HS384,' 'A256CBC-HS512,' 'A128GCM,' 'A192GCM,' 'A256GCM,' warning: some algorithm may be unavailable depending on Rhonabwy version used
+  I_OPT_TOKEN_JTI                               = 47, ///< jti value, string
+  I_OPT_TOKEN_JTI_GENERATE                      = 48, ///< Generate a random jti value
+  I_OPT_TOKEN_EXP                               = 49, ///< JWT token request expiration time in seconds
+  I_OPT_TOKEN_TARGET                            = 50, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_TOKEN_TARGET_TYPE_HINT                  = 51, ///< access_token which is the target of a revocation or an introspection, string
+  I_OPT_REVOCATION_ENDPOINT                     = 52, ///< absolute url for the revocation endpoint, string
+  I_OPT_INTROSPECTION_ENDPOINT                  = 53, ///< absolute url for the introspection endpoint, string
+  I_OPT_REGISTRATION_ENDPOINT                   = 54, ///< absolute url for the client registration endpoint, string
+  I_OPT_DEVICE_AUTHORIZATION_ENDPOINT           = 55, ///< absolute url for the pushed authorization endpoint, string
+  I_OPT_DEVICE_AUTH_CODE                        = 56, ///< device authorization code sent by the AS
+  I_OPT_DEVICE_AUTH_USER_CODE                   = 57, ///< device authorization user code sent by the AS
+  I_OPT_DEVICE_AUTH_VERIFICATION_URI            = 58, ///< device authorization verification URI sent by the AS
+  I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE   = 59, ///< device authorization verification URI complete sent by the AS
+  I_OPT_DEVICE_AUTH_EXPIRES_IN                  = 60, ///< device authorization code expiration sent by the AS
+  I_OPT_DEVICE_AUTH_INTERVAL                    = 61, ///< device authorization code verification interval sent by the AS
+  I_OPT_END_SESSION_ENDPOINT                    = 62, ///< absolute url for the end session endpoint, string
+  I_OPT_CHECK_SESSION_IRAME                     = 63, ///< absolute url for the check session iframe, string
+  I_OPT_PUSHED_AUTH_REQ_ENDPOINT                = 64, ///< absolute url for the pushed authoization endpoint, string
+  I_OPT_PUSHED_AUTH_REQ_REQUIRED                = 65, ///< are pushed authorization requests required, boolean
+  I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN              = 66, ///< pushed authorization request expiration time in seconds
+  I_OPT_PUSHED_AUTH_REQ_URI                     = 67, ///< request_uri sent by the par endpoint result, string
+  I_OPT_USE_DPOP                                = 68, ///< Generate and use a DPoP when accessing endpoints userinfo, introspection and revocation
+  I_OPT_DPOP_KID                                = 69, ///< key id to use when signing a DPoP
+  I_OPT_DECRYPT_CODE                            = 70, ///< Decrypt code when received by the AS as a JWE
+  I_OPT_DECRYPT_REFRESH_TOKEN                   = 71, ///< Decrypt refresh token when received by the AS as a JWE
+  I_OPT_DECRYPT_ACCESS_TOKEN                    = 72, ///< Decrypt access token when received by the AS as a JWE
+  I_OPT_DPOP_SIGN_ALG                           = 73, ///< signature algorithm to use when the client signs a DPoP, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
+  I_OPT_TLS_KEY_FILE                            = 74, ///< Path to the private key PEM file to use in a TLS authentication
+  I_OPT_TLS_CERT_FILE                           = 75, ///< Path to the certificate PEM file to use in a TLS authentication
+  I_OPT_REMOTE_CERT_FLAG                        = 76, ///< Flags to use with remote connexions to ignore incorrect certificates, flags available are I_REMOTE_HOST_VERIFY_PEER, I_REMOTE_HOST_VERIFY_HOSTNAME, I_REMOTE_PROXY_VERIFY_PEER, I_REMOTE_PROXY_VERIFY_HOSTNAME, I_REMOTE_VERIFY_NONE, default is I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME
+  I_OPT_PKCE_CODE_VERIFIER                      = 77, ///< PKCE code verifier, must be a string of 43 characters minumum only using the characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
+  I_OPT_PKCE_CODE_VERIFIER_GENERATE             = 78, ///< Generate a random PKCE code verifier
+  I_OPT_PKCE_METHOD                             = 79, ///< PKCE method to use, values available are I_PKCE_NONE (no PKCE, default), I_PKCE_METHOD_PLAIN or I_PKCE_METHOD_S256
+  I_OPT_RESOURCE_INDICATOR                      = 80, ///< Resource indicator as detailed in the RFC 8707
+  I_OPT_ACCESS_TOKEN_SIGNING_ALG                = 81, ///< registration value access_token_signing_alg to specify a signing algorithm for access_token
+  I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG             = 82, ///< registration value access_token_encryption_alg to specify a key management algorithm for access_token
+  I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC             = 83, ///< registration value access_token_encryption_enc to specify an encryption algorithm for access_token
+  I_OPT_ID_TOKEN_SIGNING_ALG                    = 84, ///< registration value id_token_signing_alg to specify a signing algorithm for id_token
+  I_OPT_ID_TOKEN_ENCRYPTION_ALG                 = 85, ///< registration value id_token_encryption_alg to specify a key management algorithm for id_token
+  I_OPT_ID_TOKEN_ENCRYPTION_ENC                 = 86, ///< registration value id_token_encryption_enc to specify an encryption algorithm for id_token
+  I_OPT_USERINFO_SIGNING_ALG                    = 87, ///< registration value userinfo_signing_alg to specify a signing algorithm for userinfo
+  I_OPT_USERINFO_ENCRYPTION_ALG                 = 88, ///< registration value userinfo_encryption_alg to specify a key management algorithm for userinfo
+  I_OPT_USERINFO_ENCRYPTION_ENC                 = 89, ///< registration value userinfo_encryption_enc to specify an encryption algorithm for userinfo
+  I_OPT_REQUEST_OBJECT_SIGNING_ALG              = 90, ///< registration value request_object_signing_alg to specify a signing algorithm for request_object
+  I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG           = 91, ///< registration value request_object_encryption_alg to specify a key management algorithm for request_object
+  I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC           = 92, ///< registration value request_object_encryption_enc to specify an encryption algorithm for request_object
+  I_OPT_TOKEN_ENDPOINT_SIGNING_ALG              = 93, ///< registration value token_endpoint_signing_alg to specify a signing algorithm for token_endpoint
+  I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG           = 94, ///< registration value token_endpoint_encryption_alg to specify a key management algorithm for token_endpoint
+  I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC           = 95, ///< registration value token_endpoint_encryption_enc to specify an encryption algorithm for token_endpoint
+  I_OPT_CIBA_REQUEST_SIGNING_ALG                = 96, ///< registration value ciba_request_signing_alg to specify a signing algorithm for ciba_request
+  I_OPT_CIBA_REQUEST_ENCRYPTION_ALG             = 97, ///< registration value ciba_request_encryption_alg to specify a key management algorithm for ciba_request
+  I_OPT_CIBA_REQUEST_ENCRYPTION_ENC             = 98, ///< registration value ciba_request_encryption_enc to specify an encryption algorithm for ciba_request
+  I_OPT_AUTH_RESPONSE_SIGNING_ALG               = 99, ///< registration value auth_response_signing_alg to specify a signing algorithm for auth_response
+  I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG            = 100, ///< registration value auth_response_encryption_alg to specify a key management algorithm for auth_response
+  I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC            = 101, ///< registration value auth_response_encryption_enc to specify an encryption algorithm for auth_response
+  I_OPT_CIBA_ENDPOINT                           = 102, ///< absolute url for the CIBA endpoint or equivalent, string
+  I_OPT_CIBA_MODE                               = 103, ///< backchannel token delivery mode, values available are I_CIBA_MODE_NONE, I_CIBA_MODE_POLL, I_CIBA_MODE_PING and I_CIBA_MODE_PUSH
+  I_OPT_CIBA_USER_CODE                          = 104, ///< CIBA user code to specify in the CIBA request, string, optional
+  I_OPT_CIBA_LOGIN_HINT                         = 105, ///< CIBA login_hint value, mandatory on CIBA requests
+  I_OPT_CIBA_LOGIN_HINT_FORMAT                  = 106, ///< CIBA login_hint format, values available are I_CIBA_LOGIN_HINT_FORMAT_JSON, I_CIBA_LOGIN_HINT_FORMAT_JWT or I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN
+  I_OPT_CIBA_LOGIN_HINT_KID                     = 107, ///< key id to use to sign CIBA requests or login_hint_token if multiple jwk are available on the client, string
+  I_OPT_CIBA_BINDING_MESSAGE                    = 108, ///< CIBA binding message to specify in the CIBA request, string, optional
+  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN          = 109, ///< client_notification_token value to use on CIBA requests, string, mandatory if mode is ping or push
+  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE = 110, ///< Generate a random client_notification_token of the specified length
+  I_OPT_CIBA_AUTH_REQ_ID                        = 111, ///< auth_req_id value received by the server on succesfull request
+  I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT       = 112, ///< backchannel_client_notification_endpoint value to specify the url for ping or push modes
+  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 113, ///< expiration of the request in seconds received by the server on succesfull request
+  I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 114  ///< Interval to poll token endpoint on poll mode in seconds
 } i_option;
 
 /**
@@ -294,6 +338,39 @@ struct _i_session {
   int           pkce_method;
   json_t      * j_claims;
   char        * resource_indicator;
+  jwa_alg       access_token_signing_alg;
+  jwa_alg       access_token_encryption_alg;
+  jwa_enc       access_token_encryption_enc;
+  jwa_alg       id_token_signing_alg;
+  jwa_alg       id_token_encryption_alg;
+  jwa_enc       id_token_encryption_enc;
+  jwa_alg       userinfo_signing_alg;
+  jwa_alg       userinfo_encryption_alg;
+  jwa_enc       userinfo_encryption_enc;
+  jwa_alg       request_object_signing_alg;
+  jwa_alg       request_object_encryption_alg;
+  jwa_enc       request_object_encryption_enc;
+  jwa_alg       token_endpoint_signing_alg;
+  jwa_alg       token_endpoint_encryption_alg;
+  jwa_enc       token_endpoint_encryption_enc;
+  jwa_alg       ciba_request_signing_alg;
+  jwa_alg       ciba_request_encryption_alg;
+  jwa_enc       ciba_request_encryption_enc;
+  jwa_alg       auth_response_signing_alg;
+  jwa_alg       auth_response_encryption_alg;
+  jwa_enc       auth_response_encryption_enc;
+  char        * ciba_endpoint;
+  uint          ciba_mode;
+  char        * ciba_user_code;
+  char        * ciba_login_hint;
+  uint          ciba_login_hint_format;
+  char        * ciba_login_hint_kid;
+  char        * ciba_binding_message;
+  char        * ciba_client_notification_token;
+  char        * ciba_auth_req_id;
+  char        * ciba_client_notification_endpoint;
+  uint          ciba_auth_req_expires_in;
+  uint          ciba_auth_req_interval;
 };
 
 /**
@@ -872,6 +949,14 @@ int i_run_par_request(struct _i_session * i_session);
  * @return I_OK on success, an error value on error
  */
 int i_run_device_auth_request(struct _i_session * i_session);
+
+/**
+ * Executes a CIBA request
+ * and sets the auth_req_id, expires_in and interval in the _i_session *
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_run_ciba_request(struct _i_session * i_session);
 
 /**
  * @}
