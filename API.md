@@ -652,3 +652,40 @@ ulfius_clean_request(&req);
 ulfius_clean_response(&resp);
 json_decref(j_resp);
 ```
+
+### CIBA Requests
+
+Iddawc can run CIBA requests as defined in the documentation [OpenID Connect Client-Initiated Backchannel Authentication Flow - Core 1.0](https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html).
+
+```C
+/**
+ * Executes a CIBA request
+ * and sets the auth_req_id, expires_in and interval in the _i_session *
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_run_ciba_request(struct _i_session * i_session);
+```
+
+Example of using `i_run_ciba_request`:
+
+```C
+struct _i_session i_session;
+i_init_session(&i_session);
+i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CIBA,
+                                 I_OPT_OPENID_CONFIG_ENDPOINT, "https://as.tld/.well-known/openid-configuration",
+                                 I_OPT_CLIENT_ID, "client",
+                                 I_OPT_CLIENT_SECRET, "secret",
+                                 I_OPT_AUTH_METHOD, I_TOKEN_AUTH_METHOD_SECRET_BASIC,
+                                 I_OPT_SCOPE, "openid",
+                                 I_OPT_CIBA_LOGIN_HINT, "{\"username\":\"ciba\"}",
+                                 I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
+                                 I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
+                                 I_OPT_NONE);
+
+i_get_openid_config(&i_session); // get CIBA endpoint
+i_run_ciba_request(&i_session); // run request and store auth_req_id
+i_run_token_request(&i_session); // get access_token and refresh_token when the user has completed the authentication
+```
+
+Note that when using ping or push mode, Iddawc doesn't implement the client notification endpoint, its implementation and communication with iddawc's session will be yours to make.
