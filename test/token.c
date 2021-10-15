@@ -1148,6 +1148,39 @@ START_TEST(test_iddawc_token_code_jwt_auth_secret_ok)
 }
 END_TEST
 
+START_TEST(test_iddawc_token_code_jwt_auth_secret_signing_alg_ok)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_jwt_auth_code_ok, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 32,
+                                                    I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, "HS256",
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_CODE, CODE,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CLIENT_SECRET, CLIENT_SECRET_ERROR), I_OK);
+  ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_token_code_jwt_auth_privkey_ok)
 {
   struct _i_session i_session;
@@ -1162,6 +1195,47 @@ START_TEST(test_iddawc_token_code_jwt_auth_privkey_ok)
                                                     I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY,
                                                     I_OPT_TOKEN_JTI_GENERATE, 32,
                                                     I_OPT_CLIENT_SIGN_ALG, "RS256",
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_CODE, CODE,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str_2), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CLIENT_KID, "2"), I_OK);
+  ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_token_code_jwt_auth_privkey_signing_alg_ok)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  jwk_t * jwk;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_jwt_auth_code_ok, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 32,
+                                                    I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, "RS256",
                                                     I_OPT_REDIRECT_URI, REDIRECT_URI,
                                                     I_OPT_SCOPE, SCOPE_LIST,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
@@ -1295,7 +1369,9 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_secret_error_param);
   tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_privkey_error_param);
   tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_secret_ok);
+  tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_secret_signing_alg_ok);
   tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_privkey_ok);
+  tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_privkey_signing_alg_ok);
   tcase_add_test(tc_core, test_iddawc_token_code_certificate_ok);
   tcase_add_test(tc_core, test_iddawc_token_code_certificate_invalid);
   tcase_set_timeout(tc_core, 30);
