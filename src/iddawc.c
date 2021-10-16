@@ -488,6 +488,7 @@ static int _i_parse_jwt_response(struct _i_session * i_session, const char * tok
     y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_jwt_response - Error r_jwt_init");
     ret = I_ERROR;
   }
+  r_jwt_free(jwt);
   return ret;
 }
 
