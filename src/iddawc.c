@@ -3015,7 +3015,6 @@ int i_parse_redirect_to(struct _i_session * i_session) {
   char * state = NULL, * query_dup = NULL;
 
   if (o_strncmp(redirect_to, i_session->redirect_uri, o_strlen(i_session->redirect_uri)) == 0) {
-    // Extract fragment if response_type has id_token or token
     fragment = o_strnchr(redirect_to, o_strlen(redirect_to), '#');
     if (fragment != NULL && _i_has_openid_config_parameter_value(i_session, "response_modes_supported", "fragment")) {
       u_map_init(&map);
@@ -3031,7 +3030,6 @@ int i_parse_redirect_to(struct _i_session * i_session) {
       u_map_clean(&map);
     }
 
-    // Extract query without fragment if response_type is code only
     if (_i_has_openid_config_parameter_value(i_session, "response_modes_supported", "query") && (query = o_strnchr(redirect_to, fragment!=NULL?(size_t)(fragment-redirect_to):o_strlen(redirect_to), '?')) != NULL) {
       if (fragment) {
         query_dup = o_strndup(query+1, o_strrchr(query, '#')-query-1);
