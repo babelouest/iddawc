@@ -48,7 +48,7 @@ debug: ADDITIONALFLAGS=-DDEBUG -g -O0
 $(IDDAWC_LIBRARY): $(IDDAWC_INCLUDE)/iddawc.h $(IDDAWC_LOCATION)/iddawc.c
 	cd $(IDDAWC_LOCATION) && $(MAKE) debug
 
-%.o: %.c $(IDDAWC_LIBRARY) static_compressed_inmemory_website_callback.h static_compressed_inmemory_website_callback.c http_compression_callback.h http_compression_callback.c
+%.o: %.c $(IDDAWC_LIBRARY) static_compressed_inmemory_website_callback.h static_compressed_inmemory_website_callback.c http_compression_callback.h http_compression_callback.c idwcc.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $<
 
 idwcc: $(OBJECTS)

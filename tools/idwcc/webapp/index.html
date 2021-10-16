@@ -108,12 +108,95 @@
                   <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://resource.example.com" id="resource_indicator" />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Keys, signature and encryption -->
+          <div class="card-header" id="headingResource">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseAlgorithms" aria-expanded="false" aria-controls="collapseAlgorithms">
+                Keys, signature and encryption
+              </button>
+            </h2>
+          </div>
+          <div id="collapseAlgorithms" class="collapse" aria-labelledby="headingResource" data-parent="#accordionIdwcc">
+            <div class="card-body">
               <div class="row">
                 <div class="col-md-4">
                   <label for="client_jwks">Client Private Key (JWKS)</label>
                 </div>
                 <div class="col-md-8">
                   <textarea class="form-control idwcc-input idwcc-session" id="client_jwks" placeHolder="{keys:[{...}]}"></textarea>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="dpop_kid">DPoP KID</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="key-2" id="dpop_kid" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="dpop-sig-alg">DPoP signature algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="dpop-sig-alg">
+                    <option>None</option>
+                    <option>HS256</option>
+                    <option>HS384</option>
+                    <option>HS512</option>
+                    <option>RS256</option>
+                    <option>RS384</option>
+                    <option>RS512</option>
+                    <option>ES256</option>
+                    <option>ES384</option>
+                    <option>ES512</option>
+                    <option>EdDSA</option>
+                    <option>PS256</option>
+                    <option>PS384</option>
+                    <option>PS512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="key_file">TLS Key file</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="/path/to/file" id="key_file" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="cert_file">TLS Certificate file</label>
+                </div>
+                <div class="col-md-8">
+                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="/path/to/file" id="cert_file" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label>Remote Server Certificate</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-host-peer">
+                    <label class="form-check-label" for="remote_cert_flag-host-peer">Host verify peer</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-host-name">
+                    <label class="form-check-label" for="remote_cert_flag-host-name">Host verify name</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-proxy-peer">
+                    <label class="form-check-label" for="remote_cert_flag-proxy-peer">Proxy verify peer</label>
+                  </div>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-proxy-name">
+                    <label class="form-check-label" for="remote_cert_flag-proxy-name">Proxy verify name</label>
+                  </div>
                 </div>
               </div>
               <div class="row">
@@ -190,20 +273,13 @@
                   </select>
                 </div>
               </div>
+              <hr/>
               <div class="row">
                 <div class="col-md-4">
-                  <label for="dpop_kid">DPoP KID</label>
+                  <label for="access_token_signing_alg">Access token signing alg</label>
                 </div>
                 <div class="col-md-8">
-                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="key-2" id="dpop_kid" />
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-4">
-                  <label for="dpop-sig-alg">DPoP signature algorithm</label>
-                </div>
-                <div class="col-md-8">
-                  <select class="form-control idwcc-input idwcc-session" id="dpop-sig-alg">
+                  <select class="form-control idwcc-input idwcc-session" id="access_token_signing_alg">
                     <option>None</option>
                     <option>HS256</option>
                     <option>HS384</option>
@@ -223,41 +299,441 @@
               </div>
               <div class="row">
                 <div class="col-md-4">
-                  <label for="key_file">TLS Key file</label>
+                  <label for="access_token_encryption_alg">Access token key management algorithm</label>
                 </div>
                 <div class="col-md-8">
-                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="/path/to/file" id="key_file" />
+                  <select class="form-control idwcc-input idwcc-session" id="access_token_encryption_alg">
+                    <option>None</option>
+                    <option>RSA1_5</option>
+                    <option>RSA-OAEP</option>
+                    <option>RSA-OAEP-256</option>
+                    <option>A128KW</option>
+                    <option>A192KW</option>
+                    <option>A256KW</option>
+                    <option>DIR</option>
+                    <option>ECDH-ES</option>
+                    <option>ECDH-ES+A128KW</option>
+                    <option>ECDH-ES+A192KW</option>
+                    <option>ECDH-ES+A256KW</option>
+                    <option>A128GCMKW</option>
+                    <option>A192GCMKW</option>
+                    <option>A256GCMKW</option>
+                    <option>PBES2+H256</option>
+                    <option>PBES2+H384</option>
+                    <option>PBES2+H512</option>
+                  </select>
                 </div>
               </div>
               <div class="row">
                 <div class="col-md-4">
-                  <label for="cert_file">TLS Certificate file</label>
+                  <label for="access_token_encryption_enc">Access token encryption algorithm</label>
                 </div>
                 <div class="col-md-8">
-                  <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="/path/to/file" id="cert_file" />
+                  <select class="form-control idwcc-input idwcc-session" id="access_token_encryption_enc">
+                    <option>None</option>
+                    <option>A128CBC-HS256</option>
+                    <option>A192CBC-HS384</option>
+                    <option>A256CBC-HS512</option>
+                    <option>A128GCM</option>
+                    <option>A192GCM</option>
+                    <option>A256GCM</option>
+                  </select>
                 </div>
               </div>
               <div class="row">
                 <div class="col-md-4">
-                  <label>Remote Server Certificate</label>
+                  <label for="id_token_signing_alg">ID token signing alg</label>
                 </div>
                 <div class="col-md-8">
-                  <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-host-peer">
-                    <label class="form-check-label" for="remote_cert_flag-host-peer">Host verify peer</label>
-                  </div>
-                  <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-host-name">
-                    <label class="form-check-label" for="remote_cert_flag-host-name">Host verify name</label>
-                  </div>
-                  <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-proxy-peer">
-                    <label class="form-check-label" for="remote_cert_flag-proxy-peer">Proxy verify peer</label>
-                  </div>
-                  <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="remote_cert_flag-proxy-name">
-                    <label class="form-check-label" for="remote_cert_flag-proxy-name">Proxy verify name</label>
-                  </div>
+                  <select class="form-control idwcc-input idwcc-session" id="id_token_signing_alg">
+                    <option>None</option>
+                    <option>HS256</option>
+                    <option>HS384</option>
+                    <option>HS512</option>
+                    <option>RS256</option>
+                    <option>RS384</option>
+                    <option>RS512</option>
+                    <option>ES256</option>
+                    <option>ES384</option>
+                    <option>ES512</option>
+                    <option>EdDSA</option>
+                    <option>PS256</option>
+                    <option>PS384</option>
+                    <option>PS512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="id_token_encryption_alg">ID token key management algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="id_token_encryption_alg">
+                    <option>None</option>
+                    <option>RSA1_5</option>
+                    <option>RSA-OAEP</option>
+                    <option>RSA-OAEP-256</option>
+                    <option>A128KW</option>
+                    <option>A192KW</option>
+                    <option>A256KW</option>
+                    <option>DIR</option>
+                    <option>ECDH-ES</option>
+                    <option>ECDH-ES+A128KW</option>
+                    <option>ECDH-ES+A192KW</option>
+                    <option>ECDH-ES+A256KW</option>
+                    <option>A128GCMKW</option>
+                    <option>A192GCMKW</option>
+                    <option>A256GCMKW</option>
+                    <option>PBES2+H256</option>
+                    <option>PBES2+H384</option>
+                    <option>PBES2+H512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="id_token_encryption_enc">ID token encryption algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="id_token_encryption_enc">
+                    <option>None</option>
+                    <option>A128CBC-HS256</option>
+                    <option>A192CBC-HS384</option>
+                    <option>A256CBC-HS512</option>
+                    <option>A128GCM</option>
+                    <option>A192GCM</option>
+                    <option>A256GCM</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="userinfo_signing_alg">Userinfo signing alg</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="userinfo_signing_alg">
+                    <option>None</option>
+                    <option>HS256</option>
+                    <option>HS384</option>
+                    <option>HS512</option>
+                    <option>RS256</option>
+                    <option>RS384</option>
+                    <option>RS512</option>
+                    <option>ES256</option>
+                    <option>ES384</option>
+                    <option>ES512</option>
+                    <option>EdDSA</option>
+                    <option>PS256</option>
+                    <option>PS384</option>
+                    <option>PS512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="userinfo_encryption_alg">Userinfo key management algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="userinfo_encryption_alg">
+                    <option>None</option>
+                    <option>RSA1_5</option>
+                    <option>RSA-OAEP</option>
+                    <option>RSA-OAEP-256</option>
+                    <option>A128KW</option>
+                    <option>A192KW</option>
+                    <option>A256KW</option>
+                    <option>DIR</option>
+                    <option>ECDH-ES</option>
+                    <option>ECDH-ES+A128KW</option>
+                    <option>ECDH-ES+A192KW</option>
+                    <option>ECDH-ES+A256KW</option>
+                    <option>A128GCMKW</option>
+                    <option>A192GCMKW</option>
+                    <option>A256GCMKW</option>
+                    <option>PBES2+H256</option>
+                    <option>PBES2+H384</option>
+                    <option>PBES2+H512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="userinfo_encryption_enc">Userinfo encryption algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="userinfo_encryption_enc">
+                    <option>None</option>
+                    <option>A128CBC-HS256</option>
+                    <option>A192CBC-HS384</option>
+                    <option>A256CBC-HS512</option>
+                    <option>A128GCM</option>
+                    <option>A192GCM</option>
+                    <option>A256GCM</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="request_object_signing_alg">Request object signing alg</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="request_object_signing_alg">
+                    <option>None</option>
+                    <option>HS256</option>
+                    <option>HS384</option>
+                    <option>HS512</option>
+                    <option>RS256</option>
+                    <option>RS384</option>
+                    <option>RS512</option>
+                    <option>ES256</option>
+                    <option>ES384</option>
+                    <option>ES512</option>
+                    <option>EdDSA</option>
+                    <option>PS256</option>
+                    <option>PS384</option>
+                    <option>PS512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="request_object_encryption_alg">Request object key management algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="request_object_encryption_alg">
+                    <option>None</option>
+                    <option>RSA1_5</option>
+                    <option>RSA-OAEP</option>
+                    <option>RSA-OAEP-256</option>
+                    <option>A128KW</option>
+                    <option>A192KW</option>
+                    <option>A256KW</option>
+                    <option>DIR</option>
+                    <option>ECDH-ES</option>
+                    <option>ECDH-ES+A128KW</option>
+                    <option>ECDH-ES+A192KW</option>
+                    <option>ECDH-ES+A256KW</option>
+                    <option>A128GCMKW</option>
+                    <option>A192GCMKW</option>
+                    <option>A256GCMKW</option>
+                    <option>PBES2+H256</option>
+                    <option>PBES2+H384</option>
+                    <option>PBES2+H512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="request_object_encryption_enc">Request object encryption algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="request_object_encryption_enc">
+                    <option>None</option>
+                    <option>A128CBC-HS256</option>
+                    <option>A192CBC-HS384</option>
+                    <option>A256CBC-HS512</option>
+                    <option>A128GCM</option>
+                    <option>A192GCM</option>
+                    <option>A256GCM</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="token_endpoint_signing_alg">Token endpoint signing alg</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="token_endpoint_signing_alg">
+                    <option>None</option>
+                    <option>HS256</option>
+                    <option>HS384</option>
+                    <option>HS512</option>
+                    <option>RS256</option>
+                    <option>RS384</option>
+                    <option>RS512</option>
+                    <option>ES256</option>
+                    <option>ES384</option>
+                    <option>ES512</option>
+                    <option>EdDSA</option>
+                    <option>PS256</option>
+                    <option>PS384</option>
+                    <option>PS512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="token_endpoint_encryption_alg">Token endpoint key management algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="token_endpoint_encryption_alg">
+                    <option>None</option>
+                    <option>RSA1_5</option>
+                    <option>RSA-OAEP</option>
+                    <option>RSA-OAEP-256</option>
+                    <option>A128KW</option>
+                    <option>A192KW</option>
+                    <option>A256KW</option>
+                    <option>DIR</option>
+                    <option>ECDH-ES</option>
+                    <option>ECDH-ES+A128KW</option>
+                    <option>ECDH-ES+A192KW</option>
+                    <option>ECDH-ES+A256KW</option>
+                    <option>A128GCMKW</option>
+                    <option>A192GCMKW</option>
+                    <option>A256GCMKW</option>
+                    <option>PBES2+H256</option>
+                    <option>PBES2+H384</option>
+                    <option>PBES2+H512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="token_endpoint_encryption_enc">Token endpoint encryption algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="token_endpoint_encryption_enc">
+                    <option>None</option>
+                    <option>A128CBC-HS256</option>
+                    <option>A192CBC-HS384</option>
+                    <option>A256CBC-HS512</option>
+                    <option>A128GCM</option>
+                    <option>A192GCM</option>
+                    <option>A256GCM</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_request_signing_alg">CIBA Request signing alg</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="ciba_request_signing_alg">
+                    <option>None</option>
+                    <option>HS256</option>
+                    <option>HS384</option>
+                    <option>HS512</option>
+                    <option>RS256</option>
+                    <option>RS384</option>
+                    <option>RS512</option>
+                    <option>ES256</option>
+                    <option>ES384</option>
+                    <option>ES512</option>
+                    <option>EdDSA</option>
+                    <option>PS256</option>
+                    <option>PS384</option>
+                    <option>PS512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_request_encryption_alg">CIBA Request key management algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="ciba_request_encryption_alg">
+                    <option>None</option>
+                    <option>RSA1_5</option>
+                    <option>RSA-OAEP</option>
+                    <option>RSA-OAEP-256</option>
+                    <option>A128KW</option>
+                    <option>A192KW</option>
+                    <option>A256KW</option>
+                    <option>DIR</option>
+                    <option>ECDH-ES</option>
+                    <option>ECDH-ES+A128KW</option>
+                    <option>ECDH-ES+A192KW</option>
+                    <option>ECDH-ES+A256KW</option>
+                    <option>A128GCMKW</option>
+                    <option>A192GCMKW</option>
+                    <option>A256GCMKW</option>
+                    <option>PBES2+H256</option>
+                    <option>PBES2+H384</option>
+                    <option>PBES2+H512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_request_encryption_enc">CIBA Request encryption algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="ciba_request_encryption_enc">
+                    <option>None</option>
+                    <option>A128CBC-HS256</option>
+                    <option>A192CBC-HS384</option>
+                    <option>A256CBC-HS512</option>
+                    <option>A128GCM</option>
+                    <option>A192GCM</option>
+                    <option>A256GCM</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="auth_response_signing_alg">Auth Response signing alg</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="auth_response_signing_alg">
+                    <option>None</option>
+                    <option>HS256</option>
+                    <option>HS384</option>
+                    <option>HS512</option>
+                    <option>RS256</option>
+                    <option>RS384</option>
+                    <option>RS512</option>
+                    <option>ES256</option>
+                    <option>ES384</option>
+                    <option>ES512</option>
+                    <option>EdDSA</option>
+                    <option>PS256</option>
+                    <option>PS384</option>
+                    <option>PS512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="auth_response_encryption_alg">Auth Response key management algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="auth_response_encryption_alg">
+                    <option>None</option>
+                    <option>RSA1_5</option>
+                    <option>RSA-OAEP</option>
+                    <option>RSA-OAEP-256</option>
+                    <option>A128KW</option>
+                    <option>A192KW</option>
+                    <option>A256KW</option>
+                    <option>DIR</option>
+                    <option>ECDH-ES</option>
+                    <option>ECDH-ES+A128KW</option>
+                    <option>ECDH-ES+A192KW</option>
+                    <option>ECDH-ES+A256KW</option>
+                    <option>A128GCMKW</option>
+                    <option>A192GCMKW</option>
+                    <option>A256GCMKW</option>
+                    <option>PBES2+H256</option>
+                    <option>PBES2+H384</option>
+                    <option>PBES2+H512</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="auth_response_encryption_enc">Auth Response encryption algorithm</label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-input idwcc-session" id="auth_response_encryption_enc">
+                    <option>None</option>
+                    <option>A128CBC-HS256</option>
+                    <option>A192CBC-HS384</option>
+                    <option>A256CBC-HS512</option>
+                    <option>A128GCM</option>
+                    <option>A192GCM</option>
+                    <option>A256GCM</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -452,6 +928,28 @@
               </div>
               <div class="row">
                 <div class="col-md-4">
+                  <label for="pushed_authorization_request_endpoint">Backchannel Authentication (CIBA) endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/ciba" id="ciba_endpoint" />
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary idwcc-input" type="button" id="ciba-plus" data-toggle="collapse" data-target="#ciba-collapse" aria-expanded="false" aria-controls="ciba-collapse">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="collapse multi-collapse" id="ciba-collapse">
+                    <div class="card card-body">
+                      <pre id="ciba-details">
+                      </pre>
+                    </div>
+                    <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
                   <label>Server Public Keys (digest)</label>
                 </div>
                 <div class="col-md-8">
@@ -538,7 +1036,7 @@
                 </div>
                 <div class="col-md-8">
                   <div class="input-group mb-3">
-                    <select class="form-control" id="scopeSupported">
+                    <select class="form-control scopeSupported" id="scopeSupported">
                     </select>
                     <input type="text" class="form-control idwcc-session" placeHolder="openid" id="scope"/>
                   </div>
@@ -1346,6 +1844,148 @@
                 </div>
                 <div class="col-md-8">
                   <pre id="resource_results">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Backchannel Authentication (CIBA) Request -->
+          <div class="card-header" id="headingCIBA">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseCIBA" aria-expanded="false" aria-controls="collapseCIBA">
+                Backchannel Authentication (CIBA) Request
+              </button>
+            </h2>
+          </div>
+          <div id="collapseCIBA" class="collapse" aria-labelledby="headingCIBA" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_mode">Mode</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <select class="form-control idwcc-session" id="ciba_mode">
+                      <option value=""></option>
+                      <option value="1">poll</option>
+                      <option value="2">ping</option>
+                      <option value="3">push</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_client_notification_endpoint">Client Notification Endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="message" id="ciba_client_notification_endpoint"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_client_notification_token">Client notification token</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="abcdxyz1234" id="ciba_client_notification_token"/>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" id="clientNotifTokenGenerate">
+                        <i class="fa fa-cogs" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="id_token">
+                    Login Hint
+                  </label>
+                </div>
+                <div class="col-md-8">
+                  <select class="form-control idwcc-session" id="ciba_login_hint_format">
+                    <option value="0">JSON</option>
+                    <option value="1">JWT</option>
+                    <option value="2">ID Token</option>
+                  </select>
+                  <textarea class="form-control idwcc-session" id="ciba_login_hint" placeHolder="{&#34;username&#34;:&#34;dev&#34}"></textarea>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_login_hint_kid">Login Hint JWT Kid</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="kid-6" id="ciba_login_hint_kid"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_binding_message">Binding Message</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="message" id="ciba_binding_message"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_user_code">User Code</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="secret" id="ciba_user_code"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_auth_req_id">auth_req_id</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="xyzbvc0123" id="ciba_auth_req_id"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_auth_req_expires_in">Expires in</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="number" class="form-control idwcc-session" placeHolder="120" id="ciba_auth_req_expires_in"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="ciba_auth_req_interval">Interval</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="number" class="form-control idwcc-session" placeHolder="5" id="ciba_auth_req_interval"/>
+                  </div>
+                </div>
+              </div>
+              <hr/>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="btn-group" role="group">
+                    <button class="btn btn-secondary" type="button" id="cibaRun">
+                      Run CIBA request <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-8">
+                  <pre id="ciba_status">
                   </pre>
                 </div>
               </div>

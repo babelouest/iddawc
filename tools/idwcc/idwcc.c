@@ -47,6 +47,7 @@
 struct _callback_struct {
   struct _i_session * session;
   const char * webapp_path;
+  uint ciba_status;
 };
 
 static void print_help(FILE * output, const char * command) {
@@ -168,6 +169,8 @@ static int callback_generate(const struct _u_request * request, struct _u_respon
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
   } else if (0 == o_strcmp("pkce", u_map_get(request->map_post_body, "property"))) {
     i_set_int_parameter(session, I_OPT_PKCE_CODE_VERIFIER_GENERATE, 43);
+  } else if (0 == o_strcmp("client_notification_token", u_map_get(request->map_post_body, "property"))) {
+    i_set_int_parameter(session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE, 23);
   }
   return U_CALLBACK_CONTINUE;
 }
@@ -599,6 +602,103 @@ static int callback_resource_request(const struct _u_request * request, struct _
   return U_CALLBACK_CONTINUE;
 }
 
+static int callback_get_ciba_status(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
+  json_t * j_resp;
+  
+  switch (callback_struct->ciba_status) {
+    case 0:
+      j_resp = json_pack("{ss}", "result", "none");
+      ulfius_set_json_body_response(response, 200, j_resp);
+      json_decref(j_resp);
+      break;
+    case 1:
+      j_resp = json_pack("{ss}", "result", "pending");
+      ulfius_set_json_body_response(response, 200, j_resp);
+      json_decref(j_resp);
+      break;
+    case 2:
+      j_resp = json_pack("{ss}", "result", "complete");
+      ulfius_set_json_body_response(response, 200, j_resp);
+      json_decref(j_resp);
+      break;
+    case 3:
+      j_resp = json_pack("{ss}", "result", "pushed");
+      ulfius_set_json_body_response(response, 200, j_resp);
+      json_decref(j_resp);
+      break;
+    default:
+      j_resp = json_pack("{ss}", "result", "error");
+      ulfius_set_json_body_response(response, 200, j_resp);
+      json_decref(j_resp);
+      break;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
+static int callback_run_ciba(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
+  struct _i_session * session = callback_struct->session;
+  int ret;
+  json_t * j_return;
+
+  if (session->token_method & (I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET|I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY) && !o_strlen(i_get_str_parameter(session, I_OPT_TOKEN_JTI))) {
+    i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
+  }
+  if ((ret = i_run_ciba_request(session)) == I_ERROR_PARAM) {
+    j_return = json_pack("{ss? ss? ss?}", "error", i_get_str_parameter(session, I_OPT_ERROR), "error_description", i_get_str_parameter(session, I_OPT_ERROR_DESCRIPTION), "error_uri", i_get_str_parameter(session, I_OPT_ERROR_URI));
+    ulfius_set_json_body_response(response, 400, j_return);
+    json_decref(j_return);
+  } else if (ret == I_ERROR_UNAUTHORIZED) {
+    j_return = json_pack("{ss? ss? ss?}", "error", i_get_str_parameter(session, I_OPT_ERROR), "error_description", i_get_str_parameter(session, I_OPT_ERROR_DESCRIPTION), "error_uri", i_get_str_parameter(session, I_OPT_ERROR_URI));
+    ulfius_set_json_body_response(response, 403, j_return);
+    json_decref(j_return);
+  } else if (ret != I_OK) {
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error i_run_ciba_request");
+    response->status = 500;
+  } else {
+    callback_struct->ciba_status = 1;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
+static int callback_ciba_callback(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
+  struct _i_session * session = callback_struct->session;
+  char * auth;
+  json_t * j_body;
+  
+  if (i_get_int_parameter(session, I_OPT_CIBA_MODE) == I_CIBA_MODE_PING) {
+    if (i_get_str_parameter(session, I_OPT_CIBA_AUTH_REQ_ID) != NULL && i_get_str_parameter(session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN) != NULL) {
+      auth = msprintf("Bearer %s", i_get_str_parameter(session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN));
+      j_body = ulfius_get_json_body_request(request, NULL);
+      if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), auth) && 0 == o_strcmp(i_get_str_parameter(session, I_OPT_CIBA_AUTH_REQ_ID), json_string_value(json_object_get(j_body, "auth_req_id")))) {
+        callback_struct->ciba_status = 2;
+      } else {
+        response->status = 401;
+      }
+    }
+  } else if (i_get_int_parameter(session, I_OPT_CIBA_MODE) == I_CIBA_MODE_PUSH) {
+    if (i_get_str_parameter(session, I_OPT_CIBA_AUTH_REQ_ID) != NULL && i_get_str_parameter(session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN) != NULL) {
+      auth = msprintf("Bearer %s", i_get_str_parameter(session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN));
+      j_body = ulfius_get_json_body_request(request, NULL);
+      if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), auth)) {
+        if (i_parse_token_response(session, response->status, j_body) == RHN_OK) {
+          callback_struct->ciba_status = 3;
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error i_parse_token_response");
+          response->status = 401;
+        }
+      } else {
+        response->status = 401;
+      }
+    }
+  } else {
+    response->status = 401;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
 static int callback_default(const struct _u_request * request, struct _u_response * response, void * user_data) {
   response->status = 404;
   return U_CALLBACK_CONTINUE;
@@ -716,6 +816,7 @@ int main(int argc, char ** argv) {
         file_config.allow_deflate = 1;
 
         callback_struct.session = &session;
+        callback_struct.ciba_status = 0;
 
         ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/session", 0, &callback_get_session, &session);
         ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/session", 0, &callback_save_session, &session);
@@ -732,6 +833,9 @@ int main(int argc, char ** argv) {
         ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/register", 0, &callback_client_get_registration, &session);
         ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/register", 0, &callback_client_manage_registration, &session);
         ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/resourceRequest", 0, &callback_resource_request, &session);
+        ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/ciba", 0, &callback_get_ciba_status, &callback_struct);
+        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/ciba", 0, &callback_run_ciba, &callback_struct);
+        ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/cibaCb", 0, &callback_ciba_callback, &callback_struct);
         ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/callback", 0, &callback_redirect_uri, &callback_struct);
         ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/parseRedirectTo", 0, &callback_parse_redirect_to, &session);
         ulfius_add_endpoint_by_val(&instance, "*", "/api", "*", 1, &callback_http_compression, NULL);

@@ -1,4 +1,5 @@
 var currentSession = {};
+var cibaStatus = 0;
 
 var responseTypes = {
   none:               0x00000000,
@@ -8,7 +9,8 @@ var responseTypes = {
   password:           0x00001000,
   client_credentials: 0x00010000,
   refresh_token:      0x00100000,
-  device_code:        0x01000000
+  device_code:        0x01000000,
+  ciba:               0x10000000
 };
 
 const authMethodGet              = 0x00000001;
@@ -267,6 +269,20 @@ $( document ).ready(function() {
     });
   });
 
+  $("#clientNotifTokenGenerate").click(() => {
+    saveSession()
+    .then(() => {
+      return $.ajax({
+        method: "PUT",
+        url: "/api/generate",
+        data: {property: "client_notification_token"}
+      });
+    })
+    .then(() => {
+      getSession();
+    });
+  });
+
   $("#runAuthBtn").click(() => {
     if ($("#authorization_endpoint").val() && $("#client_id").val()) {
       saveSession()
@@ -354,6 +370,8 @@ $( document ).ready(function() {
     $("#device_auth_user_code").val("");
     $("#device_auth_verification_uri").val("");
     $("#device_auth_verification_uri_complete").val("");
+    $("#ciba_client_notification_token").val("");
+    $("#ciba_auth_req_id").val("");
     $("#register_payload").empty();
     $("#access_token_payload").empty();
     $("#userinfo_payload").empty();
@@ -608,6 +626,34 @@ $( document ).ready(function() {
     }
   });
   
+  $("#cibaRun").click(() => {
+    if ($("#ciba_endpoint").val()) {
+      saveSession()
+      .then(() => {
+        return $.ajax({
+          method: "POST",
+          url: "/api/ciba"
+        });
+      })
+      .then(() => {
+        showModal("Success");
+        getSession()
+        .then(() => {
+          loopCibaStatus();
+        });
+      })
+      .fail((error) => {
+        if (error.status === 400) {
+          showModal("Error running token: invalid parameters<div><b>Error:</b> <i>"+error.responseJSON.error+"</i></div><div><b>Error description:</b> <i>"+(error.responseJSON.error_description||" - ")+"</i></div>");
+        } else if (error.status === 403) {
+          showModal("Error running token: unauthorized<div><b>Error:</b> <i>"+error.responseJSON.error+"</i></div><div><b>Error description:</b> <i>"+(error.responseJSON.error_description||" - ")+"</i></div>");
+        } else {
+          showModal("Error running token: server error");
+        }
+      });
+    }
+  });
+  
   $("#resourceRun").click(() => {
     if ($("#resourceHttpUrl").val()) {
       saveSession()
@@ -682,7 +728,7 @@ $( document ).ready(function() {
   });
 
   function getSession() {
-    $.get("/api/session")
+    return $.get("/api/session")
     .then((res) => {
       currentSession = res;
       loadSession();
@@ -705,6 +751,7 @@ $( document ).ready(function() {
     $("#registration_endpoint").val(currentSession.registration_endpoint||"");
     $("#device_authorization_endpoint").val(currentSession.device_authorization_endpoint||"");
     $("#pushed_authorization_request_endpoint").val(currentSession.pushed_authorization_request_endpoint||"");
+    $("#ciba_endpoint").val(currentSession.ciba_endpoint||"");
     $("#server_jwks").val(JSON.stringify(currentSession.server_jwks, null, 2)||"");
     $("#server-kid").val(currentSession["server-kid"]||"");
     $("#openid_config_strict").prop("checked", !!(currentSession.openid_config_strict));
@@ -721,6 +768,27 @@ $( document ).ready(function() {
     $("#client-kid").val(currentSession["client-kid"]||"");
     $("#sig-alg").val(currentSession["sig-alg"]||"None");
     $("#enc-alg").val(currentSession["enc-alg"]||"None");
+    $("#access_token_signing_alg").val(currentSession["access_token_signing_alg"]||"None");
+    $("#access_token_encryption_alg").val(currentSession["access_token_encryption_alg"]||"None");
+    $("#access_token_encryption_enc").val(currentSession["access_token_encryption_enc"]||"None");
+    $("#id_token_signing_alg").val(currentSession["id_token_signing_alg"]||"None");
+    $("#id_token_encryption_alg").val(currentSession["id_token_encryption_alg"]||"None");
+    $("#id_token_encryption_enc").val(currentSession["id_token_encryption_enc"]||"None");
+    $("#userinfo_signing_alg").val(currentSession["userinfo_signing_alg"]||"None");
+    $("#userinfo_encryption_alg").val(currentSession["userinfo_encryption_alg"]||"None");
+    $("#userinfo_encryption_enc").val(currentSession["userinfo_encryption_enc"]||"None");
+    $("#request_object_signing_alg").val(currentSession["request_object_signing_alg"]||"None");
+    $("#request_object_encryption_alg").val(currentSession["request_object_encryption_alg"]||"None");
+    $("#request_object_encryption_enc").val(currentSession["request_object_encryption_enc"]||"None");
+    $("#token_endpoint_signing_alg").val(currentSession["token_endpoint_signing_alg"]||"None");
+    $("#token_endpoint_encryption_alg").val(currentSession["token_endpoint_encryption_alg"]||"None");
+    $("#token_endpoint_encryption_enc").val(currentSession["token_endpoint_encryption_enc"]||"None");
+    $("#ciba_request_signing_alg").val(currentSession["ciba_request_signing_alg"]||"None");
+    $("#ciba_request_encryption_alg").val(currentSession["ciba_request_encryption_alg"]||"None");
+    $("#ciba_request_encryption_enc").val(currentSession["ciba_request_encryption_enc"]||"None");
+    $("#auth_response_signing_alg").val(currentSession["auth_response_signing_alg"]||"None");
+    $("#auth_response_encryption_alg").val(currentSession["auth_response_encryption_alg"]||"None");
+    $("#auth_response_encryption_enc").val(currentSession["auth_response_encryption_enc"]||"None");
     $("#enc").val(currentSession.enc||"None");
     $("#dpop_kid").val(currentSession.dpop_kid||"");
     $("#dpop-sig-alg").val(currentSession["dpop-sig-alg"]||"None");
@@ -742,6 +810,17 @@ $( document ).ready(function() {
     $("#device_auth_expires_in").val(currentSession.device_auth_expires_in||"");
     $("#device_auth_interval").val(currentSession.device_auth_interval||"");
     $("#resource_indicator").val(currentSession.resource_indicator||"");
+    $("#ciba_mode").val(currentSession.ciba_mode.toString()||"").change();
+    $("#ciba_user_code").val(currentSession.ciba_user_code||"");
+    $("#ciba_login_hint").val(currentSession.ciba_login_hint||"");
+    $("#ciba_login_hint_format").val(currentSession.ciba_login_hint_format.toString()||"").change();
+    $("#ciba_login_hint_kid").val(currentSession.ciba_login_hint_kid||"");
+    $("#ciba_binding_message").val(currentSession.ciba_binding_message||"");
+    $("#ciba_client_notification_token").val(currentSession.ciba_client_notification_token||"");
+    $("#ciba_auth_req_id").val(currentSession.ciba_auth_req_id||"");
+    $("#ciba_client_notification_endpoint").val(currentSession.ciba_client_notification_endpoint||"");
+    $("#ciba_auth_req_expires_in").val(currentSession.ciba_auth_req_expires_in||"");
+    $("#ciba_auth_req_interval").val(currentSession.ciba_auth_req_interval||"");
 
     if (currentSession.userinfo) {
       $("#userinfo_payload").empty().html(JSON.stringify(JSON.parse(currentSession.userinfo), null, 2));
@@ -749,6 +828,10 @@ $( document ).ready(function() {
 
     if (!$("#redirect_uri").val()) {
       $("#redirect_uri").val(location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '')+"/callback");
+    }
+
+    if (!$("#ciba_client_notification_endpoint").val()) {
+      $("#ciba_client_notification_endpoint").val(location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '')+"/cibaCb");
     }
 
     if (!$("#clientRegistrationRedirectUri").val()) {
@@ -800,6 +883,9 @@ $( document ).ready(function() {
       });
       if (currentSession.openid_config.grant_types_supported && currentSession.openid_config.grant_types_supported.indexOf("urn:ietf:params:oauth:grant-type:device_code") > -1) {
         $("#response_type").append('<option value="'+responseTypes.device_code+'">device_code</option>');
+      }
+      if (currentSession.openid_config.grant_types_supported.indexOf("urn:openid:params:grant-type:ciba") > -1) {
+        $("#response_type").append('<option value="'+responseTypes.ciba+'">ciba</option>');
       }
       $("#authorization_endpoint-details").empty();
       if (currentSession.openid_config.request_object_signing_alg_values_supported) {
@@ -893,6 +979,17 @@ $( document ).ready(function() {
 
       $("#pushed_authorization_request_endpoint-details").empty();
       $("#pushed_authorization_request_endpoint-details").append("<b>require_pushed_authorization_requests</b>: "+currentSession.openid_config.require_pushed_authorization_requests||"false");
+
+      $("#ciba-details").empty();
+      if (currentSession.openid_config.backchannel_authentication_endpoint) {
+        $("#ciba-details").append("<b>backchannel_token_delivery_modes_supported</b>:\n  "+currentSession.openid_config.backchannel_token_delivery_modes_supported.join(",")+"\n\n");
+        $("#ciba-details").append("<b>backchannel_authentication_request_signing_alg_values_supported</b>:\n  "+currentSession.openid_config.backchannel_authentication_request_signing_alg_values_supported.join(",")+"\n\n");
+        if (currentSession.openid_config.backchannel_authentication_request_encryption_alg_values_supported) {
+          $("#ciba-details").append("<b>backchannel_authentication_request_encryption_alg_values_supported</b>:\n  "+currentSession.openid_config.backchannel_authentication_request_encryption_alg_values_supported.join(",")+"\n\n");
+          $("#ciba-details").append("<b>backchannel_authentication_request_encryption_enc_values_supported</b>:\n  "+currentSession.openid_config.backchannel_authentication_request_encryption_enc_values_supported.join(",")+"\n\n");
+        }
+        $("#ciba-details").append("<b>backchannel_user_code_parameter_supported</b>:\n  "+(currentSession.openid_config.backchannel_user_code_parameter_supported?"true":"false")+"\n\n");
+      }
 
       $("#server_config").empty();
       Object.keys(currentSession.openid_config).forEach((key) => {
@@ -1023,6 +1120,10 @@ $( document ).ready(function() {
         }
       } else if ($(this).prop("id") === "pkce_method") {
         currentSession.pkce_method = parseInt($("#pkce_method").val());
+      } else if ($(this).prop("id") === "ciba_mode") {
+        currentSession.ciba_mode = parseInt($("#ciba_mode").val());
+      } else if ($(this).prop("id") === "ciba_login_hint_format") {
+        currentSession.ciba_login_hint_format = parseInt($("#ciba_login_hint_format").val());
       } else {
         currentSession[$(this).prop("id")] = $(this).val();
       }
@@ -1180,6 +1281,37 @@ $( document ).ready(function() {
     }
     return parameters;
   }
+  
+  function loopCibaStatus() {
+      $.ajax({
+        method: "GET",
+        url: "/api/ciba"
+      })
+      .then((res) => {
+        if (res.result === "none") {
+          $("#ciba_status").text("No CIBA request");
+          cibaStatus = 0;
+        } else if (res.result === "pending") {
+          $("#ciba_status").text("CIBA request pending");
+          cibaStatus = 1;
+          setTimeout(() => {
+            loopCibaStatus();
+          }, 5000);
+        } else if (res.result === "complete") {
+          $("#ciba_status").text("CIBA request completed");
+          cibaStatus = 2;
+        } else if (res.result === "pushed") {
+          $("#ciba_status").text("CIBA request completed, token pushed");
+          cibaStatus = 3;
+          getSession();
+          showModal("Token received from CIBA push");
+        } else if (res.result === "error") {
+          $("#ciba_status").text("CIBA request error");
+          cibaStatus = 3;
+        }
+      });
+  }
 
   getSession();
+  loopCibaStatus();
 });
