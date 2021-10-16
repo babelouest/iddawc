@@ -29,6 +29,7 @@
 #define AUTH_ENDPOINT "http://localhost:8080/auth"
 #define REFRESH_TOKEN "refreshXyz1234"
 #define ID_TOKEN "idTokenXyz1234"
+#define GLEWLWYD_ISS "https://glewlwyd.tld/"
 #define GLEWLWYD_API_URL "https://glewlwyd.tld/api"
 #define GLEWLWYD_COOKIE_SESSION "cookieXyz1234"
 #define CLAIM1 "claim1"
@@ -1029,6 +1030,572 @@ START_TEST(test_iddawc_parse_redirect_to_access_token_error_expires_in)
 }
 END_TEST
 
+START_TEST(test_iddawc_parse_redirect_to_query_jwt_ok)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld?response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CODE), CODE);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_iss)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", "error",
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld?response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_aud)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", "error",
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld?response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_exp)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)-120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld?response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_state)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", "error",
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld?response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_code)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", "error",
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld?response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
+  ck_assert_str_ne(i_get_str_parameter(&i_session, I_OPT_CODE), CODE);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_signkey)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str_2,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld?response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_ok)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld#response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CODE), CODE);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_iss)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", "error",
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld#response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_aud)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", "error",
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld#response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_exp)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)-120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld#response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_state)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", "error",
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld#response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_code)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", "error",
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld#response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
+  ck_assert_str_ne(i_get_str_parameter(&i_session, I_OPT_CODE), CODE);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_signkey)
+{
+  struct _i_session i_session;
+  jwt_t * jwt;
+  jwk_t * jwk;
+  char * token, * redirect_to;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
+                                             RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
+                                             RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
+                                             RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str_2,
+                                             RHN_OPT_SIG_ALG, R_JWA_ALG_RS256,
+                                             RHN_OPT_NONE), RHN_OK);
+  ck_assert_ptr_ne(NULL, token = r_jwt_serialize_signed(jwt, NULL, 0));
+  ck_assert_ptr_ne(NULL, redirect_to = msprintf("https://iddawc.tld#response=%s", token));
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_ISSUER, GLEWLWYD_ISS,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, redirect_to,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
+  o_free(token);
+  o_free(redirect_to);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
 START_TEST(test_iddawc_code_valid_post_jwt_sign_secret_error_param)
 {
   struct _i_session i_session;
@@ -1432,6 +1999,20 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_access_token_error_state);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_access_token_error_token_type);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_access_token_error_expires_in);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_query_jwt_ok);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_query_jwt_invalid_iss);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_query_jwt_invalid_aud);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_query_jwt_invalid_exp);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_query_jwt_invalid_state);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_query_jwt_invalid_code);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_query_jwt_invalid_signkey);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_fragment_jwt_ok);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_fragment_jwt_invalid_iss);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_fragment_jwt_invalid_aud);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_fragment_jwt_invalid_exp);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_fragment_jwt_invalid_state);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_fragment_jwt_invalid_code);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_fragment_jwt_invalid_signkey);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_secret_error_param);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_privkey_error_param);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_secret_error_param);
