@@ -91,6 +91,7 @@ extern "C"
 #define I_TOKEN_TYPE_ID_TOKEN      1 ///<
 #define I_TOKEN_TYPE_USERINFO      2 ///<
 #define I_TOKEN_TYPE_INTROSPECTION 3 ///<
+#define I_TOKEN_TYPE_RESPONSE_AUTH 4 ///<
 
 #define I_HEADER_PREFIX_BEARER "Bearer "
 #define I_HEADER_AUTHORIZATION "Authorization"
@@ -788,6 +789,16 @@ int i_parse_redirect_to(struct _i_session * i_session);
  * @return I_OK on success, an error value on error
  */
 int i_run_token_request(struct _i_session * i_session);
+
+/**
+ * Parses a token response in JSON format
+ * and sets the result values in the session variables
+ * @param i_session: a reference to a struct _i_session *
+ * @param http_status: the HTTP status response
+ * @param j_response: the response body in JSON format
+ * @return I_OK on success, an error value on error
+ */
+int i_parse_token_response(struct _i_session * i_session, int http_status, json_t * j_response);
 
 /**
  * Validates the id_token signature and content if necessary
