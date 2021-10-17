@@ -3010,35 +3010,29 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option) {
 }
 
 int i_parse_redirect_to(struct _i_session * i_session) {
-  int ret = I_OK;
+  int ret = I_OK, query_parsed = 0;
   struct _u_map map;
   const char * fragment = NULL, * query = NULL, * redirect_to = i_get_str_parameter(i_session, I_OPT_REDIRECT_TO);
-  char * state = NULL, * query_dup = NULL;
+  char * query_dup = NULL, * state = NULL;
 
   if (o_strncmp(redirect_to, i_session->redirect_uri, o_strlen(i_session->redirect_uri)) == 0) {
-    fragment = o_strnchr(redirect_to, o_strlen(redirect_to), '#');
-    if (fragment != NULL && _i_has_openid_config_parameter_value(i_session, "response_modes_supported", "fragment")) {
-      u_map_init(&map);
-      if (_i_extract_parameters(i_session, fragment+1, &map) == I_OK) {
-        if ((ret = _i_parse_redirect_to_parameters(i_session, &map)) == I_OK) {
-          if (i_session->id_token != NULL && r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to fragment - Error id_token invalid");
-            ret = I_ERROR_SERVER;
-          }
-        }
-      }
-      state = o_strdup(u_map_get(&map, "state"));
-      u_map_clean(&map);
+    query_dup = o_strdup(redirect_to + o_strlen(i_session->redirect_uri));
+    
+    query = query_dup;
+    if (o_strlen(query) && query[0] == '?') {
+      query++;
     }
 
-    if (_i_has_openid_config_parameter_value(i_session, "response_modes_supported", "query") && (query = o_strnchr(redirect_to, fragment!=NULL?(size_t)(fragment-redirect_to):o_strlen(redirect_to), '?')) != NULL) {
-      if (fragment) {
-        query_dup = o_strndup(query+1, o_strrchr(query, '#')-query-1);
-      } else {
-        query_dup = o_strdup(query+1);
-      }
+    fragment = o_strnchr(query, o_strlen(query), '#');
+    if (fragment) {
+      *((char *)fragment) = '\0';
+      fragment++;
+    }
+
+    if (o_strlen(query) && _i_has_openid_config_parameter_value(i_session, "response_modes_supported", "query")) {
+      query_parsed = 1;
       u_map_init(&map);
-      if (_i_extract_parameters(i_session, query_dup, &map) == I_OK) {
+      if (_i_extract_parameters(i_session, query, &map) == I_OK) {
         if ((ret = _i_parse_redirect_to_parameters(i_session, &map)) == I_OK) {
          if (i_session->id_token != NULL && r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
             y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error id_token invalid");
@@ -3050,13 +3044,28 @@ int i_parse_redirect_to(struct _i_session * i_session) {
         state = o_strdup(u_map_get(&map, "state"));
       }
       u_map_clean(&map);
-      o_free(query_dup);
     }
+
+    // I assume that if the query string has been parsed, the fragment must not be parsed
+    if (!query_parsed && fragment != NULL && _i_has_openid_config_parameter_value(i_session, "response_modes_supported", "fragment")) {
+      u_map_init(&map);
+      if (_i_extract_parameters(i_session, fragment, &map) == I_OK) {
+        if ((ret = _i_parse_redirect_to_parameters(i_session, &map)) == I_OK) {
+          if (i_session->id_token != NULL && r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to fragment - Error id_token invalid");
+            ret = I_ERROR_SERVER;
+          }
+        }
+      }
+      state = o_strdup(u_map_get(&map, "state"));
+      u_map_clean(&map);
+    }
+    o_free(query_dup);
 
     if (ret == I_OK) {
       if (i_get_str_parameter(i_session, I_OPT_STATE) != NULL) {
-        if (o_strcmp(i_get_str_parameter(i_session, I_OPT_STATE), state)) {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error state invalid");
+        if (0 != o_strcmp(i_get_str_parameter(i_session, I_OPT_STATE), state)) {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error state invalid %s %s", state, i_get_str_parameter(i_session, I_OPT_STATE));
           ret = I_ERROR_SERVER;
         }
       }
