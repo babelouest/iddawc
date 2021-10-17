@@ -4,7 +4,7 @@
  *
  * Copyright 2020-2021 Nicolas Mora <mail@babelouest.org>
  *
- * Version 20211017
+ * Version 20210906
  * 
  * The MIT License (MIT)
  * 
@@ -166,6 +166,9 @@ static int callback_static_file_uncompressed (const struct _u_request * request,
     file_requested = o_strdup(request->http_url);
     url_dup_save = file_requested;
 
+    while (file_requested[0] == '/') {
+      file_requested++;
+    }
     file_requested += o_strlen(((struct _u_compressed_inmemory_website_config *)user_data)->url_prefix);
     while (file_requested[0] == '/') {
       file_requested++;
@@ -186,24 +189,22 @@ static int callback_static_file_uncompressed (const struct _u_request * request,
 
     file_path = msprintf("%s/%s", ((struct _u_compressed_inmemory_website_config *)user_data)->files_path, file_requested);
 
-    if (access(file_path, F_OK) != -1) {
-      f = fopen (file_path, "rb");
-      if (f) {
-        fseek (f, 0, SEEK_END);
-        length = ftell (f);
-        fseek (f, 0, SEEK_SET);
+    f = fopen (file_path, "rb");
+    if (f) {
+      fseek (f, 0, SEEK_END);
+      length = ftell (f);
+      fseek (f, 0, SEEK_SET);
 
-        content_type = u_map_get_case(&((struct _u_compressed_inmemory_website_config *)user_data)->mime_types, get_filename_ext(file_requested));
-        if (content_type == NULL) {
-          content_type = u_map_get(&((struct _u_compressed_inmemory_website_config *)user_data)->mime_types, "*");
-          y_log_message(Y_LOG_LEVEL_WARNING, "Static File Server - Unknown mime type for extension %s", get_filename_ext(file_requested));
-        }
-        u_map_put(response->map_header, "Content-Type", content_type);
-        u_map_copy_into(response->map_header, &((struct _u_compressed_inmemory_website_config *)user_data)->map_header);
+      content_type = u_map_get_case(&((struct _u_compressed_inmemory_website_config *)user_data)->mime_types, get_filename_ext(file_requested));
+      if (content_type == NULL) {
+        content_type = u_map_get(&((struct _u_compressed_inmemory_website_config *)user_data)->mime_types, "*");
+        y_log_message(Y_LOG_LEVEL_WARNING, "Static File Server - Unknown mime type for extension %s", get_filename_ext(file_requested));
+      }
+      u_map_put(response->map_header, "Content-Type", content_type);
+      u_map_copy_into(response->map_header, &((struct _u_compressed_inmemory_website_config *)user_data)->map_header);
 
-        if (ulfius_set_stream_response(response, 200, callback_static_file_uncompressed_stream, callback_static_file_uncompressed_stream_free, length, CHUNK, f) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Static File Server - Error ulfius_set_stream_response");
-        }
+      if (ulfius_set_stream_response(response, 200, callback_static_file_uncompressed_stream, callback_static_file_uncompressed_stream_free, length, CHUNK, f) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Static File Server - Error ulfius_set_stream_response");
       }
     } else {
       if (((struct _u_compressed_inmemory_website_config *)user_data)->redirect_on_404 == NULL) {
@@ -304,6 +305,9 @@ int callback_static_compressed_inmemory_website (const struct _u_request * reque
     file_requested = o_strdup(request->http_url);
     url_dup_save = file_requested;
 
+    while (file_requested[0] == '/') {
+      file_requested++;
+    }
     file_requested += o_strlen((config->url_prefix));
     while (file_requested[0] == '/') {
       file_requested++;
@@ -321,7 +325,6 @@ int callback_static_compressed_inmemory_website (const struct _u_request * reque
       o_free(url_dup_save);
       url_dup_save = file_requested = o_strdup("index.html");
     }
-    file_path = msprintf("%s/%s", ((struct _u_compressed_inmemory_website_config *)user_data)->files_path, file_requested);
 
     if (!u_map_has_key_case(response->map_header, U_CONTENT_HEADER)) {
       if (split_string(u_map_get_case(request->map_header, U_ACCEPT_HEADER), ",", &accept_list)) {
@@ -351,6 +354,8 @@ int callback_static_compressed_inmemory_website (const struct _u_request * reque
             ulfius_set_binary_body_response(response, 200, u_map_get(&config->deflate_files, file_requested), u_map_get_length(&config->deflate_files, file_requested));
             u_map_put(response->map_header, U_CONTENT_HEADER, U_ACCEPT_DEFLATE);
           } else {
+            file_path = msprintf("%s/%s", ((struct _u_compressed_inmemory_website_config *)user_data)->files_path, file_requested);
+
             if (!pthread_mutex_lock(&config->lock)) {
               f = fopen (file_path, "rb");
               if (f) {
@@ -443,6 +448,7 @@ int callback_static_compressed_inmemory_website (const struct _u_request * reque
               y_log_message(Y_LOG_LEVEL_ERROR, "callback_static_compressed_inmemory_website - Error pthread_lock_mutex");
               ret = U_CALLBACK_ERROR;
             }
+            o_free(file_path);
           }
         } else {
           ret = callback_static_file_uncompressed(request, response, user_data);
@@ -450,8 +456,6 @@ int callback_static_compressed_inmemory_website (const struct _u_request * reque
         free_string_array(accept_list);
       }
     }
-    o_free(file_path);
-
     o_free(url_dup_save);
   }
 
