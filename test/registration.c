@@ -40,6 +40,7 @@ int callback_register_from_params (const struct _u_request * request, struct _u_
     json_object_set(j_result, "frontchannel_logout_session_required", json_object_get(j_parameters, "frontchannel_logout_session_required"));
     json_object_set(j_result, "backchannel_logout_uri", json_object_get(j_parameters, "backchannel_logout_uri"));
     json_object_set(j_result, "backchannel_logout_session_required", json_object_get(j_parameters, "backchannel_logout_session_required"));
+    json_object_set(j_result, "post_logout_redirect_uri", json_object_get(j_parameters, "post_logout_redirect_uri"));
     ulfius_set_json_body_response(response, 200, j_result);
     json_decref(j_parameters);
     json_decref(j_result);
@@ -139,6 +140,7 @@ START_TEST(test_iddawc_registration_from_params_valid)
                                                     I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, 1,
                                                     I_OPT_BACKCHANNEL_LOGOUT_URI, "https://iddawc.tld/backlogout",
                                                     I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, 1,
+                                                    I_OPT_POST_LOGOUT_REDIRECT_URI, "https://iddawc.tld/postlogout",
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_register_client(&i_session, NULL, 1, &j_result), I_OK);
   j_expected = json_loads(register_pattern, JSON_DECODE_ANY, NULL);
@@ -152,6 +154,7 @@ START_TEST(test_iddawc_registration_from_params_valid)
   json_object_set_new(j_expected, "frontchannel_logout_session_required", json_true());
   json_object_set_new(j_expected, "backchannel_logout_uri", json_string("https://iddawc.tld/backlogout"));
   json_object_set_new(j_expected, "backchannel_logout_session_required", json_true());
+  json_object_set_new(j_expected, "post_logout_redirect_uri", json_string("https://iddawc.tld/postlogout"));
   ck_assert_int_eq(1, json_equal(j_expected, j_result));
   ck_assert_str_eq(client_id, i_get_str_parameter(&i_session, I_OPT_CLIENT_ID));
   ck_assert_str_eq(client_secret, i_get_str_parameter(&i_session, I_OPT_CLIENT_SECRET));
@@ -174,6 +177,7 @@ START_TEST(test_iddawc_registration_from_params_valid)
                                                     I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, 1,
                                                     I_OPT_BACKCHANNEL_LOGOUT_URI, "https://iddawc.tld/backlogout",
                                                     I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, 1,
+                                                    I_OPT_POST_LOGOUT_REDIRECT_URI, "https://iddawc.tld/postlogout",
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_register_client(&i_session, NULL, 0, &j_result), I_OK);
   j_expected = json_loads(register_pattern, JSON_DECODE_ANY, NULL);
@@ -187,6 +191,7 @@ START_TEST(test_iddawc_registration_from_params_valid)
   json_object_set_new(j_expected, "frontchannel_logout_session_required", json_true());
   json_object_set_new(j_expected, "backchannel_logout_uri", json_string("https://iddawc.tld/backlogout"));
   json_object_set_new(j_expected, "backchannel_logout_session_required", json_true());
+  json_object_set_new(j_expected, "post_logout_redirect_uri", json_string("https://iddawc.tld/postlogout"));
   ck_assert_int_eq(1, json_equal(j_expected, j_result));
   ck_assert_ptr_eq(NULL, i_get_str_parameter(&i_session, I_OPT_CLIENT_ID));
   ck_assert_ptr_eq(NULL, i_get_str_parameter(&i_session, I_OPT_CLIENT_SECRET));

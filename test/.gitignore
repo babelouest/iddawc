@@ -13,6 +13,7 @@ api_request
 device
 par
 ciba
+session
 *.log
 *.crt
 *.key
