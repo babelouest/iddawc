@@ -1548,6 +1548,8 @@ int i_init_session(struct _i_session * i_session) {
     i_session->frontchannel_logout_session_required = 0;
     i_session->backchannel_logout_uri = NULL;
     i_session->backchannel_logout_session_required = 0;
+    i_session->post_logout_redirect_uri = NULL;
+    i_session->id_token_sid = NULL;
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
         if ((res = r_jwks_init(&i_session->server_jwks)) == RHN_OK) {
@@ -1639,6 +1641,8 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->ciba_client_notification_endpoint);
     o_free(i_session->frontchannel_logout_uri);
     o_free(i_session->backchannel_logout_uri);
+    o_free(i_session->post_logout_redirect_uri);
+    o_free(i_session->id_token_sid);
     u_map_clean(&i_session->additional_parameters);
     u_map_clean(&i_session->additional_response);
     r_jwks_free(i_session->server_jwks);
@@ -1989,6 +1993,8 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
         }
         break;
       case I_OPT_ACCESS_TOKEN:
+        json_decref(i_session->access_token_payload);
+        i_session->access_token_payload = NULL;
         o_free(i_session->access_token);
         if (o_strlen(s_value)) {
           i_session->access_token = o_strdup(s_value);
@@ -2056,9 +2062,10 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
         break;
       case I_OPT_USERINFO:
         o_free(i_session->userinfo);
+        json_decref(i_session->j_userinfo);
+        i_session->j_userinfo = NULL;
         if (o_strlen(s_value)) {
           i_session->userinfo = o_strdup(s_value);
-          json_decref(i_session->j_userinfo);
           i_session->j_userinfo = json_loads(s_value, JSON_DECODE_ANY, NULL);
         } else {
           i_session->userinfo = NULL;
@@ -2513,6 +2520,22 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
           i_session->backchannel_logout_uri = NULL;
         }
         break;
+      case I_OPT_POST_LOGOUT_REDIRECT_URI:
+        o_free(i_session->post_logout_redirect_uri);
+        if (o_strlen(s_value)) {
+          i_session->post_logout_redirect_uri = o_strdup(s_value);
+        } else {
+          i_session->post_logout_redirect_uri = NULL;
+        }
+        break;
+      case I_OPT_ID_TOKEN_SID:
+        o_free(i_session->id_token_sid);
+        if (o_strlen(s_value)) {
+          i_session->id_token_sid = o_strdup(s_value);
+        } else {
+          i_session->id_token_sid = NULL;
+        }
+        break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error unknown option %d", option);
         ret = I_ERROR_PARAM;
@@ -2751,6 +2774,8 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT:
         case I_OPT_FRONTCHANNEL_LOGOUT_URI:
         case I_OPT_BACKCHANNEL_LOGOUT_URI:
+        case I_OPT_POST_LOGOUT_REDIRECT_URI:
+        case I_OPT_ID_TOKEN_SID:
           str_value = va_arg(vl, const char *);
           ret = i_set_str_parameter(i_session, option, str_value);
           break;
@@ -3378,6 +3403,12 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_BACKCHANNEL_LOGOUT_URI:
         result = (const char *)i_session->backchannel_logout_uri;
+        break;
+      case I_OPT_POST_LOGOUT_REDIRECT_URI:
+        result = (const char *)i_session->post_logout_redirect_uri;
+        break;
+      case I_OPT_ID_TOKEN_SID:
+        result = (const char *)i_session->id_token_sid;
         break;
       default:
         break;
@@ -4414,6 +4445,11 @@ int i_verify_id_token(struct _i_session * i_session) {
                 ret = I_ERROR_PARAM;
               }
             }
+            if (json_string_length(json_object_get(i_session->id_token_payload, "sid"))) {
+              if ((ret = i_set_str_parameter(i_session, I_OPT_ID_TOKEN_SID, json_string_value(json_object_get(i_session->id_token_payload, "sid")))) != I_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token c - Error setting sid");
+              }
+            }
           } else {
             y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - invalid JWT claims");
             ret = I_ERROR_PARAM;
@@ -4837,6 +4873,9 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
       json_object_set_new(j_copy_parameters, "backchannel_logout_uri", json_string(i_session->backchannel_logout_uri));
       json_object_set_new(j_copy_parameters, "backchannel_logout_session_required", i_session->backchannel_logout_session_required?json_true():json_false());
     }
+    if (i_session->post_logout_redirect_uri != NULL) {
+      json_object_set_new(j_copy_parameters, "post_logout_redirect_uri", json_string(i_session->post_logout_redirect_uri));
+    }
     if (json_string_length(json_array_get(json_object_get(j_copy_parameters, "redirect_uris"), 0))) {
       if (_i_init_request(i_session, &request) != U_OK || ulfius_init_response(&response) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error initializing request or response");
@@ -5150,7 +5189,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -5293,7 +5332,9 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "frontchannel_logout_session_required", i_get_int_parameter(i_session, I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED),
                          "backchannel_logout_uri", i_get_str_parameter(i_session, I_OPT_BACKCHANNEL_LOGOUT_URI),
                          
-                         "backchannel_logout_session_required", i_get_int_parameter(i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED)
+                         "backchannel_logout_session_required", i_get_int_parameter(i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED),
+                         "post_logout_redirect_uri", i_get_str_parameter(i_session, I_OPT_POST_LOGOUT_REDIRECT_URI),
+                         "id_token_sid", i_get_str_parameter(i_session, I_OPT_ID_TOKEN_SID)
                          );
   }
   return j_return;
@@ -5414,6 +5455,8 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, (int)json_integer_value(json_object_get(j_import, "frontchannel_logout_session_required")),
                                      I_OPT_BACKCHANNEL_LOGOUT_URI, json_string_value(json_object_get(j_import, "backchannel_logout_uri")),
                                      I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, (int)json_integer_value(json_object_get(j_import, "backchannel_logout_session_required")),
+                                     I_OPT_POST_LOGOUT_REDIRECT_URI, json_string_value(json_object_get(j_import, "post_logout_redirect_uri")),
+                                     I_OPT_ID_TOKEN_SID, json_string_value(json_object_get(j_import, "id_token_sid")),
                                      I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
@@ -6312,6 +6355,142 @@ int i_run_ciba_request(struct _i_session * i_session) {
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error input parameters");
     ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+char * i_build_end_session_url(struct _i_session * i_session) {
+  char * url = NULL, * post_logout_enc = NULL;
+  if (i_get_str_parameter(i_session, I_OPT_END_SESSION_ENDPOINT) != NULL && i_get_str_parameter(i_session, I_OPT_ID_TOKEN) != NULL) {
+    url = msprintf("%s?id_token_hint=%s", i_get_str_parameter(i_session, I_OPT_END_SESSION_ENDPOINT), i_get_str_parameter(i_session, I_OPT_ID_TOKEN));
+    if (i_get_str_parameter(i_session, I_OPT_POST_LOGOUT_REDIRECT_URI) != NULL) {
+      post_logout_enc = ulfius_url_encode(i_get_str_parameter(i_session, I_OPT_POST_LOGOUT_REDIRECT_URI));
+      url = mstrcatf(url, "&post_logout_redirect_uri=%s", post_logout_enc);
+      o_free(post_logout_enc);
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_end_session_url - session has no end_session_endpoint or id_token");
+  }
+  return url;
+}
+
+int i_verify_end_session_backchannel_token(struct _i_session * i_session, const char * token) {
+  int ret, res;
+  jwt_t * jwt = NULL;
+  json_t * j_events;
+
+  if (r_jwt_init(&jwt) == RHN_OK) {
+    if ((res = _i_verify_jwt_sig_enc(i_session, token, I_TOKEN_TYPE_ID_TOKEN, jwt)) == I_OK) {
+      if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
+                                     R_JWT_CLAIM_AUD, i_get_str_parameter(i_session, I_OPT_CLIENT_ID),
+                                     R_JWT_CLAIM_IAT, R_JWT_CLAIM_NOW,
+                                     R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
+                                     R_JWT_CLAIM_JTI, NULL,
+                                     R_JWT_CLAIM_NOP) == RHN_OK) {
+        j_events = r_jwt_get_claim_json_t_value(jwt, "events");
+        if (json_is_object(j_events) && json_is_object(json_object_get(j_events, "http://schemas.openid.net/event/backchannel-logout"))) {
+          if (i_get_int_parameter(i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED) && r_jwt_get_claim_str_value(jwt, "sid") == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_end_session_backchannel_token - invalid claims, claim sid required");
+            ret = I_ERROR_PARAM;
+          } else if (r_jwt_get_claim_str_value(jwt, "sid") == NULL && r_jwt_get_claim_str_value(jwt, "sub") == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_end_session_backchannel_token - invalid claims, missing sub or sid claim");
+            ret = I_ERROR_PARAM;
+          } else if (r_jwt_get_claim_str_value(jwt, "sid") != NULL && 0 != o_strcmp(r_jwt_get_claim_str_value(jwt, "sid"), i_get_str_parameter(i_session, I_OPT_ID_TOKEN_SID))) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_end_session_backchannel_token - invalid claims, invalid claim sid");
+            ret = I_ERROR_PARAM;
+          } else {
+            json_decref(i_session->access_token_payload);
+            i_session->access_token_payload = r_jwt_get_full_claims_json_t(jwt);
+            ret = I_OK;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_end_session_backchannel_token - invalid claims, missing or invalid events claim");
+          ret = I_ERROR_PARAM;
+        }
+        json_decref(j_events);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_end_session_backchannel_token - invalid claims");
+        ret = I_ERROR_PARAM;
+      }
+    } else if (res == I_ERROR) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_end_session_backchannel_token - Error _i_verify_jwt_sig_enc");
+      ret = I_ERROR_PARAM;
+    } else {
+      ret = res;
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_end_session_backchannel_token - Error r_jwt_init");
+    ret = I_ERROR;
+  }
+  r_jwt_free(jwt);
+  return ret;
+}
+
+int i_close_session(struct _i_session * i_session, const char * sid) {
+  int ret = I_OK;
+  if (sid != NULL && 0 != o_strcmp(sid, i_get_str_parameter(i_session, I_OPT_ID_TOKEN_SID))) {
+    ret = I_ERROR_PARAM;
+  } else {
+    if ((ret = i_set_str_parameter(i_session, I_OPT_CODE, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning code");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_REFRESH_TOKEN, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning refresh token");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning access token");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_ID_TOKEN, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning id_token");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_NONCE, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning nonce");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_USERINFO, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning userinfo");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_TOKEN_JTI, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning token jti");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_DEVICE_AUTH_CODE, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning device auth code");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_DEVICE_AUTH_USER_CODE, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning device auth user code");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning device auth verification uri");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning device auth verification uri complete");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_PKCE_CODE_VERIFIER, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning PKCE code verifier");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_CIBA_USER_CODE, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning CIBA user code");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_CIBA_AUTH_REQ_ID, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning CIBA auth req id");
+      return ret;
+    }
+    if ((ret = i_set_str_parameter(i_session, I_OPT_ID_TOKEN_SID, NULL)) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_close_session - Error cleaning id_token sid");
+      return ret;
+    }
   }
   return ret;
 }
