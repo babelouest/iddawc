@@ -1,4 +1,4 @@
-# Iddawc - OAuth2/OIDC client library
+# Iddawc - OAuth2/OIDC Client and Relying Party library
 
 ![.github/workflows/ccpp.yml](https://github.com/babelouest/iddawc/workflows/.github/workflows/ccpp.yml/badge.svg)
 
