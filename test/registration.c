@@ -11,8 +11,8 @@
 
 const char client_id[] = "s6BhdRkqt3";
 const char client_secret[] = "ZJYCqe3GGRvdrudKyZS0XhGv_Z45DuKhCUk0gBR1vZk";
-const char register_pattern[] = "{\"client_id\": \"s6BhdRkqt3\",\"client_secret\":\"ZJYCqe3GGRvdrudKyZS0XhGv_Z45DuKhCUk0gBR1vZk\",\"client_secret_expires_at\": 1577858400,\"registration_access_token\":\"this.is.an.access.token.value.ffx83\",\"registration_client_uri\":\"https://server.example.com/connect/register?client_id=s6BhdRkqt3\",\"token_endpoint_auth_method\":\"client_secret_basic\",\"application_type\": \"web\",\"redirect_uris\":[],\"client_name\": \"My Example\",\"client_name#ja-Jpan-JP\":\"クライアント名\",\"logo_uri\": \"https://client.example.org/logo.png\",\"subject_type\": \"pairwise\",\"sector_identifier_uri\":\"https://other.example.net/file_of_redirect_uris.json\",\"jwks_uri\": \"https://client.example.org/my_public_keys.jwks\",\"userinfo_encrypted_response_alg\": \"RSA1_5\",\"userinfo_encrypted_response_enc\": \"A128CBC-HS256\",\"contacts\": [\"ve7jtb@example.org\", \"mary@example.org\"],\"request_uris\":[]}";
-const char register_pattern_2[] = "{\"client_id\": \"s6BhdRkqt3\",\"client_secret\":\"ZJYCqe3GGRvdrudKyZS0XhGv_Z45DuKhCUk0gBR1vZk\",\"client_secret_expires_at\": 1577858400,\"registration_access_token\":\"this.is.an.access.token.value.ffx83\",\"registration_client_uri\":\"https://server.example.com/connect/register?client_id=s6BhdRkqt3\",\"token_endpoint_auth_method\":\"client_secret_basic\",\"application_type\": \"web\",\"redirect_uris\":[],\"client_name\": \"My Example\",\"client_name#ja-Jpan-JP\":\"クライアント名\",\"logo_uri\": \"https://client.example.org/logo.png\",\"subject_type\": \"pairwise\",\"sector_identifier_uri\":\"https://other.example.net/file_of_redirect_uris.json\",\"jwks_uri\": \"https://client.example.org/my_public_keys.jwks\",\"contacts\": [\"ve7jtb@example.org\", \"mary@example.org\"],\"request_uris\":[]}";
+const char register_pattern[] = "{\"client_id\": \"s6BhdRkqt3\",\"client_secret\":\"ZJYCqe3GGRvdrudKyZS0XhGv_Z45DuKhCUk0gBR1vZk\",\"client_secret_expires_at\": 1577858400,\"registration_access_token\":\"this.is.an.access.token.value.ffx83\",\"registration_client_uri\":\"https://server.example.com/connect/register?client_id=s6BhdRkqt3\",\"token_endpoint_auth_method\":\"client_secret_basic\",\"application_type\": \"web\",\"redirect_uris\":[],\"client_name\": \"My Example\",\"client_name#ja-Jpan-JP\":\"クライアント名\",\"logo_uri\": \"https://client.example.org/logo.png\",\"subject_type\": \"pairwise\",\"sector_identifier_uri\":\"https://other.example.net/file_of_redirect_uris.json\",\"jwks_uri\": \"https://client.example.org/my_public_keys.jwks\",\"userinfo_encrypted_response_alg\": \"RSA1_5\",\"userinfo_encrypted_response_enc\": \"A128CBC-HS256\",\"contacts\": [\"ve7jtb@example.org\", \"mary@example.org\"],\"request_uris\":[],\"frontchannel_logout_uri\": \"https://iddawc.tld/frontlogout\",\"frontchannel_logout_session_required\": true,\"backchannel_logout_uri\": \"https://iddawc.tld/backlogout\",\"backchannel_logout_session_required\": true}";
+const char register_pattern_2[] = "{\"client_id\": \"s6BhdRkqt3\",\"client_secret\":\"ZJYCqe3GGRvdrudKyZS0XhGv_Z45DuKhCUk0gBR1vZk\",\"client_secret_expires_at\": 1577858400,\"registration_access_token\":\"this.is.an.access.token.value.ffx83\",\"registration_client_uri\":\"https://server.example.com/connect/register?client_id=s6BhdRkqt3\",\"token_endpoint_auth_method\":\"client_secret_basic\",\"application_type\": \"web\",\"redirect_uris\":[],\"client_name\": \"My Example\",\"client_name#ja-Jpan-JP\":\"クライアント名\",\"logo_uri\": \"https://client.example.org/logo.png\",\"subject_type\": \"pairwise\",\"sector_identifier_uri\":\"https://other.example.net/file_of_redirect_uris.json\",\"jwks_uri\": \"https://client.example.org/my_public_keys.jwks\",\"contacts\": [\"ve7jtb@example.org\", \"mary@example.org\"],\"request_uris\":[],\"frontchannel_logout_uri\": \"https://iddawc.tld/frontlogout\",\"frontchannel_logout_session_required\": true,\"backchannel_logout_uri\": \"https://iddawc.tld/backlogout\",\"backchannel_logout_session_required\": true}";
 
 int callback_register (const struct _u_request * request, struct _u_response * response, void * user_data) {
   if (0 == o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization"))) {
@@ -36,6 +36,10 @@ int callback_register_from_params (const struct _u_request * request, struct _u_
     json_object_set(j_result, "access_token_encryption_enc", json_object_get(j_parameters, "access_token_encryption_enc"));
     json_object_set(j_result, "backchannel_client_notification_endpoint", json_object_get(j_parameters, "backchannel_client_notification_endpoint"));
     json_object_set(j_result, "backchannel_token_delivery_mode", json_object_get(j_parameters, "backchannel_token_delivery_mode"));
+    json_object_set(j_result, "frontchannel_logout_uri", json_object_get(j_parameters, "frontchannel_logout_uri"));
+    json_object_set(j_result, "frontchannel_logout_session_required", json_object_get(j_parameters, "frontchannel_logout_session_required"));
+    json_object_set(j_result, "backchannel_logout_uri", json_object_get(j_parameters, "backchannel_logout_uri"));
+    json_object_set(j_result, "backchannel_logout_session_required", json_object_get(j_parameters, "backchannel_logout_session_required"));
     ulfius_set_json_body_response(response, 200, j_result);
     json_decref(j_parameters);
     json_decref(j_result);
@@ -131,6 +135,10 @@ START_TEST(test_iddawc_registration_from_params_valid)
                                                     I_OPT_ACCESS_TOKEN_SIGNING_ALG, "RS512",
                                                     I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, "RSA1_5",
                                                     I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, "A128GCM",
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_URI, "https://iddawc.tld/frontlogout",
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, 1,
+                                                    I_OPT_BACKCHANNEL_LOGOUT_URI, "https://iddawc.tld/backlogout",
+                                                    I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, 1,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_register_client(&i_session, NULL, 1, &j_result), I_OK);
   j_expected = json_loads(register_pattern, JSON_DECODE_ANY, NULL);
@@ -140,6 +148,10 @@ START_TEST(test_iddawc_registration_from_params_valid)
   json_object_set_new(j_expected, "access_token_encryption_enc", json_string("A128GCM"));
   json_object_set_new(j_expected, "backchannel_token_delivery_mode", json_string("ping"));
   json_object_set_new(j_expected, "backchannel_client_notification_endpoint", json_string("https://www.example.com/ciba"));
+  json_object_set_new(j_expected, "frontchannel_logout_uri", json_string("https://iddawc.tld/frontlogout"));
+  json_object_set_new(j_expected, "frontchannel_logout_session_required", json_true());
+  json_object_set_new(j_expected, "backchannel_logout_uri", json_string("https://iddawc.tld/backlogout"));
+  json_object_set_new(j_expected, "backchannel_logout_session_required", json_true());
   ck_assert_int_eq(1, json_equal(j_expected, j_result));
   ck_assert_str_eq(client_id, i_get_str_parameter(&i_session, I_OPT_CLIENT_ID));
   ck_assert_str_eq(client_secret, i_get_str_parameter(&i_session, I_OPT_CLIENT_SECRET));
@@ -158,6 +170,10 @@ START_TEST(test_iddawc_registration_from_params_valid)
                                                     I_OPT_ACCESS_TOKEN_SIGNING_ALG, "RS512",
                                                     I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, "RSA1_5",
                                                     I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, "A128GCM",
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_URI, "https://iddawc.tld/frontlogout",
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, 1,
+                                                    I_OPT_BACKCHANNEL_LOGOUT_URI, "https://iddawc.tld/backlogout",
+                                                    I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, 1,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_register_client(&i_session, NULL, 0, &j_result), I_OK);
   j_expected = json_loads(register_pattern, JSON_DECODE_ANY, NULL);
@@ -167,6 +183,10 @@ START_TEST(test_iddawc_registration_from_params_valid)
   json_object_set_new(j_expected, "access_token_encryption_enc", json_string("A128GCM"));
   json_object_set_new(j_expected, "backchannel_token_delivery_mode", json_string("ping"));
   json_object_set_new(j_expected, "backchannel_client_notification_endpoint", json_string("https://www.example.com/ciba"));
+  json_object_set_new(j_expected, "frontchannel_logout_uri", json_string("https://iddawc.tld/frontlogout"));
+  json_object_set_new(j_expected, "frontchannel_logout_session_required", json_true());
+  json_object_set_new(j_expected, "backchannel_logout_uri", json_string("https://iddawc.tld/backlogout"));
+  json_object_set_new(j_expected, "backchannel_logout_session_required", json_true());
   ck_assert_int_eq(1, json_equal(j_expected, j_result));
   ck_assert_ptr_eq(NULL, i_get_str_parameter(&i_session, I_OPT_CLIENT_ID));
   ck_assert_ptr_eq(NULL, i_get_str_parameter(&i_session, I_OPT_CLIENT_SECRET));

@@ -148,6 +148,10 @@
 #define CIBA_CLIENT_NOTIFICATION_ENDPOINT "https://iddawc.tld/cb"
 #define CIBA_AUTH_REQ_EXPIRES_IN 145
 #define CIBA_AUTH_REQ_INTERVAL 4
+#define FRONTCHANNEL_LOGOUT_URI "https://iddawc.tld/frontlogout"
+#define FRONTCHANNEL_LOGOUT_SESSION_REQUIRED 1
+#define BACKCHANNEL_LOGOUT_URI "https://iddawc.tld/backlogout"
+#define BACKCHANNEL_LOGOUT_SESSION_REQUIRED 1
 
 const char jwks_pubkey_ecdsa_str[] = "{\"keys\":[{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4\","\
                                     "\"y\":\"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM\",\"use\":\"enc\",\"kid\":\"1\"}]}";
@@ -569,6 +573,12 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_URI, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_URI, FRONTCHANNEL_LOGOUT_URI), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_URI, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_URI, BACKCHANNEL_LOGOUT_URI), I_OK);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -608,6 +618,8 @@ START_TEST(test_iddawc_set_int_parameter)
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE, 32), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN), I_OK);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, FRONTCHANNEL_LOGOUT_SESSION_REQUIRED), I_OK);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, BACKCHANNEL_LOGOUT_SESSION_REQUIRED), I_OK);
 
   i_clean_session(&i_session);
 }
@@ -860,6 +872,12 @@ START_TEST(test_iddawc_get_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_URI, FRONTCHANNEL_LOGOUT_URI), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_URI), FRONTCHANNEL_LOGOUT_URI);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_URI, BACKCHANNEL_LOGOUT_URI), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_URI), BACKCHANNEL_LOGOUT_URI);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -926,6 +944,10 @@ START_TEST(test_iddawc_get_int_parameter)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
   ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL), I_OK);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, FRONTCHANNEL_LOGOUT_SESSION_REQUIRED), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED), FRONTCHANNEL_LOGOUT_SESSION_REQUIRED);
+  ck_assert_int_eq(i_set_int_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, BACKCHANNEL_LOGOUT_SESSION_REQUIRED), I_OK);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED), BACKCHANNEL_LOGOUT_SESSION_REQUIRED);
 
   i_clean_session(&i_session);
 }
@@ -1188,6 +1210,10 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                   I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
                                                   I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
+                                                  I_OPT_FRONTCHANNEL_LOGOUT_URI, FRONTCHANNEL_LOGOUT_URI,
+                                                  I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, FRONTCHANNEL_LOGOUT_SESSION_REQUIRED,
+                                                  I_OPT_BACKCHANNEL_LOGOUT_URI, BACKCHANNEL_LOGOUT_URI,
+                                                  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, BACKCHANNEL_LOGOUT_SESSION_REQUIRED,
                                                   I_OPT_NONE), I_OK);
 
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_STATE), STATE);
@@ -1273,6 +1299,10 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_URI), FRONTCHANNEL_LOGOUT_URI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED), FRONTCHANNEL_LOGOUT_SESSION_REQUIRED);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_URI), BACKCHANNEL_LOGOUT_URI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED), BACKCHANNEL_LOGOUT_SESSION_REQUIRED);
 
   i_clean_session(&i_session);
 }
@@ -1470,6 +1500,10 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "ciba_client_notification_endpoint"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_auth_req_expires_in")), 0);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_auth_req_interval")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "frontchannel_logout_uri"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "frontchannel_logout_session_required")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "backchannel_logout_uri"), NULL);
+  ck_assert_int_eq(json_integer_value(json_object_get(j_export, "backchannel_logout_session_required")), 0);
   json_decref(j_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1967,7 +2001,7 @@ START_TEST(test_iddawc_export_str)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
 
   str_export = i_export_session_str(&i_session);
-  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":false,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":false,\"decrypt_code\":false,\"decrypt_refresh_token\":false,\"decrypt_access_token\":false,\"client_jwks\":{\"keys\":[]},\"remote_cert_flag\":4369,\"pkce_method\":0,\"claims\":{\"userinfo\":{},\"id_token\":{}},\"ciba_mode\":0,\"ciba_login_hint_format\":0,\"ciba_auth_req_expires_in\":0,\"ciba_auth_req_interval\":0}");
+  ck_assert_str_eq(str_export, "{\"response_type\":0,\"additional_parameters\":{},\"additional_response\":{},\"result\":0,\"expires_in\":0,\"expires_at\":0,\"auth_method\":1,\"token_method\":0,\"server_jwks\":{\"keys\":[]},\"x5u_flags\":0,\"openid_config_strict\":false,\"token_exp\":600,\"authorization_details\":[],\"device_auth_expires_in\":0,\"device_auth_interval\":0,\"require_pushed_authorization_requests\":false,\"pushed_authorization_request_expires_in\":0,\"use_dpop\":false,\"decrypt_code\":false,\"decrypt_refresh_token\":false,\"decrypt_access_token\":false,\"client_jwks\":{\"keys\":[]},\"remote_cert_flag\":4369,\"pkce_method\":0,\"claims\":{\"userinfo\":{},\"id_token\":{}},\"ciba_mode\":0,\"ciba_login_hint_format\":0,\"ciba_auth_req_expires_in\":0,\"ciba_auth_req_interval\":0,\"frontchannel_logout_session_required\":0,\"backchannel_logout_session_required\":0}");
   o_free(str_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -2074,6 +2108,10 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
                                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_URI, FRONTCHANNEL_LOGOUT_URI,
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, FRONTCHANNEL_LOGOUT_SESSION_REQUIRED,
+                                                    I_OPT_BACKCHANNEL_LOGOUT_URI, BACKCHANNEL_LOGOUT_URI,
+                                                    I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, BACKCHANNEL_LOGOUT_SESSION_REQUIRED,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -2207,6 +2245,10 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
                                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_URI, FRONTCHANNEL_LOGOUT_URI,
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, FRONTCHANNEL_LOGOUT_SESSION_REQUIRED,
+                                                    I_OPT_BACKCHANNEL_LOGOUT_URI, BACKCHANNEL_LOGOUT_URI,
+                                                    I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, BACKCHANNEL_LOGOUT_SESSION_REQUIRED,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -2329,6 +2371,10 @@ START_TEST(test_iddawc_import_str)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_URI), FRONTCHANNEL_LOGOUT_URI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED), FRONTCHANNEL_LOGOUT_SESSION_REQUIRED);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_URI), BACKCHANNEL_LOGOUT_URI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED), BACKCHANNEL_LOGOUT_SESSION_REQUIRED);
   o_free(str_import);
   o_free(str_rar);
 
@@ -2456,6 +2502,10 @@ START_TEST(test_iddawc_import_multiple)
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
                                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, CIBA_AUTH_REQ_INTERVAL,
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_URI, FRONTCHANNEL_LOGOUT_URI,
+                                                    I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, FRONTCHANNEL_LOGOUT_SESSION_REQUIRED,
+                                                    I_OPT_BACKCHANNEL_LOGOUT_URI, BACKCHANNEL_LOGOUT_URI,
+                                                    I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, BACKCHANNEL_LOGOUT_SESSION_REQUIRED,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -2661,6 +2711,10 @@ START_TEST(test_iddawc_import_multiple)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_URI), FRONTCHANNEL_LOGOUT_URI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED), FRONTCHANNEL_LOGOUT_SESSION_REQUIRED);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_URI), BACKCHANNEL_LOGOUT_URI);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED), BACKCHANNEL_LOGOUT_SESSION_REQUIRED);
   
   json_decref(j_export);
 
