@@ -245,7 +245,11 @@ typedef enum {
   I_OPT_CIBA_AUTH_REQ_ID                        = 111, ///< auth_req_id value received by the server on succesfull request
   I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT       = 112, ///< backchannel_client_notification_endpoint value to specify the url for ping or push modes
   I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 113, ///< expiration of the request in seconds received by the server on succesfull request
-  I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 114  ///< Interval to poll token endpoint on poll mode in seconds
+  I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 114, ///< Interval to poll token endpoint on poll mode in seconds
+  I_OPT_FRONTCHANNEL_LOGOUT_URI                 = 115,
+  I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED    = 116,
+  I_OPT_BACKCHANNEL_LOGOUT_URI                  = 117,
+  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 118
 } i_option;
 
 /**
@@ -372,6 +376,10 @@ struct _i_session {
   char        * ciba_client_notification_endpoint;
   uint          ciba_auth_req_expires_in;
   uint          ciba_auth_req_interval;
+  char        * frontchannel_logout_uri;
+  uint          frontchannel_logout_session_required;
+  char        * backchannel_logout_uri;
+  uint          backchannel_logout_session_required;
 };
 
 /**
