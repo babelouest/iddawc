@@ -249,7 +249,9 @@ typedef enum {
   I_OPT_FRONTCHANNEL_LOGOUT_URI                 = 115,
   I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED    = 116,
   I_OPT_BACKCHANNEL_LOGOUT_URI                  = 117,
-  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 118
+  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 118,
+  I_OPT_POST_LOGOUT_REDIRECT_URI                = 119,
+  I_OPT_ID_TOKEN_SID                            = 120
 } i_option;
 
 /**
@@ -380,6 +382,8 @@ struct _i_session {
   uint          frontchannel_logout_session_required;
   char        * backchannel_logout_uri;
   uint          backchannel_logout_session_required;
+  char        * post_logout_redirect_uri;
+  char        * id_token_sid;
 };
 
 /**
@@ -976,6 +980,34 @@ int i_run_device_auth_request(struct _i_session * i_session);
  * @return I_OK on success, an error value on error
  */
 int i_run_ciba_request(struct _i_session * i_session);
+
+/**
+ * Generates an end session url to access the single logout page
+ * @param i_session: a reference to a struct _i_session *
+ * The session must contain an end_session_endpoint and an id_token at least
+ * If a post_logout_redirect_uri is available in the session, this will be added to the url
+ * @return a char * containing the end session url, must be i_free'd after use
+ */
+char * i_build_end_session_url(struct _i_session * i_session);
+
+/**
+ * Validates the end session token sent by the AS via the backchannel_logout_uri
+ * @param i_session: a reference to a struct _i_session *
+ * @param token: the end session token to validate
+ * @return I_OK on success, an error value on error
+ */
+int i_verify_end_session_backchannel_token(struct _i_session * i_session, const char * token);
+
+/**
+ * Closes the current session by cleaning the following values of the session:
+ * code, refresh token, access token, id_token, nonce, userinfo, jti,
+ * device auth code, device auth user code, device auth verification uri,
+ * device auth verification uri complete, PKCE code verifier,
+ * CIBA user code, CIBA auth req id, id_token sid
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_close_session(struct _i_session * i_session, const char * sid);
 
 /**
  * @}
