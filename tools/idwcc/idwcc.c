@@ -26,6 +26,8 @@
 #include <ctype.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#include <errno.h>
 #include <orcania.h>
 #include <yder.h>
 #include <ulfius.h>
@@ -38,6 +40,8 @@
 #define _IDWCC_VERSION "0.9"
 #define _DEFAULT_PORT 4398
 #define PREFIX_STATIC "/"
+#define MESSAGE_MAX 256
+
 #ifndef WEBAPP_PATH
   #define WEBAPP_PATH "/usr/share/idwcc/webapp"
 #endif
@@ -46,8 +50,11 @@
 
 struct _callback_struct {
   struct _i_session * session;
-  const char * webapp_path;
-  uint ciba_status;
+  const char        * webapp_path;
+  uint                ciba_status;
+  pthread_mutex_t     ws_lock;
+  pthread_cond_t      ws_cond;
+  char                message[MESSAGE_MAX+1];
 };
 
 static void print_help(FILE * output, const char * command) {
@@ -699,6 +706,128 @@ static int callback_ciba_callback(const struct _u_request * request, struct _u_r
   return U_CALLBACK_CONTINUE;
 }
 
+static int callback_get_end_session(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
+  struct _i_session * session = callback_struct->session;
+  char * url = i_build_end_session_url(session);
+  json_t * j_resp;
+  
+  if (url != NULL) {
+    j_resp = json_pack("{ss}", "url", url);
+    ulfius_set_json_body_response(response, 200, j_resp);
+    json_decref(j_resp);
+  } else {
+    response->status = 400;
+  }
+  o_free(url);
+  
+  return U_CALLBACK_CONTINUE;
+}
+
+static int callback_frontchannel_logout(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
+  struct _i_session * session = callback_struct->session;
+  const char * iss = u_map_get(request->map_url, "iss"), * sid = u_map_get(request->map_url, "sid");
+
+  if (o_strlen(iss) && 0 == o_strcmp(i_get_str_parameter(session, I_OPT_ISSUER), iss)) {
+    switch (i_get_int_parameter(session, I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED)) {
+      case 1:
+        if (o_strlen(sid) && 0 == o_strcmp(sid, i_get_str_parameter(session, I_OPT_ID_TOKEN_SID))) {
+          if (i_close_session(session, sid) != I_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "Error i_close_session (sid)");
+            response->status = 500;
+          } else {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "Frontchannel logout received from %s", iss);
+            o_strcpy(callback_struct->message, "Frontchannel logout received");
+            pthread_mutex_lock(&callback_struct->ws_lock);
+            pthread_cond_broadcast(&callback_struct->ws_cond);
+            pthread_mutex_unlock(&callback_struct->ws_lock);
+          }
+        } else {
+          response->status = 400;
+        }
+        break;
+      default:
+        if (i_close_session(session, sid) != I_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error i_close_session (no sid)");
+          response->status = 500;
+        } else {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "Frontchannel logout received from %s", iss);
+          o_strcpy(callback_struct->message, "Frontchannel logout received");
+          pthread_mutex_lock(&callback_struct->ws_lock);
+          pthread_cond_broadcast(&callback_struct->ws_cond);
+          pthread_mutex_unlock(&callback_struct->ws_lock);
+        }
+        break;
+    }
+  } else {
+    response->status = 400;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
+static int callback_backchannel_logout(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
+  struct _i_session * session = callback_struct->session;
+  const char * token = u_map_get(request->map_post_body, "logout_token");
+  int res;
+  
+  if (token != NULL) {
+    if ((res = i_verify_end_session_backchannel_token(session, token)) == I_ERROR_PARAM) {
+      response->status = 400;
+    } else if (res == I_ERROR) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error i_verify_end_session_backchannel_token");
+      response->status = 500;
+    } else if (i_close_session(session, i_get_int_parameter(session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED)?i_get_str_parameter(session, I_OPT_ID_TOKEN_SID):NULL) != I_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Error i_close_session");
+      response->status = 500;
+    } else {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "Backchannel logout received");
+      o_strcpy(callback_struct->message, "Backchannel logout received");
+      pthread_mutex_lock(&callback_struct->ws_lock);
+      pthread_cond_broadcast(&callback_struct->ws_cond);
+      pthread_mutex_unlock(&callback_struct->ws_lock);
+    }
+  } else {
+    response->status = 400;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
+void websocket_send_message_callback(const struct _u_request * request,
+                                     struct _websocket_manager * websocket_manager,
+                                     void * websocket_manager_user_data) {
+  struct _callback_struct * callback_struct = (struct _callback_struct *)websocket_manager_user_data;
+  struct timespec abstime;
+  int ret;
+
+  websocket_manager->keep_messages = U_WEBSOCKET_KEEP_NONE;
+  while (ulfius_websocket_wait_close(websocket_manager, 50) == U_WEBSOCKET_STATUS_OPEN) {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "grut");
+    clock_gettime(CLOCK_REALTIME, &abstime);
+    abstime.tv_sec += 1;
+    pthread_mutex_lock(&callback_struct->ws_lock);
+    ret = pthread_cond_timedwait(&websocket_manager->status_cond, &websocket_manager->status_lock, &abstime);
+    pthread_mutex_unlock(&callback_struct->ws_lock);
+    if (ret && ret != ETIMEDOUT) {
+      break;
+    } else if (!ret) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "Send ws message '%s'", callback_struct->message);
+      ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(callback_struct->message), callback_struct->message);
+    }
+  }
+  y_log_message(Y_LOG_LEVEL_DEBUG, "plop");
+}
+
+static int callback_websocket(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  if (ulfius_set_websocket_response(response, NULL, NULL, &websocket_send_message_callback, user_data, NULL, NULL, NULL, NULL) == U_OK) {
+    ulfius_add_websocket_deflate_extension(response);
+    return U_CALLBACK_CONTINUE;
+  } else {
+    return U_CALLBACK_ERROR;
+  }
+}
+
 static int callback_default(const struct _u_request * request, struct _u_response * response, void * user_data) {
   response->status = 404;
   return U_CALLBACK_CONTINUE;
@@ -790,66 +919,76 @@ int main(int argc, char ** argv) {
 
     if (ulfius_init_instance(&instance, port, bind_localhost?&bind_address:NULL, NULL) == U_OK) {
       if (u_init_compressed_inmemory_website_config(&file_config) == U_OK) {
-        u_map_put(&file_config.mime_types, ".html", "text/html");
-        u_map_put(&file_config.mime_types, ".css", "text/css");
-        u_map_put(&file_config.mime_types, ".js", "application/javascript");
-        u_map_put(&file_config.mime_types, ".png", "image/png");
-        u_map_put(&file_config.mime_types, ".jpg", "image/jpeg");
-        u_map_put(&file_config.mime_types, ".jpeg", "image/jpeg");
-        u_map_put(&file_config.mime_types, ".ttf", "font/ttf");
-        u_map_put(&file_config.mime_types, ".woff", "font/woff");
-        u_map_put(&file_config.mime_types, ".woff2", "font/woff2");
-        u_map_put(&file_config.mime_types, ".map", "application/octet-stream");
-        u_map_put(&file_config.mime_types, ".json", "application/json");
-        u_map_put(&file_config.mime_types, ".ico", "image/x-icon");
-        u_map_put(&file_config.mime_types, "*", "application/octet-stream");
-        if (webapp_path != NULL) {
-          file_config.files_path = webapp_path;
-          callback_struct.webapp_path = webapp_path;
+        if (!pthread_mutex_init(&callback_struct.ws_lock, NULL) && !pthread_cond_init(&callback_struct.ws_cond, NULL)) {
+          u_map_put(&file_config.mime_types, ".html", "text/html");
+          u_map_put(&file_config.mime_types, ".css", "text/css");
+          u_map_put(&file_config.mime_types, ".js", "application/javascript");
+          u_map_put(&file_config.mime_types, ".png", "image/png");
+          u_map_put(&file_config.mime_types, ".jpg", "image/jpeg");
+          u_map_put(&file_config.mime_types, ".jpeg", "image/jpeg");
+          u_map_put(&file_config.mime_types, ".ttf", "font/ttf");
+          u_map_put(&file_config.mime_types, ".woff", "font/woff");
+          u_map_put(&file_config.mime_types, ".woff2", "font/woff2");
+          u_map_put(&file_config.mime_types, ".map", "application/octet-stream");
+          u_map_put(&file_config.mime_types, ".json", "application/json");
+          u_map_put(&file_config.mime_types, ".ico", "image/x-icon");
+          u_map_put(&file_config.mime_types, "*", "application/octet-stream");
+          if (webapp_path != NULL) {
+            file_config.files_path = webapp_path;
+            callback_struct.webapp_path = webapp_path;
+          } else {
+            file_config.files_path = WEBAPP_PATH;
+            callback_struct.webapp_path = WEBAPP_PATH;
+          }
+          file_config.url_prefix = PREFIX_STATIC;
+          file_config.allow_cache_compressed = 0;
+          file_config.allow_gzip = 1;
+          file_config.allow_deflate = 1;
+
+          callback_struct.session = &session;
+          callback_struct.ciba_status = 0;
+
+          ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/session", 0, &callback_get_session, &session);
+          ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/session", 0, &callback_save_session, &session);
+          ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/configDownload", 0, &callback_config_download, &session);
+          ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/userinfoDownload", 0, &callback_userinfo_download, &session);
+          ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/introspectDownload", 0, &callback_introspect_token, &session);
+          ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/accessTokenVerify", 0, &callback_access_token_verify, &session);
+          ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/generate", 0, &callback_generate, &session);
+          ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/auth", 0, &callback_run_auth, &session);
+          ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/token", 0, &callback_run_token, &session);
+          ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/device", 0, &callback_run_device_auth, &session);
+          ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/revoke", 0, &callback_revoke_token, &session);
+          ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/register", 0, &callback_client_register, &session);
+          ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/register", 0, &callback_client_get_registration, &session);
+          ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/register", 0, &callback_client_manage_registration, &session);
+          ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/resourceRequest", 0, &callback_resource_request, &session);
+          ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/ciba", 0, &callback_get_ciba_status, &callback_struct);
+          ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/ciba", 0, &callback_run_ciba, &callback_struct);
+          ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/cibaCb", 0, &callback_ciba_callback, &callback_struct);
+          ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/callback", 0, &callback_redirect_uri, &callback_struct);
+          ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/parseRedirectTo", 0, &callback_parse_redirect_to, &session);
+          ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/endSession", 0, &callback_get_end_session, &callback_struct);
+          ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/frontlogout", 0, &callback_frontchannel_logout, &callback_struct);
+          ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/backlogout", 0, &callback_backchannel_logout, &callback_struct);
+          ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/ws", 0, &callback_websocket, &callback_struct);
+          ulfius_add_endpoint_by_val(&instance, "*", "/api", "*", 1, &callback_http_compression, NULL);
+          ulfius_add_endpoint_by_val(&instance, "GET", PREFIX_STATIC, "*", 0, &callback_static_compressed_inmemory_website, &file_config);
+          ulfius_add_endpoint_by_val(&instance, "GET", PREFIX_STATIC, "*", 2, &callback_static_close, NULL);
+          ulfius_set_default_endpoint(&instance, &callback_default, NULL);
+          ulfius_start_framework(&instance);
+
+          y_log_message(Y_LOG_LEVEL_INFO, "Start idwcc on port %u, webapp path: %s, url: http://localhost:%u/", port, file_config.files_path, port);
+          y_log_message(Y_LOG_LEVEL_INFO, "Press <enter> to quit");
+          getchar();
+          ulfius_stop_framework(&instance);
+          ulfius_clean_instance(&instance);
+          u_clean_compressed_inmemory_website_config(&file_config);
+          pthread_mutex_destroy(&callback_struct.ws_lock);
+          pthread_cond_destroy(&callback_struct.ws_cond);
         } else {
-          file_config.files_path = WEBAPP_PATH;
-          callback_struct.webapp_path = WEBAPP_PATH;
+          y_log_message(Y_LOG_LEVEL_ERROR, "Error initializing pthread structures");
         }
-        file_config.url_prefix = PREFIX_STATIC;
-        file_config.allow_cache_compressed = 0;
-        file_config.allow_gzip = 1;
-        file_config.allow_deflate = 1;
-
-        callback_struct.session = &session;
-        callback_struct.ciba_status = 0;
-
-        ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/session", 0, &callback_get_session, &session);
-        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/session", 0, &callback_save_session, &session);
-        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/configDownload", 0, &callback_config_download, &session);
-        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/userinfoDownload", 0, &callback_userinfo_download, &session);
-        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/introspectDownload", 0, &callback_introspect_token, &session);
-        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/accessTokenVerify", 0, &callback_access_token_verify, &session);
-        ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/generate", 0, &callback_generate, &session);
-        ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/auth", 0, &callback_run_auth, &session);
-        ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/token", 0, &callback_run_token, &session);
-        ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/device", 0, &callback_run_device_auth, &session);
-        ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/revoke", 0, &callback_revoke_token, &session);
-        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/register", 0, &callback_client_register, &session);
-        ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/register", 0, &callback_client_get_registration, &session);
-        ulfius_add_endpoint_by_val(&instance, "PUT", "/api", "/register", 0, &callback_client_manage_registration, &session);
-        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/resourceRequest", 0, &callback_resource_request, &session);
-        ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/ciba", 0, &callback_get_ciba_status, &callback_struct);
-        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/ciba", 0, &callback_run_ciba, &callback_struct);
-        ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/cibaCb", 0, &callback_ciba_callback, &callback_struct);
-        ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/callback", 0, &callback_redirect_uri, &callback_struct);
-        ulfius_add_endpoint_by_val(&instance, "POST", "/api", "/parseRedirectTo", 0, &callback_parse_redirect_to, &session);
-        ulfius_add_endpoint_by_val(&instance, "*", "/api", "*", 1, &callback_http_compression, NULL);
-        ulfius_add_endpoint_by_val(&instance, "GET", PREFIX_STATIC, "*", 0, &callback_static_compressed_inmemory_website, &file_config);
-        ulfius_add_endpoint_by_val(&instance, "GET", PREFIX_STATIC, "*", 2, &callback_static_close, NULL);
-        ulfius_set_default_endpoint(&instance, &callback_default, NULL);
-        ulfius_start_framework(&instance);
-
-        y_log_message(Y_LOG_LEVEL_INFO, "Start idwcc on port %u, webapp path: %s, url: http://localhost:%u/", port, file_config.files_path, port);
-        y_log_message(Y_LOG_LEVEL_INFO, "Press <enter> to quit");
-        getchar();
-        ulfius_stop_framework(&instance);
-        ulfius_clean_instance(&instance);
-        u_clean_compressed_inmemory_website_config(&file_config);
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error initializing file config");
       }
