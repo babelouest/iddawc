@@ -1,5 +1,6 @@
 var currentSession = {};
 var cibaStatus = 0;
+var mySocket = false;
 
 var responseTypes = {
   none:               0x00000000,
@@ -42,6 +43,10 @@ $( document ).ready(function() {
     .then(() => {
       getSession();
     });
+  });
+
+  $("#reloadSession").click(() => {
+    getSession();
   });
 
   $("#exportSession").click(() => {
@@ -727,6 +732,26 @@ $( document ).ready(function() {
     $("#resource_results").empty();
   });
 
+  $("#endsessionRun").click(() => {
+    saveSession()
+    .then(() => {
+      $.ajax({
+        method: "GET",
+        url: "/api/endSession"
+      })
+      .then((res) => {
+        $("#end_session_status").html('<span>Click here to log out</span><div><a href="'+res.url+'" target="_blank" alt="log out">'+res.url+'</a></div>');
+      })
+      .fail((error) => {
+        if (error.status === 400) {
+          showModal("Error running token: invalid parameters<div><b>Error:</b> <i>"+error.responseJSON.error+"</i></div><div><b>Error description:</b> <i>"+(error.responseJSON.error_description||" - ")+"</i></div>");
+        } else {
+          showModal("Error running token: server error");
+        }
+      });
+    });
+  })
+
   function getSession() {
     return $.get("/api/session")
     .then((res) => {
@@ -752,6 +777,7 @@ $( document ).ready(function() {
     $("#device_authorization_endpoint").val(currentSession.device_authorization_endpoint||"");
     $("#pushed_authorization_request_endpoint").val(currentSession.pushed_authorization_request_endpoint||"");
     $("#ciba_endpoint").val(currentSession.ciba_endpoint||"");
+    $("#end_session_endpoint").val(currentSession.end_session_endpoint||"");
     $("#server_jwks").val(JSON.stringify(currentSession.server_jwks, null, 2)||"");
     $("#server-kid").val(currentSession["server-kid"]||"");
     $("#openid_config_strict").prop("checked", !!(currentSession.openid_config_strict));
@@ -821,6 +847,12 @@ $( document ).ready(function() {
     $("#ciba_client_notification_endpoint").val(currentSession.ciba_client_notification_endpoint||"");
     $("#ciba_auth_req_expires_in").val(currentSession.ciba_auth_req_expires_in||"");
     $("#ciba_auth_req_interval").val(currentSession.ciba_auth_req_interval||"");
+    $("#frontchannel_logout_uri").val(currentSession.frontchannel_logout_uri||"");
+    $("#frontchannel_logout_session_required").val(!!currentSession.frontchannel_logout_session_required);
+    $("#backchannel_logout_uri").val(currentSession.backchannel_logout_uri||"");
+    $("#backchannel_logout_session_required").val(!!currentSession.backchannel_logout_session_required);
+    $("#post_logout_redirect_uri").val(currentSession.post_logout_redirect_uri||"");
+    $("#id_token_sid").val(currentSession.id_token_sid||"");
 
     if (currentSession.userinfo) {
       $("#userinfo_payload").empty().html(JSON.stringify(JSON.parse(currentSession.userinfo), null, 2));
@@ -828,6 +860,14 @@ $( document ).ready(function() {
 
     if (!$("#redirect_uri").val()) {
       $("#redirect_uri").val(location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '')+"/callback");
+    }
+
+    if (!$("#frontchannel_logout_uri").val()) {
+      $("#frontchannel_logout_uri").val(location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '')+"/frontlogout");
+    }
+
+    if (!$("#backchannel_logout_uri").val()) {
+      $("#backchannel_logout_uri").val(location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '')+"/backlogout");
     }
 
     if (!$("#ciba_client_notification_endpoint").val()) {
@@ -1312,6 +1352,28 @@ $( document ).ready(function() {
       });
   }
 
+  function connectWs() {
+    if (location.protocol === "https:") {
+      mySocket = new WebSocket("wss://" + location.hostname + ":" + location.port + "/api/ws");
+    } else {
+      mySocket = new WebSocket("ws://" + location.hostname + ":" + location.port + "/api/ws");
+    }
+    mySocket.onmessage = (event) => {
+      showModal(event.data);
+      loadSession();
+    };
+    mySocket.onopen = () => {
+      $("#ws_status").text("Connected");
+    };
+    mySocket.onclose = () => {
+      $("#ws_status").text("Disonnected");
+      setTimeout(() => {
+        connectWs();
+      }, 1000);
+    };
+  }
+
   getSession();
   loopCibaStatus();
+  connectWs();
 });

@@ -26,7 +26,7 @@
         <h2>Iddawc OAuth2 Client Tester</h2>
       </div>
       <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-6">
           <div class="btn-group" role="group">
             <button class="btn btn-secondary" type="button" id="saveSession">
               Save Session
@@ -40,7 +40,12 @@
             <button class="btn btn-secondary" type="button" id="cleanSession">
               Clean Session
             </button>
+            <button class="btn btn-secondary" type="button" id="reloadSession">
+              Reload Session
+            </button>
           </div>
+        </div>
+        <div class="col-md-6">
           <div class="btn-group" role="group">
             <button class="btn btn-secondary" type="button" id="runAuthBtn">
               Run Auth
@@ -945,6 +950,16 @@
                       </pre>
                     </div>
                     <hr/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="pushed_authorization_request_endpoint">End Session endpoint</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-input idwcc-session" placeHolder="https://example.com/end_session" id="end_session_endpoint" />
                   </div>
                 </div>
               </div>
@@ -1986,6 +2001,96 @@
                 </div>
                 <div class="col-md-8">
                   <pre id="ciba_status">
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"> <!-- Session -->
+          <div class="card-header" id="headingSession">
+            <h2 class="mb-0">
+              <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseSession" aria-expanded="false" aria-controls="collapseSession">
+                Session Management
+              </button>
+            </h2>
+          </div>
+          <div id="collapseSession" class="collapse" aria-labelledby="headingSession" data-parent="#accordionIdwcc">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="frontchannel_logout_uri">Front-Channel Logout URL</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="https://resource.tld/frontlogout" id="frontchannel_logout_uri"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="frontchannel_logout_session_required">Front-Channel Logout Session Required</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="frontchannel_logout_session_required">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="backchannel_logout_uri">Back-Channel Logout URL</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="https://resource.tld/backlogout" id="backchannel_logout_uri"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="backchannel_logout_uri">Back-Channel Logout Session Required</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="backchannel_logout_uri">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="post_logout_redirect_uri">Post Logout Redirect URI</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="https://resource.tld/postlogout" id="post_logout_redirect_uri"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <label for="id_token_sid">ID Token SID</label>
+                </div>
+                <div class="col-md-8">
+                  <div class="input-group mb-3">
+                    <input type="text" class="form-control idwcc-session" placeHolder="sid value" id="id_token_sid"/>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="btn-group" role="group">
+                    <button class="btn btn-secondary" type="button" id="endsessionRun">
+                      Run end session request <i class="fa fa-sign-out" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <pre id="ws_status">
+                  </pre>
+                </div>
+                <div class="col-md-6">
+                  <pre id="end_session_status">
                   </pre>
                 </div>
               </div>
