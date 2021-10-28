@@ -38,6 +38,7 @@ const char jwk_privkey_rsa_str[] = "{\"kty\":\"RSA\",\"n\":\"0vx7agoebGcQSuuPiLJ
 
 #define DPOP_HTM "POST"
 #define DPOP_HTU "https://resource.tld/object"
+#define ACCESS_TOKEN "accessTokenXyz1234"
 
 START_TEST(test_iddawc_dpop_invalid_parameters)
 {
@@ -45,26 +46,28 @@ START_TEST(test_iddawc_dpop_invalid_parameters)
   jwk_t * jwk;
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
   
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
   r_jwk_free(jwk);
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
   
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_TOKEN_JTI_GENERATE, 16,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_DPOP_SIGN_ALG, "RS256",
                                                     I_OPT_TOKEN_JTI, NULL,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
 
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, NULL, DPOP_HTU, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, NULL, DPOP_HTU, 0, 0));
 
-  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, NULL, 0));
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, NULL, 0, 0));
+
+  ck_assert_ptr_eq(NULL, i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 1));
 
   i_clean_session(&i_session);
   
@@ -86,13 +89,23 @@ START_TEST(test_iddawc_dpop_valid_parameters)
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
   r_jwk_free(jwk);
-  ck_assert_ptr_ne(NULL, token = i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
+  ck_assert_ptr_ne(NULL, token = i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 0));
   ck_assert_int_eq(r_jwt_init(&dpop_jwt), RHN_OK);
   ck_assert_int_eq(r_jwt_advanced_parse(dpop_jwt, token, R_PARSE_HEADER_JWK, 0), RHN_OK);
   ck_assert_int_eq(r_jwt_verify_signature(dpop_jwt, NULL, 0), RHN_OK);
   r_jwt_free(dpop_jwt);
-  i_clean_session(&i_session);
   o_free(token);
+
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN, I_OPT_NONE), I_OK);
+  ck_assert_ptr_ne(NULL, token = i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 1, 1));
+  ck_assert_int_eq(r_jwt_init(&dpop_jwt), RHN_OK);
+  ck_assert_int_eq(r_jwt_advanced_parse(dpop_jwt, token, R_PARSE_HEADER_JWK, 0), RHN_OK);
+  ck_assert_int_eq(r_jwt_verify_signature(dpop_jwt, NULL, 0), RHN_OK);
+  ck_assert_ptr_ne(NULL, r_jwt_get_claim_str_value(dpop_jwt, "ath"));
+  r_jwt_free(dpop_jwt);
+  o_free(token);
+
+  i_clean_session(&i_session);
 }
 END_TEST
 
@@ -106,16 +119,17 @@ START_TEST(test_iddawc_verify_dpop_proof_ok)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_DPOP_SIGN_ALG, "RS256",
                                                     I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
   ck_assert_ptr_ne(NULL, jtk = r_jwk_thumbprint(jwk, R_JWK_THUMB_SHA256, R_FLAG_IGNORE_REMOTE));
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
   r_jwk_free(jwk);
-  ck_assert_ptr_ne(NULL, token = i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
+  ck_assert_ptr_ne(NULL, token = i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 1));
   ck_assert_int_eq(r_jwt_init(&dpop_jwt), RHN_OK);
   ck_assert_int_eq(r_jwt_advanced_parse(dpop_jwt, token, R_PARSE_HEADER_JWK, 0), RHN_OK);
-  ck_assert_int_eq(i_verify_dpop_proof(token, DPOP_HTM, DPOP_HTU, 10, jtk), I_OK);
+  ck_assert_int_eq(i_verify_dpop_proof(token, DPOP_HTM, DPOP_HTU, 10, jtk, ACCESS_TOKEN), I_OK);
   r_jwt_free(dpop_jwt);
   i_clean_session(&i_session);
   o_free(token);
@@ -133,6 +147,7 @@ START_TEST(test_iddawc_verify_dpop_proof_invalid)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_DPOP_SIGN_ALG, "RS256",
                                                     I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_init(&jwk_fool), RHN_OK);
@@ -142,10 +157,10 @@ START_TEST(test_iddawc_verify_dpop_proof_invalid)
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk_fool), RHN_OK);
   r_jwk_free(jwk);
   r_jwk_free(jwk_fool);
-  ck_assert_ptr_ne(NULL, token = i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0));
+  ck_assert_ptr_ne(NULL, token = i_generate_dpop_token(&i_session, DPOP_HTM, DPOP_HTU, 0, 1));
   ck_assert_int_eq(r_jwt_init(&dpop_jwt), RHN_OK);
   ck_assert_int_eq(r_jwt_advanced_parse(dpop_jwt, token, R_PARSE_HEADER_JWK, 0), RHN_OK);
-  ck_assert_int_eq(i_verify_dpop_proof(token, DPOP_HTM, DPOP_HTU, 10, jtk), I_ERROR_UNAUTHORIZED);
+  ck_assert_int_eq(i_verify_dpop_proof(token, DPOP_HTM, DPOP_HTU, 10, jtk, ACCESS_TOKEN), I_ERROR_UNAUTHORIZED);
   r_jwt_free(dpop_jwt);
   i_clean_session(&i_session);
   o_free(token);
