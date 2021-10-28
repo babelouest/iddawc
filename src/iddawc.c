@@ -2900,7 +2900,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
     if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) == U_OK) {
       // Set DPoP
       if (i_session->use_dpop) {
-        if ((dpop_token = i_generate_dpop_token(i_session, http_method!=NULL?http_method:"GET", i_session->userinfo_endpoint, 0)) != NULL) {
+        if ((dpop_token = i_generate_dpop_token(i_session, http_method!=NULL?http_method:"GET", i_session->userinfo_endpoint, 0, 1)) != NULL) {
           if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
             y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_userinfo_custom - Error setting DPoP in header");
             ret = I_ERROR;
@@ -3936,7 +3936,7 @@ int i_run_token_request(struct _i_session * i_session) {
           ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "code_verifier", i_session->pkce_code_verifier);
         }
         if (i_session->use_dpop) {
-          dpop_token = i_generate_dpop_token(i_session, "POST", _i_get_endpoint(i_session, "token"), 0);
+          dpop_token = i_generate_dpop_token(i_session, "POST", _i_get_endpoint(i_session, "token"), 0, 0);
           if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "DPoP", dpop_token, U_OPT_NONE) != U_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error setting DPoP header");
             ret = I_ERROR;
@@ -4540,7 +4540,7 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
         if (o_strlen(i_session->access_token)) {
           // Set DPoP
           if (i_session->use_dpop) {
-            if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->revocation_endpoint, 0)) != NULL) {
+            if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->revocation_endpoint, 0, 1)) != NULL) {
               if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
                 y_log_message(Y_LOG_LEVEL_DEBUG, "i_revoke_token - Error setting DPoP in header");
                 ret = I_ERROR;
@@ -4652,7 +4652,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
         if (o_strlen(i_session->access_token)) {
           // Set DPoP
           if (i_session->use_dpop) {
-            if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->introspection_endpoint, 0)) != NULL) {
+            if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->introspection_endpoint, 0, 1)) != NULL) {
               if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
                 y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_token_introspection - Error setting DPoP in header");
                 ret = I_ERROR;
@@ -5534,13 +5534,16 @@ int i_import_session_str(struct _i_session * i_session, const char * str_import)
   return ret;
 }
 
-char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat) {
+char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat, int add_ath) {
   char * token = NULL;
   jwt_t * jwt_dpop = NULL;
   jwk_t * jwk_sign = NULL, * jwk_pub = NULL;
   json_t * j_dpop_pub = NULL;
   int has_error = 0;
   const char * kid;
+  unsigned char ath[32] = {0}, ath_enc[64] = {0};
+  size_t ath_len = 32, ath_enc_len = 64;
+  gnutls_datum_t hash_data;
 
   if (i_session != NULL && o_strlen(i_session->token_jti) && o_strlen(htu) && o_strlen(htm)) {
     kid = i_session->dpop_kid!=NULL?i_session->dpop_kid:i_session->client_kid;
@@ -5578,7 +5581,26 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
         r_jwt_set_sign_alg(jwt_dpop, i_session->dpop_sign_alg);
         if (r_jwk_init(&jwk_pub) == RHN_OK) {
           if (r_jwk_extract_pubkey(jwk_sign, jwk_pub, i_session->x5u_flags) == RHN_OK) {
-            if ((j_dpop_pub = r_jwk_export_to_json_t(jwk_pub)) == NULL) {
+            if ((j_dpop_pub = r_jwk_export_to_json_t(jwk_pub)) != NULL) {
+              if (add_ath) {
+                if (i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN) != NULL) {
+                  hash_data.data = (unsigned char*)i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN);
+                  hash_data.size = o_strlen(i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN));
+                  if (gnutls_fingerprint(GNUTLS_DIG_SHA256, &hash_data, ath, &ath_len) == GNUTLS_E_SUCCESS) {
+                    if (!o_base64url_encode(ath, ath_len, ath_enc, &ath_enc_len)) {
+                      y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error o_base64url_encode ath");
+                      has_error = 1;
+                    }
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error gnutls_fingerprint");
+                    has_error = 1;
+                  }
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - access token missing");
+                  has_error = 1;
+                }
+              }
+            } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error r_jwk_export_to_json_t");
               has_error = 1;
             }
@@ -5604,6 +5626,9 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
           r_jwt_set_claim_int_value(jwt_dpop, "iat", iat);
         } else {
           r_jwt_set_claim_int_value(jwt_dpop, "iat", time(NULL));
+        }
+        if (add_ath) {
+          r_jwt_set_claim_str_value(jwt_dpop, "ath", (const char *)ath_enc);
         }
         r_jwt_set_header_json_t_value(jwt_dpop, "jwk", j_dpop_pub);
         token = r_jwt_serialize_signed(jwt_dpop, jwk_sign, i_session->x5u_flags);
@@ -5671,7 +5696,7 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
           // Set DPoP
           if (use_dpop) {
             if (I_OK == ret) {
-              if ((dpop_token = i_generate_dpop_token(i_session, copy_req.http_verb, copy_req.http_url, dpop_iat)) != NULL) {
+              if ((dpop_token = i_generate_dpop_token(i_session, copy_req.http_verb, copy_req.http_url, dpop_iat, 1)) != NULL) {
                 if (ulfius_set_request_properties(&copy_req, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
                   y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error setting DPoP in header");
                   ret = I_ERROR;
@@ -5711,7 +5736,7 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
   return ret;
 }
 
-int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char * htu, time_t max_iat, const char * jkt) {
+int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char * htu, time_t max_iat, const char * jkt, const char * access_token) {
   json_t * j_header = NULL;
   jwt_t * dpop_jwt = NULL;
   jwa_alg alg;
@@ -5719,6 +5744,9 @@ int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char *
   char * jkt_from_token = NULL;
   time_t now;
   int ret;
+  unsigned char ath[32] = {0}, ath_enc[64] = {0};
+  size_t ath_len = 32, ath_enc_len = 64;
+  gnutls_datum_t hash_data;
   
   if (r_jwt_init(&dpop_jwt) == RHN_OK) {
     if (r_jwt_advanced_parse(dpop_jwt, dpop_header, R_PARSE_HEADER_JWK, R_FLAG_IGNORE_REMOTE) == RHN_OK) {
@@ -5783,6 +5811,28 @@ int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char *
           }
           if ((time_t)r_jwt_get_claim_int_value(dpop_jwt, "iat") > now) {
             y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid iat");
+            ret = I_ERROR_UNAUTHORIZED;
+            break;
+          }
+          if (!o_strlen(access_token)) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_dpop_proof - Invalid access_token");
+            ret = I_ERROR_PARAM;
+            break;
+          }
+          hash_data.data = (unsigned char*)access_token;
+          hash_data.size = o_strlen(access_token);
+          if (gnutls_fingerprint(GNUTLS_DIG_SHA256, &hash_data, ath, &ath_len) != GNUTLS_E_SUCCESS) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_dpop_proof - Error gnutls_fingerprint");
+            ret = I_ERROR;
+            break;
+          }
+          if (!o_base64url_encode(ath, ath_len, ath_enc, &ath_enc_len)) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_dpop_proof - Error o_base64url_encode ath");
+            ret = I_ERROR;
+            break;
+          }
+          if (0 != o_strcmp((const char *)ath_enc, r_jwt_get_claim_str_value(dpop_jwt, "ath"))) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_dpop_proof - Error ath invalid");
             ret = I_ERROR_UNAUTHORIZED;
             break;
           }

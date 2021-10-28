@@ -925,9 +925,10 @@ int i_get_registration_client(struct _i_session * i_session, json_t ** j_result)
  * @param htm: The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.)
  * @param htu: The htu claim value, the HTTP url used to access the protected resource (ex: https://resource.tld/object)
  * @param iat: the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used
+ * @param add_ath: Add access token hash (ath) based on the access token in the i_session
  * @return a char * containing the DPoP token signed, must be i_free'd after use
  */
-char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat);
+char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat, int add_ath);
 
 /**
  * Verifies the dpop_header is valid with the jkt specified
@@ -936,8 +937,10 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
  * @param htu: The htu claim value, the HTTP url used to access the protected resource (ex: https://resource.tld/object)
  * @param max_iat: the maximum age of the dpop, based on the claim iat, if set to 0, no expiration date will be checked
  * @param jkt: the signature identifier specified by the access_token
+ * @param access_token: the access token linked with this proof
+ * @return I_OK on success, an error value on error
  */
-int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char * htu, time_t max_iat, const char * jkt);
+int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char * htu, time_t max_iat, const char * jkt, const char * access_token);
 
 /**
  * Sends an HTTP request to a REST API using the access token to authenticate
