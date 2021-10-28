@@ -339,6 +339,7 @@ if (BUILD_IDDAWC_TESTING)
             device
             par
             ciba
+            session
             )
 
         configure_file(
