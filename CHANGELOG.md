@@ -5,6 +5,7 @@
 - Add `i_run_ciba_request` and implement [OpenID Connect Client-Initiated Backchannel Authentication Flow](https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html)
 - Improve client registration
 - Implement [JWT Secured Authorization Response Mode (JARM)](https://openid.net/specs/openid-financial-api-jarm.html)
+- Implement `ath` property in DPoP token
 
 ## 1.0.1
 
