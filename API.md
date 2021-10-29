@@ -740,6 +740,9 @@ int i_verify_end_session_backchannel_token(struct _i_session * i_session, const 
  * device auth verification uri complete, PKCE code verifier,
  * CIBA user code, CIBA auth req id, id_token sid
  * @param i_session: a reference to a struct _i_session *
+ * @param sid: the session ID, this parameter is optional, although if present,
+ * the value will be checked with the session sid value, if they don't match,
+ * i_close_session will return an error and the session will not be cleaned
  * @return I_OK on success, an error value on error
  */
 int i_close_session(struct _i_session * i_session, const char * sid);
