@@ -6,6 +6,7 @@
 - Improve client registration
 - Implement [JWT Secured Authorization Response Mode (JARM)](https://openid.net/specs/openid-financial-api-jarm.html)
 - Implement `ath` property in DPoP token
+- End session and single-logout functionalities
 
 ## 1.0.1
 

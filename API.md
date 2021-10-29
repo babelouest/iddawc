@@ -18,6 +18,8 @@ Iddawc supports the following features:
 - Making Rich Auth Requests
 - Adding claims to requests
 - Sending DPoP proofs
+- JWT Secured Authorization Response Mode
+- End session and single-logout functionalities
 
 ## Return values
 
