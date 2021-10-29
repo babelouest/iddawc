@@ -6434,7 +6434,6 @@ int i_verify_end_session_backchannel_token(struct _i_session * i_session, const 
       if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
                                      R_JWT_CLAIM_AUD, i_get_str_parameter(i_session, I_OPT_CLIENT_ID),
                                      R_JWT_CLAIM_IAT, R_JWT_CLAIM_NOW,
-                                     R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
                                      R_JWT_CLAIM_JTI, NULL,
                                      R_JWT_CLAIM_NOP) == RHN_OK) {
         j_events = r_jwt_get_claim_json_t_value(jwt, "events");
