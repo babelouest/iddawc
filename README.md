@@ -19,8 +19,8 @@ Supported features:
 - [OAuth 2.0 Dynamic Client Registration Management Protocol](https://tools.ietf.org/html/rfc7592)
 - [OAuth 2.0 Demonstration of Proof-of-Possession at the Application Layer (DPoP) Draft 04](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-04)
 - [OAuth 2.0 Rich Authorization Requests Draft 03](https://www.ietf.org/archive/id/draft-ietf-oauth-rar-03.html)
-- [OAuth 2.0 Pushed Authorization Requests Draft 05](https://tools.ietf.org/html/draft-ietf-oauth-par-05)
-- [JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens - draft 13](https://tools.ietf.org/html/draft-ietf-oauth-access-token-jwt-13)
+- [OAuth 2.0 Pushed Authorization Requests](https://datatracker.ietf.org/doc/html/rfc9126)
+- [JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens](https://datatracker.ietf.org/doc/html/rfc9068)
 - [Messages encryption](https://openid.net/specs/openid-connect-core-1_0.html#Encryption)
 
 Example for `code` and `id_token` response types on an OpenID Connect server.

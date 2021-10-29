@@ -590,10 +590,28 @@ You can use your client's private key parameters to generate a DPoP token. If yo
  * @param htm: The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.)
  * @param htu: The htu claim value, the HTTP url used to access the protected resource (ex: https://resource.tld/object)
  * @param iat: the iat claim value, the epoch time value when the DPoP token must be set. If 0, the current time will be used
- * @param add_pubkey: include the public key in the header for first DPoP proof
+ * @param add_ath: Add access token hash (ath) based on the access token in the i_session
  * @return a char * containing the DPoP token signed, must be i_free'd after use
  */
-char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat, int add_pubkey);
+char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, const char * htu, time_t iat, int add_ath);
+```
+
+### Verify a DPoP proof
+
+If you are using Iddawc in a Resource Service (RS), you can check the DPoP sent by the client using the function `i_verify_dpop_proof`. The parameter `const char * access_token` is mandatory to comply with DPoP Definition, Draft 04.
+
+```C
+/**
+ * Verifies the dpop_header is valid with the jkt specified
+ * @param dpop_header: the dpop header in a serialized JWT format
+ * @param htm: The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.)
+ * @param htu: The htu claim value, the HTTP url used to access the protected resource (ex: https://resource.tld/object)
+ * @param max_iat: the maximum age of the dpop, based on the claim iat, if set to 0, no expiration date will be checked
+ * @param jkt: the signature identifier specified by the access_token
+ * @param access_token: the access token linked with this proof
+ * @return I_OK on success, an error value on error
+ */
+int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char * htu, time_t max_iat, const char * jkt, const char * access_token);
 ```
 
 ### Perform a HTTP request to a Resource Service
@@ -690,3 +708,39 @@ i_run_token_request(&i_session); // get access_token and refresh_token when the 
 ```
 
 Note that when using ping or push mode, Iddawc doesn't implement the client notification endpoint, its implementation and communication with iddawc's session will be yours to make.
+
+### End session
+
+Iddawc provides 3 functions dedicated to end session capabilities: [OpenID Connect Front-Channel Logout](https://openid.net/specs/openid-connect-frontchannel-1_0.html) and [OpenID Connect Back-Channel Logout](https://openid.net/specs/openid-connect-backchannel-1_0.html).
+
+```C
+/**
+ * Generates an end session url to access the single logout page
+ * @param i_session: a reference to a struct _i_session *
+ * The session must contain an end_session_endpoint and an id_token at least
+ * If a post_logout_redirect_uri is available in the session, this will be added to the url
+ * @return a char * containing the end session url, must be i_free'd after use
+ */
+char * i_build_end_session_url(struct _i_session * i_session);
+
+/**
+ * Validates the end session token sent by the AS via the backchannel_logout_uri
+ * @param i_session: a reference to a struct _i_session *
+ * @param token: the end session token to validate
+ * @return I_OK on success, an error value on error
+ */
+int i_verify_end_session_backchannel_token(struct _i_session * i_session, const char * token);
+
+/**
+ * Closes the current session by cleaning the following values of the session:
+ * code, refresh token, access token, id_token, nonce, userinfo, jti,
+ * device auth code, device auth user code, device auth verification uri,
+ * device auth verification uri complete, PKCE code verifier,
+ * CIBA user code, CIBA auth req id, id_token sid
+ * @param i_session: a reference to a struct _i_session *
+ * @return I_OK on success, an error value on error
+ */
+int i_close_session(struct _i_session * i_session, const char * sid);
+```
+
+Even if Iddawc doesn't provide Front-Channel or Back-Channel logout endpoints, you can use the function `i_verify_end_session_backchannel_token` to verify an end_session backchannel token, and `i_close_session` to clean the current session.
