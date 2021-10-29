@@ -735,6 +735,7 @@ $( document ).ready(function() {
   $("#endsessionRun").click(() => {
     saveSession()
     .then(() => {
+      loopChange();
       $.ajax({
         method: "GET",
         url: "/api/endSession"
@@ -743,7 +744,7 @@ $( document ).ready(function() {
         $("#end_session_status").html('<span>Click here to log out</span><div><a href="'+res.url+'" target="_blank" alt="log out">'+res.url+'</a></div>');
       })
       .fail((error) => {
-        if (error.status === 400) {
+        if (error.status === 400 && error.responseJSON) {
           showModal("Error running token: invalid parameters<div><b>Error:</b> <i>"+error.responseJSON.error+"</i></div><div><b>Error description:</b> <i>"+(error.responseJSON.error_description||" - ")+"</i></div>");
         } else {
           showModal("Error running token: server error");
@@ -1352,28 +1353,24 @@ $( document ).ready(function() {
       });
   }
 
-  function connectWs() {
-    if (location.protocol === "https:") {
-      mySocket = new WebSocket("wss://" + location.hostname + ":" + location.port + "/api/ws");
-    } else {
-      mySocket = new WebSocket("ws://" + location.hostname + ":" + location.port + "/api/ws");
-    }
-    mySocket.onmessage = (event) => {
-      showModal(event.data);
-      loadSession();
-    };
-    mySocket.onopen = () => {
-      $("#ws_status").text("Connected");
-    };
-    mySocket.onclose = () => {
-      $("#ws_status").text("Disonnected");
-      setTimeout(() => {
-        connectWs();
-      }, 1000);
-    };
+  function loopChange() {
+    setTimeout(() => {
+      return $.get("/api/message")
+      .then((res) => {
+        if (res.message) {
+          showModal(res.message);
+          loadSession();
+        }
+      })
+      .fail((error) => {
+        console.log("Error loading message", error.responseText);
+      })
+      .always(() => {
+        loopChange();
+      });
+    }, 2000);
   }
 
   getSession();
   loopCibaStatus();
-  connectWs();
 });

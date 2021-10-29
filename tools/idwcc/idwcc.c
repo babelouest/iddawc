@@ -52,8 +52,7 @@ struct _callback_struct {
   struct _i_session * session;
   const char        * webapp_path;
   uint                ciba_status;
-  pthread_mutex_t     ws_lock;
-  pthread_cond_t      ws_cond;
+  pthread_mutex_t     change_lock;
   char                message[MESSAGE_MAX+1];
 };
 
@@ -737,11 +736,13 @@ static int callback_frontchannel_logout(const struct _u_request * request, struc
             y_log_message(Y_LOG_LEVEL_ERROR, "Error i_close_session (sid)");
             response->status = 500;
           } else {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "Frontchannel logout received from %s", iss);
-            o_strcpy(callback_struct->message, "Frontchannel logout received");
-            pthread_mutex_lock(&callback_struct->ws_lock);
-            pthread_cond_broadcast(&callback_struct->ws_cond);
-            pthread_mutex_unlock(&callback_struct->ws_lock);
+            if (!pthread_mutex_lock(&callback_struct->change_lock)) {
+              y_log_message(Y_LOG_LEVEL_DEBUG, "Frontchannel logout received");
+              o_strcpy(callback_struct->message, "Frontchannel logout received");
+              pthread_mutex_unlock(&callback_struct->change_lock);
+            } else {
+              y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock");
+            }
           }
         } else {
           response->status = 400;
@@ -752,11 +753,13 @@ static int callback_frontchannel_logout(const struct _u_request * request, struc
           y_log_message(Y_LOG_LEVEL_ERROR, "Error i_close_session (no sid)");
           response->status = 500;
         } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "Frontchannel logout received from %s", iss);
-          o_strcpy(callback_struct->message, "Frontchannel logout received");
-          pthread_mutex_lock(&callback_struct->ws_lock);
-          pthread_cond_broadcast(&callback_struct->ws_cond);
-          pthread_mutex_unlock(&callback_struct->ws_lock);
+          if (!pthread_mutex_lock(&callback_struct->change_lock)) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "Frontchannel logout received");
+            o_strcpy(callback_struct->message, "Frontchannel logout received");
+            pthread_mutex_unlock(&callback_struct->change_lock);
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock");
+          }
         }
         break;
     }
@@ -782,11 +785,13 @@ static int callback_backchannel_logout(const struct _u_request * request, struct
       y_log_message(Y_LOG_LEVEL_ERROR, "Error i_close_session");
       response->status = 500;
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "Backchannel logout received");
-      o_strcpy(callback_struct->message, "Backchannel logout received");
-      pthread_mutex_lock(&callback_struct->ws_lock);
-      pthread_cond_broadcast(&callback_struct->ws_cond);
-      pthread_mutex_unlock(&callback_struct->ws_lock);
+      if (!pthread_mutex_lock(&callback_struct->change_lock)) {
+        y_log_message(Y_LOG_LEVEL_DEBUG, "Backchannel logout received");
+        o_strcpy(callback_struct->message, "Backchannel logout received");
+        pthread_mutex_unlock(&callback_struct->change_lock);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock");
+      }
     }
   } else {
     response->status = 400;
@@ -794,38 +799,26 @@ static int callback_backchannel_logout(const struct _u_request * request, struct
   return U_CALLBACK_CONTINUE;
 }
 
-void websocket_send_message_callback(const struct _u_request * request,
-                                     struct _websocket_manager * websocket_manager,
-                                     void * websocket_manager_user_data) {
-  struct _callback_struct * callback_struct = (struct _callback_struct *)websocket_manager_user_data;
-  struct timespec abstime;
-  int ret;
-
-  websocket_manager->keep_messages = U_WEBSOCKET_KEEP_NONE;
-  while (ulfius_websocket_wait_close(websocket_manager, 50) == U_WEBSOCKET_STATUS_OPEN) {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "grut");
-    clock_gettime(CLOCK_REALTIME, &abstime);
-    abstime.tv_sec += 1;
-    pthread_mutex_lock(&callback_struct->ws_lock);
-    ret = pthread_cond_timedwait(&websocket_manager->status_cond, &websocket_manager->status_lock, &abstime);
-    pthread_mutex_unlock(&callback_struct->ws_lock);
-    if (ret && ret != ETIMEDOUT) {
-      break;
-    } else if (!ret) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "Send ws message '%s'", callback_struct->message);
-      ulfius_websocket_send_message(websocket_manager, U_WEBSOCKET_OPCODE_TEXT, o_strlen(callback_struct->message), callback_struct->message);
+static int callback_message(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
+  json_t * j_message;
+  
+  if (!pthread_mutex_lock(&callback_struct->change_lock)) {
+    if (o_strlen(callback_struct->message)) {
+      j_message = json_pack("{ss}", "message", callback_struct->message);
+      ulfius_set_json_body_response(response, 200, j_message);
+      json_decref(j_message);
+      callback_struct->message[0] = '\0';
+    } else {
+      j_message = json_pack("{so}", "message", json_false());
+      ulfius_set_json_body_response(response, 200, j_message);
+      json_decref(j_message);
     }
-  }
-  y_log_message(Y_LOG_LEVEL_DEBUG, "plop");
-}
-
-static int callback_websocket(const struct _u_request * request, struct _u_response * response, void * user_data) {
-  if (ulfius_set_websocket_response(response, NULL, NULL, &websocket_send_message_callback, user_data, NULL, NULL, NULL, NULL) == U_OK) {
-    ulfius_add_websocket_deflate_extension(response);
-    return U_CALLBACK_CONTINUE;
+    pthread_mutex_unlock(&callback_struct->change_lock);
   } else {
-    return U_CALLBACK_ERROR;
+    y_log_message(Y_LOG_LEVEL_ERROR, "Error pthread_mutex_lock");
   }
+  return U_CALLBACK_CONTINUE;
 }
 
 static int callback_default(const struct _u_request * request, struct _u_response * response, void * user_data) {
@@ -850,6 +843,7 @@ int main(int argc, char ** argv) {
   struct _u_compressed_inmemory_website_config file_config;
   struct sockaddr_in bind_address;
   struct _callback_struct callback_struct;
+  pthread_mutexattr_t mutexattr;
 
   const char * short_options = "p:f:b:w:v::h";
   static const struct option long_options[]= {
@@ -919,7 +913,9 @@ int main(int argc, char ** argv) {
 
     if (ulfius_init_instance(&instance, port, bind_localhost?&bind_address:NULL, NULL) == U_OK) {
       if (u_init_compressed_inmemory_website_config(&file_config) == U_OK) {
-        if (!pthread_mutex_init(&callback_struct.ws_lock, NULL) && !pthread_cond_init(&callback_struct.ws_cond, NULL)) {
+        pthread_mutexattr_init ( &mutexattr );
+        pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE );
+        if (!pthread_mutex_init(&callback_struct.change_lock, &mutexattr)) {
           u_map_put(&file_config.mime_types, ".html", "text/html");
           u_map_put(&file_config.mime_types, ".css", "text/css");
           u_map_put(&file_config.mime_types, ".js", "application/javascript");
@@ -971,7 +967,7 @@ int main(int argc, char ** argv) {
           ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/endSession", 0, &callback_get_end_session, &callback_struct);
           ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/frontlogout", 0, &callback_frontchannel_logout, &callback_struct);
           ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/backlogout", 0, &callback_backchannel_logout, &callback_struct);
-          ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/ws", 0, &callback_websocket, &callback_struct);
+          ulfius_add_endpoint_by_val(&instance, "GET", "/api", "/message", 0, &callback_message, &callback_struct);
           ulfius_add_endpoint_by_val(&instance, "*", "/api", "*", 1, &callback_http_compression, NULL);
           ulfius_add_endpoint_by_val(&instance, "GET", PREFIX_STATIC, "*", 0, &callback_static_compressed_inmemory_website, &file_config);
           ulfius_add_endpoint_by_val(&instance, "GET", PREFIX_STATIC, "*", 2, &callback_static_close, NULL);
@@ -984,11 +980,10 @@ int main(int argc, char ** argv) {
           ulfius_stop_framework(&instance);
           ulfius_clean_instance(&instance);
           u_clean_compressed_inmemory_website_config(&file_config);
-          pthread_mutex_destroy(&callback_struct.ws_lock);
-          pthread_cond_destroy(&callback_struct.ws_cond);
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "Error initializing pthread structures");
         }
+        pthread_mutexattr_destroy(&mutexattr);
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "Error initializing file config");
       }
@@ -999,6 +994,7 @@ int main(int argc, char ** argv) {
   i_clean_session(&session);
   y_close_logs();
   o_free(webapp_path);
+  pthread_mutex_destroy(&callback_struct.change_lock);
 
   return ret;
 }
