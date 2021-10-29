@@ -285,43 +285,6 @@ START_TEST(test_iddawc_session_verify_token_invalid_iat)
 }
 END_TEST
 
-START_TEST(test_iddawc_session_verify_token_invalid_exp)
-{
-  struct _i_session i_session;
-  jwt_t * jwt;
-  jwk_t * jwk, * jwk_sign;
-  char * grants = NULL, * jwt_str;
-  time_t now;
-  time(&now);
-  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
-  ck_assert_int_eq(r_jwk_import_from_pem_der(jwk, R_X509_TYPE_PRIVKEY, R_FORMAT_PEM, private_key, o_strlen((const char *)private_key)), RHN_OK);
-  ck_assert_int_eq(r_jwk_init(&jwk_sign), RHN_OK);
-  ck_assert_int_eq(r_jwk_import_from_pem_der(jwk_sign, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, public_key, o_strlen((const char *)public_key)), RHN_OK);
-  ck_assert_ptr_ne(grants = msprintf(end_session_token_pattern, CLIENT_ID, (long long)now, (long long)(now - EXPIRES_IN), ISSUER), NULL);
-
-  ck_assert_int_eq(i_init_session(&i_session), I_OK);
-  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ISSUER, ISSUER,
-                                                    I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, 1,
-                                                    I_OPT_ID_TOKEN_SID, ID_TOKEN_SID,
-                                                    I_OPT_NONE), I_OK);
-  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk_sign), RHN_OK);
-  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
-  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256), RHN_OK);
-  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
-  ck_assert_int_eq(r_jwt_set_claim_str_value(jwt, "sid", ID_TOKEN_SID), RHN_OK);
-  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed(jwt, jwk, 0)), NULL);
-  ck_assert_int_eq(I_ERROR_PARAM, i_verify_end_session_backchannel_token(&i_session, jwt_str));
-  o_free(jwt_str);
-  r_jwt_free(jwt);
-  i_clean_session(&i_session);
-
-  o_free(grants);
-  r_jwk_free(jwk);
-  r_jwk_free(jwk_sign);
-}
-END_TEST
-
 START_TEST(test_iddawc_session_verify_token_invalid_jti)
 {
   struct _i_session i_session;
@@ -646,7 +609,6 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_session_verify_token_invalid_iss);
   tcase_add_test(tc_core, test_iddawc_session_verify_token_invalid_aud);
   tcase_add_test(tc_core, test_iddawc_session_verify_token_invalid_iat);
-  tcase_add_test(tc_core, test_iddawc_session_verify_token_invalid_exp);
   tcase_add_test(tc_core, test_iddawc_session_verify_token_invalid_jti);
   tcase_add_test(tc_core, test_iddawc_session_verify_token_invalid_events);
   tcase_add_test(tc_core, test_iddawc_session_verify_token_invalid_sid);
