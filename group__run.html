@@ -993,6 +993,7 @@ Functions</h2></td></tr>
 <p>Closes the current session by cleaning the following values of the session: code, refresh token, access token, id_token, nonce, userinfo, jti, device auth code, device auth user code, device auth verification uri, device auth verification uri complete, PKCE code verifier, CIBA user code, CIBA auth req id, id_token sid </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">sid</td><td>the session ID, this parameter is optional, although if present, the value will be checked with the session sid value, if they don't match, i_close_session will return an error and the session will not be cleaned </td></tr>
   </table>
   </dd>
 </dl>
