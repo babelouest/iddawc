@@ -1,7 +1,7 @@
 /**
  * GitLab OAuth2 example using Iddawc library
  * 
- * Copyright 2020 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2020-2021 Nicolas Mora <mail@babelouest.org>
  *
  * License MIT
  * 
