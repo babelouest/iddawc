@@ -59,6 +59,8 @@ $(function() {
 <li>Making Rich Auth Requests</li>
 <li>Adding claims to requests</li>
 <li>Sending DPoP proofs</li>
+<li>JWT Secured Authorization Response Mode</li>
+<li>End session and single-logout functionalities</li>
 </ul>
 <h1>Return values</h1>
 <p>Lots of functions in Rhonabwy library return an int value. The returned value can be one of the following:</p>
@@ -244,8 +246,13 @@ $(function() {
 </div><!-- fragment --><h2>Generate a DPoP token</h2>
 <p>You can use your client's private key parameters to generate a DPoP token. If you set the session property <code>I_OPT_USE_DPOP</code> to true, the functions <code>i_run_device_auth_request</code>, <code>i_run_par_request</code>, <code>i_get_userinfo_custom</code>, <code>i_get_userinfo</code>, <code>i_run_token_request</code>, <code>i_revoke_token</code>, <code>i_get_token_introspection</code> or <code>i_perform_resource_service_request</code> will add a DPoP header.</p>
 <div class="fragment"><div class="line"> </div>
-<div class="line"><span class="keywordtype">char</span> * <a class="code" href="group__run.html#ga525029dc9d7979066f020c0d51ef3b93">i_generate_dpop_token</a>(<span class="keyword">struct</span> <a class="code" href="struct__i__session.html">_i_session</a> * i_session, <span class="keyword">const</span> <span class="keywordtype">char</span> * htm, <span class="keyword">const</span> <span class="keywordtype">char</span> * htu, time_t iat, <span class="keywordtype">int</span> add_pubkey);</div>
+<div class="line"><span class="keywordtype">char</span> * <a class="code" href="group__run.html#ga525029dc9d7979066f020c0d51ef3b93">i_generate_dpop_token</a>(<span class="keyword">struct</span> <a class="code" href="struct__i__session.html">_i_session</a> * i_session, <span class="keyword">const</span> <span class="keywordtype">char</span> * htm, <span class="keyword">const</span> <span class="keywordtype">char</span> * htu, time_t iat, <span class="keywordtype">int</span> add_ath);</div>
 <div class="ttc" id="agroup__run_html_ga525029dc9d7979066f020c0d51ef3b93"><div class="ttname"><a href="group__run.html#ga525029dc9d7979066f020c0d51ef3b93">i_generate_dpop_token</a></div><div class="ttdeci">char * i_generate_dpop_token(struct _i_session *i_session, const char *htm, const char *htu, time_t iat, int add_ath)</div><div class="ttdef"><b>Definition:</b> iddawc.c:5537</div></div>
+</div><!-- fragment --><h2>Verify a DPoP proof</h2>
+<p>If you are using Iddawc in a Resource Service (RS), you can check the DPoP sent by the client using the function <code>i_verify_dpop_proof</code>. The parameter <code>const char * access_token</code> is mandatory to comply with DPoP Definition, Draft 04.</p>
+<div class="fragment"><div class="line"> </div>
+<div class="line"><span class="keywordtype">int</span> <a class="code" href="group__run.html#gac96c00e3cd99b7c00c49fa46b3d23559">i_verify_dpop_proof</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * dpop_header, <span class="keyword">const</span> <span class="keywordtype">char</span> * htm, <span class="keyword">const</span> <span class="keywordtype">char</span> * htu, time_t max_iat, <span class="keyword">const</span> <span class="keywordtype">char</span> * jkt, <span class="keyword">const</span> <span class="keywordtype">char</span> * access_token);</div>
+<div class="ttc" id="agroup__run_html_gac96c00e3cd99b7c00c49fa46b3d23559"><div class="ttname"><a href="group__run.html#gac96c00e3cd99b7c00c49fa46b3d23559">i_verify_dpop_proof</a></div><div class="ttdeci">int i_verify_dpop_proof(const char *dpop_header, const char *htm, const char *htu, time_t max_iat, const char *jkt, const char *access_token)</div><div class="ttdef"><b>Definition:</b> iddawc.c:5739</div></div>
 </div><!-- fragment --><h2>Perform a HTTP request to a Resource Service</h2>
 <p>This features uses Ulfius' <code>ulfius_send_http_request</code> function to proceed. This function requires at least a <code>struct _u_request</code> with all the request parameters.</p>
 <p>Iddawc will add the access token previously obtained to the HTTP request using the <a href="https://tools.ietf.org/html/rfc6750">Bearer usage</a> specified.</p>
@@ -316,7 +323,19 @@ $(function() {
 <div class="ttc" id="agroup__const_html_gga845a2122b22dd4f5a7f66c7d3bce2b41ad784b2e55cb95f331bd67212418b3323"><div class="ttname"><a href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41ad784b2e55cb95f331bd67212418b3323">I_OPT_RESPONSE_TYPE</a></div><div class="ttdeci">@ I_OPT_RESPONSE_TYPE</div><div class="ttdoc">response_type, values available are I_RESPONSE_TYPE_CODE, I_RESPONSE_TYPE_TOKEN, I_RESPONSE_TYPE_ID_T...</div><div class="ttdef"><b>Definition:</b> iddawc.h:137</div></div>
 <div class="ttc" id="agroup__const_html_gga845a2122b22dd4f5a7f66c7d3bce2b41adaa64fb80bda1ea21bf0f412a38254fb"><div class="ttname"><a href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41adaa64fb80bda1ea21bf0f412a38254fb">I_OPT_AUTH_METHOD</a></div><div class="ttdeci">@ I_OPT_AUTH_METHOD</div><div class="ttdoc">Authentication method to use with the auth endpoint, values available are I_AUTH_METHOD_GET,...</div><div class="ttdef"><b>Definition:</b> iddawc.h:162</div></div>
 <div class="ttc" id="agroup__const_html_gga845a2122b22dd4f5a7f66c7d3bce2b41aee9b0f29db48b158568705694b73a1f9"><div class="ttname"><a href="group__const.html#gga845a2122b22dd4f5a7f66c7d3bce2b41aee9b0f29db48b158568705694b73a1f9">I_OPT_SCOPE</a></div><div class="ttdeci">@ I_OPT_SCOPE</div><div class="ttdoc">scope values, string, multiple scopes must be separated by a space character: &quot;scope1 openid&quot;</div><div class="ttdef"><b>Definition:</b> iddawc.h:138</div></div>
-</div><!-- fragment --><p>Note that when using ping or push mode, Iddawc doesn't implement the client notification endpoint, its implementation and communication with iddawc's session will be yours to make. </p>
+</div><!-- fragment --><p>Note that when using ping or push mode, Iddawc doesn't implement the client notification endpoint, its implementation and communication with iddawc's session will be yours to make.</p>
+<h2>End session</h2>
+<p>Iddawc provides 3 functions dedicated to end session capabilities: <a href="https://openid.net/specs/openid-connect-frontchannel-1_0.html">OpenID Connect Front-Channel Logout</a> and <a href="https://openid.net/specs/openid-connect-backchannel-1_0.html">OpenID Connect Back-Channel Logout</a>.</p>
+<div class="fragment"><div class="line"> </div>
+<div class="line"><span class="keywordtype">char</span> * <a class="code" href="group__run.html#ga6a716a75cddc5ee2a1be4d35c908f390">i_build_end_session_url</a>(<span class="keyword">struct</span> <a class="code" href="struct__i__session.html">_i_session</a> * i_session);</div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">int</span> <a class="code" href="group__run.html#ga10894505403f690e0dce303607f3cfc0">i_verify_end_session_backchannel_token</a>(<span class="keyword">struct</span> <a class="code" href="struct__i__session.html">_i_session</a> * i_session, <span class="keyword">const</span> <span class="keywordtype">char</span> * token);</div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">int</span> <a class="code" href="group__run.html#gafa6f85f310dccda2962ccf09815c2eb9">i_close_session</a>(<span class="keyword">struct</span> <a class="code" href="struct__i__session.html">_i_session</a> * i_session, <span class="keyword">const</span> <span class="keywordtype">char</span> * sid);</div>
+<div class="ttc" id="agroup__run_html_ga10894505403f690e0dce303607f3cfc0"><div class="ttname"><a href="group__run.html#ga10894505403f690e0dce303607f3cfc0">i_verify_end_session_backchannel_token</a></div><div class="ttdeci">int i_verify_end_session_backchannel_token(struct _i_session *i_session, const char *token)</div><div class="ttdef"><b>Definition:</b> iddawc.c:6427</div></div>
+<div class="ttc" id="agroup__run_html_ga6a716a75cddc5ee2a1be4d35c908f390"><div class="ttname"><a href="group__run.html#ga6a716a75cddc5ee2a1be4d35c908f390">i_build_end_session_url</a></div><div class="ttdeci">char * i_build_end_session_url(struct _i_session *i_session)</div><div class="ttdef"><b>Definition:</b> iddawc.c:6412</div></div>
+<div class="ttc" id="agroup__run_html_gafa6f85f310dccda2962ccf09815c2eb9"><div class="ttname"><a href="group__run.html#gafa6f85f310dccda2962ccf09815c2eb9">i_close_session</a></div><div class="ttdeci">int i_close_session(struct _i_session *i_session, const char *sid)</div><div class="ttdef"><b>Definition:</b> iddawc.c:6478</div></div>
+</div><!-- fragment --><p>Even if Iddawc doesn't provide Front-Channel or Back-Channel logout endpoints, you can use the function <code>i_verify_end_session_backchannel_token</code> to verify an end_session backchannel token, and <code>i_close_session</code> to clean the current session. </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->
 <!-- start footer part -->
