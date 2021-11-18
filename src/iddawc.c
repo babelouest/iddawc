@@ -3456,6 +3456,7 @@ int i_set_server_jwks(struct _i_session * i_session, json_t * j_jwks) {
       ret = I_OK;
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "i_set_server_jwks - Error importing jwks");
+      ret = I_ERROR;
     }
   } else {
     ret = I_ERROR_PARAM;
@@ -3478,6 +3479,7 @@ int i_set_client_jwks(struct _i_session * i_session, json_t * j_jwks) {
       ret = I_OK;
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "i_set_client_jwks - Error importing jwks");
+      ret = I_ERROR;
     }
   } else {
     ret = I_ERROR_PARAM;
