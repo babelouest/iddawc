@@ -1363,7 +1363,7 @@ $( document ).ready(function() {
         }
       })
       .fail((error) => {
-        console.log("Error loading message", error.responseText);
+        console.error("Error loading message", error.responseText);
       })
       .always(() => {
         loopChange();
