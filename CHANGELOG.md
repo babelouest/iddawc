@@ -1,5 +1,9 @@
 # Iddawc Changelog
 
+## 1.1.1
+
+- Fix undefined variables
+
 ## 1.1.0
 
 - Add `i_run_ciba_request` and implement [OpenID Connect Client-Initiated Backchannel Authentication Flow](https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html)
