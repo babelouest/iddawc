@@ -34,6 +34,7 @@ clean:
 	cd $(LIBIDDAWC_LOCATION) && $(MAKE) clean
 	cd $(IDWCC_LOCATION) && $(MAKE) clean
 	cd $(TESTS_LOCATION) && $(MAKE) clean
+	rm -rf doc/html $(TESTS_LOCATION)/cert/*.crt $(TESTS_LOCATION)/cert/*.key $(TESTS_LOCATION)/cert/*.log
 
 install:
 	cd $(LIBIDDAWC_LOCATION) && $(MAKE) install
