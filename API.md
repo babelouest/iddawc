@@ -435,6 +435,17 @@ To execute a request in the token endpoint, get a refresh token from a code or r
 int i_run_token_request(struct _i_session * i_session);
 ```
 
+Note: By default, token endpoint authentication method is `I_TOKEN_AUTH_METHOD_NONE`. If your client needs to be authenticated, you must specify the desired method by setting the `I_OPT_TOKEN_METHOD` with one of the following values:
+- `I_TOKEN_AUTH_METHOD_SECRET_BASIC`: HTTP Basic Authentication
+- `I_TOKEN_AUTH_METHOD_SECRET_POST`: Secret Post Authentication
+- `I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE`: [MTLS](https://datatracker.ietf.org/doc/html/rfc8705) authentication
+- `I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET`: Client Assertion in JWT format signed with the client secret
+- `I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY`: Client Assertion in JWT format signed with the client private key
+- `I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET`: Client Assertion in JWT format encrypted using the client secret
+- `I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_PUBKEY`: Client Assertion in JWT format encrypted using the AS public key
+
+The values `I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET` and `I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_PUBKEY` must be combined with the values `I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET` or `I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY`.
+
 ### Verify an id_token
 
 If the auth or token endpoints returns an id_token, this one will be parsed, the signature will be verified and the content will be validated to make sure the id_token is valid.
