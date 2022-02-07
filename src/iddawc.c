@@ -25,7 +25,6 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 #include <yder.h>
-#include <rhonabwy.h>
 
 #include "iddawc.h"
 
@@ -676,7 +675,7 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
           if (r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
             ret = I_OK;
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error r_jwks_import_from_str");
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error r_jwks_import_from_json_str");
             ret = I_ERROR;
           }
         } else {
@@ -3604,9 +3603,13 @@ int i_build_auth_url_get(struct _i_session * i_session) {
         keys = u_map_enum_keys(&i_session->additional_parameters);
 
         for (i=0; keys[i] != NULL; i++) {
-          escaped = ulfius_url_encode(u_map_get(&i_session->additional_parameters, keys[i]));
-          url = mstrcatf(url, "&%s=%s", keys[i], escaped);
-          o_free(escaped);
+          if (o_strlen(u_map_get(&i_session->additional_parameters, keys[i]))) {
+            escaped = ulfius_url_encode(u_map_get(&i_session->additional_parameters, keys[i]));
+            url = mstrcatf(url, "&%s=%s", keys[i], escaped);
+            o_free(escaped);
+          } else {
+            url = mstrcatf(url, "&%s", keys[i]);
+          }
         }
         ret = i_set_str_parameter(i_session, I_OPT_REDIRECT_TO, url);
         o_free(url);
