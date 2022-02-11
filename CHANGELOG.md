@@ -1,5 +1,10 @@
 # Iddawc Changelog
 
+## 1.1.2
+
+- Improve tests
+- Rename `uint` to `unsigned int`
+
 ## 1.1.1
 
 - Fix undefined variables
