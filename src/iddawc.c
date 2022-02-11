@@ -257,7 +257,7 @@ static const char * _i_get_parameter_key(int token_type, const char * key_type) 
   return param;
 }
 
-static const char * _i_get_response_type(uint response_type) {
+static const char * _i_get_response_type(unsigned int response_type) {
   static char result[32] = {0};
   switch (response_type) {
     case I_RESPONSE_TYPE_CODE:
@@ -574,11 +574,11 @@ static int _i_parse_redirect_to_parameters(struct _i_session * i_session, struct
       time(&expires_at);
       expires_at += (time_t)expires_in;
       if (endptr != (char *)u_map_get(map, key)) {
-        if (i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, (uint)expires_in) != I_OK) {
+        if (i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, (unsigned int)expires_in) != I_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_redirect_to_parameters - expires_in invalid");
           ret = ret!=I_OK?ret:I_ERROR_SERVER;
         }
-        if (i_set_int_parameter(i_session, I_OPT_EXPIRES_AT, (uint)expires_at) != I_OK) {
+        if (i_set_int_parameter(i_session, I_OPT_EXPIRES_AT, (unsigned int)expires_at) != I_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_redirect_to_parameters - expires_at invalid");
           ret = ret!=I_OK?ret:I_ERROR_SERVER;
         }
@@ -901,7 +901,7 @@ static char * _i_generate_auth_jwt(struct _i_session * i_session) {
   jwk_t * jwk_sign = NULL, * jwk_enc = NULL;
   char * jwt_str = NULL;
   const char ** keys = NULL;
-  uint i;
+  unsigned int i;
   jwa_alg sign_alg = R_JWA_ALG_UNKNOWN, enc_alg = R_JWA_ALG_UNKNOWN;
   jwa_enc enc = R_JWA_ENC_UNKNOWN;
   int has_error = 0;
@@ -1655,15 +1655,15 @@ void i_clean_session(struct _i_session * i_session) {
   }
 }
 
-int i_set_response_type(struct _i_session * i_session, uint i_value) {
+int i_set_response_type(struct _i_session * i_session, unsigned int i_value) {
   return i_set_int_parameter(i_session, I_OPT_RESPONSE_TYPE, i_value);
 }
 
-int i_set_result(struct _i_session * i_session, uint i_value) {
+int i_set_result(struct _i_session * i_session, unsigned int i_value) {
   return i_set_int_parameter(i_session, I_OPT_RESULT, i_value);
 }
 
-int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_value) {
+int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned int i_value) {
   int ret = I_OK;
   if (i_session != NULL) {
     switch (option) {
@@ -2648,13 +2648,13 @@ int i_remove_claim_request(struct _i_session * i_session, int target, const char
 }
 
 int i_set_parameter_list(struct _i_session * i_session, ...) {
-  uint option, i_value, ret = I_OK;
+  unsigned int option, i_value, ret = I_OK;
   const char * str_key, * str_value;
   va_list vl;
 
   if (i_session != NULL) {
     va_start(vl, i_session);
-    for (option = va_arg(vl, uint); option != I_OPT_NONE && ret == I_OK; option = va_arg(vl, uint)) {
+    for (option = va_arg(vl, unsigned int); option != I_OPT_NONE && ret == I_OK; option = va_arg(vl, unsigned int)) {
       switch (option) {
         case I_OPT_RESPONSE_TYPE:
         case I_OPT_RESULT:
@@ -2686,7 +2686,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_CIBA_AUTH_REQ_INTERVAL:
         case I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED:
         case I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED:
-          i_value = va_arg(vl, uint);
+          i_value = va_arg(vl, unsigned int);
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
         case I_OPT_SCOPE:
@@ -2977,15 +2977,15 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
   return ret;
 }
 
-uint i_get_response_type(struct _i_session * i_session) {
+unsigned int i_get_response_type(struct _i_session * i_session) {
   return i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE);
 }
 
-uint i_get_result(struct _i_session * i_session) {
+unsigned int i_get_result(struct _i_session * i_session) {
   return i_get_int_parameter(i_session, I_OPT_RESULT);
 }
 
-uint i_get_int_parameter(struct _i_session * i_session, i_option option) {
+unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option) {
   if (i_session != NULL) {
     switch (option) {
       case I_OPT_RESPONSE_TYPE:
@@ -3004,7 +3004,7 @@ uint i_get_int_parameter(struct _i_session * i_session, i_option option) {
         return i_session->expires_in;
         break;
       case I_OPT_EXPIRES_AT:
-        return (uint)i_session->expires_at;
+        return (unsigned int)i_session->expires_at;
         break;
       case I_OPT_X5U_FLAGS:
         return i_session->x5u_flags;
@@ -3490,7 +3490,7 @@ int i_build_auth_url_get(struct _i_session * i_session) {
   int ret;
   char * url = NULL, * escaped = NULL, * tmp = NULL, * jwt = NULL;
   const char ** keys = NULL;
-  uint i;
+  unsigned int i;
   unsigned char code_challenge[32] = {0}, code_challenge_encoded[64] = {0};
   size_t code_challenge_len = 32, code_challenge_encoded_len = 0;
   gnutls_datum_t hash_data;
@@ -3659,7 +3659,7 @@ int i_run_auth_request(struct _i_session * i_session) {
   struct _u_request request;
   struct _u_response response;
   const char ** keys = NULL;
-  uint i;
+  unsigned int i;
   char * jwt = NULL;
 
   if (i_session != NULL &&
@@ -3798,7 +3798,8 @@ int i_parse_token_response(struct _i_session * i_session, int http_status, json_
         }
         if (res == I_OK && i_set_str_parameter(i_session, I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_response, "token_type"))) == I_OK) {
           // Validate access token signature and decrypt if necessary if it's a JWT
-          if (r_jwt_init(&jwt) == RHN_OK && r_jwt_advanced_parse(jwt, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), R_PARSE_NONE, i_session->x5u_flags) == RHN_OK) {
+          if (r_jwt_token_type(i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN)) != R_JWT_TYPE_NONE &&
+              (jwt = r_jwt_quick_parse(i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), R_PARSE_NONE, i_session->x5u_flags)) != NULL) {
             if (_i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt) != I_OK) {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_token_response - Error _i_verify_jwt_sig_enc");
               ret = I_ERROR;
@@ -5652,7 +5653,7 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
 
 int i_perform_resource_service_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat) {
   int ret = I_OK, reset_resp_type = 0;
-  uint cur_resp_type;
+  unsigned int cur_resp_type;
   char * dpop_token = NULL, * auth_header;
   struct _u_request copy_req;
 
@@ -6025,8 +6026,8 @@ int i_run_device_auth_request(struct _i_session * i_session) {
                                    I_OPT_DEVICE_AUTH_USER_CODE, json_string_value(json_object_get(j_response, "user_code")),
                                    I_OPT_DEVICE_AUTH_VERIFICATION_URI, json_string_value(json_object_get(j_response, "verification_uri")),
                                    I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, json_string_value(json_object_get(j_response, "verification_uri_complete")),
-                                   I_OPT_DEVICE_AUTH_EXPIRES_IN, (uint)json_integer_value(json_object_get(j_response, "expires_in")),
-                                   I_OPT_DEVICE_AUTH_INTERVAL, (uint)json_integer_value(json_object_get(j_response, "interval")),
+                                   I_OPT_DEVICE_AUTH_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
+                                   I_OPT_DEVICE_AUTH_INTERVAL, (unsigned int)json_integer_value(json_object_get(j_response, "interval")),
                                    I_OPT_NONE);
               ret = I_OK;
             } else {
@@ -6151,7 +6152,7 @@ int i_run_par_request(struct _i_session * i_session) {
             if (response.status == 201) {
               i_set_parameter_list(i_session,
                                    I_OPT_PUSHED_AUTH_REQ_URI, json_string_value(json_object_get(j_response, "request_uri")),
-                                   I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, (uint)json_integer_value(json_object_get(j_response, "expires_in")),
+                                   I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
                                    I_OPT_NONE);
               ret = I_OK;
             } else {
@@ -6373,8 +6374,8 @@ int i_run_ciba_request(struct _i_session * i_session) {
               if (response.status == 200) {
                 i_set_parameter_list(i_session,
                                      I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_response, "auth_req_id")),
-                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (uint)json_integer_value(json_object_get(j_response, "expires_in")),
-                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, (uint)json_integer_value(json_object_get(j_response, "expires_in")),
+                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
+                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
                                      I_OPT_NONE);
                 ret = I_OK;
               } else {

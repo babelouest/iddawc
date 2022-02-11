@@ -265,7 +265,7 @@ typedef enum {
  */
 
 struct _i_session {
-  uint          response_type;
+  unsigned int  response_type;
   char        * scope;
   char        * state;
   char        * nonce;
@@ -288,7 +288,7 @@ struct _i_session {
   char        * device_authorization_endpoint;
   char        * registration_endpoint;
   char        * pushed_authorization_request_endpoint;
-  uint          result;
+  unsigned int  result;
   char        * error;
   char        * error_description;
   char        * error_uri;
@@ -299,12 +299,12 @@ struct _i_session {
   char        * token_target;
   char        * token_target_type_hint;
   char        * token_type;
-  uint          expires_in;
+  unsigned int  expires_in;
   time_t        expires_at;
   char        * id_token;
   json_t      * id_token_payload;
-  uint          auth_method;
-  uint          token_method;
+  unsigned int  auth_method;
+  unsigned int  token_method;
   jwks_t      * server_jwks;
   char        * server_kid;
   jwa_alg       server_enc_alg;
@@ -321,16 +321,16 @@ struct _i_session {
   char        * userinfo;
   json_t      * j_userinfo;
   char        * token_jti;
-  uint          token_exp;
+  unsigned int  token_exp;
   json_t      * j_authorization_details;
   char        * device_auth_code;
   char        * device_auth_user_code;
   char        * device_auth_verification_uri;
   char        * device_auth_verification_uri_complete;
-  uint          device_auth_expires_in;
-  uint          device_auth_interval;
-  uint          require_pushed_authorization_requests;
-  uint          pushed_authorization_request_expires_in;
+  unsigned int  device_auth_expires_in;
+  unsigned int  device_auth_interval;
+  unsigned int  require_pushed_authorization_requests;
+  unsigned int  pushed_authorization_request_expires_in;
   char        * pushed_authorization_request_uri;
   int           use_dpop;
   char        * dpop_kid;
@@ -367,21 +367,21 @@ struct _i_session {
   jwa_alg       auth_response_encryption_alg;
   jwa_enc       auth_response_encryption_enc;
   char        * ciba_endpoint;
-  uint          ciba_mode;
+  unsigned int  ciba_mode;
   char        * ciba_user_code;
   char        * ciba_login_hint;
-  uint          ciba_login_hint_format;
+  unsigned int  ciba_login_hint_format;
   char        * ciba_login_hint_kid;
   char        * ciba_binding_message;
   char        * ciba_client_notification_token;
   char        * ciba_auth_req_id;
   char        * ciba_client_notification_endpoint;
-  uint          ciba_auth_req_expires_in;
-  uint          ciba_auth_req_interval;
+  unsigned int  ciba_auth_req_expires_in;
+  unsigned int  ciba_auth_req_interval;
   char        * frontchannel_logout_uri;
-  uint          frontchannel_logout_session_required;
+  unsigned int  frontchannel_logout_session_required;
   char        * backchannel_logout_uri;
-  uint          backchannel_logout_session_required;
+  unsigned int  backchannel_logout_session_required;
   char        * post_logout_redirect_uri;
   char        * id_token_sid;
 };
@@ -451,7 +451,7 @@ void i_clean_session(struct _i_session * i_session);
  * I_RESPONSE_TYPE_CODE | I_RESPONSE_TYPE_TOKEN | I_RESPONSE_TYPE_ID_TOKEN
  * @return I_OK on success, an error value on error
  */
-int i_set_response_type(struct _i_session * i_session, uint i_value);
+int i_set_response_type(struct _i_session * i_session, unsigned int i_value);
 
 /**
  * Sets the result of a request
@@ -461,7 +461,7 @@ int i_set_response_type(struct _i_session * i_session, uint i_value);
  * I_ERROR_MEMORY, I_ERROR_UNAUTHORIZED orI_ERROR_SERVER
  * @return I_OK on success, an error value on error
  */
-int i_set_result(struct _i_session * i_session, uint i_value);
+int i_set_result(struct _i_session * i_session, unsigned int i_value);
 
 /**
  * Sets an unsigned integer property value
@@ -477,7 +477,7 @@ int i_set_result(struct _i_session * i_session, uint i_value);
  * @param i_value: The unsigned integer value to set
  * @return I_OK on success, an error value on error
  */
-int i_set_int_parameter(struct _i_session * i_session, i_option option, uint i_value);
+int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned int i_value);
 
 /**
  * Sets a char * property value
@@ -602,14 +602,14 @@ char * i_get_rich_authorization_request_str(struct _i_session * i_session, const
  * stacked if using hybrid flow, example:
  * I_RESPONSE_TYPE_CODE | I_RESPONSE_TYPE_TOKEN | I_RESPONSE_TYPE_ID_TOKEN
  */
-uint i_get_response_type(struct _i_session * i_session);
+unsigned int i_get_response_type(struct _i_session * i_session);
 
 /**
  * Returns the result of the last oauth2 request
  * @param i_session: a reference to a struct _i_session *
  * @return I_OK on success, an error value on error
  */
-uint i_get_result(struct _i_session * i_session);
+unsigned int i_get_result(struct _i_session * i_session);
 
 /**
  * Returns the integer value of an option
@@ -624,7 +624,7 @@ uint i_get_result(struct _i_session * i_session);
  * I_OPT_REMOTE_CERT_FLAG, I_OPT_PKCE_CODE_VERIFIER_GENERATE, I_OPT_PKCE_METHOD
  * @return the option value
  */
-uint i_get_int_parameter(struct _i_session * i_session, i_option option);
+unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option);
 
 /**
  * Returns the char * value of an option
