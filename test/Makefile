@@ -17,19 +17,23 @@ TARGET=core implicit id_token token load_config load_userinfo flow introspection
 TARGET_TEST=test_core test_implicit test_id_token test_token test_load_config test_load_userinfo test_flow test_introspection test_revocation test_registration test_dpop test_api_request test_device test_par test_ciba test_session
 VERBOSE=0
 MEMCHECK=0
+CERT=cert
 
 all: test
 
 clean:
-	rm -f *.o $(TARGET) valgrind-*.txt *.log
+	rm -f *.o $(TARGET) valgrind-*.txt *.log $(CERT)/*.crt $(CERT)/*.key
 
 $(IDDAWC_LIBRARY): $(IDDAWC_INCLUDE)/iddawc.h $(IDDAWC_LOCATION)/iddawc.c
 	cd $(IDDAWC_LOCATION) && $(MAKE) debug
 
+$(CERT)/server.key:
+	./$(CERT)/create-cert.sh
+
 %: $(IDDAWC_LIBRARY) %.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-test_%: % $(IDDAWC_LIBRARY)
+test_%: % $(IDDAWC_LIBRARY) $(CERT)/server.key
 	@if [ "$(VERBOSE)" = "0" ] && [ "$(MEMCHECK)" = "0" ]; then \
 		LD_LIBRARY_PATH=$(IDDAWC_LOCATION):${LD_LIBRARY_PATH} ./run_test.sh ./$^; \
 	elif [ "$(MEMCHECK)" = "0" ]; then \
