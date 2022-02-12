@@ -1,10 +1,10 @@
 /**
  * 
- * Iddwac JSON Web Key (JWK) library
+ * Iddawc OAuth2 client library
  * 
  * iddawc-cfg.h: configuration file
  * 
- * Copyright 2020 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2020-2022 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License

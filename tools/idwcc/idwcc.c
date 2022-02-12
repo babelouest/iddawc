@@ -2,7 +2,7 @@
  *
  * idwcc: OAuth2/OIDC client program to test or validate OAuth2/OIDC AS
  *
- * Copyright 2021 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2021-2022 Nicolas Mora <mail@babelouest.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU GENERAL PUBLIC LICENSE
