@@ -51,7 +51,7 @@
 struct _callback_struct {
   struct _i_session * session;
   const char        * webapp_path;
-  uint                ciba_status;
+  unsigned int        ciba_status;
   pthread_mutex_t     change_lock;
   char                message[MESSAGE_MAX+1];
 };

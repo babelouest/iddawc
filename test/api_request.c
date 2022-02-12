@@ -161,7 +161,7 @@ START_TEST(test_iddawc_api_request_refresh_not_required_no_dpop)
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_EXPIRES_IN, EXPIRES_IN,
-                                                    I_OPT_EXPIRES_AT, ((uint)time(NULL))+EXPIRES_IN,
+                                                    I_OPT_EXPIRES_AT, ((unsigned int)time(NULL))+EXPIRES_IN,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
   ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
@@ -197,7 +197,7 @@ START_TEST(test_iddawc_api_request_refresh_required_not_available_no_dpop)
   // AT expired, no params to refresh
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_EXPIRES_IN, EXPIRES_IN,
-                                                    I_OPT_EXPIRES_AT, ((uint)time(NULL))-1,
+                                                    I_OPT_EXPIRES_AT, ((unsigned int)time(NULL))-1,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
   ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 1, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR_PARAM);
@@ -236,7 +236,7 @@ START_TEST(test_iddawc_api_request_refresh_required_ok_no_dpop)
   
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_EXPIRES_IN, EXPIRES_IN,
-                                                    I_OPT_EXPIRES_AT, ((uint)time(NULL))-1,
+                                                    I_OPT_EXPIRES_AT, ((unsigned int)time(NULL))-1,
                                                     I_OPT_REFRESH_TOKEN, REFRESH_TOKEN,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
                                                     I_OPT_CLIENT_SECRET, CLIENT_SECRET,
@@ -270,7 +270,7 @@ START_TEST(test_iddawc_api_request_refresh_not_required_dpop_required)
   ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
                                                     I_OPT_EXPIRES_IN, EXPIRES_IN,
-                                                    I_OPT_EXPIRES_AT, ((uint)time(NULL))+EXPIRES_IN,
+                                                    I_OPT_EXPIRES_AT, ((unsigned int)time(NULL))+EXPIRES_IN,
                                                     I_OPT_DPOP_SIGN_ALG, "RS256",
                                                     I_OPT_TOKEN_JTI_GENERATE, 16,
                                                     I_OPT_NONE), I_OK);
