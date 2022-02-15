@@ -80,6 +80,7 @@
 #define REVOCATION_ENDPOINT "https://isp.tld/revocation"
 #define INTROSPECTION_ENDPOINT "https://isp.tld/introspect"
 #define REGISTRATION_ENDPOINT "https://isp.tld/register"
+#define REGISTRATION_CLIENT_URI "https://isp.tld/register/clientXyz1234"
 #define AUTH_REQUEST_1 "{\"locations\":[\"https://resource.tld/\"],\"actions\":[\"swing\"],\"sneak attack\":[\"dans\",\"la\",\"face\"]}"
 #define AUTH_REQUEST_TYPE_1 "type1"
 #define AUTH_REQUEST_FULL_1 "{\"type\":\""AUTH_REQUEST_TYPE_1"\",\"locations\":[\"https://resource.tld/\"],\"actions\":[\"swing\"],\"sneak attack\":[\"dans\",\"la\",\"face\"]}"
@@ -443,6 +444,9 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REGISTRATION_CLIENT_URI, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REGISTRATION_CLIENT_URI, REGISTRATION_CLIENT_URI), I_OK);
+
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, DEVICE_AUTHORIZATION_ENDPOINT), I_OK);
 
@@ -747,6 +751,9 @@ START_TEST(test_iddawc_get_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REGISTRATION_CLIENT_URI, REGISTRATION_CLIENT_URI), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_CLIENT_URI), REGISTRATION_CLIENT_URI);
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, DEVICE_AUTHORIZATION_ENDPOINT), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT), DEVICE_AUTHORIZATION_ENDPOINT);
@@ -1179,6 +1186,7 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_REVOCATION_ENDPOINT, REVOCATION_ENDPOINT,
                                                   I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
                                                   I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
+                                                  I_OPT_REGISTRATION_CLIENT_URI, REGISTRATION_CLIENT_URI,
                                                   I_OPT_USE_DPOP, USE_DPOP,
                                                   I_OPT_DPOP_KID, DPOP_KID,
                                                   I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG,
@@ -1270,6 +1278,7 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REVOCATION_ENDPOINT), REVOCATION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_INTROSPECTION_ENDPOINT), INTROSPECTION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_CLIENT_URI), REGISTRATION_CLIENT_URI);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_USE_DPOP), USE_DPOP);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_KID), DPOP_KID);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG), DPOP_SIGN_ALG);
@@ -1456,6 +1465,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "revocation_endpoint"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "introspection_endpoint"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "registration_endpoint"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "registration_client_uri"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "token_exp")), 600);
   ck_assert_int_ne(json_is_array(json_object_get(j_export, "authorization_details")), 0);
   ck_assert_int_eq(json_array_size(json_object_get(j_export, "authorization_details")), 0);
@@ -1574,6 +1584,7 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_REVOCATION_ENDPOINT, REVOCATION_ENDPOINT,
                                                     I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
                                                     I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
+                                                    I_OPT_REGISTRATION_CLIENT_URI, REGISTRATION_CLIENT_URI,
                                                     I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, DEVICE_AUTHORIZATION_ENDPOINT,
                                                     I_OPT_DEVICE_AUTH_CODE, DEVICE_AUTH_CODE,
                                                     I_OPT_DEVICE_AUTH_USER_CODE, DEVICE_AUTH_USER_CODE,
@@ -1691,6 +1702,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "revocation_endpoint")), REVOCATION_ENDPOINT);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "introspection_endpoint")), INTROSPECTION_ENDPOINT);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "registration_endpoint")), REGISTRATION_ENDPOINT);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "registration_client_uri")), REGISTRATION_CLIENT_URI);
   ck_assert_ptr_ne(NULL, json_search(json_object_get(j_export, "authorization_details"), j_auth_request));
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_authorization_endpoint")), DEVICE_AUTHORIZATION_ENDPOINT);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "device_auth_code")), DEVICE_AUTH_CODE);
@@ -1823,6 +1835,7 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_REVOCATION_ENDPOINT, REVOCATION_ENDPOINT,
                                                     I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
                                                     I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
+                                                    I_OPT_REGISTRATION_CLIENT_URI, REGISTRATION_CLIENT_URI,
                                                     I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, DEVICE_AUTHORIZATION_ENDPOINT,
                                                     I_OPT_DEVICE_AUTH_CODE, DEVICE_AUTH_CODE,
                                                     I_OPT_DEVICE_AUTH_USER_CODE, DEVICE_AUTH_USER_CODE,
@@ -1944,6 +1957,7 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REVOCATION_ENDPOINT), REVOCATION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_INTROSPECTION_ENDPOINT), INTROSPECTION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_CLIENT_URI), REGISTRATION_CLIENT_URI);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT), DEVICE_AUTHORIZATION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_CODE), DEVICE_AUTH_CODE);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_USER_CODE), DEVICE_AUTH_USER_CODE);
@@ -2078,6 +2092,7 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_REVOCATION_ENDPOINT, REVOCATION_ENDPOINT,
                                                     I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
                                                     I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
+                                                    I_OPT_REGISTRATION_CLIENT_URI, REGISTRATION_CLIENT_URI,
                                                     I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, DEVICE_AUTHORIZATION_ENDPOINT,
                                                     I_OPT_DEVICE_AUTH_CODE, DEVICE_AUTH_CODE,
                                                     I_OPT_DEVICE_AUTH_USER_CODE, DEVICE_AUTH_USER_CODE,
@@ -2217,6 +2232,7 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_REVOCATION_ENDPOINT, REVOCATION_ENDPOINT,
                                                     I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
                                                     I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
+                                                    I_OPT_REGISTRATION_CLIENT_URI, REGISTRATION_CLIENT_URI,
                                                     I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, DEVICE_AUTHORIZATION_ENDPOINT,
                                                     I_OPT_DEVICE_AUTH_CODE, DEVICE_AUTH_CODE,
                                                     I_OPT_DEVICE_AUTH_USER_CODE, DEVICE_AUTH_USER_CODE,
@@ -2340,6 +2356,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REVOCATION_ENDPOINT), REVOCATION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_INTROSPECTION_ENDPOINT), INTROSPECTION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_REGISTRATION_CLIENT_URI), REGISTRATION_CLIENT_URI);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT), DEVICE_AUTHORIZATION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_DEVICE_AUTH_CODE), DEVICE_AUTH_CODE);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_DEVICE_AUTH_USER_CODE), DEVICE_AUTH_USER_CODE);
@@ -2478,6 +2495,7 @@ START_TEST(test_iddawc_import_multiple)
                                                     I_OPT_REVOCATION_ENDPOINT, REVOCATION_ENDPOINT,
                                                     I_OPT_INTROSPECTION_ENDPOINT, INTROSPECTION_ENDPOINT,
                                                     I_OPT_REGISTRATION_ENDPOINT, REGISTRATION_ENDPOINT,
+                                                    I_OPT_REGISTRATION_CLIENT_URI, REGISTRATION_CLIENT_URI,
                                                     I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, DEVICE_AUTHORIZATION_ENDPOINT,
                                                     I_OPT_DEVICE_AUTH_CODE, DEVICE_AUTH_CODE,
                                                     I_OPT_DEVICE_AUTH_USER_CODE, DEVICE_AUTH_USER_CODE,
@@ -2604,6 +2622,7 @@ START_TEST(test_iddawc_import_multiple)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REVOCATION_ENDPOINT), REVOCATION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_INTROSPECTION_ENDPOINT), INTROSPECTION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_CLIENT_URI), REGISTRATION_CLIENT_URI);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT), DEVICE_AUTHORIZATION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_CODE), DEVICE_AUTH_CODE);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_USER_CODE), DEVICE_AUTH_USER_CODE);
@@ -2685,6 +2704,7 @@ START_TEST(test_iddawc_import_multiple)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REVOCATION_ENDPOINT), REVOCATION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_INTROSPECTION_ENDPOINT), INTROSPECTION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_ENDPOINT), REGISTRATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REGISTRATION_CLIENT_URI), REGISTRATION_CLIENT_URI);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT), DEVICE_AUTHORIZATION_ENDPOINT);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_CODE), DEVICE_AUTH_CODE);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DEVICE_AUTH_USER_CODE), DEVICE_AUTH_USER_CODE);
