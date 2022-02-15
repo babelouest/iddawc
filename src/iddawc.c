@@ -1484,6 +1484,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->revocation_endpoint = NULL;
     i_session->introspection_endpoint = NULL;
     i_session->registration_endpoint = NULL;
+    i_session->registration_client_uri = NULL;
     i_session->device_authorization_endpoint = NULL;
     i_session->device_auth_code = NULL;
     i_session->device_auth_user_code = NULL;
@@ -1614,6 +1615,7 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->revocation_endpoint);
     o_free(i_session->introspection_endpoint);
     o_free(i_session->registration_endpoint);
+    o_free(i_session->registration_client_uri);
     o_free(i_session->token_target);
     o_free(i_session->token_target_type_hint);
     o_free(i_session->device_authorization_endpoint);
@@ -2167,6 +2169,14 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
           i_session->registration_endpoint = o_strdup(s_value);
         } else {
           i_session->registration_endpoint = NULL;
+        }
+        break;
+      case I_OPT_REGISTRATION_CLIENT_URI:
+        o_free(i_session->registration_client_uri);
+        if (o_strlen(s_value)) {
+          i_session->registration_client_uri = o_strdup(s_value);
+        } else {
+          i_session->registration_client_uri = NULL;
         }
         break;
       case I_OPT_DEVICE_AUTHORIZATION_ENDPOINT:
@@ -2727,6 +2737,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_REVOCATION_ENDPOINT:
         case I_OPT_INTROSPECTION_ENDPOINT:
         case I_OPT_REGISTRATION_ENDPOINT:
+        case I_OPT_REGISTRATION_CLIENT_URI:
         case I_OPT_DEVICE_AUTHORIZATION_ENDPOINT:
         case I_OPT_DEVICE_AUTH_CODE:
         case I_OPT_DEVICE_AUTH_USER_CODE:
@@ -3264,6 +3275,9 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_REGISTRATION_ENDPOINT:
         result = (const char *)i_session->registration_endpoint;
+        break;
+      case I_OPT_REGISTRATION_CLIENT_URI:
+        result = (const char *)i_session->registration_client_uri;
         break;
       case I_OPT_DEVICE_AUTHORIZATION_ENDPOINT:
         result = (const char *)i_session->device_authorization_endpoint;
@@ -4129,6 +4143,7 @@ int i_run_token_request(struct _i_session * i_session) {
             ulfius_clean_request(&request);
             ulfius_clean_response(&response);
           } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error invalid client_id");
             ret = I_ERROR_PARAM;
           }
           break;
@@ -4792,9 +4807,9 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
   if (i_session != NULL && o_strlen(i_session->registration_endpoint)) {
     if (!json_is_array(json_object_get(j_copy_parameters, "redirect_uris"))) {
       json_object_set_new(j_copy_parameters, "redirect_uris", json_array());
-    }
-    if (i_session->redirect_uri != NULL && !_i_json_array_has_string(json_object_get(j_copy_parameters, "redirect_uris"), i_session->redirect_uri)) {
-      json_array_append_new(json_object_get(j_copy_parameters, "redirect_uris"), json_string(i_session->redirect_uri));
+      if (i_session->redirect_uri != NULL) {
+        json_array_append_new(json_object_get(j_copy_parameters, "redirect_uris"), json_string(i_session->redirect_uri));
+      }
     }
     if (i_session->access_token_signing_alg != R_JWA_ALG_UNKNOWN) {
       json_object_set_new(j_copy_parameters, "access_token_signing_alg", json_string(r_jwa_alg_to_str(i_session->access_token_signing_alg)));
@@ -4911,6 +4926,10 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
               if (update_session) {
                 i_set_str_parameter(i_session, I_OPT_CLIENT_ID, json_string_value(json_object_get(j_response, "client_id")));
                 i_set_str_parameter(i_session, I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_response, "client_secret")));
+                i_set_str_parameter(i_session, I_OPT_REGISTRATION_CLIENT_URI, json_string_value(json_object_get(j_response, "registration_client_uri")));
+                if (json_string_value(json_object_get(j_response, "registration_access_token"))) {
+                  i_set_str_parameter(i_session, I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_response, "registration_access_token")));
+                }
                 i_set_str_parameter(i_session, I_OPT_REDIRECT_URI, json_string_value(json_array_get(json_object_get(j_response, "redirect_uris"), 0)));
               }
               if (j_result != NULL) {
@@ -5034,7 +5053,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
   } else {
     j_copy_parameters = json_object();
   }
-  if (i_session != NULL && o_strlen(i_session->registration_endpoint)) {
+  if (i_session != NULL && (o_strlen(i_session->registration_client_uri) || (o_strlen(i_session->registration_endpoint) && o_strlen(i_session->client_id)))) {
     if (!json_is_array(json_object_get(j_copy_parameters, "redirect_uris"))) {
       json_object_set_new(j_copy_parameters, "redirect_uris", json_array());
     }
@@ -5130,14 +5149,25 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
     } else {
       ret = I_OK;
       if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "PUT",
-                                                  U_OPT_HTTP_URL, i_session->registration_endpoint,
-                                                  U_OPT_HTTP_URL_APPEND, "/",
-                                                  U_OPT_HTTP_URL_APPEND, i_session->client_id,
                                                   U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                   U_OPT_JSON_BODY, j_copy_parameters,
                                                   U_OPT_NONE) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error setting parameters");
         ret = I_ERROR;
+      }
+      if (o_strlen(i_session->registration_client_uri)) {
+        if (ulfius_set_request_properties(&request, U_OPT_HTTP_URL, i_session->registration_client_uri, U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error setting url parameter registration_client_uri");
+          ret = I_ERROR;
+        }
+      } else {
+        if (ulfius_set_request_properties(&request, U_OPT_HTTP_URL, i_session->registration_endpoint,
+                                                    U_OPT_HTTP_URL_APPEND, "/",
+                                                    U_OPT_HTTP_URL_APPEND, i_session->client_id,
+                                                    U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error setting url parameter registration_endpoint/client_id");
+          ret = I_ERROR;
+        }
       }
       if (o_strlen(i_session->access_token)) {
         bearer = msprintf("Bearer %s", i_session->access_token);
@@ -5192,10 +5222,86 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
   return ret;
 }
 
+int i_delete_registration_client(struct _i_session * i_session) {
+  int ret;
+  struct _u_request request;
+  struct _u_response response;
+  char * bearer = NULL;
+  json_t * j_response;
+
+  if (i_session != NULL && (o_strlen(i_session->registration_client_uri) || (o_strlen(i_session->registration_endpoint) && o_strlen(i_session->client_id)))) {
+    if (_i_init_request(i_session, &request) != U_OK || ulfius_init_response(&response) != U_OK) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error initializing request or response");
+      ret = I_ERROR;
+    } else {
+      ret = I_OK;
+      if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "DELETE",
+                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                                  U_OPT_NONE) != U_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error setting parameters");
+        ret = I_ERROR;
+      }
+      if (o_strlen(i_session->registration_client_uri)) {
+        if (ulfius_set_request_properties(&request, U_OPT_HTTP_URL, i_session->registration_client_uri, U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error setting url parameter registration_client_uri");
+          ret = I_ERROR;
+        }
+      } else {
+        if (ulfius_set_request_properties(&request, U_OPT_HTTP_URL, i_session->registration_endpoint,
+                                                    U_OPT_HTTP_URL_APPEND, "/",
+                                                    U_OPT_HTTP_URL_APPEND, i_session->client_id,
+                                                    U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error setting url parameter registration_endpoint/client_id");
+          ret = I_ERROR;
+        }
+      }
+      if (o_strlen(i_session->access_token)) {
+        bearer = msprintf("Bearer %s", i_session->access_token);
+        if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error setting bearer token");
+          ret = I_ERROR;
+        }
+        o_free(bearer);
+      }
+      if (ret == I_OK) {
+        if (ulfius_send_http_request(&request, &response) == U_OK) {
+          j_response = ulfius_get_json_body_response(&response, NULL);
+          if (response.status == 404) {
+            ret = I_ERROR_PARAM;
+          } else if (response.status == 400) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_PARAM;
+          } else if (response.status == 401 || response.status == 403) {
+            if (_i_parse_error_response(i_session, j_response) != I_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error _i_parse_error_response (1)");
+            }
+            ret = I_ERROR_UNAUTHORIZED;
+          } else if (response.status != 200) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error registering client");
+            ret = I_ERROR;
+          }
+          json_decref(j_response);
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error sending http request");
+          ret = I_ERROR;
+        }
+      }
+      ulfius_clean_request(&request);
+      ulfius_clean_response(&response);
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_DEBUG, "i_delete_registration_client - Invalid parameters");
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -5340,7 +5446,9 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          
                          "backchannel_logout_session_required", i_get_int_parameter(i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED),
                          "post_logout_redirect_uri", i_get_str_parameter(i_session, I_OPT_POST_LOGOUT_REDIRECT_URI),
-                         "id_token_sid", i_get_str_parameter(i_session, I_OPT_ID_TOKEN_SID)
+                         "id_token_sid", i_get_str_parameter(i_session, I_OPT_ID_TOKEN_SID),
+                         "registration_client_uri", i_get_str_parameter(i_session, I_OPT_REGISTRATION_CLIENT_URI)
+                         
                          );
   }
   return j_return;
@@ -5399,6 +5507,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                      I_OPT_REVOCATION_ENDPOINT, json_string_value(json_object_get(j_import, "revocation_endpoint")),
                                      I_OPT_INTROSPECTION_ENDPOINT, json_string_value(json_object_get(j_import, "introspection_endpoint")),
                                      I_OPT_REGISTRATION_ENDPOINT, json_string_value(json_object_get(j_import, "registration_endpoint")),
+                                     I_OPT_REGISTRATION_CLIENT_URI, json_string_value(json_object_get(j_import, "registration_client_uri")),
                                      I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, json_string_value(json_object_get(j_import, "device_authorization_endpoint")),
                                      I_OPT_DEVICE_AUTH_CODE, json_string_value(json_object_get(j_import, "device_auth_code")),
                                      I_OPT_DEVICE_AUTH_USER_CODE, json_string_value(json_object_get(j_import, "device_auth_user_code")),
