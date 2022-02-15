@@ -4,6 +4,8 @@
 
 - Improve tests
 - Rename `uint` to `unsigned int`
+- Add `i_delete_registration_client`
+- Add property `I_OPT_REGISTRATION_CLIENT_URI`
 
 ## 1.1.1
 
