@@ -4,6 +4,7 @@
 
 #include <check.h>
 #include <yder.h>
+#include <ulfius.h>
 #include <rhonabwy.h>
 #include <iddawc.h>
 
@@ -13,6 +14,42 @@
 #define CLIENT_ID "client1_id"
 #define NONCE_INVALID "4321cba"
 #define NONCE_VALID "abc1234"
+#define SERVER_JWKS_CACHE_EXPIRATION 20
+#define AUTH_ENDPOINT "http://localhost:8080/auth"
+#define TOKEN_ENDPOINT "http://localhost:8080/token"
+#define USERINFO_ENDPOINT "http://localhost:8080/userinfo"
+#define JWKS_URI "http://localhost:8080/jwks"
+#define JWKS_URI_INVALID "http://localhost:8080/jwks_invalid"
+#define AUTH_METHOD_1 "client_secret_basic"
+#define AUTH_METHOD_2 "client_secret_jwt"
+#define ALG_VALUE_1 "RS512"
+#define ALG_VALUE_2 "RS256"
+#define SCOPE_1 "openid"
+#define SCOPE_2 "g_profile"
+#define RESP_TYPE_1 "code"
+#define RESP_TYPE_2 "id_token"
+#define RESP_TYPE_3 "token"
+#define RESP_TYPE_4 "none"
+#define RESP_TYPE_5 "refresh_token"
+#define MODE_1 "query"
+#define MODE_2 "fragment"
+#define GRANT_TYPE_1 "authorization_code"
+#define GRANT_TYPE_2 "implicit"
+#define DISPLAY_1 "page"
+#define DISPLAY_2 "popup"
+#define DISPLAY_3 "touch"
+#define DISPLAY_4 "wap"
+#define CLAIM_TYPE "normal"
+#define CLAIMS_PARAM_SUPPORTED "true"
+#define CLAIMS_SUPPORTED "name"
+#define DOC "https://glewlwyd.tld/docs"
+#define LOCALE_1 "en"
+#define LOCALE_2 "fr"
+#define LOCALE_3 "nl"
+#define REQUEST_PARAM "true"
+#define REQUEST_URI "true"
+#define REQUIRE_REQUEST_REGIS "false"
+#define SUBJECT_TYPE "public"
 
 const char id_token_pattern[] =
 "{\"amr\":[\"password\"],\"aud\":\"%s\",\"auth_time\":%lld"
@@ -97,6 +134,10 @@ const char jwk_privkey_rsa_str_2[] = "{\"kty\":\"RSA\",\"n\":\"0vx7agoebGcQSuuPi
                                      "6huUUvMfBcMpn8lqeW6vzznYY5SSQF7pMdC_agI3nG8Ibp1BUb0JUiraRNqUfLhcQb_d9GF4Dh7e74WbRsobRonujTYN1xCaP6TO61jvWrX-L18txXw494Q_cg"\
                                      "k\",\"qi\":\"GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_m"\
                                      "HZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU\",\"alg\":\"RS256\",\"kid\":\"2011-04-29\"}";
+const char jwk_pubkey_fool_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9E"\
+                                   "XrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0"\
+                                    "WTea8n_TQmq9sVHGQtLIFqfblLxbSz_7m4g7_o3WfqlwXkVmCIu1wdzAjZV5BspBGrL0ed5Whpk9-bX69nUDvpcMAaPhuRwZ43e9koVRbVwXCNkne98VAs0_U\""\
+                                   ",\"e\":\"AQAB\",\"kid\":\"1\"}";
 const char jwk_privkey_fool_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9E"\
                                     "XrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0"\
                                     "WTea8n_TQmq9sVHGQtLIFqfblLxbSz_7m4g7_o3WfqlwXkVmCIu1wdzAjZV5BspBGrL0ed5Whpk9-bX69nUDvpcMAaPhuRwZ43e9koVRbVwXCNkne98VAs0_U\""\
@@ -111,6 +152,67 @@ const char jwk_privkey_fool_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5Q
                                     "jLyq8M82Uio9ZvhSbCG1VQgTcdmj1mNXHk3gtS_msNuJZLeVEBEkU2_3k33TyrzeMUXRT0hvkVXT4zPeZLMA5LW4EUbeV6ZlJqPC_DGDm0B2G9jtpXE\",\"dq"\
                                     "\":\"AMTictPUEcpOILO9HG985vPxKeTTfaBpVDbSymDqR_nQmZSOeg3yHQAkCco_rXTZu3rruR7El3K5AlVEMsNxp3IepbIuagrH6qsPpuXkA6YBAzdMNjHL6h"\
                                     "nwIbQxnT1h2M7KzklzogRAIT0x706CEmq_06wEDvZ-8j3VKvhHxBwd\",\"kid\":\"1\"}";
+
+const char openid_configuration_valid[] = "{\
+  \"issuer\":\"" ISSUER "\",\
+  \"authorization_endpoint\":\"" AUTH_ENDPOINT "\",\
+  \"token_endpoint\":\"" TOKEN_ENDPOINT "\",\
+  \"userinfo_endpoint\":\"" USERINFO_ENDPOINT "\",\
+  \"jwks_uri\":\"" JWKS_URI "\",\
+  \"token_endpoint_auth_methods_supported\":[\"" AUTH_METHOD_1 "\",\"" AUTH_METHOD_2 "\"],\
+  \"id_token_signing_alg_values_supported\":[\"" ALG_VALUE_1 "\",\"" ALG_VALUE_2 "\"],\
+  \"scopes_supported\":[\"" SCOPE_1 "\",\"" SCOPE_2 "\"],\
+  \"response_types_supported\":[\"" RESP_TYPE_1 "\",\"" RESP_TYPE_2 "\",\"" RESP_TYPE_3 "\",\"" RESP_TYPE_1 " " RESP_TYPE_2 "\",\"" RESP_TYPE_3 " " RESP_TYPE_2 "\",\"" RESP_TYPE_1 " " RESP_TYPE_2" " RESP_TYPE_3 "\",\"" RESP_TYPE_4 "\",\"" RESP_TYPE_5 "\"],\
+  \"response_modes_supported\":[\"" MODE_1 "\",\"" MODE_2 "\"],\
+  \"grant_types_supported\":[\"" GRANT_TYPE_1 "\",\"" GRANT_TYPE_2 "\"],\
+  \"display_values_supported\":[\"" DISPLAY_1 "\",\"" DISPLAY_2 "\",\"" DISPLAY_3 "\",\"" DISPLAY_4 "\"],\
+  \"claim_types_supported\":[\"" CLAIM_TYPE "\"],\
+  \"claims_parameter_supported\":" CLAIMS_PARAM_SUPPORTED ",\
+  \"claims_supported\":[\"" CLAIMS_SUPPORTED "\"],\
+  \"service_documentation\":\"" DOC "\",\
+  \"ui_locales_supported\":[\"" LOCALE_1 "\",\"" LOCALE_2 "\",\"" LOCALE_3 "\"],\
+  \"request_parameter_supported\":" REQUEST_PARAM ",\
+  \"request_uri_parameter_supported\":" REQUEST_URI ",\
+  \"require_request_uri_registration\":" REQUIRE_REQUEST_REGIS ",\
+  \"subject_types_supported\":[\"" SUBJECT_TYPE "\"]\
+}";
+
+int callback_openid_configuration_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  json_t * j_response = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL);
+  ulfius_set_json_body_response(response, 200, j_response);
+  json_decref(j_response);
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_openid_jwks_rotate (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  static int counter = 0;
+  jwks_t * jwks;
+  json_t * j_response;
+  
+  if (!counter) {
+    jwks = r_jwks_quick_import(R_IMPORT_JSON_STR, jwk_pubkey_rsa_str_2, R_IMPORT_NONE);
+    counter++;
+  } else {
+    jwks = r_jwks_quick_import(R_IMPORT_JSON_STR, jwk_pubkey_fool_str, R_IMPORT_NONE);
+  }
+  j_response = r_jwks_export_to_json_t(jwks);
+  ulfius_set_json_body_response(response, 200, j_response);
+  json_decref(j_response);
+  r_jwks_free(jwks);
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_openid_jwks_norotate (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  jwks_t * jwks;
+  json_t * j_response;
+  
+  jwks = r_jwks_quick_import(R_IMPORT_JSON_STR, jwk_pubkey_rsa_str_2, R_IMPORT_NONE);
+  j_response = r_jwks_export_to_json_t(jwks);
+  ulfius_set_json_body_response(response, 200, j_response);
+  json_decref(j_response);
+  r_jwks_free(jwks);
+  return U_CALLBACK_CONTINUE;
+}
 
 START_TEST(test_iddawc_id_token_invalid_iss)
 {
@@ -896,6 +998,98 @@ START_TEST(test_iddawc_id_token_fooled_key)
 }
 END_TEST
 
+START_TEST(test_iddawc_id_token_rotate_key)
+{
+  struct _i_session i_session;
+  jwk_t * jwk;
+  jwt_t * jwt;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  struct _u_instance instance;
+  
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/jwks", 0, &callback_openid_jwks_rotate, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  
+  time(&now);
+  grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_fool_str), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256), RHN_OK);
+  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed(jwt, jwk, 0)), NULL);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
+                                                    I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
+                                                    I_OPT_ID_TOKEN, jwt_str,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_OK);
+  i_session.server_jwks_cache_expires_at -= (SERVER_JWKS_CACHE_EXPIRATION+10);
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);
+  i_clean_session(&i_session);
+  
+  r_jwt_free(jwt);
+  r_jwk_free(jwk);
+  o_free(grants);
+  o_free(jwt_str);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_id_token_rotate_key_invalid)
+{
+  struct _i_session i_session;
+  jwk_t * jwk;
+  jwt_t * jwt;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  struct _u_instance instance;
+  
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/jwks", 0, &callback_openid_jwks_norotate, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  
+  time(&now);
+  grants = msprintf(id_token_pattern, CLIENT_ID, (long long)now, CLIENT_ID, (long long)(now + EXPIRES_IN), (long long)now, ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_fool_str), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256), RHN_OK);
+  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed(jwt, jwk, 0)), NULL);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
+                                                    I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
+                                                    I_OPT_ID_TOKEN, jwt_str,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_OK);
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR);
+  i_session.server_jwks_cache_expires_at -= (SERVER_JWKS_CACHE_EXPIRATION+10);
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR);
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR);
+  i_clean_session(&i_session);
+  
+  r_jwt_free(jwt);
+  r_jwk_free(jwk);
+  o_free(grants);
+  o_free(jwt_str);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_access_token_invalid_iss)
 {
   struct _i_session i_session;
@@ -1430,6 +1624,100 @@ START_TEST(test_iddawc_access_token_fooled_key)
 }
 END_TEST
 
+START_TEST(test_iddawc_access_token_rotate_key)
+{
+  struct _i_session i_session;
+  jwk_t * jwk;
+  jwt_t * jwt;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  struct _u_instance instance;
+  
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/jwks", 0, &callback_openid_jwks_rotate, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  
+  time(&now);
+  grants = msprintf(access_token_pattern, (long long)now, (long long)(now + EXPIRES_IN), ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_header_str_value(jwt, "typ", "at+jwt"), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_fool_str), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256), RHN_OK);
+  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed(jwt, jwk, 0)), NULL);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
+                                                    I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
+                                                    I_OPT_ACCESS_TOKEN, jwt_str,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_OK);
+  i_session.server_jwks_cache_expires_at -= (SERVER_JWKS_CACHE_EXPIRATION+10);
+  ck_assert_int_eq(i_verify_jwt_access_token(&i_session, NULL), I_OK);
+  i_clean_session(&i_session);
+  
+  r_jwt_free(jwt);
+  r_jwk_free(jwk);
+  o_free(grants);
+  o_free(jwt_str);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_access_token_rotate_key_invalid)
+{
+  struct _i_session i_session;
+  jwk_t * jwk;
+  jwt_t * jwt;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  struct _u_instance instance;
+  
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/jwks", 0, &callback_openid_jwks_norotate, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  
+  time(&now);
+  grants = msprintf(access_token_pattern, (long long)now, (long long)(now + EXPIRES_IN), ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_header_str_value(jwt, "typ", "at+jwt"), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_fool_str), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_RS256), RHN_OK);
+  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed(jwt, jwk, 0)), NULL);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
+                                                    I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
+                                                    I_OPT_ACCESS_TOKEN, jwt_str,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_OK);
+  ck_assert_int_eq(i_verify_jwt_access_token(&i_session, NULL), I_ERROR_PARAM);
+  i_session.server_jwks_cache_expires_at -= (SERVER_JWKS_CACHE_EXPIRATION+10);
+  ck_assert_int_eq(i_verify_jwt_access_token(&i_session, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_verify_jwt_access_token(&i_session, NULL), I_ERROR_PARAM);
+  i_clean_session(&i_session);
+  
+  r_jwt_free(jwt);
+  r_jwk_free(jwk);
+  o_free(grants);
+  o_free(jwt_str);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_access_token_invalid_aud)
 {
   struct _i_session i_session;
@@ -1538,6 +1826,8 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_id_token_nested);
   tcase_add_test(tc_core, test_iddawc_id_token_invalid_key);
   tcase_add_test(tc_core, test_iddawc_id_token_fooled_key);
+  tcase_add_test(tc_core, test_iddawc_id_token_rotate_key);
+  tcase_add_test(tc_core, test_iddawc_id_token_rotate_key_invalid);
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_typ);
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_iss);
   tcase_add_test(tc_core, test_iddawc_access_token_missing_iss);
@@ -1551,6 +1841,8 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_iat);
   tcase_add_test(tc_core, test_iddawc_access_token);
   tcase_add_test(tc_core, test_iddawc_access_token_fooled_key);
+  tcase_add_test(tc_core, test_iddawc_access_token_rotate_key);
+  tcase_add_test(tc_core, test_iddawc_access_token_rotate_key_invalid);
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_aud);
   tcase_add_test(tc_core, test_iddawc_access_token_aud);
   tcase_set_timeout(tc_core, 30);

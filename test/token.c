@@ -1333,6 +1333,104 @@ START_TEST(test_iddawc_token_code_certificate_invalid)
 }
 END_TEST
 
+START_TEST(test_iddawc_token_generate_assertion_secret_error_param)
+{
+  struct _i_session i_session;
+
+  // Missing params
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 32,
+                                                    I_OPT_CLIENT_SIGN_ALG, "HS256",
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_ptr_eq(NULL, i_generate_client_assertion(NULL, TOKEN_ENDPOINT));
+  ck_assert_ptr_eq(NULL, i_generate_client_assertion(&i_session, NULL));
+  i_clean_session(&i_session);
+
+  // Invalid alg
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 32,
+                                                    I_OPT_CLIENT_SIGN_ALG, "RS256",
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_ptr_eq(NULL, i_generate_client_assertion(&i_session, TOKEN_ENDPOINT));
+  i_clean_session(&i_session);
+
+  // Missing secret
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 32,
+                                                    I_OPT_CLIENT_SIGN_ALG, "HS256",
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_ptr_eq(NULL, i_generate_client_assertion(&i_session, TOKEN_ENDPOINT));
+  i_clean_session(&i_session);
+
+  // Missing auth method
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 32,
+                                                    I_OPT_CLIENT_SIGN_ALG, "HS256",
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_ptr_eq(NULL, i_generate_client_assertion(&i_session, TOKEN_ENDPOINT));
+  i_clean_session(&i_session);
+
+  // Missing jti
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_CLIENT_SIGN_ALG, "HS256",
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_ptr_eq(NULL, i_generate_client_assertion(&i_session, TOKEN_ENDPOINT));
+  i_clean_session(&i_session);
+
+  // Missing everything
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_ptr_eq(NULL, i_generate_client_assertion(&i_session, TOKEN_ENDPOINT));
+  i_clean_session(&i_session);
+
+}
+END_TEST
+
+START_TEST(test_iddawc_token_generate_assertion_secret_ok)
+{
+  struct _i_session i_session;
+  char * assertion;
+  jwt_t * jwt;
+  jwk_t * jwk;
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 32,
+                                                    I_OPT_CLIENT_SIGN_ALG, "HS256",
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_ptr_ne(NULL, assertion = i_generate_client_assertion(&i_session, TOKEN_ENDPOINT));
+  ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(assertion, R_PARSE_NONE, 0));
+  ck_assert_ptr_ne(NULL, jwk = r_jwk_quick_import(R_IMPORT_SYMKEY, (const unsigned char *)CLIENT_SECRET, o_strlen(CLIENT_SECRET)));
+  ck_assert_int_eq(r_jwt_get_sign_alg(jwt), R_JWA_ALG_HS256);
+  ck_assert_int_eq(r_jwt_verify_signature(jwt, jwk, 0), RHN_OK);
+
+  i_free(assertion);
+  r_jwt_free(jwt);
+  r_jwk_free(jwk);
+  i_clean_session(&i_session);
+}
+END_TEST
+
 static Suite *iddawc_suite(void)
 {
   Suite *s;
@@ -1374,6 +1472,8 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_token_code_jwt_auth_privkey_signing_alg_ok);
   tcase_add_test(tc_core, test_iddawc_token_code_certificate_ok);
   tcase_add_test(tc_core, test_iddawc_token_code_certificate_invalid);
+  tcase_add_test(tc_core, test_iddawc_token_generate_assertion_secret_error_param);
+  tcase_add_test(tc_core, test_iddawc_token_generate_assertion_secret_ok);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
 
