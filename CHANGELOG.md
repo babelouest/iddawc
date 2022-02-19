@@ -5,7 +5,7 @@
 - Improve tests
 - Rename `uint` to `unsigned int`
 - Add `i_delete_registration_client`
-- Add property `I_OPT_REGISTRATION_CLIENT_URI`
+- Add properties `I_OPT_REGISTRATION_CLIENT_URI`, `I_OPT_SERVER_JWKS_CACHE_EXPIRATION`
 
 ## 1.1.1
 
