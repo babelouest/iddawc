@@ -101,6 +101,20 @@ static char * rand_string_nonce(char * str, size_t str_size) {
   }
 }
 
+static int _i_get_token_auth_method(const char * str_method) {
+  int method = I_TOKEN_AUTH_METHOD_NONE;
+  if (0 == o_strcmp("client_secret_basic", str_method)) {
+    method = I_TOKEN_AUTH_METHOD_SECRET_BASIC;
+  } else if (0 == o_strcmp("client_secret_post", str_method)) {
+    method = I_TOKEN_AUTH_METHOD_SECRET_POST;
+  } else if (0 == o_strcmp("client_secret_jwt", str_method)) {
+    method = I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET;
+  } else if (0 == o_strcmp("private_key_jwt", str_method)) {
+    method = I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY;
+  }
+  return method;
+}
+
 static int _i_has_claims(struct _i_session * i_session) {
   return json_object_size(json_object_get(i_session->j_claims, "userinfo")) && json_object_size(json_object_get(i_session->j_claims, "id_token"));
 }
@@ -336,9 +350,58 @@ static int _i_has_openid_config_parameter_value(struct _i_session * i_session, c
   return ret;
 }
 
+static int _i_load_jwks_endpoint(struct _i_session * i_session) {
+  int ret;
+  struct _u_request request;
+  struct _u_response response;
+  json_t * j_jwks = NULL;
+
+  if (i_session != NULL && json_string_length(json_object_get(i_session->openid_config, "jwks_uri"))) {
+    _i_init_request(i_session, &request);
+    ulfius_init_response(&response);
+
+    ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                            U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+                                            U_OPT_HTTP_URL, json_string_value(json_object_get(i_session->openid_config, "jwks_uri")),
+                                            U_OPT_NONE);
+    if (ulfius_send_http_request(&request, &response) == U_OK) {
+      if (response.status == 200 && (NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), ULFIUS_HTTP_ENCODING_JSON) || NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), I_CONTENT_TYPE_JWKS))) {
+        if ((j_jwks = json_loadb(response.binary_body, response.binary_body_length, JSON_DECODE_ANY, NULL)) != NULL) {
+          r_jwks_free(i_session->server_jwks);
+          r_jwks_init(&i_session->server_jwks);
+          if (r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
+            ret = I_OK;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error r_jwks_import_from_json_str");
+            ret = I_ERROR;
+          }
+        } else {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error loading jwks content");
+          ret = I_ERROR;
+        }
+        json_decref(j_jwks);
+      } else if (response.status == 401 || response.status == 403) {
+        ret = I_ERROR_UNAUTHORIZED;
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error invalid response status: %d", response.status);
+        ret = I_ERROR;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error getting config_endpoint");
+      ret = I_ERROR;
+    }
+    ulfius_clean_request(&request);
+    ulfius_clean_response(&response);
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
 static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * token, int token_type, jwt_t * jwt) {
   int ret = I_ERROR_PARAM, res = RHN_ERROR;
-  jwk_t * jwk_sign;
+  jwk_t * jwk_sign, * jwk_sign2;
+  time_t now;
 
   if (i_session != NULL && token != NULL) {
     if (r_jwt_advanced_parse(jwt, token, R_PARSE_NONE, i_session->x5u_flags) == RHN_OK) {
@@ -352,10 +415,48 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
         if (r_jwt_add_enc_jwks(jwt, i_session->client_jwks, NULL) == RHN_OK) {
           if (jwt->type == R_JWT_TYPE_SIGN) {
             res = r_jwt_verify_signature(jwt, jwk_sign, i_session->x5u_flags);
+            if (res == RHN_ERROR_INVALID && i_session->server_jwks_cache_expiration) {
+              time(&now);
+              if (now > i_session->server_jwks_cache_expires_at) {
+                y_log_message(Y_LOG_LEVEL_DEBUG, "_i_verify_jwt_sig_enc - Rotate key");
+                if ((res = _i_load_jwks_endpoint(i_session)) != I_OK && res != I_ERROR_UNAUTHORIZED) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig_enc - Error _i_load_jwks_endpoint");
+                  res = RHN_ERROR;
+                } else {
+                  i_session->server_jwks_cache_expires_at = now + i_session->server_jwks_cache_expiration;
+                  if (r_jwks_size(i_session->server_jwks) > 1) {
+                    jwk_sign2 = r_jwks_get_by_kid(i_session->server_jwks, r_jwt_get_header_str_value(jwt, "kid"));
+                  } else {
+                    jwk_sign2 = r_jwks_get_at(i_session->server_jwks, 0);
+                  }
+                  res = r_jwt_verify_signature(jwt, jwk_sign2, i_session->x5u_flags);
+                  r_jwk_free(jwk_sign2);
+                }
+              }
+            }
           } else if (jwt->type == R_JWT_TYPE_NESTED_SIGN_THEN_ENCRYPT) {
             if (_i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_alg_values_supported"), r_jwa_alg_to_str(r_jwt_get_enc_alg(jwt))) &&
                 _i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_enc_values_supported"), r_jwa_enc_to_str(r_jwt_get_enc(jwt)))) {
               res = r_jwt_decrypt_verify_signature_nested(jwt, jwk_sign, i_session->x5u_flags, NULL, i_session->x5u_flags);
+              if (res == RHN_ERROR_INVALID && i_session->server_jwks_cache_expiration) {
+                time(&now);
+                if (now > i_session->server_jwks_cache_expires_at) {
+                  y_log_message(Y_LOG_LEVEL_DEBUG, "_i_verify_jwt_sig_enc - Rotate key");
+                  if ((res = _i_load_jwks_endpoint(i_session)) != I_OK && res != I_ERROR_UNAUTHORIZED) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig_enc - Error _i_load_jwks_endpoint");
+                    res = RHN_ERROR;
+                  } else {
+                    i_session->server_jwks_cache_expires_at = now + i_session->server_jwks_cache_expiration;
+                    if (r_jwks_size(i_session->server_jwks) > 1) {
+                      jwk_sign2 = r_jwks_get_by_kid(i_session->server_jwks, r_jwt_get_header_str_value(jwt, "kid"));
+                    } else {
+                      jwk_sign2 = r_jwks_get_at(i_session->server_jwks, 0);
+                    }
+                    res = r_jwt_verify_signature(jwt, jwk_sign2, i_session->x5u_flags);
+                    r_jwk_free(jwk_sign2);
+                  }
+                }
+              }
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - Error invalid jwt encryption");
               res = I_ERROR;
@@ -653,58 +754,11 @@ static int _i_parse_error_response(struct _i_session * i_session, json_t * j_res
   return ret;
 }
 
-static int _i_load_jwks_endpoint(struct _i_session * i_session) {
-  int ret;
-  struct _u_request request;
-  struct _u_response response;
-  json_t * j_jwks = NULL;
-
-  if (i_session != NULL && json_string_length(json_object_get(i_session->openid_config, "jwks_uri"))) {
-    _i_init_request(i_session, &request);
-    ulfius_init_response(&response);
-
-    ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
-                                            U_OPT_HEADER_PARAMETER, "Accept", "application/json",
-                                            U_OPT_HTTP_URL, json_string_value(json_object_get(i_session->openid_config, "jwks_uri")),
-                                            U_OPT_NONE);
-    if (ulfius_send_http_request(&request, &response) == U_OK) {
-      if (response.status == 200 && (NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), ULFIUS_HTTP_ENCODING_JSON) || NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), I_CONTENT_TYPE_JWKS))) {
-        if ((j_jwks = json_loadb(response.binary_body, response.binary_body_length, JSON_DECODE_ANY, NULL)) != NULL) {
-          r_jwks_free(i_session->server_jwks);
-          r_jwks_init(&i_session->server_jwks);
-          if (r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
-            ret = I_OK;
-          } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error r_jwks_import_from_json_str");
-            ret = I_ERROR;
-          }
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error loading jwks content");
-          ret = I_ERROR;
-        }
-        json_decref(j_jwks);
-      } else if (response.status == 401 || response.status == 403) {
-        ret = I_ERROR_UNAUTHORIZED;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error invalid response status: %d", response.status);
-        ret = I_ERROR;
-      }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error getting config_endpoint");
-      ret = I_ERROR;
-    }
-    ulfius_clean_request(&request);
-    ulfius_clean_response(&response);
-  } else {
-    ret = I_ERROR_PARAM;
-  }
-  return ret;
-}
-
 static int _i_parse_openid_config(struct _i_session * i_session, int get_jwks) {
   int ret, res;
   size_t index = 0;
   json_t * j_element = NULL;
+  time_t now;
 
   if (i_session != NULL && json_is_object(i_session->openid_config)) {
     // Check required metadata
@@ -730,6 +784,10 @@ static int _i_parse_openid_config(struct _i_session * i_session, int get_jwks) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_openid_config - Error _i_load_jwks_endpoint");
           ret = I_ERROR;
           break;
+        }
+        if (i_session->server_jwks_cache_expiration) {
+          time(&now);
+          i_session->server_jwks_cache_expires_at = now + i_session->server_jwks_cache_expiration;
         }
         json_array_foreach(json_object_get(i_session->openid_config, "response_types_supported"), index, j_element) {
           if (!json_string_length(j_element)) {
@@ -1475,6 +1533,8 @@ int i_init_session(struct _i_session * i_session) {
     i_session->server_kid = NULL;
     i_session->server_enc_alg = R_JWA_ALG_UNKNOWN;
     i_session->server_enc = R_JWA_ENC_UNKNOWN;
+    i_session->server_jwks_cache_expires_at = 0;
+    i_session->server_jwks_cache_expiration = 0;
     i_session->client_kid = NULL;
     i_session->client_sign_alg = R_JWA_ALG_UNKNOWN;
     i_session->client_enc_alg = R_JWA_ALG_UNKNOWN;
@@ -1839,6 +1899,9 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         break;
       case I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED:
         i_session->backchannel_logout_session_required = i_value;
+        break;
+      case I_OPT_SERVER_JWKS_CACHE_EXPIRATION:
+        i_session->server_jwks_cache_expiration = (time_t)i_value;
         break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
@@ -2696,6 +2759,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_CIBA_AUTH_REQ_INTERVAL:
         case I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED:
         case I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED:
+        case I_OPT_SERVER_JWKS_CACHE_EXPIRATION:
           i_value = va_arg(vl, unsigned int);
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
@@ -3073,6 +3137,9 @@ unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED:
         return i_session->backchannel_logout_session_required;
+        break;
+      case I_OPT_SERVER_JWKS_CACHE_EXPIRATION:
+        return (unsigned int)i_session->server_jwks_cache_expiration;
         break;
       default:
         return 0;
@@ -5301,7 +5368,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -5447,8 +5514,8 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "backchannel_logout_session_required", i_get_int_parameter(i_session, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED),
                          "post_logout_redirect_uri", i_get_str_parameter(i_session, I_OPT_POST_LOGOUT_REDIRECT_URI),
                          "id_token_sid", i_get_str_parameter(i_session, I_OPT_ID_TOKEN_SID),
-                         "registration_client_uri", i_get_str_parameter(i_session, I_OPT_REGISTRATION_CLIENT_URI)
-                         
+                         "registration_client_uri", i_get_str_parameter(i_session, I_OPT_REGISTRATION_CLIENT_URI),
+                         "server_jwks_cache_expiration", i_get_int_parameter(i_session, I_OPT_SERVER_JWKS_CACHE_EXPIRATION)
                          );
   }
   return j_return;
@@ -5462,117 +5529,118 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
 
   if (i_session != NULL && json_is_object(j_import)) {
     if ((ret = i_set_parameter_list(i_session,
-                                     I_OPT_RESPONSE_TYPE, (int)json_integer_value(json_object_get(j_import, "response_type")),
-                                     I_OPT_SCOPE, json_string_value(json_object_get(j_import, "scope")),
-                                     I_OPT_STATE, json_string_value(json_object_get(j_import, "state")),
-                                     I_OPT_NONCE, json_string_value(json_object_get(j_import, "nonce")),
-                                     I_OPT_REDIRECT_URI, json_string_value(json_object_get(j_import, "redirect_uri")),
-                                     I_OPT_REDIRECT_TO, json_string_value(json_object_get(j_import, "redirect_to")),
-                                     I_OPT_CLIENT_ID, json_string_value(json_object_get(j_import, "client_id")),
-                                     I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_import, "client_secret")),
-                                     I_OPT_AUTH_ENDPOINT, json_string_value(json_object_get(j_import, "authorization_endpoint")),
-                                     I_OPT_TOKEN_ENDPOINT, json_string_value(json_object_get(j_import, "token_endpoint")),
-                                     I_OPT_OPENID_CONFIG_ENDPOINT, json_string_value(json_object_get(j_import, "openid_config_endpoint")),
-                                     I_OPT_USERINFO_ENDPOINT, json_string_value(json_object_get(j_import, "userinfo_endpoint")),
-                                     I_OPT_RESULT, (int)json_integer_value(json_object_get(j_import, "result")),
-                                     I_OPT_ERROR, json_string_value(json_object_get(j_import, "error")),
-                                     I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_import, "error_description")),
-                                     I_OPT_ERROR_URI, json_string_value(json_object_get(j_import, "error_uri")),
-                                     I_OPT_CODE, json_string_value(json_object_get(j_import, "code")),
-                                     I_OPT_REFRESH_TOKEN, json_string_value(json_object_get(j_import, "refresh_token")),
-                                     I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_import, "access_token")),
-                                     I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_import, "token_type")),
-                                     I_OPT_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "expires_in")),
-                                     I_OPT_EXPIRES_AT, (int)json_integer_value(json_object_get(j_import, "expires_at")),
-                                     I_OPT_ID_TOKEN, json_string_value(json_object_get(j_import, "id_token")),
-                                     I_OPT_USERNAME, json_string_value(json_object_get(j_import, "username")),
-                                     I_OPT_AUTH_METHOD, (int)json_integer_value(json_object_get(j_import, "auth_method")),
-                                     I_OPT_TOKEN_METHOD, (int)json_integer_value(json_object_get(j_import, "token_method")),
-                                     I_OPT_USER_PASSWORD, json_string_value(json_object_get(j_import, "user_password")),
-                                     I_OPT_X5U_FLAGS, (int)json_integer_value(json_object_get(j_import, "x5u_flags")),
-                                     I_OPT_OPENID_CONFIG_STRICT, json_object_get(j_import, "openid_config_strict")==json_true(),
-                                     I_OPT_ISSUER, json_string_value(json_object_get(j_import, "issuer")),
-                                     I_OPT_USERINFO, json_string_value(json_object_get(j_import, "userinfo")),
-                                     I_OPT_SERVER_KID, json_string_value(json_object_get(j_import, "server-kid")),
-                                     I_OPT_SERVER_ENC_ALG, json_string_value(json_object_get(j_import, "server-enc-alg")),
-                                     I_OPT_SERVER_ENC, json_string_value(json_object_get(j_import, "server-enc")),
-                                     I_OPT_CLIENT_KID, json_string_value(json_object_get(j_import, "client-kid")),
-                                     I_OPT_CLIENT_SIGN_ALG, json_string_value(json_object_get(j_import, "sig-alg")),
-                                     I_OPT_CLIENT_ENC_ALG, json_string_value(json_object_get(j_import, "enc-alg")),
-                                     I_OPT_CLIENT_ENC, json_string_value(json_object_get(j_import, "enc")),
-                                     I_OPT_TOKEN_JTI, json_string_value(json_object_get(j_import, "token_jti")),
-                                     I_OPT_TOKEN_EXP, (int)json_integer_value(json_object_get(j_import, "token_exp")),
-                                     I_OPT_TOKEN_TARGET, json_string_value(json_object_get(j_import, "token_target")),
-                                     I_OPT_TOKEN_TARGET_TYPE_HINT, json_string_value(json_object_get(j_import, "token_target_type_hint")),
-                                     I_OPT_REVOCATION_ENDPOINT, json_string_value(json_object_get(j_import, "revocation_endpoint")),
-                                     I_OPT_INTROSPECTION_ENDPOINT, json_string_value(json_object_get(j_import, "introspection_endpoint")),
-                                     I_OPT_REGISTRATION_ENDPOINT, json_string_value(json_object_get(j_import, "registration_endpoint")),
-                                     I_OPT_REGISTRATION_CLIENT_URI, json_string_value(json_object_get(j_import, "registration_client_uri")),
-                                     I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, json_string_value(json_object_get(j_import, "device_authorization_endpoint")),
-                                     I_OPT_DEVICE_AUTH_CODE, json_string_value(json_object_get(j_import, "device_auth_code")),
-                                     I_OPT_DEVICE_AUTH_USER_CODE, json_string_value(json_object_get(j_import, "device_auth_user_code")),
-                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI, json_string_value(json_object_get(j_import, "device_auth_verification_uri")),
-                                     I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, json_string_value(json_object_get(j_import, "device_auth_verification_uri_complete")),
-                                     I_OPT_DEVICE_AUTH_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "device_auth_expires_in")),
-                                     I_OPT_DEVICE_AUTH_INTERVAL, (int)json_integer_value(json_object_get(j_import, "device_auth_interval")),
-                                     I_OPT_END_SESSION_ENDPOINT, json_string_value(json_object_get(j_import, "end_session_endpoint")),
-                                     I_OPT_CHECK_SESSION_IRAME, json_string_value(json_object_get(j_import, "check_session_iframe")),
-                                     I_OPT_PUSHED_AUTH_REQ_ENDPOINT, json_string_value(json_object_get(j_import, "pushed_authorization_request_endpoint")),
-                                     I_OPT_PUSHED_AUTH_REQ_REQUIRED, json_object_get(j_import, "require_pushed_authorization_requests")==json_true(),
-                                     I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "pushed_authorization_request_expires_in")),
-                                     I_OPT_PUSHED_AUTH_REQ_URI, json_string_value(json_object_get(j_import, "pushed_authorization_request_uri")),
-                                     I_OPT_USE_DPOP, json_object_get(j_import, "use_dpop")==json_true(),
-                                     I_OPT_DPOP_KID, json_string_value(json_object_get(j_import, "dpop_kid")),
-                                     I_OPT_DPOP_SIGN_ALG, json_string_value(json_object_get(j_import, "dpop-sig-alg")),
-                                     I_OPT_DECRYPT_CODE, json_object_get(j_import, "decrypt_code")==json_true(),
-                                     I_OPT_DECRYPT_REFRESH_TOKEN, json_object_get(j_import, "decrypt_refresh_token")==json_true(),
-                                     I_OPT_DECRYPT_ACCESS_TOKEN, json_object_get(j_import, "decrypt_access_token")==json_true(),
-                                     I_OPT_TLS_KEY_FILE, json_string_value(json_object_get(j_import, "key_file")),
-                                     I_OPT_TLS_CERT_FILE, json_string_value(json_object_get(j_import, "cert_file")),
-                                     I_OPT_REMOTE_CERT_FLAG, (int)json_integer_value(json_object_get(j_import, "remote_cert_flag")),
-                                     I_OPT_PKCE_CODE_VERIFIER, json_string_value(json_object_get(j_import, "pkce_code_verifier")),
-                                     I_OPT_PKCE_METHOD, (int)json_integer_value(json_object_get(j_import, "pkce_method")),
-                                     I_OPT_RESOURCE_INDICATOR, json_string_value(json_object_get(j_import, "resource_indicator")),
-                                     I_OPT_ACCESS_TOKEN_SIGNING_ALG, json_string_value(json_object_get(j_import, "access_token_signing_alg")),
-                                     I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "access_token_encryption_alg")),
-                                     I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "access_token_encryption_enc")),
-                                     I_OPT_ID_TOKEN_SIGNING_ALG, json_string_value(json_object_get(j_import, "id_token_signing_alg")),
-                                     I_OPT_ID_TOKEN_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "id_token_encryption_alg")),
-                                     I_OPT_ID_TOKEN_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "id_token_encryption_enc")),
-                                     I_OPT_USERINFO_SIGNING_ALG, json_string_value(json_object_get(j_import, "userinfo_signing_alg")),
-                                     I_OPT_USERINFO_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "userinfo_encryption_alg")),
-                                     I_OPT_USERINFO_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "userinfo_encryption_enc")),
-                                     I_OPT_REQUEST_OBJECT_SIGNING_ALG, json_string_value(json_object_get(j_import, "request_object_signing_alg")),
-                                     I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "request_object_encryption_alg")),
-                                     I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "request_object_encryption_enc")),
-                                     I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, json_string_value(json_object_get(j_import, "token_endpoint_signing_alg")),
-                                     I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "token_endpoint_encryption_alg")),
-                                     I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "token_endpoint_encryption_enc")),
-                                     I_OPT_CIBA_REQUEST_SIGNING_ALG, json_string_value(json_object_get(j_import, "ciba_request_signing_alg")),
-                                     I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "ciba_request_encryption_alg")),
-                                     I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "ciba_request_encryption_enc")),
-                                     I_OPT_AUTH_RESPONSE_SIGNING_ALG, json_string_value(json_object_get(j_import, "auth_response_signing_alg")),
-                                     I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "auth_response_encryption_alg")),
-                                     I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "auth_response_encryption_enc")),
-                                     I_OPT_CIBA_ENDPOINT, json_string_value(json_object_get(j_import, "ciba_endpoint")),
-                                     I_OPT_CIBA_MODE, (int)json_integer_value(json_object_get(j_import, "ciba_mode")),
-                                     I_OPT_CIBA_USER_CODE, json_string_value(json_object_get(j_import, "ciba_user_code")),
-                                     I_OPT_CIBA_LOGIN_HINT, json_string_value(json_object_get(j_import, "ciba_login_hint")),
-                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, (int)json_integer_value(json_object_get(j_import, "ciba_login_hint_format")),
-                                     I_OPT_CIBA_LOGIN_HINT_KID, json_string_value(json_object_get(j_import, "ciba_login_hint_kid")),
-                                     I_OPT_CIBA_BINDING_MESSAGE, json_string_value(json_object_get(j_import, "ciba_binding_message")),
-                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, json_string_value(json_object_get(j_import, "ciba_client_notification_token")),
-                                     I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_import, "ciba_auth_req_id")),
-                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, json_string_value(json_object_get(j_import, "ciba_client_notification_endpoint")),
-                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "ciba_auth_req_expires_in")),
-                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, (int)json_integer_value(json_object_get(j_import, "ciba_auth_req_interval")),
-                                     I_OPT_FRONTCHANNEL_LOGOUT_URI, json_string_value(json_object_get(j_import, "frontchannel_logout_uri")),
-                                     I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, (int)json_integer_value(json_object_get(j_import, "frontchannel_logout_session_required")),
-                                     I_OPT_BACKCHANNEL_LOGOUT_URI, json_string_value(json_object_get(j_import, "backchannel_logout_uri")),
-                                     I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, (int)json_integer_value(json_object_get(j_import, "backchannel_logout_session_required")),
-                                     I_OPT_POST_LOGOUT_REDIRECT_URI, json_string_value(json_object_get(j_import, "post_logout_redirect_uri")),
-                                     I_OPT_ID_TOKEN_SID, json_string_value(json_object_get(j_import, "id_token_sid")),
-                                     I_OPT_NONE)) == I_OK) {
+                                   I_OPT_RESPONSE_TYPE, (int)json_integer_value(json_object_get(j_import, "response_type")),
+                                   I_OPT_SCOPE, json_string_value(json_object_get(j_import, "scope")),
+                                   I_OPT_STATE, json_string_value(json_object_get(j_import, "state")),
+                                   I_OPT_NONCE, json_string_value(json_object_get(j_import, "nonce")),
+                                   I_OPT_REDIRECT_URI, json_string_value(json_object_get(j_import, "redirect_uri")),
+                                   I_OPT_REDIRECT_TO, json_string_value(json_object_get(j_import, "redirect_to")),
+                                   I_OPT_CLIENT_ID, json_string_value(json_object_get(j_import, "client_id")),
+                                   I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_import, "client_secret")),
+                                   I_OPT_AUTH_ENDPOINT, json_string_value(json_object_get(j_import, "authorization_endpoint")),
+                                   I_OPT_TOKEN_ENDPOINT, json_string_value(json_object_get(j_import, "token_endpoint")),
+                                   I_OPT_OPENID_CONFIG_ENDPOINT, json_string_value(json_object_get(j_import, "openid_config_endpoint")),
+                                   I_OPT_USERINFO_ENDPOINT, json_string_value(json_object_get(j_import, "userinfo_endpoint")),
+                                   I_OPT_RESULT, (int)json_integer_value(json_object_get(j_import, "result")),
+                                   I_OPT_ERROR, json_string_value(json_object_get(j_import, "error")),
+                                   I_OPT_ERROR_DESCRIPTION, json_string_value(json_object_get(j_import, "error_description")),
+                                   I_OPT_ERROR_URI, json_string_value(json_object_get(j_import, "error_uri")),
+                                   I_OPT_CODE, json_string_value(json_object_get(j_import, "code")),
+                                   I_OPT_REFRESH_TOKEN, json_string_value(json_object_get(j_import, "refresh_token")),
+                                   I_OPT_ACCESS_TOKEN, json_string_value(json_object_get(j_import, "access_token")),
+                                   I_OPT_TOKEN_TYPE, json_string_value(json_object_get(j_import, "token_type")),
+                                   I_OPT_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "expires_in")),
+                                   I_OPT_EXPIRES_AT, (int)json_integer_value(json_object_get(j_import, "expires_at")),
+                                   I_OPT_ID_TOKEN, json_string_value(json_object_get(j_import, "id_token")),
+                                   I_OPT_USERNAME, json_string_value(json_object_get(j_import, "username")),
+                                   I_OPT_AUTH_METHOD, (int)json_integer_value(json_object_get(j_import, "auth_method")),
+                                   I_OPT_TOKEN_METHOD, (int)json_integer_value(json_object_get(j_import, "token_method")),
+                                   I_OPT_USER_PASSWORD, json_string_value(json_object_get(j_import, "user_password")),
+                                   I_OPT_X5U_FLAGS, (int)json_integer_value(json_object_get(j_import, "x5u_flags")),
+                                   I_OPT_OPENID_CONFIG_STRICT, json_object_get(j_import, "openid_config_strict")==json_true(),
+                                   I_OPT_ISSUER, json_string_value(json_object_get(j_import, "issuer")),
+                                   I_OPT_USERINFO, json_string_value(json_object_get(j_import, "userinfo")),
+                                   I_OPT_SERVER_KID, json_string_value(json_object_get(j_import, "server-kid")),
+                                   I_OPT_SERVER_ENC_ALG, json_string_value(json_object_get(j_import, "server-enc-alg")),
+                                   I_OPT_SERVER_ENC, json_string_value(json_object_get(j_import, "server-enc")),
+                                   I_OPT_CLIENT_KID, json_string_value(json_object_get(j_import, "client-kid")),
+                                   I_OPT_CLIENT_SIGN_ALG, json_string_value(json_object_get(j_import, "sig-alg")),
+                                   I_OPT_CLIENT_ENC_ALG, json_string_value(json_object_get(j_import, "enc-alg")),
+                                   I_OPT_CLIENT_ENC, json_string_value(json_object_get(j_import, "enc")),
+                                   I_OPT_TOKEN_JTI, json_string_value(json_object_get(j_import, "token_jti")),
+                                   I_OPT_TOKEN_EXP, (int)json_integer_value(json_object_get(j_import, "token_exp")),
+                                   I_OPT_TOKEN_TARGET, json_string_value(json_object_get(j_import, "token_target")),
+                                   I_OPT_TOKEN_TARGET_TYPE_HINT, json_string_value(json_object_get(j_import, "token_target_type_hint")),
+                                   I_OPT_REVOCATION_ENDPOINT, json_string_value(json_object_get(j_import, "revocation_endpoint")),
+                                   I_OPT_INTROSPECTION_ENDPOINT, json_string_value(json_object_get(j_import, "introspection_endpoint")),
+                                   I_OPT_REGISTRATION_ENDPOINT, json_string_value(json_object_get(j_import, "registration_endpoint")),
+                                   I_OPT_REGISTRATION_CLIENT_URI, json_string_value(json_object_get(j_import, "registration_client_uri")),
+                                   I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, json_string_value(json_object_get(j_import, "device_authorization_endpoint")),
+                                   I_OPT_DEVICE_AUTH_CODE, json_string_value(json_object_get(j_import, "device_auth_code")),
+                                   I_OPT_DEVICE_AUTH_USER_CODE, json_string_value(json_object_get(j_import, "device_auth_user_code")),
+                                   I_OPT_DEVICE_AUTH_VERIFICATION_URI, json_string_value(json_object_get(j_import, "device_auth_verification_uri")),
+                                   I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, json_string_value(json_object_get(j_import, "device_auth_verification_uri_complete")),
+                                   I_OPT_DEVICE_AUTH_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "device_auth_expires_in")),
+                                   I_OPT_DEVICE_AUTH_INTERVAL, (int)json_integer_value(json_object_get(j_import, "device_auth_interval")),
+                                   I_OPT_END_SESSION_ENDPOINT, json_string_value(json_object_get(j_import, "end_session_endpoint")),
+                                   I_OPT_CHECK_SESSION_IRAME, json_string_value(json_object_get(j_import, "check_session_iframe")),
+                                   I_OPT_PUSHED_AUTH_REQ_ENDPOINT, json_string_value(json_object_get(j_import, "pushed_authorization_request_endpoint")),
+                                   I_OPT_PUSHED_AUTH_REQ_REQUIRED, json_object_get(j_import, "require_pushed_authorization_requests")==json_true(),
+                                   I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "pushed_authorization_request_expires_in")),
+                                   I_OPT_PUSHED_AUTH_REQ_URI, json_string_value(json_object_get(j_import, "pushed_authorization_request_uri")),
+                                   I_OPT_USE_DPOP, json_object_get(j_import, "use_dpop")==json_true(),
+                                   I_OPT_DPOP_KID, json_string_value(json_object_get(j_import, "dpop_kid")),
+                                   I_OPT_DPOP_SIGN_ALG, json_string_value(json_object_get(j_import, "dpop-sig-alg")),
+                                   I_OPT_DECRYPT_CODE, json_object_get(j_import, "decrypt_code")==json_true(),
+                                   I_OPT_DECRYPT_REFRESH_TOKEN, json_object_get(j_import, "decrypt_refresh_token")==json_true(),
+                                   I_OPT_DECRYPT_ACCESS_TOKEN, json_object_get(j_import, "decrypt_access_token")==json_true(),
+                                   I_OPT_TLS_KEY_FILE, json_string_value(json_object_get(j_import, "key_file")),
+                                   I_OPT_TLS_CERT_FILE, json_string_value(json_object_get(j_import, "cert_file")),
+                                   I_OPT_REMOTE_CERT_FLAG, (int)json_integer_value(json_object_get(j_import, "remote_cert_flag")),
+                                   I_OPT_PKCE_CODE_VERIFIER, json_string_value(json_object_get(j_import, "pkce_code_verifier")),
+                                   I_OPT_PKCE_METHOD, (int)json_integer_value(json_object_get(j_import, "pkce_method")),
+                                   I_OPT_RESOURCE_INDICATOR, json_string_value(json_object_get(j_import, "resource_indicator")),
+                                   I_OPT_ACCESS_TOKEN_SIGNING_ALG, json_string_value(json_object_get(j_import, "access_token_signing_alg")),
+                                   I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "access_token_encryption_alg")),
+                                   I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "access_token_encryption_enc")),
+                                   I_OPT_ID_TOKEN_SIGNING_ALG, json_string_value(json_object_get(j_import, "id_token_signing_alg")),
+                                   I_OPT_ID_TOKEN_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "id_token_encryption_alg")),
+                                   I_OPT_ID_TOKEN_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "id_token_encryption_enc")),
+                                   I_OPT_USERINFO_SIGNING_ALG, json_string_value(json_object_get(j_import, "userinfo_signing_alg")),
+                                   I_OPT_USERINFO_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "userinfo_encryption_alg")),
+                                   I_OPT_USERINFO_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "userinfo_encryption_enc")),
+                                   I_OPT_REQUEST_OBJECT_SIGNING_ALG, json_string_value(json_object_get(j_import, "request_object_signing_alg")),
+                                   I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "request_object_encryption_alg")),
+                                   I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "request_object_encryption_enc")),
+                                   I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, json_string_value(json_object_get(j_import, "token_endpoint_signing_alg")),
+                                   I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "token_endpoint_encryption_alg")),
+                                   I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "token_endpoint_encryption_enc")),
+                                   I_OPT_CIBA_REQUEST_SIGNING_ALG, json_string_value(json_object_get(j_import, "ciba_request_signing_alg")),
+                                   I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "ciba_request_encryption_alg")),
+                                   I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "ciba_request_encryption_enc")),
+                                   I_OPT_AUTH_RESPONSE_SIGNING_ALG, json_string_value(json_object_get(j_import, "auth_response_signing_alg")),
+                                   I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, json_string_value(json_object_get(j_import, "auth_response_encryption_alg")),
+                                   I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, json_string_value(json_object_get(j_import, "auth_response_encryption_enc")),
+                                   I_OPT_CIBA_ENDPOINT, json_string_value(json_object_get(j_import, "ciba_endpoint")),
+                                   I_OPT_CIBA_MODE, (int)json_integer_value(json_object_get(j_import, "ciba_mode")),
+                                   I_OPT_CIBA_USER_CODE, json_string_value(json_object_get(j_import, "ciba_user_code")),
+                                   I_OPT_CIBA_LOGIN_HINT, json_string_value(json_object_get(j_import, "ciba_login_hint")),
+                                   I_OPT_CIBA_LOGIN_HINT_FORMAT, (int)json_integer_value(json_object_get(j_import, "ciba_login_hint_format")),
+                                   I_OPT_CIBA_LOGIN_HINT_KID, json_string_value(json_object_get(j_import, "ciba_login_hint_kid")),
+                                   I_OPT_CIBA_BINDING_MESSAGE, json_string_value(json_object_get(j_import, "ciba_binding_message")),
+                                   I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, json_string_value(json_object_get(j_import, "ciba_client_notification_token")),
+                                   I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_import, "ciba_auth_req_id")),
+                                   I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, json_string_value(json_object_get(j_import, "ciba_client_notification_endpoint")),
+                                   I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "ciba_auth_req_expires_in")),
+                                   I_OPT_CIBA_AUTH_REQ_INTERVAL, (int)json_integer_value(json_object_get(j_import, "ciba_auth_req_interval")),
+                                   I_OPT_FRONTCHANNEL_LOGOUT_URI, json_string_value(json_object_get(j_import, "frontchannel_logout_uri")),
+                                   I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, (int)json_integer_value(json_object_get(j_import, "frontchannel_logout_session_required")),
+                                   I_OPT_BACKCHANNEL_LOGOUT_URI, json_string_value(json_object_get(j_import, "backchannel_logout_uri")),
+                                   I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED, (int)json_integer_value(json_object_get(j_import, "backchannel_logout_session_required")),
+                                   I_OPT_POST_LOGOUT_REDIRECT_URI, json_string_value(json_object_get(j_import, "post_logout_redirect_uri")),
+                                   I_OPT_ID_TOKEN_SID, json_string_value(json_object_get(j_import, "id_token_sid")),
+                                   I_OPT_SERVER_JWKS_CACHE_EXPIRATION, (int)json_integer_value(json_object_get(j_import, "server_jwks_cache_expiration")),
+                                   I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
           tmp = json_dumps(j_value, JSON_COMPACT);
@@ -5643,6 +5711,21 @@ int i_import_session_str(struct _i_session * i_session, const char * str_import)
       ret = I_ERROR;
     }
     json_decref(j_import);
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
+int i_import_session_from_registration(struct _i_session * i_session, json_t * j_registration) {
+  int ret;
+  
+  if (i_session != NULL && json_is_object(j_registration)) {
+    ret = i_set_parameter_list(i_session, I_OPT_CLIENT_ID, json_string_value(json_object_get(j_registration, "client_id")),
+                                          I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_registration, "client_secret")),
+                                          I_OPT_TOKEN_METHOD, _i_get_token_auth_method(json_string_value(json_object_get(j_registration, "client_secret"))),
+                                          I_OPT_REDIRECT_URI, json_string_value(json_array_get(json_object_get(j_registration, "redirect_uris"), 0)),
+                                          I_OPT_NONE);
   } else {
     ret = I_ERROR_PARAM;
   }
@@ -5979,6 +6062,32 @@ int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char *
   }
   r_jwt_free(dpop_jwt);
   return ret;
+}
+
+char * i_generate_client_assertion(struct _i_session * i_session, const char * aud) {
+  jwa_alg sign_alg = R_JWA_ALG_UNKNOWN, enc_alg = R_JWA_ALG_UNKNOWN;
+  jwa_enc enc = R_JWA_ENC_UNKNOWN;
+
+  if (i_session != NULL && aud != NULL) {
+    if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
+      sign_alg = i_session->client_sign_alg;
+    } else if (i_session->token_endpoint_signing_alg != R_JWA_ALG_UNKNOWN) {
+      sign_alg = i_session->token_endpoint_signing_alg;
+    }
+    if (i_session->client_enc_alg != R_JWA_ALG_UNKNOWN) {
+      enc_alg = i_session->client_enc_alg;
+    } else if (i_session->token_endpoint_encryption_alg != R_JWA_ALG_UNKNOWN) {
+      enc_alg = i_session->token_endpoint_encryption_alg;
+    }
+    if (i_session->client_enc != R_JWA_ENC_UNKNOWN) {
+      enc = i_session->client_enc;
+    } else if (i_session->token_endpoint_encryption_enc != R_JWA_ENC_UNKNOWN) {
+      enc = i_session->token_endpoint_encryption_enc;
+    }
+    return _i_generate_client_assertion(i_session, aud, sign_alg, enc_alg, enc);
+  } else {
+    return NULL;
+  }
 }
 
 int i_set_rich_authorization_request_str(struct _i_session * i_session, const char * type, const char * value) {
