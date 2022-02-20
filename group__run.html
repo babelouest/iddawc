@@ -74,14 +74,18 @@ Functions</h2></td></tr>
 <tr class="separator:ga168ed1f7be1c7a0e41720f29ab44fcd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gae4b42399eedec1b1a73eaea95c22ce51">i_register_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_parameters, int update_session, json_t **j_result)</td></tr>
 <tr class="separator:gae4b42399eedec1b1a73eaea95c22ce51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad361385c6da3d496994306ec5b37b37e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gad361385c6da3d496994306ec5b37b37e">i_manage_registration_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_parameters, int update_session, json_t **j_result)</td></tr>
-<tr class="separator:gad361385c6da3d496994306ec5b37b37e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5d47fb47d1fea0aaecbd8da8e2230654"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga5d47fb47d1fea0aaecbd8da8e2230654">i_get_registration_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t **j_result)</td></tr>
 <tr class="separator:ga5d47fb47d1fea0aaecbd8da8e2230654"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad361385c6da3d496994306ec5b37b37e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gad361385c6da3d496994306ec5b37b37e">i_manage_registration_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_parameters, int update_session, json_t **j_result)</td></tr>
+<tr class="separator:gad361385c6da3d496994306ec5b37b37e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab36b9d5cecbd1b7c840b767c68ae628e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gab36b9d5cecbd1b7c840b767c68ae628e">i_delete_registration_client</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
+<tr class="separator:gab36b9d5cecbd1b7c840b767c68ae628e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga525029dc9d7979066f020c0d51ef3b93"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga525029dc9d7979066f020c0d51ef3b93">i_generate_dpop_token</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *htm, const char *htu, time_t iat, int add_ath)</td></tr>
 <tr class="separator:ga525029dc9d7979066f020c0d51ef3b93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac96c00e3cd99b7c00c49fa46b3d23559"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gac96c00e3cd99b7c00c49fa46b3d23559">i_verify_dpop_proof</a> (const char *dpop_header, const char *htm, const char *htu, time_t max_iat, const char *jkt, const char *access_token)</td></tr>
 <tr class="separator:gac96c00e3cd99b7c00c49fa46b3d23559"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5267cde4d9d03a82708b4b33b8e6e08c"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga5267cde4d9d03a82708b4b33b8e6e08c">i_generate_client_assertion</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *aud)</td></tr>
+<tr class="separator:ga5267cde4d9d03a82708b4b33b8e6e08c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga287c866466f6b7ed0beea1854f72b0e2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#ga287c866466f6b7ed0beea1854f72b0e2">i_perform_resource_service_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, struct _u_request *http_request, struct _u_response *http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat)</td></tr>
 <tr class="separator:ga287c866466f6b7ed0beea1854f72b0e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae33a5d87add6949222d96c861ff67fba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gae33a5d87add6949222d96c861ff67fba">i_run_par_request</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
@@ -542,7 +546,43 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
     <tr><td class="paramname">j_parameters</td><td>a json_t * object containing the client metadata The metadata content depends on the registration endpoint but at least the parameter redirect_uris (array of string) is required to register a new client </td></tr>
-    <tr><td class="paramname">update_session</td><td>if the registration is succesfull, update the session with the new client_id and client_secret </td></tr>
+    <tr><td class="paramname">update_session</td><td>if the registration is succesfull, update the session with the new client_id client_secret, registration_client_uri and registration_access_token (as I_OPT_ACCESS_TOKEN) </td></tr>
+    <tr><td class="paramname">j_result</td><td>if not NULL, set an allocated json_t * object with the endpoint result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
+
+</div>
+</div>
+<a id="ga5d47fb47d1fea0aaecbd8da8e2230654"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga5d47fb47d1fea0aaecbd8da8e2230654">&#9670;&nbsp;</a></span>i_get_registration_client()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_get_registration_client </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">json_t **&#160;</td>
+          <td class="paramname"><em>j_result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Gets a client registration using the dynamic registration endpoint Using the access_token for authentication </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
     <tr><td class="paramname">j_result</td><td>if not NULL, set an allocated json_t * object with the endpoint result </td></tr>
   </table>
   </dd>
@@ -592,7 +632,7 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
     <tr><td class="paramname">j_parameters</td><td>a json_t * object containing the client metadata The metadata content depends on the registration endpoint but at least the parameter redirect_uris (array of string) is required to register a new client </td></tr>
-    <tr><td class="paramname">update_session</td><td>if the registration is succesfull, update the session with the new client_id and client_secret </td></tr>
+    <tr><td class="paramname">update_session</td><td>if the registration is succesfull, update the session with the new client_id client_secret, registration_client_uri and registration_access_token (as I_OPT_ACCESS_TOKEN) </td></tr>
     <tr><td class="paramname">j_result</td><td>if not NULL, set an allocated json_t * object with the endpoint result </td></tr>
   </table>
   </dd>
@@ -601,35 +641,24 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ga5d47fb47d1fea0aaecbd8da8e2230654"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga5d47fb47d1fea0aaecbd8da8e2230654">&#9670;&nbsp;</a></span>i_get_registration_client()</h2>
+<a id="gab36b9d5cecbd1b7c840b767c68ae628e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab36b9d5cecbd1b7c840b767c68ae628e">&#9670;&nbsp;</a></span>i_delete_registration_client()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int i_get_registration_client </td>
+          <td class="memname">int i_delete_registration_client </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
-          <td class="paramname"><em>i_session</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>i_session</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">json_t **&#160;</td>
-          <td class="paramname"><em>j_result</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Gets a client registration using the dynamic registration endpoint Using the access_token for authentication </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Deletes a client registration using the dynamic registration endpoint Using the access_token for authentication </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
-    <tr><td class="paramname">j_result</td><td>if not NULL, set an allocated json_t * object with the endpoint result </td></tr>
   </table>
   </dd>
 </dl>
@@ -680,7 +709,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generates a DPoP token based on the given parameters and the internal state of the struct <a class="el" href="struct__i__session.html">_i_session</a> The jti must be previously generated via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Generates a DPoP token based on the given parameters and the internal state of the struct <a class="el" href="struct__i__session.html">_i_session</a> The jti must be previously set via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
     <tr><td class="paramname">htm</td><td>The htm claim value, the HTTP method used to access the protected resource (GET, POST, PATCH, etc.) </td></tr>
@@ -755,6 +784,42 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
+
+</div>
+</div>
+<a id="ga5267cde4d9d03a82708b4b33b8e6e08c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga5267cde4d9d03a82708b4b33b8e6e08c">&#9670;&nbsp;</a></span>i_generate_client_assertion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char* i_generate_client_assertion </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>aud</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Generates a client assertion token based on the given parameters and the internal state of the struct <a class="el" href="struct__i__session.html">_i_session</a> The jti must be previously set via I_OPT_TOKEN_JTI or generated via I_OPT_TOKEN_JTI_GENERATE </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">aud</td><td>The audience of the token, example: the token endpoint URL </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a char * containing the token, must be i_free'd after use </dd></dl>
 
 </div>
 </div>
