@@ -1610,6 +1610,9 @@ int i_init_session(struct _i_session * i_session) {
     i_session->backchannel_logout_session_required = 0;
     i_session->post_logout_redirect_uri = NULL;
     i_session->id_token_sid = NULL;
+    i_session->save_http_request_response = 0;
+    i_session->_saved_request = NULL;
+    i_session->_saved_response = NULL;
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
         if ((res = r_jwks_init(&i_session->server_jwks)) == RHN_OK) {
@@ -1902,6 +1905,9 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         break;
       case I_OPT_SERVER_JWKS_CACHE_EXPIRATION:
         i_session->server_jwks_cache_expiration = (time_t)i_value;
+        break;
+      case I_OPT_SAVE_HTTP_REQUEST_RESPONSE:
+        i_session->save_http_request_response = i_value;
         break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
@@ -2760,6 +2766,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED:
         case I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED:
         case I_OPT_SERVER_JWKS_CACHE_EXPIRATION:
+        case I_OPT_SAVE_HTTP_REQUEST_RESPONSE:
           i_value = va_arg(vl, unsigned int);
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
@@ -3140,6 +3147,9 @@ unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_SERVER_JWKS_CACHE_EXPIRATION:
         return (unsigned int)i_session->server_jwks_cache_expiration;
+        break;
+      case I_OPT_SAVE_HTTP_REQUEST_RESPONSE:
+        return i_session->save_http_request_response;
         break;
       default:
         return 0;
@@ -5368,7 +5378,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -5515,7 +5525,9 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "post_logout_redirect_uri", i_get_str_parameter(i_session, I_OPT_POST_LOGOUT_REDIRECT_URI),
                          "id_token_sid", i_get_str_parameter(i_session, I_OPT_ID_TOKEN_SID),
                          "registration_client_uri", i_get_str_parameter(i_session, I_OPT_REGISTRATION_CLIENT_URI),
-                         "server_jwks_cache_expiration", i_get_int_parameter(i_session, I_OPT_SERVER_JWKS_CACHE_EXPIRATION)
+                         "server_jwks_cache_expiration", i_get_int_parameter(i_session, I_OPT_SERVER_JWKS_CACHE_EXPIRATION),
+                         
+                         "save_http_request_response", i_get_int_parameter(i_session, I_OPT_SAVE_HTTP_REQUEST_RESPONSE)
                          );
   }
   return j_return;
@@ -5640,6 +5652,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                    I_OPT_POST_LOGOUT_REDIRECT_URI, json_string_value(json_object_get(j_import, "post_logout_redirect_uri")),
                                    I_OPT_ID_TOKEN_SID, json_string_value(json_object_get(j_import, "id_token_sid")),
                                    I_OPT_SERVER_JWKS_CACHE_EXPIRATION, (int)json_integer_value(json_object_get(j_import, "server_jwks_cache_expiration")),
+                                   I_OPT_SAVE_HTTP_REQUEST_RESPONSE, (int)json_integer_value(json_object_get(j_import, "save_http_request_response")),
                                    I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
