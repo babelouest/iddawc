@@ -391,8 +391,8 @@ struct _i_session {
   char                * post_logout_redirect_uri;
   char                * id_token_sid;
   unsigned int          save_http_request_response;
-  struct _u_request  * _saved_request;
-  struct _u_response * _saved_response;
+  struct _u_request   * saved_request;
+  struct _u_response  * saved_response;
 };
 
 /**

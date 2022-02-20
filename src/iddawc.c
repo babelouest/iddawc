@@ -101,6 +101,69 @@ static char * rand_string_nonce(char * str, size_t str_size) {
   }
 }
 
+static int _i_send_http_request(struct _i_session * i_session, struct _u_request  * request, struct _u_response * response) {
+  int ret;
+  if (ulfius_send_http_request(request, response) == U_OK) {
+    ret = I_OK;
+    if (i_session->save_http_request_response) {
+      do {
+        if (i_session->saved_request == NULL) {
+          if ((i_session->saved_request = o_malloc(sizeof(struct _u_request))) == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_request");
+            ret = I_ERROR_MEMORY;
+            break;
+          }
+          if (ulfius_init_request(i_session->saved_request) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_request");
+            ret = I_ERROR;
+            break;
+          }
+        } else {
+          ulfius_clean_request(i_session->saved_request);
+          if (ulfius_init_request(i_session->saved_request) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_request");
+            ret = I_ERROR;
+            break;
+          }
+        }
+        if (i_session->saved_response == NULL) {
+          if ((i_session->saved_response = o_malloc(sizeof(struct _u_response))) == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_response");
+            ret = I_ERROR_MEMORY;
+            break;
+          }
+          if (ulfius_init_response(i_session->saved_response) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_response");
+            ret = I_ERROR;
+            break;
+          }
+        } else {
+          ulfius_clean_response(i_session->saved_response);
+          if (ulfius_init_response(i_session->saved_response) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_response");
+            ret = I_ERROR;
+            break;
+          }
+        }
+        if (ulfius_copy_request(i_session->saved_request, request) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying request");
+          ret = I_ERROR;
+          break;
+        }
+        if (ulfius_copy_response(i_session->saved_response, response) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying response");
+          ret = I_ERROR;
+          break;
+        }
+      } while (0);
+    }
+  } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error sending HTTP request");
+    ret = I_ERROR;
+  }
+  return ret;
+}
+
 static int _i_get_token_auth_method(const char * str_method) {
   int method = I_TOKEN_AUTH_METHOD_NONE;
   if (0 == o_strcmp("client_secret_basic", str_method)) {
@@ -364,7 +427,7 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
                                             U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                             U_OPT_HTTP_URL, json_string_value(json_object_get(i_session->openid_config, "jwks_uri")),
                                             U_OPT_NONE);
-    if (ulfius_send_http_request(&request, &response) == U_OK) {
+    if (_i_send_http_request(i_session, &request, &response) == U_OK) {
       if (response.status == 200 && (NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), ULFIUS_HTTP_ENCODING_JSON) || NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), I_CONTENT_TYPE_JWKS))) {
         if ((j_jwks = json_loadb(response.binary_body, response.binary_body_length, JSON_DECODE_ANY, NULL)) != NULL) {
           r_jwks_free(i_session->server_jwks);
@@ -1611,8 +1674,8 @@ int i_init_session(struct _i_session * i_session) {
     i_session->post_logout_redirect_uri = NULL;
     i_session->id_token_sid = NULL;
     i_session->save_http_request_response = 0;
-    i_session->_saved_request = NULL;
-    i_session->_saved_response = NULL;
+    i_session->saved_request = NULL;
+    i_session->saved_response = NULL;
     if ((res = u_map_init(&i_session->additional_parameters)) == U_OK) {
       if ((res = u_map_init(&i_session->additional_response)) == U_OK) {
         if ((res = r_jwks_init(&i_session->server_jwks)) == RHN_OK) {
@@ -1717,6 +1780,8 @@ void i_clean_session(struct _i_session * i_session) {
     json_decref(i_session->j_userinfo);
     json_decref(i_session->j_authorization_details);
     json_decref(i_session->j_claims);
+    ulfius_clean_request_full(i_session->saved_request);
+    ulfius_clean_response_full(i_session->saved_response);
   }
 }
 
@@ -2897,7 +2962,7 @@ int i_get_openid_config(struct _i_session * i_session) {
                                             U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                             U_OPT_HTTP_URL, i_session->openid_config_endpoint,
                                             U_OPT_NONE);
-    if (ulfius_send_http_request(&request, &response) == U_OK) {
+    if (_i_send_http_request(i_session, &request, &response) == U_OK) {
       if (response.status == 200) {
         if ((i_session->openid_config = ulfius_get_json_body_response(&response, NULL)) != NULL) {
           if ((ret = _i_parse_openid_config(i_session, 1)) == I_OK) {
@@ -2992,7 +3057,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
         }
         o_free(dpop_token);
       }
-      if (ulfius_send_http_request(&request, &response) == U_OK) {
+      if (_i_send_http_request(i_session, &request, &response) == U_OK) {
         j_response = ulfius_get_json_body_response(&response, NULL);
         if (response.status == 200) {
           if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
@@ -3835,7 +3900,7 @@ int i_run_auth_request(struct _i_session * i_session) {
       }
 
       if (ret == I_OK) {
-        if (ulfius_send_http_request(&request, &response) == U_OK) {
+        if (_i_send_http_request(i_session, &request, &response) == U_OK) {
           if (response.status == 302 && o_strlen(u_map_get_case(response.map_header, "Location"))) {
             if (i_set_str_parameter(i_session, I_OPT_REDIRECT_TO, u_map_get_case(response.map_header, "Location")) == I_OK) {
               ret = i_parse_redirect_to(i_session);
@@ -4041,7 +4106,7 @@ int i_run_token_request(struct _i_session * i_session) {
           o_free(dpop_token);
         }
         if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request, sign_alg, enc_alg, enc)) == I_OK) {
-          if (ulfius_send_http_request(&request, &response) == U_OK) {
+          if (_i_send_http_request(i_session, &request, &response) == U_OK) {
             if (response.status == 200 || response.status == 400) {
               j_response = ulfius_get_json_body_response(&response, NULL);
               if (j_response != NULL) {
@@ -4117,7 +4182,7 @@ int i_run_token_request(struct _i_session * i_session) {
               }
             }
             if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request, sign_alg, enc_alg, enc)) == I_OK) {
-              if (ulfius_send_http_request(&request, &response) == U_OK) {
+              if (_i_send_http_request(i_session, &request, &response) == U_OK) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
@@ -4180,7 +4245,7 @@ int i_run_token_request(struct _i_session * i_session) {
               }
             }
             if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request, sign_alg, enc_alg, enc)) == I_OK) {
-              if (ulfius_send_http_request(&request, &response) == U_OK) {
+              if (_i_send_http_request(i_session, &request, &response) == U_OK) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
@@ -4245,7 +4310,7 @@ int i_run_token_request(struct _i_session * i_session) {
               }
             }
             if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request, sign_alg, enc_alg, enc)) == I_OK) {
-              if (ulfius_send_http_request(&request, &response) == U_OK) {
+              if (_i_send_http_request(i_session, &request, &response) == U_OK) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
@@ -4300,7 +4365,7 @@ int i_run_token_request(struct _i_session * i_session) {
                                           U_OPT_POST_BODY_PARAMETER, "device_code", i_session->device_auth_code,
                                           U_OPT_NONE);
             if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request, sign_alg, enc_alg, enc)) == I_OK) {
-              if (ulfius_send_http_request(&request, &response) == U_OK) {
+              if (_i_send_http_request(i_session, &request, &response) == U_OK) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
@@ -4356,7 +4421,7 @@ int i_run_token_request(struct _i_session * i_session) {
                                           U_OPT_POST_BODY_PARAMETER, "auth_req_id", i_session->ciba_auth_req_id,
                                           U_OPT_NONE);
             if ((res = _i_add_token_authentication(i_session, i_session->token_endpoint, &request, sign_alg, enc_alg, enc)) == I_OK) {
-              if (ulfius_send_http_request(&request, &response) == U_OK) {
+              if (_i_send_http_request(i_session, &request, &response) == U_OK) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
@@ -4688,7 +4753,7 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
         }
       }
       if (ret == I_OK) {
-        if (ulfius_send_http_request(&request, &response) == U_OK) {
+        if (_i_send_http_request(i_session, &request, &response) == U_OK) {
           j_response = ulfius_get_json_body_response(&response, NULL);
           if (response.status == 404) {
             ret = I_ERROR_PARAM;
@@ -4799,7 +4864,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
         }
       }
       if (ret == I_OK) {
-        if (ulfius_send_http_request(&request, &response) == U_OK) {
+        if (_i_send_http_request(i_session, &request, &response) == U_OK) {
           j_response = ulfius_get_json_body_response(&response, NULL);
           if (response.status == 200) {
             if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
@@ -4997,7 +5062,7 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
           o_free(bearer);
         }
         if (ret == I_OK) {
-          if (ulfius_send_http_request(&request, &response) == U_OK) {
+          if (_i_send_http_request(i_session, &request, &response) == U_OK) {
             j_response = ulfius_get_json_body_response(&response, NULL);
             if (response.status == 200) {
               if (update_session) {
@@ -5080,7 +5145,7 @@ int i_get_registration_client(struct _i_session * i_session, json_t ** j_result)
         o_free(bearer);
       }
       if (ret == I_OK) {
-        if (ulfius_send_http_request(&request, &response) == U_OK) {
+        if (_i_send_http_request(i_session, &request, &response) == U_OK) {
           j_response = ulfius_get_json_body_response(&response, NULL);
           if (response.status == 200) {
             if (j_result != NULL) {
@@ -5255,7 +5320,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
         o_free(bearer);
       }
       if (ret == I_OK) {
-        if (ulfius_send_http_request(&request, &response) == U_OK) {
+        if (_i_send_http_request(i_session, &request, &response) == U_OK) {
           j_response = ulfius_get_json_body_response(&response, NULL);
           if (response.status == 200) {
             if (update_session) {
@@ -5341,7 +5406,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
         o_free(bearer);
       }
       if (ret == I_OK) {
-        if (ulfius_send_http_request(&request, &response) == U_OK) {
+        if (_i_send_http_request(i_session, &request, &response) == U_OK) {
           j_response = ulfius_get_json_body_response(&response, NULL);
           if (response.status == 404) {
             ret = I_ERROR_PARAM;
@@ -5922,8 +5987,8 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
           // Perform HTTP request
           if (I_OK == ret) {
             ulfius_set_request_properties(&copy_req, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR, U_OPT_NONE);
-            if (ulfius_send_http_request(&copy_req, http_response) != U_OK) {
-              y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error ulfius_send_http_request");
+            if (_i_send_http_request(i_session, &copy_req, http_response) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error sending API request");
               ret = I_ERROR;
             }
           }
@@ -6247,7 +6312,7 @@ int i_run_device_auth_request(struct _i_session * i_session) {
       enc = i_session->token_endpoint_encryption_enc;
     }
     if ((res = _i_add_token_authentication(i_session, i_session->device_authorization_endpoint, &request, sign_alg, enc_alg, enc)) == I_OK) {
-      if (ulfius_send_http_request(&request, &response) == U_OK) {
+      if (_i_send_http_request(i_session, &request, &response) == U_OK) {
         if (response.status == 200 || response.status == 400) {
           j_response = ulfius_get_json_body_response(&response, NULL);
           if (j_response != NULL) {
@@ -6376,7 +6441,7 @@ int i_run_par_request(struct _i_session * i_session) {
       enc = i_session->token_endpoint_encryption_enc;
     }
     if ((res = _i_add_token_authentication(i_session, i_session->pushed_authorization_request_endpoint, &request, sign_alg, enc_alg, enc)) == I_OK) {
-      if (ulfius_send_http_request(&request, &response) == U_OK) {
+      if (_i_send_http_request(i_session, &request, &response) == U_OK) {
         if (response.status == 201 || response.status == 400) {
           j_response = ulfius_get_json_body_response(&response, NULL);
           if (j_response != NULL) {
@@ -6598,7 +6663,7 @@ int i_run_ciba_request(struct _i_session * i_session) {
         enc = i_session->token_endpoint_encryption_enc;
       }
       if ((res = _i_add_token_authentication(i_session, i_session->pushed_authorization_request_endpoint, &request, sign_alg, enc_alg, enc)) == I_OK) {
-        if (ulfius_send_http_request(&request, &response) == U_OK) {
+        if (_i_send_http_request(i_session, &request, &response) == U_OK) {
           if (response.status == 200 || response.status == 400) {
             j_response = ulfius_get_json_body_response(&response, NULL);
             if (j_response != NULL) {
