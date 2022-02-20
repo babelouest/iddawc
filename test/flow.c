@@ -728,13 +728,13 @@ static Suite *iddawc_suite(void)
 
   s = suite_create("Iddawc flow function tests");
   tc_core = tcase_create("test_iddawc_flow");
-  /*tcase_add_test(tc_core, test_iddawc_token_flow);
+  tcase_add_test(tc_core, test_iddawc_token_flow);
   tcase_add_test(tc_core, test_iddawc_code_flow);
   tcase_add_test(tc_core, test_iddawc_code_claims_resource_flow);
   tcase_add_test(tc_core, test_iddawc_code_pkce_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_code_flow);
-  tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_code_flow);*/
+  tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_code_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_code_flow_save_request_response);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
@@ -747,7 +747,7 @@ int main(int argc, char *argv[])
   int number_failed;
   Suite *s;
   SRunner *sr;
-  y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc oauth complete flow tests");
+  //y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc oauth complete flow tests");
   i_global_init();
   s = iddawc_suite();
   sr = srunner_create(s);
@@ -757,6 +757,6 @@ int main(int argc, char *argv[])
   srunner_free(sr);
   
   i_global_close();
-  y_close_logs();
+  //y_close_logs();
   return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
