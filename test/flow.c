@@ -656,6 +656,71 @@ START_TEST(test_iddawc_oidc_token_id_token_code_flow)
 }
 END_TEST
 
+START_TEST(test_iddawc_oidc_code_flow_save_request_response)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
+
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/jwks", 0, &callback_openid_jwks_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/auth", 0, &callback_oauth2_redirect_external_auth, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_id_token_ok, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/userinfo", 0, &callback_userinfo_valid_json, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_SAVE_HTTP_REQUEST_RESPONSE, 1,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_OK);
+  
+  // First step: get redirection to login page
+  ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_REDIRECT_TO), REDIRECT_EXTERNAL_AUTH "?redirect_uri=" REDIRECT_URI "&state=" STATE);
+  ck_assert_ptr_ne(NULL, o_strstr(i_session.saved_request->http_url, "/auth?redirect_uri=https%3A%2F%2Fiddawc.tld&response_type=code&client_id=clientXyz1234&state=stateXyz1234&scope=openid+g_profile"));
+  ck_assert_int_eq(302, i_session.saved_response->status);
+  ck_assert_ptr_ne(NULL, o_strstr(u_map_get(i_session.saved_response->map_header, "Location"), REDIRECT_EXTERNAL_AUTH));
+  
+  // Then the user has loggined in the external application, gets redirected with a result, we parse the result
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, REDIRECT_CODE CODE "&state=" STATE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  
+  // Run the token request, get the refresh and access tokens
+  ck_assert_int_eq(i_run_token_request(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TOKEN_TYPE), "bearer");
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 3600);
+  ck_assert_str_eq("POST", i_session.saved_request->http_verb);
+  ck_assert_str_eq(TOKEN_ENDPOINT, i_session.saved_request->http_url);
+  ck_assert_int_eq(200, i_session.saved_response->status);
+  ck_assert_str_eq(ULFIUS_HTTP_ENCODING_JSON, u_map_get(i_session.saved_response->map_header, ULFIUS_HTTP_HEADER_CONTENT));
+  
+  // And finally we load user info using the access token
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
+  ck_assert_str_eq(USERINFO_ENDPOINT, i_session.saved_request->http_url);
+  ck_assert_int_eq(200, i_session.saved_response->status);
+  ck_assert_str_eq(ULFIUS_HTTP_ENCODING_JSON, u_map_get(i_session.saved_response->map_header, ULFIUS_HTTP_HEADER_CONTENT));
+  
+  json_decref(j_userinfo);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+  i_clean_session(&i_session);
+}
+END_TEST
+
 static Suite *iddawc_suite(void)
 {
   Suite *s;
@@ -663,13 +728,14 @@ static Suite *iddawc_suite(void)
 
   s = suite_create("Iddawc flow function tests");
   tc_core = tcase_create("test_iddawc_flow");
-  tcase_add_test(tc_core, test_iddawc_token_flow);
+  /*tcase_add_test(tc_core, test_iddawc_token_flow);
   tcase_add_test(tc_core, test_iddawc_code_flow);
   tcase_add_test(tc_core, test_iddawc_code_claims_resource_flow);
   tcase_add_test(tc_core, test_iddawc_code_pkce_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_flow);
   tcase_add_test(tc_core, test_iddawc_oidc_code_flow);
-  tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_code_flow);
+  tcase_add_test(tc_core, test_iddawc_oidc_token_id_token_code_flow);*/
+  tcase_add_test(tc_core, test_iddawc_oidc_code_flow_save_request_response);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
 
@@ -681,7 +747,7 @@ int main(int argc, char *argv[])
   int number_failed;
   Suite *s;
   SRunner *sr;
-  //y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc oauth complete flow tests");
+  y_init_logs("Iddawc", Y_LOG_MODE_CONSOLE, Y_LOG_LEVEL_DEBUG, NULL, "Starting Iddawc oauth complete flow tests");
   i_global_init();
   s = iddawc_suite();
   sr = srunner_create(s);
@@ -691,6 +757,6 @@ int main(int argc, char *argv[])
   srunner_free(sr);
   
   i_global_close();
-  //y_close_logs();
+  y_close_logs();
   return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
