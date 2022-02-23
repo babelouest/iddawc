@@ -3596,6 +3596,28 @@ json_t * i_get_server_configuration(struct _i_session * i_session) {
   }
 }
 
+int i_set_server_configuration(struct _i_session * i_session, json_t * j_openid_config) {
+  int ret;
+  
+  if (i_session != NULL && j_openid_config != NULL) {
+    json_decref(i_session->openid_config);
+    if ((i_session->openid_config = json_deep_copy(j_openid_config)) != NULL) {
+      if (_i_parse_openid_config(i_session, 0) == I_OK) {
+        ret = I_OK;
+      } else {
+        json_decref(i_session->openid_config);
+        i_session->openid_config = NULL;
+        ret = I_ERROR;
+      }
+    } else {
+      ret = I_ERROR;
+    }
+  } else {
+    ret = I_ERROR_PARAM;
+  }
+  return ret;
+}
+
 json_t * i_get_server_jwks(struct _i_session * i_session) {
   if (i_session != NULL) {
     return r_jwks_export_to_json_t(i_session->server_jwks);
@@ -3606,7 +3628,7 @@ json_t * i_get_server_jwks(struct _i_session * i_session) {
 
 int i_set_server_jwks(struct _i_session * i_session, json_t * j_jwks) {
   int ret;
-  if (i_session != NULL) {
+  if (i_session != NULL && j_jwks != NULL) {
     if (r_jwks_empty(i_session->server_jwks) == RHN_OK && r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
       ret = I_OK;
     } else {

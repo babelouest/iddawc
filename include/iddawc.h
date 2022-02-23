@@ -703,6 +703,14 @@ const char * i_get_additional_response(struct _i_session * i_session, const char
 json_t * i_get_server_configuration(struct _i_session * i_session);
 
 /**
+ * Sets the server configuration
+ * @param i_session: a reference to a struct _i_session *
+ * @param j_openid_config: the AS openid configuration result
+ * @return I_OK on success, an error value on error
+ */
+int i_set_server_configuration(struct _i_session * i_session, json_t * j_openid_config);
+
+/**
  * Gets the server configuration
  * @param i_session: a reference to a struct _i_session *
  * @return the server public JWKS in json_t * format
@@ -710,7 +718,7 @@ json_t * i_get_server_configuration(struct _i_session * i_session);
 json_t * i_get_server_jwks(struct _i_session * i_session);
 
 /**
- * Gets the server configuration
+ * Sets the server public JWKS
  * @param i_session: a reference to a struct _i_session *
  * @param j_jwks: the server public JWKS in json_t * format
  * @return I_OK on success, an error value on error
@@ -725,7 +733,7 @@ int i_set_server_jwks(struct _i_session * i_session, json_t * j_jwks);
 json_t * i_get_client_jwks(struct _i_session * i_session);
 
 /**
- * Gets the client configuration
+ * Sets the client configuration
  * @param i_session: a reference to a struct _i_session *
  * @param j_jwks: the client public JWKS in json_t * format
  * @return I_OK on success, an error value on error
