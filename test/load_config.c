@@ -402,8 +402,8 @@ START_TEST(test_iddawc_configuration_valid)
   
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
-                                                  I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
-                                                  I_OPT_NONE), I_OK);
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
+                                                    I_OPT_NONE), I_OK);
   ck_assert_int_eq(i_get_openid_config(&i_session), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ISSUER), ISSUER);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_AUTH_ENDPOINT), AUTH_ENDPOINT);
@@ -427,6 +427,30 @@ START_TEST(test_iddawc_configuration_valid)
 }
 END_TEST
 
+START_TEST(test_iddawc_set_offline_configuration)
+{
+  struct _i_session i_session;
+  json_t * j_config, * j_jwks;
+
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_ptr_ne(NULL, j_config = json_loads(openid_configuration_invalid_issuer, JSON_DECODE_ANY, NULL));
+  ck_assert_int_eq(i_set_server_configuration(NULL, j_config), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_server_configuration(&i_session, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_server_configuration(&i_session, j_config), I_ERROR);
+  json_decref(j_config);
+  ck_assert_ptr_ne(NULL, j_config = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL));
+  ck_assert_int_eq(i_set_server_configuration(&i_session, j_config), I_OK);
+  json_decref(j_config);
+
+  ck_assert_ptr_ne(NULL, j_jwks = json_loads(jwks_pubkey_rsa_str, JSON_DECODE_ANY, NULL));
+  ck_assert_int_eq(i_set_server_jwks(NULL, j_jwks), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_server_jwks(&i_session, NULL), I_ERROR_PARAM);
+  ck_assert_int_eq(i_set_server_jwks(&i_session, j_jwks), I_OK);
+  json_decref(j_jwks);
+  i_clean_session(&i_session);
+}
+END_TEST
+
 static Suite *iddawc_suite(void)
 {
   Suite *s;
@@ -436,6 +460,7 @@ static Suite *iddawc_suite(void)
   tc_core = tcase_create("test_iddawc_oauth2");
   tcase_add_test(tc_core, test_iddawc_configuration_invalid);
   tcase_add_test(tc_core, test_iddawc_configuration_valid);
+  tcase_add_test(tc_core, test_iddawc_set_offline_configuration);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
 
