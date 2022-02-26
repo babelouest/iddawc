@@ -1890,11 +1890,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         i_session->x5u_flags = i_value;
         break;
       case I_OPT_TOKEN_EXP:
-        if (i_value) {
-          i_session->token_exp = i_value;
-        } else {
-          ret = I_ERROR_PARAM;
-        }
+        i_session->token_exp = i_value;
         break;
       case I_OPT_DEVICE_AUTH_EXPIRES_IN:
         i_session->device_auth_expires_in = i_value;
