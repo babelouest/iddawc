@@ -59,7 +59,7 @@ int main() {
   // When the user has logged in the external application, gets redirected with a result, we parse the result
   y_log_message(Y_LOG_LEVEL_INFO, "Enter redirect URL");
   fgets(redirect_to, 4096, stdin);
-  redirect_to[strlen(redirect_to)-1] = '\0';
+  redirect_to[o_strlen(redirect_to)-1] = '\0';
   i_set_str_parameter(&i_session, I_OPT_REDIRECT_TO, redirect_to);
   if (i_parse_redirect_to(&i_session) != I_OK) {
     y_log_message(Y_LOG_LEVEL_DEBUG, "Error parsing redirect_to url");
