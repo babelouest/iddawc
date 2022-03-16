@@ -5927,6 +5927,7 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
                       y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error o_base64url_encode ath");
                       has_error = 1;
                     }
+                    ath_enc[ath_enc_len] = '\0';
                   } else {
                     y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error gnutls_fingerprint");
                     has_error = 1;
@@ -6167,6 +6168,7 @@ int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char *
             ret = I_ERROR;
             break;
           }
+          ath_enc[ath_enc_len] = '\0';
           if (0 != o_strcmp((const char *)ath_enc, r_jwt_get_claim_str_value(dpop_jwt, "ath"))) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_dpop_proof - Error ath invalid");
             ret = I_ERROR_UNAUTHORIZED;
@@ -6628,7 +6630,7 @@ int i_run_ciba_request(struct _i_session * i_session) {
               if (sign_alg != R_JWA_ALG_UNKNOWN) {
                 r_jwt_set_sign_alg(jwt, sign_alg);
                 r_jwk_init(&jwk_sign);
-                r_jwk_import_from_symmetric_key(jwk_sign, (const unsigned char *)i_session->client_secret, !o_strnullempty(i_session->client_secret));
+                r_jwk_import_from_symmetric_key(jwk_sign, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
               } else {
                 y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
                 ret = I_ERROR_PARAM;
