@@ -94,6 +94,7 @@ extern "C"
 #define I_TOKEN_TYPE_RESPONSE_AUTH 4 ///<
 
 #define I_HEADER_PREFIX_BEARER "Bearer "
+#define I_HEADER_PREFIX_DPOP   "DPoP "
 #define I_HEADER_AUTHORIZATION "Authorization"
 #define I_CONTENT_TYPE_JWKS    "application/jwk-set+json"
 #define I_BODY_URL_PARAMETER   "access_token"

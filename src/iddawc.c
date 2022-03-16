@@ -3041,7 +3041,11 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
       }
     }
 
-    bearer = msprintf("Bearer %s", i_session->access_token);
+    if (i_session->use_dpop) {
+      bearer = msprintf("%s%s", I_HEADER_PREFIX_DPOP, i_session->access_token);
+    } else {
+      bearer = msprintf("%s%s", I_HEADER_PREFIX_BEARER, i_session->access_token);
+    }
     if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) == U_OK) {
       // Set DPoP
       if (i_session->use_dpop) {
@@ -4750,8 +4754,10 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
               ret = I_ERROR;
             }
             o_free(dpop_token);
+            bearer = msprintf("%s%s", I_HEADER_PREFIX_DPOP, i_session->access_token);
+          } else {
+            bearer = msprintf("%s%s", I_HEADER_PREFIX_BEARER, i_session->access_token);
           }
-          bearer = msprintf("Bearer %s", i_session->access_token);
           if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting bearer token");
             ret = I_ERROR;
@@ -4862,8 +4868,10 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
               ret = I_ERROR;
             }
             o_free(dpop_token);
+            bearer = msprintf("%s%s", I_HEADER_PREFIX_DPOP, i_session->access_token);
+          } else {
+            bearer = msprintf("%s%s", I_HEADER_PREFIX_BEARER, i_session->access_token);
           }
-          bearer = msprintf("Bearer %s", i_session->access_token);
           if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) != U_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error setting bearer token");
             ret = I_ERROR;
@@ -6006,7 +6014,7 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
           // Set access token
           switch (bearer_type) {
             case I_BEARER_TYPE_HEADER:
-              auth_header = msprintf("%s%s", I_HEADER_PREFIX_BEARER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN));
+              auth_header = msprintf("%s%s", use_dpop?I_HEADER_PREFIX_DPOP:I_HEADER_PREFIX_BEARER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN));
               if (ulfius_set_request_properties(&copy_req, U_OPT_HEADER_PARAMETER, I_HEADER_AUTHORIZATION, auth_header, U_OPT_NONE) != U_OK) {
                 y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error setting access_token in header");
                 ret = I_ERROR;
