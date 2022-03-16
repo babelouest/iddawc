@@ -101,7 +101,7 @@ int callback_introspect_cert (const struct _u_request * request, struct _u_respo
 }
 
 int callback_introspect_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  if (0 == o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization")) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
+  if (0 == o_strcmp("DPoP "TOKEN, u_map_get(request->map_header, "Authorization")) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
     if (0 == o_strcmp(TOKEN, u_map_get(request->map_post_body, "token"))) {
       json_t * j_response = json_loads(result, JSON_DECODE_ANY, NULL);
       ulfius_set_json_body_response(response, 200, j_response);

@@ -95,7 +95,7 @@ int callback_openid_userinfo_valid_json (const struct _u_request * request, stru
 }
 
 int callback_openid_userinfo_valid_json_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), "Bearer " ACCESS_TOKEN) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
+  if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), "DPoP " ACCESS_TOKEN) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
     json_t * j_response = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
     ulfius_set_json_body_response(response, 200, j_response);
     json_decref(j_response);

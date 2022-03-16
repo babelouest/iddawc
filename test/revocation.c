@@ -79,7 +79,7 @@ int callback_revoke_cert (const struct _u_request * request, struct _u_response 
 }
 
 int callback_revoke_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
-  if (0 != o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization")) || u_map_get(request->map_header, I_HEADER_DPOP) == NULL) {
+  if (0 != o_strcmp("DPoP "TOKEN, u_map_get(request->map_header, "Authorization")) || u_map_get(request->map_header, I_HEADER_DPOP) == NULL) {
     response->status = 403;
   }
   return U_CALLBACK_CONTINUE;
