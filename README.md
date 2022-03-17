@@ -17,7 +17,7 @@ Supported features:
 - [OpenID Connect Dynamic Registration](http://openid.net/specs/openid-connect-registration-1_0.html)
 - [OAuth 2.0 Dynamic Client Registration Protocol](https://tools.ietf.org/html/rfc7591)
 - [OAuth 2.0 Dynamic Client Registration Management Protocol](https://tools.ietf.org/html/rfc7592)
-- [OAuth 2.0 Demonstration of Proof-of-Possession at the Application Layer (DPoP) Draft 04](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-04)
+- [OAuth 2.0 Demonstration of Proof-of-Possession at the Application Layer (DPoP) Draft 06](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-06)
 - [OAuth 2.0 Rich Authorization Requests Draft 03](https://www.ietf.org/archive/id/draft-ietf-oauth-rar-03.html)
 - [OAuth 2.0 Pushed Authorization Requests](https://datatracker.ietf.org/doc/html/rfc9126)
 - [JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens](https://datatracker.ietf.org/doc/html/rfc9068)
