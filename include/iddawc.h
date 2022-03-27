@@ -255,7 +255,9 @@ typedef enum {
   I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 120, ///< Backchannel logout session required
   I_OPT_POST_LOGOUT_REDIRECT_URI                = 121, ///< Post logout redirect URI
   I_OPT_ID_TOKEN_SID                            = 122, ///< ID_Token SID
-  I_OPT_SAVE_HTTP_REQUEST_RESPONSE              = 123  ///< ID_Token SID
+  I_OPT_SAVE_HTTP_REQUEST_RESPONSE              = 123, ///< Save HTTP request and response
+  I_OPT_DPOP_NONCE_AS                           = 124, ///< DPoP Nonce for the AS
+  I_OPT_DPOP_NONCE_RS                           = 125  ///< DPoP Nonce for the RS
 } i_option;
 
 /**
@@ -342,6 +344,8 @@ struct _i_session {
   int                   use_dpop;
   char                * dpop_kid;
   jwa_alg               dpop_sign_alg;
+  char                * dpop_nonce_as;
+  char                * dpop_nonce_rs;
   int                   decrypt_code;
   int                   decrypt_refresh_token;
   int                   decrypt_access_token;
@@ -528,7 +532,8 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
  * I_OPT_CIBA_LOGIN_HINT_KID, I_OPT_CIBA_BINDING_MESSAGE, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN,
  * I_OPT_CIBA_AUTH_REQ_ID, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT,
  * I_OPT_FRONTCHANNEL_LOGOUT_URI, I_OPT_BACKCHANNEL_LOGOUT_URI,
- * I_OPT_POST_LOGOUT_REDIRECT_URI, I_OPT_ID_TOKEN_SID
+ * I_OPT_POST_LOGOUT_REDIRECT_URI, I_OPT_ID_TOKEN_SID,
+ * I_OPT_DPOP_NONCE_AS, I_OPT_DPOP_NONCE_RS
  * @param s_value: The const char * value to set
  * @return I_OK on success, an error value on error
  */
@@ -675,7 +680,22 @@ unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option)
  * I_OPT_CHECK_SESSION_IRAME, I_OPT_PUSHED_AUTH_REQ_ENDPOINT,
  * I_OPT_PUSHED_AUTH_REQ_URI, I_OPT_DPOP_KID, I_OPT_DPOP_SIGN_ALG,
  * I_OPT_TLS_KEY_FILE, I_OPT_TLS_CERT_FILE, I_OPT_PKCE_CODE_VERIFIER,
- * I_OPT_RESOURCE_INDICATOR
+ * I_OPT_RESOURCE_INDICATOR, I_OPT_ACCESS_TOKEN_SIGNING_ALG,
+ * I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC,
+ * I_OPT_ID_TOKEN_SIGNING_ALG, I_OPT_ID_TOKEN_ENCRYPTION_ALG, I_OPT_ID_TOKEN_ENCRYPTION_ENC,
+ * I_OPT_USERINFO_SIGNING_ALG, I_OPT_USERINFO_ENCRYPTION_ALG, I_OPT_USERINFO_ENCRYPTION_ENC,
+ * I_OPT_REQUEST_OBJECT_SIGNING_ALG, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG,
+ * I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG,
+ * I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC,
+ * I_OPT_CIBA_REQUEST_SIGNING_ALG, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG,
+ * I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, I_OPT_AUTH_RESPONSE_SIGNING_ALG,
+ * I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC,
+ * I_OPT_CIBA_ENDPOINT, I_OPT_CIBA_USER_CODE, I_OPT_CIBA_LOGIN_HINT,
+ * I_OPT_CIBA_LOGIN_HINT_KID, I_OPT_CIBA_BINDING_MESSAGE, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN,
+ * I_OPT_CIBA_AUTH_REQ_ID, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT,
+ * I_OPT_FRONTCHANNEL_LOGOUT_URI, I_OPT_BACKCHANNEL_LOGOUT_URI,
+ * I_OPT_POST_LOGOUT_REDIRECT_URI, I_OPT_ID_TOKEN_SID,
+ * I_OPT_DPOP_NONCE_AS, I_OPT_DPOP_NONCE_RS
  * @return the char * value of the option, NULL if no value set
  */
 const char * i_get_str_parameter(struct _i_session * i_session, i_option option);
