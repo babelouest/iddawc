@@ -645,6 +645,21 @@ If you are using Iddawc in a Resource Service (RS), you can check the DPoP sent 
 int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char * htu, time_t max_iat, const char * jkt, const char * access_token);
 ```
 
+### DPoP nonce
+
+When a request is sent to an Auth server or a Resource server, if the server can require a nonce in the DPoP to mitigate pre-generated DPoP tokens. If so, the server sends and error response with the status 400 for the AS and 401 for the RS, and the nonce required set int the HTTP response header `"DPoP-Nonce"`. When the server sends such an error response, Iddawc will return a `I_ERROR_PARAM` value when relevant, but will set the nonce in the `struct _i_session`. It's up to the app using Iddawc to send another request by using the same function.
+
+Example:
+
+```C
+// First call to i_get_userinfo, without DPoP nonce
+res = i_get_userinfo(i_session, 0);
+if (res == I_ERROR_PARAM && i_get_str_parameter(i_session, I_OPT_DPOP_NONCE_RS) != NULL) {
+  // Second call to i_get_userinfo, with the DPoP nonce set automatically
+  res = i_get_userinfo(i_session, 0);
+}
+```
+
 ### Perform a HTTP request to a Resource Service
 
 This features uses Ulfius' `ulfius_send_http_request` function to proceed. This function requires at least a `struct _u_request` with all the request parameters.
