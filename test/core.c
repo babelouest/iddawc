@@ -103,6 +103,8 @@
 #define USE_DPOP 1
 #define DPOP_KID "dpop kid"
 #define DPOP_SIGN_ALG "RS256"
+#define DPOP_NONCE_AS "nonceAs1234"
+#define DPOP_NONCE_RS "nonceRs1234"
 #define DECRYPT_CODE 1
 #define DECRYPT_REFRESH_TOKEN 1
 #define DECRYPT_ACCESS_TOKEN 1
@@ -593,6 +595,12 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_SID, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_SID, ID_TOKEN_SID), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_NONCE_AS, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_NONCE_AS, DPOP_NONCE_AS), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS, DPOP_NONCE_RS), I_OK);
+
   i_clean_session(&i_session);
 }
 END_TEST
@@ -902,6 +910,12 @@ START_TEST(test_iddawc_get_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ID_TOKEN_SID, ID_TOKEN_SID), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_SID), ID_TOKEN_SID);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_NONCE_AS, DPOP_NONCE_AS), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_AS), DPOP_NONCE_AS);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS, DPOP_NONCE_RS), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS), DPOP_NONCE_RS);
 
   i_clean_session(&i_session);
 }
@@ -1248,6 +1262,8 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_ID_TOKEN_SID, ID_TOKEN_SID,
                                                   I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
                                                   I_OPT_SAVE_HTTP_REQUEST_RESPONSE, SAVE_HTTP_REQUEST_RESPONSE,
+                                                  I_OPT_DPOP_NONCE_AS, DPOP_NONCE_AS,
+                                                  I_OPT_DPOP_NONCE_RS, DPOP_NONCE_RS,
                                                   I_OPT_NONE), I_OK);
 
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_STATE), STATE);
@@ -1342,6 +1358,8 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_SID), ID_TOKEN_SID);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_SERVER_JWKS_CACHE_EXPIRATION), SERVER_JWKS_CACHE_EXPIRATION);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_SAVE_HTTP_REQUEST_RESPONSE), SAVE_HTTP_REQUEST_RESPONSE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_AS), DPOP_NONCE_AS);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS), DPOP_NONCE_RS);
 
   i_clean_session(&i_session);
 }
@@ -1547,6 +1565,8 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "post_logout_redirect_uri"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "id_token_sid"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "save_http_request_response")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "dpop_nonce_as"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "dpop_nonce_rs"), NULL);
   json_decref(j_export);
 
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN,
@@ -1660,6 +1680,8 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_ID_TOKEN_SID, ID_TOKEN_SID,
                                                     I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
                                                     I_OPT_SAVE_HTTP_REQUEST_RESPONSE, SAVE_HTTP_REQUEST_RESPONSE,
+                                                    I_OPT_DPOP_NONCE_AS, DPOP_NONCE_AS,
+                                                    I_OPT_DPOP_NONCE_RS, DPOP_NONCE_RS,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -1782,6 +1804,8 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "id_token_sid")), ID_TOKEN_SID);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "server_jwks_cache_expiration")), SERVER_JWKS_CACHE_EXPIRATION);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "save_http_request_response")), SAVE_HTTP_REQUEST_RESPONSE);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "dpop_nonce_as")), DPOP_NONCE_AS);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "dpop_nonce_rs")), DPOP_NONCE_RS);
   json_decref(j_export);
 
   json_decref(j_additional);
@@ -1915,6 +1939,8 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_ID_TOKEN_SID, ID_TOKEN_SID,
                                                     I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
                                                     I_OPT_SAVE_HTTP_REQUEST_RESPONSE, SAVE_HTTP_REQUEST_RESPONSE,
+                                                    I_OPT_DPOP_NONCE_AS, DPOP_NONCE_AS,
+                                                    I_OPT_DPOP_NONCE_RS, DPOP_NONCE_RS,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -2043,6 +2069,8 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_SID), ID_TOKEN_SID);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_SERVER_JWKS_CACHE_EXPIRATION), SERVER_JWKS_CACHE_EXPIRATION);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_SAVE_HTTP_REQUEST_RESPONSE), SAVE_HTTP_REQUEST_RESPONSE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_AS), DPOP_NONCE_AS);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS), DPOP_NONCE_RS);
   json_decref(j_export);
 
   json_decref(j_config);
@@ -2180,6 +2208,8 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_ID_TOKEN_SID, ID_TOKEN_SID,
                                                     I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
                                                     I_OPT_SAVE_HTTP_REQUEST_RESPONSE, SAVE_HTTP_REQUEST_RESPONSE,
+                                                    I_OPT_DPOP_NONCE_AS, DPOP_NONCE_AS,
+                                                    I_OPT_DPOP_NONCE_RS, DPOP_NONCE_RS,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -2322,6 +2352,8 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_ID_TOKEN_SID, ID_TOKEN_SID,
                                                     I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
                                                     I_OPT_SAVE_HTTP_REQUEST_RESPONSE, SAVE_HTTP_REQUEST_RESPONSE,
+                                                    I_OPT_DPOP_NONCE_AS, DPOP_NONCE_AS,
+                                                    I_OPT_DPOP_NONCE_RS, DPOP_NONCE_RS,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.server_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
   ck_assert_int_eq(r_jwks_import_from_json_str(i_session.client_jwks, jwks_pubkey_ecdsa_str), RHN_OK);
@@ -2453,6 +2485,8 @@ START_TEST(test_iddawc_import_str)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN_SID), ID_TOKEN_SID);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_SERVER_JWKS_CACHE_EXPIRATION), SERVER_JWKS_CACHE_EXPIRATION);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_SAVE_HTTP_REQUEST_RESPONSE), SAVE_HTTP_REQUEST_RESPONSE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_AS), DPOP_NONCE_AS);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS), DPOP_NONCE_RS);
   o_free(str_import);
   o_free(str_rar);
 
@@ -2589,6 +2623,8 @@ START_TEST(test_iddawc_import_multiple)
                                                     I_OPT_ID_TOKEN_SID, ID_TOKEN_SID,
                                                     I_OPT_SERVER_JWKS_CACHE_EXPIRATION, SERVER_JWKS_CACHE_EXPIRATION,
                                                     I_OPT_SAVE_HTTP_REQUEST_RESPONSE, SAVE_HTTP_REQUEST_RESPONSE,
+                                                    I_OPT_DPOP_NONCE_AS, DPOP_NONCE_AS,
+                                                    I_OPT_DPOP_NONCE_RS, DPOP_NONCE_RS,
                                                     I_OPT_NONE), I_OK);
   i_session.id_token_payload = json_pack("{ss}", "aud", "payload");
   ck_assert_int_eq(i_set_rich_authorization_request_str(&i_session, AUTH_REQUEST_TYPE_1, AUTH_REQUEST_1), I_OK);
@@ -2845,6 +2881,8 @@ START_TEST(test_iddawc_import_multiple)
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_ID_TOKEN_SID), ID_TOKEN_SID);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_SERVER_JWKS_CACHE_EXPIRATION), SERVER_JWKS_CACHE_EXPIRATION);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_SAVE_HTTP_REQUEST_RESPONSE), SAVE_HTTP_REQUEST_RESPONSE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_AS), DPOP_NONCE_AS);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS), DPOP_NONCE_RS);
   
   json_decref(j_export);
 

@@ -32,6 +32,8 @@ const char jwk_privkey_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQ
 #define ACCESS_TOKEN_2 "accessXyz5678"
 #define TOKEN_TYPE "bearer"
 #define EXPIRES_IN 3600
+#define DPOP_NONCE "dpopNonceXyz1234"
+
 
 const char resource_object[] = "{\"Hello\":\"World\"}";
 
@@ -70,8 +72,27 @@ static int callback_resource_service_object_at_url (const struct _u_request * re
 
 int callback_resource_service_object_with_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(resource_object, JSON_DECODE_ANY, NULL);
-  if (u_map_get(request->map_header, "DPoP") != NULL) {
+  if (0 == o_strcmp("DPoP "ACCESS_TOKEN, u_map_get(request->map_header, "Authorization")) && u_map_get(request->map_header, "DPoP") != NULL) {
     ulfius_set_json_body_response(response, 200, j_response);
+  } else {
+    response->status = 401;
+  }
+  json_decref(j_response);
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_resource_service_object_with_dpop_nonce (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  json_t * j_response = json_loads(resource_object, JSON_DECODE_ANY, NULL);
+  if (0 == o_strcmp("DPoP "ACCESS_TOKEN, u_map_get(request->map_header, "Authorization")) && u_map_get(request->map_header, "DPoP") != NULL) {
+    jwt_t * jwt = r_jwt_quick_parse(u_map_get(request->map_header, I_HEADER_DPOP), R_PARSE_HEADER_JWK, 0);
+    if (0 != o_strcmp(DPOP_NONCE, r_jwt_get_claim_str_value(jwt, "nonce"))) {
+      ulfius_set_response_properties(response, U_OPT_STATUS, 401,
+                                               U_OPT_HEADER_PARAMETER, "DPoP-Nonce", DPOP_NONCE,
+                                               U_OPT_NONE);
+    } else {
+      ulfius_set_json_body_response(response, 200, j_response);
+    }
+    r_jwt_free(jwt);
   } else {
     response->status = 401;
   }
@@ -298,6 +319,53 @@ START_TEST(test_iddawc_api_request_refresh_not_required_dpop_required)
 }
 END_TEST
 
+START_TEST(test_iddawc_api_request_refresh_not_required_dpop_required_nonce)
+{
+  struct _i_session i_session;
+  struct _u_request req;
+  struct _u_response resp;
+  struct _u_instance instance;
+  jwk_t * jwk;
+  json_t * j_resp, * j_control;
+  
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, DPOP_HTM, NULL, "/object", 0, &callback_resource_service_object_with_dpop_nonce, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_request(&req), I_OK);
+  ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                    I_OPT_EXPIRES_IN, EXPIRES_IN,
+                                                    I_OPT_EXPIRES_AT, ((unsigned int)time(NULL))+EXPIRES_IN,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_NONE), I_OK);
+
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
+  ck_assert_ptr_eq(NULL, i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS));
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 1, 0), I_OK);
+  ck_assert_ptr_ne(NULL, i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS));
+  ck_assert_int_eq(401, resp.status);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 1, 0), I_OK);
+  ck_assert_int_eq(200, resp.status);
+  ck_assert_ptr_ne(NULL, j_control = json_loads(resource_object, JSON_DECODE_ANY, NULL));
+  ck_assert_ptr_ne(NULL, j_resp = ulfius_get_json_body_response(&resp, NULL));
+  ck_assert_int_eq(1, json_equal(j_control, j_resp));
+
+  i_clean_session(&i_session);
+  ulfius_clean_request(&req);
+  ulfius_clean_response(&resp);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+  json_decref(j_control);
+  json_decref(j_resp);
+}
+END_TEST
+
 START_TEST(test_iddawc_api_request_test_bearer_type)
 {
   struct _i_session i_session;
@@ -376,6 +444,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_api_request_refresh_required_not_available_no_dpop);
   tcase_add_test(tc_core, test_iddawc_api_request_refresh_required_ok_no_dpop);
   tcase_add_test(tc_core, test_iddawc_api_request_refresh_not_required_dpop_required);
+  tcase_add_test(tc_core, test_iddawc_api_request_refresh_not_required_dpop_required_nonce);
   tcase_add_test(tc_core, test_iddawc_api_request_test_bearer_type);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);

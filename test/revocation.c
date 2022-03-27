@@ -8,6 +8,7 @@
 #include <iddawc.h>
 
 #define TOKEN "accessTokenXyz1234"
+#define DPOP_NONCE "dpopNonceXyz1234"
 
 #define CLIENT_ID "client"
 
@@ -81,6 +82,22 @@ int callback_revoke_cert (const struct _u_request * request, struct _u_response 
 int callback_revoke_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
   if (0 != o_strcmp("DPoP "TOKEN, u_map_get(request->map_header, "Authorization")) || u_map_get(request->map_header, I_HEADER_DPOP) == NULL) {
     response->status = 403;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_revoke_dpop_nonce (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  jwt_t * jwt;
+  if (0 != o_strcmp("DPoP "TOKEN, u_map_get(request->map_header, "Authorization")) || u_map_get(request->map_header, I_HEADER_DPOP) == NULL) {
+    response->status = 403;
+  } else {
+    jwt = r_jwt_quick_parse(u_map_get(request->map_header, I_HEADER_DPOP), R_PARSE_HEADER_JWK, 0);
+    if (0 != o_strcmp(DPOP_NONCE, r_jwt_get_claim_str_value(jwt, "nonce"))) {
+      ulfius_set_response_properties(response, U_OPT_STATUS, 400,
+                                               U_OPT_HEADER_PARAMETER, "DPoP-Nonce", DPOP_NONCE,
+                                               U_OPT_NONE);
+    }
+    r_jwt_free(jwt);
   }
   return U_CALLBACK_CONTINUE;
 }
@@ -191,6 +208,39 @@ START_TEST(test_iddawc_revocation_dpop)
 }
 END_TEST
 
+START_TEST(test_iddawc_revocation_dpop_nonce)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  jwk_t * jwk;
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/revoke", 0, &callback_revoke_dpop_nonce, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_REVOCATION_ENDPOINT, "http://localhost:8080/revoke",
+                                                    I_OPT_ACCESS_TOKEN, TOKEN,
+                                                    I_OPT_TOKEN_TARGET, TOKEN,
+                                                    I_OPT_USE_DPOP, 1,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_rsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_ptr_eq(NULL, i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS));
+  ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN), I_ERROR_PARAM);
+  ck_assert_ptr_ne(NULL, i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS));
+  ck_assert_int_eq(i_revoke_token(&i_session, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN), I_OK);
+  i_clean_session(&i_session);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_revocation_cert_valid)
 {
   struct _i_session i_session;
@@ -263,6 +313,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_revocation_invalid);
   tcase_add_test(tc_core, test_iddawc_revocation_valid);
   tcase_add_test(tc_core, test_iddawc_revocation_dpop);
+  tcase_add_test(tc_core, test_iddawc_revocation_dpop_nonce);
   tcase_add_test(tc_core, test_iddawc_revocation_cert_valid);
   tcase_add_test(tc_core, test_iddawc_revocation_cert_invalid);
   tcase_set_timeout(tc_core, 30);

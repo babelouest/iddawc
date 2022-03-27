@@ -10,6 +10,7 @@
 #define USERINFO_AUD "abcdxyz"
 #define USERINFO_EMAIL "dev@iddawc.tld"
 #define ACCESS_TOKEN "accessXyz1234"
+#define DPOP_NONCE "dpopNonceXyz1234"
 
 static char userinfo_json[] = "{"\
   "\"name\":\"" USERINFO_NAME "\","\
@@ -99,6 +100,25 @@ int callback_openid_userinfo_valid_json_dpop (const struct _u_request * request,
     json_t * j_response = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
     ulfius_set_json_body_response(response, 200, j_response);
     json_decref(j_response);
+  } else {
+    response->status = 401;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_openid_userinfo_valid_json_dpop_nonce (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), "DPoP " ACCESS_TOKEN) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
+    jwt_t * jwt = r_jwt_quick_parse(u_map_get(request->map_header, I_HEADER_DPOP), R_PARSE_HEADER_JWK, 0);
+    if (0 != o_strcmp(DPOP_NONCE, r_jwt_get_claim_str_value(jwt, "nonce"))) {
+      ulfius_set_response_properties(response, U_OPT_STATUS, 400,
+                                               U_OPT_HEADER_PARAMETER, "DPoP-Nonce", DPOP_NONCE,
+                                               U_OPT_NONE);
+    } else {
+      json_t * j_response = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
+      ulfius_set_json_body_response(response, 200, j_response);
+      json_decref(j_response);
+    }
+    r_jwt_free(jwt);
   } else {
     response->status = 401;
   }
@@ -356,6 +376,40 @@ START_TEST(test_iddawc_userinfo_response_json_dpop)
 }
 END_TEST
 
+START_TEST(test_iddawc_userinfo_response_json_dpop_nonce)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
+  jwk_t * jwk;
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/userinfo", 0, &callback_openid_userinfo_valid_json_dpop_nonce, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
+                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                    I_OPT_USE_DPOP, 1,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_rsa_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_ptr_eq(NULL, i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS));
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_ERROR_PARAM);
+  ck_assert_ptr_ne(NULL, i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS));
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_OK);
+  ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
+  i_clean_session(&i_session);
+  json_decref(j_userinfo);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_userinfo_response_json_dpop_invalid)
 {
   struct _i_session i_session;
@@ -460,6 +514,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_userinfo_response_char);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_json);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_json_dpop);
+  tcase_add_test(tc_core, test_iddawc_userinfo_response_json_dpop_nonce);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_json_dpop_invalid);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_jwt_signed);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_jwt_nested);

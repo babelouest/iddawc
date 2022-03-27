@@ -228,6 +228,18 @@ int callback_oauth2_code_valid_post (const struct _u_request * request, struct _
   return U_CALLBACK_CONTINUE;
 }
 
+int callback_oauth2_code_valid_post_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  if (u_map_get(request->map_post_body, "dpop_jkt") == NULL) {
+    response->status = 400;
+  } else {
+    char * redirect = msprintf("%s?code=" CODE "&state=%s", u_map_get(request->map_post_body, "redirect_uri"), u_map_get(request->map_post_body, "state"));
+    u_map_put(response->map_header, "Location", redirect);
+    response->status = 302;
+    o_free(redirect);
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
 int callback_oauth2_code_valid_post_jwt_signed (const struct _u_request * request, struct _u_response * response, void * user_data) {
   if (u_map_get(request->map_post_body, "request") != NULL) {
     jwt_t * jwt;
@@ -248,6 +260,42 @@ int callback_oauth2_code_valid_post_jwt_signed (const struct _u_request * reques
     } else {
       r_jwk_import_from_json_str(jwk, jwk_pubkey_str);
       if (r_jwt_verify_signature(jwt, jwk, 0) == RHN_OK) {
+        char * redirect = msprintf("%s?code=" CODE "&state=%s", REDIRECT_URI, STATE);
+        u_map_put(response->map_header, "Location", redirect);
+        response->status = 302;
+        o_free(redirect);
+      } else {
+        response->status = 400;
+      }
+    }
+    r_jwt_free(jwt);
+    r_jwk_free(jwk);
+  } else {
+    response->status = 400;
+  }
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_oauth2_code_valid_post_jwt_signed_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  if (u_map_get(request->map_post_body, "request") != NULL) {
+    jwt_t * jwt;
+    jwk_t * jwk;
+    r_jwt_init(&jwt);
+    r_jwk_init(&jwk);
+    r_jwt_parse(jwt, u_map_get(request->map_post_body, "request"), 0);
+    if (r_jwt_get_sign_alg(jwt) == R_JWA_ALG_HS256) {
+      r_jwk_import_from_symmetric_key(jwk, (const unsigned char *)CLIENT_SECRET, o_strlen(CLIENT_SECRET));
+      if (r_jwt_verify_signature(jwt, jwk, 0) == RHN_OK && r_jwt_get_claim_str_value(jwt, "dpop_jkt") != NULL) {
+        char * redirect = msprintf("%s?code=" CODE "&state=%s", REDIRECT_URI, STATE);
+        u_map_put(response->map_header, "Location", redirect);
+        response->status = 302;
+        o_free(redirect);
+      } else {
+        response->status = 400;
+      }
+    } else {
+      r_jwk_import_from_json_str(jwk, jwk_pubkey_str);
+      if (r_jwt_verify_signature(jwt, jwk, 0) == RHN_OK && r_jwt_get_claim_str_value(jwt, "dpop_jkt") != NULL) {
         char * redirect = msprintf("%s?code=" CODE "&state=%s", REDIRECT_URI, STATE);
         u_map_put(response->map_header, "Location", redirect);
         response->status = 302;
@@ -871,6 +919,41 @@ START_TEST(test_iddawc_code_valid_post)
                                                     I_OPT_STATE, STATE,
                                                     I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST,
                                                     I_OPT_NONE), I_OK);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_code_valid_post_dpop)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  jwk_t * jwk;
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/auth", 0, &callback_oauth2_code_valid_post_dpop, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST,
+                                                    I_OPT_USE_DPOP, 1,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
   ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
   ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
   ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
@@ -1756,6 +1839,45 @@ START_TEST(test_iddawc_code_valid_post_jwt_sign_secret)
 }
 END_TEST
 
+START_TEST(test_iddawc_code_valid_post_jwt_sign_secret_dpop)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  jwk_t * jwk;
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/auth", 0, &callback_oauth2_code_valid_post_jwt_signed_dpop, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_CLIENT_SIGN_ALG, "HS256",
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_POST|I_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_USE_DPOP, 1,
+                                                    I_OPT_TOKEN_JTI_GENERATE, 16,
+                                                    I_OPT_DPOP_SIGN_ALG, "RS256",
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  ck_assert_int_eq(i_run_auth_request(&i_session), I_OK);
+  ck_assert_ptr_ne(i_get_str_parameter(&i_session, I_OPT_CODE), NULL);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CLIENT_SECRET, CLIENT_SECRET_ERROR), I_OK);
+  ck_assert_int_eq(i_run_auth_request(&i_session), I_ERROR_PARAM);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_code_valid_post_jwt_sign_secret_claims_resource)
 {
   struct _i_session i_session;
@@ -1992,6 +2114,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_access_token_code_valid);
   tcase_add_test(tc_core, test_iddawc_access_token_code_id_token_valid);
   tcase_add_test(tc_core, test_iddawc_code_valid_post);
+  tcase_add_test(tc_core, test_iddawc_code_valid_post_dpop);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_code_ok);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_access_token_ok);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_error_ok);
@@ -2018,6 +2141,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_secret_error_param);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_pubkey_error_param);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_secret);
+  tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_secret_dpop);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_secret_claims_resource);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_sign_privkey);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_jwt_encrypt_secret);
