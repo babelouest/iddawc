@@ -6,7 +6,7 @@
 - Rename `uint` to `unsigned int`
 - Add `i_delete_registration_client`, `i_set_server_configuration`
 - Add properties `I_OPT_REGISTRATION_CLIENT_URI`, `I_OPT_SERVER_JWKS_CACHE_EXPIRATION`, `I_OPT_SAVE_HTTP_REQUEST_RESPONSE`
-- Implement [DPoP Draft 06](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-06)
+- Implement [OAuth 2.0 Demonstrating Proof-of-Possession at the Application Layer (DPoP) Draft 07](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-07)
 
 ## 1.1.1
 
