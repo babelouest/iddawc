@@ -1725,6 +1725,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->ciba_login_hint_format = I_CIBA_LOGIN_HINT_FORMAT_JSON;
     i_session->ciba_login_hint_kid = NULL;
     i_session->ciba_binding_message = NULL;
+    i_session->ciba_requested_expiry = 0;
     i_session->ciba_client_notification_token = NULL;
     i_session->ciba_auth_req_id = NULL;
     i_session->ciba_client_notification_endpoint = NULL;
@@ -2016,6 +2017,9 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         break;
       case I_OPT_CIBA_LOGIN_HINT_FORMAT:
         i_session->ciba_login_hint_format = i_value;
+        break;
+      case I_OPT_CIBA_REQUESTED_EXPIRY:
+        i_session->ciba_requested_expiry = (time_t)i_value;
         break;
       case I_OPT_CIBA_AUTH_REQ_EXPIRES_IN:
         i_session->ciba_auth_req_expires_in = i_value;
@@ -2902,6 +2906,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_PKCE_METHOD:
         case I_OPT_CIBA_MODE:
         case I_OPT_CIBA_LOGIN_HINT_FORMAT:
+        case I_OPT_CIBA_REQUESTED_EXPIRY:
         case I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE:
         case I_OPT_CIBA_AUTH_REQ_EXPIRES_IN:
         case I_OPT_CIBA_AUTH_REQ_INTERVAL:
@@ -3295,6 +3300,9 @@ unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_CIBA_LOGIN_HINT_FORMAT:
         return i_session->ciba_login_hint_format;
+        break;
+      case I_OPT_CIBA_REQUESTED_EXPIRY:
+        return i_session->ciba_requested_expiry;
         break;
       case I_OPT_CIBA_AUTH_REQ_EXPIRES_IN:
         return i_session->ciba_auth_req_expires_in;
@@ -4703,7 +4711,7 @@ int i_verify_id_token(struct _i_session * i_session) {
                                          R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
                                          R_JWT_CLAIM_IAT, R_JWT_CLAIM_NOW,
                                          R_JWT_CLAIM_NOP) == RHN_OK &&
-              (o_strnullempty(i_session->nonce) || r_jwt_validate_claims(jwt, R_JWT_CLAIM_STR, "nonce", i_session->nonce,R_JWT_CLAIM_NOP) == RHN_OK)) {
+              (o_strnullempty(i_session->nonce) || r_jwt_validate_claims(jwt, R_JWT_CLAIM_STR, "nonce", i_session->nonce, R_JWT_CLAIM_NOP) == RHN_OK)) {
             switch (r_jwt_get_sign_alg(jwt)) {
               case R_JWA_ALG_HS256:
               case R_JWA_ALG_RS256:
@@ -5671,7 +5679,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* si }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -5822,7 +5830,8 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          
                          "save_http_request_response", i_get_int_parameter(i_session, I_OPT_SAVE_HTTP_REQUEST_RESPONSE),
                          "dpop_nonce_as", i_get_str_parameter(i_session, I_OPT_DPOP_NONCE_AS),
-                         "dpop_nonce_rs", i_get_str_parameter(i_session, I_OPT_DPOP_NONCE_RS)
+                         "dpop_nonce_rs", i_get_str_parameter(i_session, I_OPT_DPOP_NONCE_RS),
+                         "ciba_requested_expiry", i_get_int_parameter(i_session, I_OPT_CIBA_REQUESTED_EXPIRY)
                          );
   }
   return j_return;
@@ -5935,6 +5944,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, (int)json_integer_value(json_object_get(j_import, "ciba_login_hint_format")),
                                    I_OPT_CIBA_LOGIN_HINT_KID, json_string_value(json_object_get(j_import, "ciba_login_hint_kid")),
                                    I_OPT_CIBA_BINDING_MESSAGE, json_string_value(json_object_get(j_import, "ciba_binding_message")),
+                                   I_OPT_CIBA_REQUESTED_EXPIRY, (int)json_integer_value(json_object_get(j_import, "ciba_requested_expiry")),
                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, json_string_value(json_object_get(j_import, "ciba_client_notification_token")),
                                    I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_import, "ciba_auth_req_id")),
                                    I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, json_string_value(json_object_get(j_import, "ciba_client_notification_endpoint")),
@@ -6029,8 +6039,16 @@ int i_import_session_str(struct _i_session * i_session, const char * str_import)
 
 int i_import_session_from_registration(struct _i_session * i_session, json_t * j_registration) {
   int ret;
+  unsigned int ciba_mode = I_CIBA_MODE_NONE;
   
   if (i_session != NULL && json_is_object(j_registration)) {
+    if (0 == o_strcmp(json_string_value(json_object_get(j_registration, "backchannel_token_delivery_mode")), "poll")) {
+      ciba_mode = I_CIBA_MODE_POLL;
+    } else if (0 == o_strcmp(json_string_value(json_object_get(j_registration, "backchannel_token_delivery_mode")), "ping")) {
+      ciba_mode = I_CIBA_MODE_PING;
+    } else if (0 == o_strcmp(json_string_value(json_object_get(j_registration, "backchannel_token_delivery_mode")), "push")) {
+      ciba_mode = I_CIBA_MODE_PUSH;
+    }
     ret = i_set_parameter_list(i_session, I_OPT_CLIENT_ID, json_string_value(json_object_get(j_registration, "client_id")),
                                           I_OPT_TOKEN_METHOD, _i_get_token_auth_method(json_string_value(json_object_get(j_registration, "token_endpoint_auth_method"))),
                                           I_OPT_REDIRECT_URI, json_string_value(json_array_get(json_object_get(j_registration, "redirect_uris"), 0)),
@@ -6055,6 +6073,8 @@ int i_import_session_from_registration(struct _i_session * i_session, json_t * j
                                           I_OPT_AUTH_RESPONSE_SIGNING_ALG, json_string_value(json_object_get(j_registration, "auth_response_signing_alg")),
                                           I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, json_string_value(json_object_get(j_registration, "auth_response_encryption_alg")),
                                           I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, json_string_value(json_object_get(j_registration, "auth_response_encryption_end")),
+                                          I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, json_string_value(json_object_get(j_registration, "backchannel_client_notification_endpoint")),
+                                          I_OPT_CIBA_MODE, ciba_mode,
                                           I_OPT_NONE);
     if (ret == I_OK && json_object_get(j_registration, "client_secret") != NULL) {
       ret = i_set_str_parameter(i_session, I_OPT_CLIENT_SECRET, json_string_value(json_object_get(j_registration, "client_secret")));
@@ -6903,6 +6923,12 @@ int i_run_ciba_request(struct _i_session * i_session) {
       
       if (i_session->ciba_user_code != NULL) {
         ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "user_code", i_session->ciba_user_code, U_OPT_NONE);
+      }
+      
+      if (i_session->ciba_requested_expiry) {
+        tmp = msprintf("%u", i_session->ciba_requested_expiry);
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "requested_expiry", tmp, U_OPT_NONE);
+        o_free(tmp);
       }
     } while (0);
     r_jwt_free(jwt);

@@ -243,21 +243,22 @@ typedef enum {
   I_OPT_CIBA_LOGIN_HINT_FORMAT                  = 108, ///< CIBA login_hint format, values available are I_CIBA_LOGIN_HINT_FORMAT_JSON, I_CIBA_LOGIN_HINT_FORMAT_JWT or I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN
   I_OPT_CIBA_LOGIN_HINT_KID                     = 109, ///< key id to use to sign CIBA requests or login_hint_token if multiple jwk are available on the client, string
   I_OPT_CIBA_BINDING_MESSAGE                    = 110, ///< CIBA binding message to specify in the CIBA request, string, optional
-  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN          = 111, ///< client_notification_token value to use on CIBA requests, string, mandatory if mode is ping or push
-  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE = 112, ///< Generate a random client_notification_token of the specified length
-  I_OPT_CIBA_AUTH_REQ_ID                        = 113, ///< auth_req_id value received by the server on succesfull request
-  I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT       = 114, ///< backchannel_client_notification_endpoint value to specify the url for ping or push modes
-  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 115, ///< expiration of the request in seconds received by the server on succesfull request
-  I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 116, ///< Interval to poll token endpoint on poll mode in seconds
-  I_OPT_FRONTCHANNEL_LOGOUT_URI                 = 117, ///< Frontchannel logout URI
-  I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED    = 118, ///< Frontchannel logout session required
-  I_OPT_BACKCHANNEL_LOGOUT_URI                  = 119, ///< Backchannel logout URI
-  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 120, ///< Backchannel logout session required
-  I_OPT_POST_LOGOUT_REDIRECT_URI                = 121, ///< Post logout redirect URI
-  I_OPT_ID_TOKEN_SID                            = 122, ///< ID_Token SID
-  I_OPT_SAVE_HTTP_REQUEST_RESPONSE              = 123, ///< Save HTTP request and response
-  I_OPT_DPOP_NONCE_AS                           = 124, ///< DPoP Nonce for the AS
-  I_OPT_DPOP_NONCE_RS                           = 125  ///< DPoP Nonce for the RS
+  I_OPT_CIBA_REQUESTED_EXPIRY                   = 111, ///< CIBA binding message to specify in the CIBA request, string, optional
+  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN          = 112, ///< client_notification_token value to use on CIBA requests, string, mandatory if mode is ping or push
+  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE = 113, ///< Generate a random client_notification_token of the specified length
+  I_OPT_CIBA_AUTH_REQ_ID                        = 114, ///< auth_req_id value received by the server on succesfull request
+  I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT       = 115, ///< backchannel_client_notification_endpoint value to specify the url for ping or push modes
+  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 116, ///< expiration of the request in seconds received by the server on succesfull request
+  I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 117, ///< Interval to poll token endpoint on poll mode in seconds
+  I_OPT_FRONTCHANNEL_LOGOUT_URI                 = 118, ///< Frontchannel logout URI
+  I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED    = 119, ///< Frontchannel logout session required
+  I_OPT_BACKCHANNEL_LOGOUT_URI                  = 120, ///< Backchannel logout URI
+  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 121, ///< Backchannel logout session required
+  I_OPT_POST_LOGOUT_REDIRECT_URI                = 122, ///< Post logout redirect URI
+  I_OPT_ID_TOKEN_SID                            = 123, ///< ID_Token SID
+  I_OPT_SAVE_HTTP_REQUEST_RESPONSE              = 124, ///< Save HTTP request and response
+  I_OPT_DPOP_NONCE_AS                           = 125, ///< DPoP Nonce for the AS
+  I_OPT_DPOP_NONCE_RS                           = 126  ///< DPoP Nonce for the RS
 } i_option;
 
 /**
@@ -384,6 +385,7 @@ struct _i_session {
   unsigned int          ciba_login_hint_format;
   char                * ciba_login_hint_kid;
   char                * ciba_binding_message;
+  time_t                ciba_requested_expiry;
   char                * ciba_client_notification_token;
   char                * ciba_auth_req_id;
   char                * ciba_client_notification_endpoint;
