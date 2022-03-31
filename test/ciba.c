@@ -26,6 +26,7 @@
 #define CIBA_REQUESTED_EXPIRY 99
 #define CIBA_REQUESTED_EXPIRY_str "99"
 #define CIBA_CLIENT_NOTIFICATION_TOKEN "CIBAClientNotificationToken123456789012345678901234567890"
+#define CIBA_ACR_VALUES "password"
 #define CIBA_AUTH_REQ_ID "CIBAAuthReqId123456789012345678901234567890"
 #define CIBA_CLIENT_NOTIFICATION_ENDPOINT "https://iddawc.tld/cb"
 #define CIBA_AUTH_REQ_EXPIRES_IN 145
@@ -64,14 +65,74 @@ int callback_ciba_login_hint_valid (const struct _u_request * request, struct _u
   ck_assert_str_eq(CIBA_LOGIN_HINT, u_map_get(request->map_post_body, "login_hint"));
   ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_str, u_map_get(request->map_post_body, "requested_expiry"));
   ck_assert_str_eq(CIBA_BINDING_MESSAGE, u_map_get(request->map_post_body, "binding_message"));
+  ck_assert_str_eq(CIBA_ACR_VALUES, u_map_get(request->map_post_body, "acr_values"));
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_ciba_jwt_sign_secret_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  jwt_t * jwt = NULL;
+  ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "request"), R_PARSE_NONE, 0));
+  ck_assert_int_eq(R_JWT_TYPE_SIGN, r_jwt_get_type(jwt));
+  ck_assert_int_eq(R_JWA_ALG_HS256, r_jwt_get_sign_alg(jwt));
+  ck_assert_str_eq(CIBA_LOGIN_HINT, r_jwt_get_claim_str_value(jwt, "login_hint"));
+  ck_assert_int_eq(CIBA_REQUESTED_EXPIRY, r_jwt_get_claim_int_value(jwt, "requested_expiry"));
+  ck_assert_str_eq(CIBA_BINDING_MESSAGE, r_jwt_get_claim_str_value(jwt, "binding_message"));
+  ck_assert_str_eq(CIBA_ACR_VALUES, r_jwt_get_claim_str_value(jwt, "acr_values"));
+  json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
+  ulfius_set_json_body_response(response, 200, j_response);
+  json_decref(j_response);
+  r_jwt_free(jwt);
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_ciba_jwt_sign_pubkey_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  jwt_t * jwt = NULL;
+  ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "request"), R_PARSE_NONE, 0));
+  ck_assert_int_eq(R_JWT_TYPE_SIGN, r_jwt_get_type(jwt));
+  ck_assert_int_eq(R_JWA_ALG_RS256, r_jwt_get_sign_alg(jwt));
+  ck_assert_str_eq(CIBA_LOGIN_HINT, r_jwt_get_claim_str_value(jwt, "login_hint"));
+  ck_assert_int_eq(CIBA_REQUESTED_EXPIRY, r_jwt_get_claim_int_value(jwt, "requested_expiry"));
+  ck_assert_str_eq(CIBA_BINDING_MESSAGE, r_jwt_get_claim_str_value(jwt, "binding_message"));
+  ck_assert_str_eq(CIBA_ACR_VALUES, r_jwt_get_claim_str_value(jwt, "acr_values"));
+  json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
+  ulfius_set_json_body_response(response, 200, j_response);
+  json_decref(j_response);
+  r_jwt_free(jwt);
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_ciba_jwt_encrypt_secret_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  jwt_t * jwt = NULL;
+  ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "request"), R_PARSE_NONE, 0));
+  ck_assert_int_eq(R_JWT_TYPE_ENCRYPT, r_jwt_get_type(jwt));
+  ck_assert_int_eq(R_JWA_ALG_PBES2_H256, r_jwt_get_enc_alg(jwt));
+  json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
+  ulfius_set_json_body_response(response, 200, j_response);
+  json_decref(j_response);
+  r_jwt_free(jwt);
+  return U_CALLBACK_CONTINUE;
+}
+
+int callback_ciba_jwt_encrypt_pubkey_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  jwt_t * jwt = NULL;
+  ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "request"), R_PARSE_NONE, 0));
+  ck_assert_int_eq(R_JWT_TYPE_NESTED_SIGN_THEN_ENCRYPT, r_jwt_get_type(jwt));
+  ck_assert_int_eq(R_JWA_ALG_RSA_OAEP_256, r_jwt_get_enc_alg(jwt));
+  json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
+  ulfius_set_json_body_response(response, 200, j_response);
+  json_decref(j_response);
+  r_jwt_free(jwt);
   return U_CALLBACK_CONTINUE;
 }
 
 int callback_ciba_id_token_hint_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
   ck_assert_str_eq(CIBA_ID_TOKEN_HINT, u_map_get(request->map_post_body, "id_token_hint"));
+  ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_str, u_map_get(request->map_post_body, "requested_expiry"));
+  ck_assert_str_eq(CIBA_BINDING_MESSAGE, u_map_get(request->map_post_body, "binding_message"));
+  ck_assert_str_eq(CIBA_ACR_VALUES, u_map_get(request->map_post_body, "acr_values"));
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -80,6 +141,9 @@ int callback_ciba_id_token_hint_valid (const struct _u_request * request, struct
 int callback_ciba_login_hint_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   jwt_t * jwt = NULL;
   ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "login_hint_token"), R_PARSE_NONE, 0));
+  ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_str, u_map_get(request->map_post_body, "requested_expiry"));
+  ck_assert_str_eq(CIBA_BINDING_MESSAGE, u_map_get(request->map_post_body, "binding_message"));
+  ck_assert_str_eq(CIBA_ACR_VALUES, u_map_get(request->map_post_body, "acr_values"));
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
@@ -375,6 +439,7 @@ START_TEST(test_iddawc_ciba_login_hint_valid)
                                                     I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_NONE), I_OK);
@@ -412,6 +477,7 @@ START_TEST(test_iddawc_ciba_login_hint_token_valid)
                                                     I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JWT,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_NONE), I_OK);
@@ -446,6 +512,7 @@ START_TEST(test_iddawc_ciba_id_token_hint_valid)
                                                     I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_NONE), I_OK);
@@ -480,6 +547,7 @@ START_TEST(test_iddawc_ciba_jwt_auth_secret_ok)
                                                     I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_NONE), I_OK);
@@ -516,6 +584,7 @@ START_TEST(test_iddawc_ciba_jwt_auth_secret_signing_alg_ok)
                                                     I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_NONE), I_OK);
@@ -552,6 +621,7 @@ START_TEST(test_iddawc_ciba_jwt_auth_privkey_ok)
                                                     I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_NONE), I_OK);
@@ -596,6 +666,7 @@ START_TEST(test_iddawc_ciba_jwt_auth_privkey_signing_alg_ok)
                                                     I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_NONE), I_OK);
@@ -641,6 +712,7 @@ START_TEST(test_iddawc_ciba_token_valid)
                                                     I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
@@ -684,6 +756,7 @@ START_TEST(test_iddawc_ciba_token_auth_pending)
                                                     I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
@@ -724,6 +797,7 @@ START_TEST(test_iddawc_ciba_token_slow_down)
                                                     I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
@@ -764,6 +838,7 @@ START_TEST(test_iddawc_ciba_token_expired_token)
                                                     I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
@@ -804,6 +879,7 @@ START_TEST(test_iddawc_ciba_token_access_denied)
                                                     I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
                                                     I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
@@ -816,6 +892,163 @@ START_TEST(test_iddawc_ciba_token_access_denied)
   ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR_PARAM);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR), ERROR_ACCESS_DENIED);
 
+  i_clean_session(&i_session);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_ciba_jwt_sign_secret_valid)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/ciba", 0, &callback_ciba_jwt_sign_secret_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CIBA,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_CLIENT_SIGN_ALG, "HS256",
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_SCOPE, SCOPE,
+                                                    I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                    I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                    I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
+                                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                    I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                    I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_run_ciba_request(&i_session), I_OK);
+  ck_assert_str_eq(CIBA_AUTH_REQ_ID, i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID));
+  ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN));
+  ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL));
+  i_clean_session(&i_session);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_ciba_jwt_sign_pubkey_valid)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  jwk_t * jwk;
+
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/ciba", 0, &callback_ciba_jwt_sign_pubkey_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CIBA,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_CLIENT_SIGN_ALG, "RS256",
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_JWT_SIGN_PRIVKEY,
+                                                    I_OPT_SCOPE, SCOPE,
+                                                    I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                    I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                    I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
+                                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                    I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                    I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_run_ciba_request(&i_session), I_OK);
+  ck_assert_str_eq(CIBA_AUTH_REQ_ID, i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID));
+  ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN));
+  ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL));
+  i_clean_session(&i_session);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_ciba_jwt_encrypt_secret_valid)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/ciba", 0, &callback_ciba_jwt_encrypt_secret_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CIBA,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_CLIENT_ENC_ALG, "PBES2-HS256+A128KW",
+                                                    I_OPT_CLIENT_ENC, "A128CBC-HS256",
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_JWT_ENCRYPT_SECRET,
+                                                    I_OPT_SCOPE, SCOPE,
+                                                    I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                    I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                    I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
+                                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                    I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                    I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_run_ciba_request(&i_session), I_OK);
+  ck_assert_str_eq(CIBA_AUTH_REQ_ID, i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID));
+  ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN));
+  ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL));
+  i_clean_session(&i_session);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
+START_TEST(test_iddawc_ciba_jwt_nested_pubkey_secret_valid)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  jwk_t * jwk;
+  
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/ciba", 0, &callback_ciba_jwt_encrypt_pubkey_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CIBA,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_CLIENT_ENC_ALG, "RSA-OAEP-256",
+                                                    I_OPT_CLIENT_ENC, "A128CBC-HS256",
+                                                    I_OPT_CLIENT_SIGN_ALG, "HS256",
+                                                    I_OPT_AUTH_METHOD, I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY|I_AUTH_METHOD_JWT_SIGN_SECRET,
+                                                    I_OPT_SCOPE, SCOPE,
+                                                    I_OPT_CIBA_ENDPOINT, CIBA_ENDPOINT,
+                                                    I_OPT_CIBA_LOGIN_HINT, CIBA_LOGIN_HINT,
+                                                    I_OPT_CIBA_MODE, I_CIBA_MODE_POLL,
+                                                    I_OPT_CIBA_LOGIN_HINT_FORMAT, I_CIBA_LOGIN_HINT_FORMAT_JSON,
+                                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                    I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
+                                                    I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk), RHN_OK);
+  r_jwk_free(jwk);
+  ck_assert_int_eq(i_run_ciba_request(&i_session), I_OK);
+  ck_assert_str_eq(CIBA_AUTH_REQ_ID, i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID));
+  ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN));
+  ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL));
   i_clean_session(&i_session);
   
   ulfius_stop_framework(&instance);
@@ -843,6 +1076,10 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_ciba_token_slow_down);
   tcase_add_test(tc_core, test_iddawc_ciba_token_expired_token);
   tcase_add_test(tc_core, test_iddawc_ciba_token_access_denied);
+  tcase_add_test(tc_core, test_iddawc_ciba_jwt_sign_secret_valid);
+  tcase_add_test(tc_core, test_iddawc_ciba_jwt_sign_pubkey_valid);
+  tcase_add_test(tc_core, test_iddawc_ciba_jwt_encrypt_secret_valid);
+  tcase_add_test(tc_core, test_iddawc_ciba_jwt_nested_pubkey_secret_valid);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);
 
