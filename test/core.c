@@ -148,6 +148,8 @@
 #define CIBA_BINDING_MESSAGE "CIBABindingMessage"
 #define CIBA_REQUESTED_EXPIRY 99
 #define CIBA_CLIENT_NOTIFICATION_TOKEN "CIBAClientNotificationToken123456789012345678901234567890"
+#define CIBA_ACR_VALUES "password"
+#define CIBA_ACR_VALUES_APPEND "otp"
 #define CIBA_AUTH_REQ_ID "CIBAAuthReqId123456789012345678901234567890"
 #define CIBA_CLIENT_NOTIFICATION_ENDPOINT "https://iddawc.tld/cb"
 #define CIBA_AUTH_REQ_EXPIRES_IN 145
@@ -578,6 +580,12 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES), I_OK);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES_APPEND, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES_APPEND, CIBA_ACR_VALUES_APPEND), I_OK);
+
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID), I_OK);
 
@@ -894,6 +902,12 @@ START_TEST(test_iddawc_get_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES), CIBA_ACR_VALUES);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES_APPEND, CIBA_ACR_VALUES_APPEND), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES), CIBA_ACR_VALUES " " CIBA_ACR_VALUES_APPEND);
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
@@ -1255,6 +1269,8 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                   I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                   I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                  I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                  I_OPT_CIBA_ACR_VALUES_APPEND, CIBA_ACR_VALUES_APPEND,
                                                   I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
                                                   I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                   I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
@@ -1352,6 +1368,7 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE), CIBA_BINDING_MESSAGE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_REQUESTED_EXPIRY), CIBA_REQUESTED_EXPIRY);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES), CIBA_ACR_VALUES " " CIBA_ACR_VALUES_APPEND);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
@@ -1561,6 +1578,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "ciba_binding_message"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_requested_expiry")), 0);
   ck_assert_ptr_eq(json_object_get(j_export, "ciba_client_notification_token"), NULL);
+  ck_assert_ptr_eq(json_object_get(j_export, "ciba_acr_values"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "ciba_auth_req_id"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "ciba_client_notification_endpoint"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_auth_req_expires_in")), 0);
@@ -1680,6 +1698,8 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                    I_OPT_CIBA_ACR_VALUES_APPEND, CIBA_ACR_VALUES_APPEND,
                                                     I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
@@ -1805,6 +1825,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_binding_message")), CIBA_BINDING_MESSAGE);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_requested_expiry")), CIBA_REQUESTED_EXPIRY);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_client_notification_token")), CIBA_CLIENT_NOTIFICATION_TOKEN);
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_acr_values")), CIBA_ACR_VALUES " " CIBA_ACR_VALUES_APPEND);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_auth_req_id")), CIBA_AUTH_REQ_ID);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "ciba_client_notification_endpoint")), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "ciba_auth_req_expires_in")), CIBA_AUTH_REQ_EXPIRES_IN);
@@ -1941,6 +1962,8 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                    I_OPT_CIBA_ACR_VALUES_APPEND, CIBA_ACR_VALUES_APPEND,
                                                     I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
@@ -2072,6 +2095,7 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_BINDING_MESSAGE), CIBA_BINDING_MESSAGE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_REQUESTED_EXPIRY), CIBA_REQUESTED_EXPIRY);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES), CIBA_ACR_VALUES " " CIBA_ACR_VALUES_APPEND);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
@@ -2208,6 +2232,8 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                    I_OPT_CIBA_ACR_VALUES_APPEND, CIBA_ACR_VALUES_APPEND,
                                                     I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
@@ -2353,6 +2379,8 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                    I_OPT_CIBA_ACR_VALUES_APPEND, CIBA_ACR_VALUES_APPEND,
                                                     I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
@@ -2489,6 +2517,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES), CIBA_ACR_VALUES " " CIBA_ACR_VALUES_APPEND);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL), CIBA_AUTH_REQ_INTERVAL);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_FRONTCHANNEL_LOGOUT_URI), FRONTCHANNEL_LOGOUT_URI);
@@ -2626,6 +2655,8 @@ START_TEST(test_iddawc_import_multiple)
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, CIBA_CLIENT_NOTIFICATION_TOKEN,
+                                                    I_OPT_CIBA_ACR_VALUES, CIBA_ACR_VALUES,
+                                                    I_OPT_CIBA_ACR_VALUES_APPEND, CIBA_ACR_VALUES_APPEND,
                                                     I_OPT_CIBA_AUTH_REQ_ID, CIBA_AUTH_REQ_ID,
                                                     I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, CIBA_CLIENT_NOTIFICATION_ENDPOINT,
                                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, CIBA_AUTH_REQ_EXPIRES_IN,
@@ -2886,6 +2917,7 @@ START_TEST(test_iddawc_import_multiple)
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CIBA_BINDING_MESSAGE), CIBA_BINDING_MESSAGE);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_CIBA_REQUESTED_EXPIRY), CIBA_REQUESTED_EXPIRY);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN), CIBA_CLIENT_NOTIFICATION_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CIBA_ACR_VALUES), CIBA_ACR_VALUES " " CIBA_ACR_VALUES_APPEND);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CIBA_AUTH_REQ_ID), CIBA_AUTH_REQ_ID);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT), CIBA_CLIENT_NOTIFICATION_ENDPOINT);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN), CIBA_AUTH_REQ_EXPIRES_IN);
