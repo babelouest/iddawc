@@ -246,19 +246,21 @@ typedef enum {
   I_OPT_CIBA_REQUESTED_EXPIRY                   = 111, ///< CIBA binding message to specify in the CIBA request, string, optional
   I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN          = 112, ///< client_notification_token value to use on CIBA requests, string, mandatory if mode is ping or push
   I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE = 113, ///< Generate a random client_notification_token of the specified length
-  I_OPT_CIBA_AUTH_REQ_ID                        = 114, ///< auth_req_id value received by the server on succesfull request
-  I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT       = 115, ///< backchannel_client_notification_endpoint value to specify the url for ping or push modes
-  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 116, ///< expiration of the request in seconds received by the server on succesfull request
-  I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 117, ///< Interval to poll token endpoint on poll mode in seconds
-  I_OPT_FRONTCHANNEL_LOGOUT_URI                 = 118, ///< Frontchannel logout URI
-  I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED    = 119, ///< Frontchannel logout session required
-  I_OPT_BACKCHANNEL_LOGOUT_URI                  = 120, ///< Backchannel logout URI
-  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 121, ///< Backchannel logout session required
-  I_OPT_POST_LOGOUT_REDIRECT_URI                = 122, ///< Post logout redirect URI
-  I_OPT_ID_TOKEN_SID                            = 123, ///< ID_Token SID
-  I_OPT_SAVE_HTTP_REQUEST_RESPONSE              = 124, ///< Save HTTP request and response
-  I_OPT_DPOP_NONCE_AS                           = 125, ///< DPoP Nonce for the AS
-  I_OPT_DPOP_NONCE_RS                           = 126  ///< DPoP Nonce for the RS
+  I_OPT_CIBA_ACR_VALUES                         = 114, ///< ACR values that the OpenID Provider is being requested to use for processing this Authentication Request
+  I_OPT_CIBA_ACR_VALUES_APPEND                  = 115, ///< append another ACR value to the ACR values list, string
+  I_OPT_CIBA_AUTH_REQ_ID                        = 116, ///< auth_req_id value received by the server on succesfull request
+  I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT       = 117, ///< backchannel_client_notification_endpoint value to specify the url for ping or push modes
+  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 118, ///< expiration of the request in seconds received by the server on succesfull request
+  I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 119, ///< Interval to poll token endpoint on poll mode in seconds
+  I_OPT_FRONTCHANNEL_LOGOUT_URI                 = 120, ///< Frontchannel logout URI
+  I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED    = 121, ///< Frontchannel logout session required
+  I_OPT_BACKCHANNEL_LOGOUT_URI                  = 122, ///< Backchannel logout URI
+  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 123, ///< Backchannel logout session required
+  I_OPT_POST_LOGOUT_REDIRECT_URI                = 124, ///< Post logout redirect URI
+  I_OPT_ID_TOKEN_SID                            = 125, ///< ID_Token SID
+  I_OPT_SAVE_HTTP_REQUEST_RESPONSE              = 126, ///< Save HTTP request and response
+  I_OPT_DPOP_NONCE_AS                           = 127, ///< DPoP Nonce for the AS
+  I_OPT_DPOP_NONCE_RS                           = 128  ///< DPoP Nonce for the RS
 } i_option;
 
 /**
@@ -387,6 +389,7 @@ struct _i_session {
   char                * ciba_binding_message;
   time_t                ciba_requested_expiry;
   char                * ciba_client_notification_token;
+  char                * ciba_acr_values;
   char                * ciba_auth_req_id;
   char                * ciba_client_notification_endpoint;
   unsigned int          ciba_auth_req_expires_in;

@@ -33,7 +33,7 @@
  * Generates a random long integer between 0 and max
  *
  */
-unsigned char random_at_most(unsigned char max, int nonce) {
+static unsigned char random_at_most(unsigned char max, int nonce) {
   unsigned char
   num_bins = (unsigned char) max + 1,
   num_rand = (unsigned char) 0xff,
@@ -199,7 +199,10 @@ static int _i_init_request(struct _i_session * i_session, struct _u_request * re
   }
 
   if (ulfius_init_request(request) == U_OK) {
-    if (ulfius_set_request_properties(request, U_OPT_CHECK_SERVER_CERTIFICATE_FLAG, flag_host, U_OPT_CHECK_PROXY_CERTIFICATE_FLAG, flag_proxy, U_OPT_NONE) == U_OK) {
+    if (ulfius_set_request_properties(request, U_OPT_CHECK_SERVER_CERTIFICATE_FLAG, flag_host,
+                                               U_OPT_CHECK_PROXY_CERTIFICATE_FLAG, flag_proxy,
+                                               U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                               U_OPT_NONE) == U_OK) {
       ret = I_OK;
     } else {
       y_log_message(Y_LOG_LEVEL_ERROR, "_i_init_request - Error setting TLS flags");
@@ -426,8 +429,7 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
     _i_init_request(i_session, &request);
     ulfius_init_response(&response);
 
-    ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
-                                            U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+    ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                             U_OPT_HTTP_URL, json_string_value(json_object_get(i_session->openid_config, "jwks_uri")),
                                             U_OPT_NONE);
     if (_i_send_http_request(i_session, &request, &response) == U_OK) {
@@ -1071,15 +1073,241 @@ static json_t * _i_export_u_map(struct _u_map * map) {
   return j_return;
 }
 
+static char * _i_sign_encrypt_jwt_auth(struct _i_session * i_session, jwt_t * jwt) {
+  jwa_alg sign_alg = R_JWA_ALG_UNKNOWN, enc_alg = R_JWA_ALG_UNKNOWN;
+  jwa_enc enc = R_JWA_ENC_UNKNOWN;
+  int ret = I_OK;
+  jwk_t * jwk_sign = NULL, * jwk_enc = NULL;
+  char * jwt_str = NULL;
+  
+  if (i_session->auth_method & I_AUTH_METHOD_JWT_SIGN_SECRET) {
+    if (!o_strnullempty(i_session->client_secret)) {
+      if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
+        sign_alg = i_session->client_sign_alg;
+      } else if (i_session->request_object_signing_alg != R_JWA_ALG_UNKNOWN) {
+        sign_alg = i_session->request_object_signing_alg;
+      }
+      if ((sign_alg == R_JWA_ALG_HS256 || sign_alg == R_JWA_ALG_HS384 || sign_alg == R_JWA_ALG_HS512) && !_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
+        sign_alg = R_JWA_ALG_UNKNOWN;
+      } else if (sign_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "request_object_signing_alg_values_supported"))) {
+        // no signtature alg specified, use one supported by the server
+        if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "HS256")) {
+          sign_alg = R_JWA_ALG_HS256;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "HS384")) {
+          sign_alg = R_JWA_ALG_HS384;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "HS512")) {
+          sign_alg = R_JWA_ALG_HS512;
+        }
+      }
+      if (sign_alg != R_JWA_ALG_UNKNOWN) {
+        r_jwt_set_sign_alg(jwt, sign_alg);
+        r_jwk_init(&jwk_sign);
+        r_jwk_import_from_symmetric_key(jwk_sign, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
+        ret = I_ERROR_PARAM;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Client has no secret");
+      ret = I_ERROR_PARAM;
+    }
+  } else if (i_session->auth_method & I_AUTH_METHOD_JWT_SIGN_PRIVKEY) {
+    if ((i_session->client_kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, i_session->client_kid)) != NULL) ||
+        (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
+      if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
+        sign_alg = i_session->client_sign_alg;
+      } else if (i_session->request_object_signing_alg != R_JWA_ALG_UNKNOWN) {
+        sign_alg = i_session->request_object_signing_alg;
+      }
+      if ((sign_alg == R_JWA_ALG_RS256 || sign_alg == R_JWA_ALG_RS384 || sign_alg == R_JWA_ALG_RS512 ||
+           sign_alg == R_JWA_ALG_PS256 || sign_alg == R_JWA_ALG_PS384 || sign_alg == R_JWA_ALG_PS512) &&
+           _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
+        if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+          ret = I_ERROR_PARAM;
+        }
+      } else if ((sign_alg == R_JWA_ALG_ES256 || sign_alg == R_JWA_ALG_ES384 || sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
+        if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+          ret = I_ERROR_PARAM;
+        }
+      } else if (sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
+        if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+          ret = I_ERROR_PARAM;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
+        ret = I_ERROR_PARAM;
+      }
+    } else if (!r_jwks_size(i_session->client_jwks)) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Client has no private key ");
+      ret = I_ERROR_PARAM;
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
+      ret = I_ERROR_PARAM;
+    }
+    if (jwk_sign != NULL) {
+      r_jwt_set_sign_alg(jwt, i_session->client_sign_alg);
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Client has no signing key");
+      ret = I_ERROR_PARAM;
+    }
+  }
+  if (i_session->auth_method & I_AUTH_METHOD_JWT_ENCRYPT_SECRET) {
+    if (!o_strnullempty(i_session->client_secret)) {
+      if (i_session->client_enc != R_JWA_ENC_UNKNOWN) {
+        enc = i_session->client_enc;
+      } else if (i_session->request_object_encryption_enc != R_JWA_ENC_UNKNOWN) {
+        enc = i_session->request_object_encryption_enc;
+      }
+      if (enc != R_JWA_ENC_UNKNOWN && !_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", r_jwa_enc_to_str(enc))) {
+        enc = R_JWA_ENC_UNKNOWN;
+      } else if (enc == R_JWA_ENC_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "request_object_encryption_enc_values_supported"))) {
+        if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A128CBC-HS256")) {
+          enc = R_JWA_ENC_A128CBC;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A192CBC-HS384")) {
+          enc = R_JWA_ENC_A192CBC;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A256CBC-HS512")) {
+          enc = R_JWA_ENC_A256CBC;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A128GCM")) {
+          enc = R_JWA_ENC_A128GCM;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A192GCM")) {
+          enc = R_JWA_ENC_A192GCM;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A256GCM")) {
+          enc = R_JWA_ENC_A256GCM;
+        }
+      }
+      if (i_session->client_enc_alg != R_JWA_ALG_UNKNOWN) {
+        enc_alg = i_session->client_enc_alg;
+      } else if (i_session->request_object_encryption_alg != R_JWA_ALG_UNKNOWN) {
+        enc_alg = i_session->request_object_encryption_alg;
+      }
+      if ((enc_alg == R_JWA_ALG_A128GCMKW ||
+           enc_alg == R_JWA_ALG_A192GCMKW ||
+           enc_alg == R_JWA_ALG_A256GCMKW ||
+           enc_alg == R_JWA_ALG_A128KW ||
+           enc_alg == R_JWA_ALG_A192KW ||
+           enc_alg == R_JWA_ALG_A256KW ||
+           enc_alg == R_JWA_ALG_DIR ||
+           enc_alg == R_JWA_ALG_PBES2_H256 ||
+           enc_alg == R_JWA_ALG_PBES2_H384 ||
+           enc_alg == R_JWA_ALG_PBES2_H512) &&
+           !_i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", r_jwa_alg_to_str(enc_alg))) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
+        enc_alg = R_JWA_ALG_UNKNOWN;
+      } else if (i_session->client_enc_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "request_object_encryption_alg_values_supported"))) {
+        // no signtature alg specified, use one supported by the server
+        if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", "A128KW")) {
+          enc_alg = R_JWA_ALG_A128KW;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A192KW")) {
+          enc_alg = R_JWA_ALG_A192KW;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A256KW")) {
+          enc_alg = R_JWA_ALG_A256KW;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A128GCMKW")) {
+          enc_alg = R_JWA_ALG_A128GCMKW;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A192GCMKW")) {
+          enc_alg = R_JWA_ALG_A192GCMKW;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A256GCMKW")) {
+          enc_alg = R_JWA_ALG_A256GCMKW;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "dir")) {
+          enc_alg = R_JWA_ALG_DIR;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "PBES2-HS256+A128KW")) {
+          enc_alg = R_JWA_ALG_PBES2_H256;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "PBES2-HS384+A192KW")) {
+          enc_alg = R_JWA_ALG_PBES2_H384;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "PBES2-HS512+A256KW")) {
+          enc_alg = R_JWA_ALG_PBES2_H512;
+        }
+      }
+      if (enc_alg != R_JWA_ALG_UNKNOWN && enc != R_JWA_ENC_UNKNOWN) {
+        r_jwt_set_enc_alg(jwt, enc_alg);
+        r_jwt_set_enc(jwt, enc);
+        r_jwk_init(&jwk_enc);
+        r_jwk_import_from_symmetric_key(jwk_enc, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key parameters (secret)");
+        ret = I_ERROR_PARAM;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Client has no secret");
+      ret = I_ERROR_PARAM;
+    }
+  } else if (i_session->auth_method & I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY) {
+    if ((i_session->server_kid != NULL && (jwk_enc = r_jwks_get_by_kid(i_session->server_jwks, i_session->server_kid)) != NULL) || (r_jwks_size(i_session->server_jwks) == 1 && (jwk_enc = r_jwks_get_at(i_session->server_jwks, 0)) != NULL)) {
+      if (i_session->client_enc != R_JWA_ENC_UNKNOWN && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_ENC))) {
+        enc = i_session->client_enc;
+      } else if (i_session->request_object_encryption_enc != R_JWA_ENC_UNKNOWN && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", i_get_str_parameter(i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC))) {
+        enc = i_session->request_object_encryption_enc;
+      } else if (i_session->client_enc == R_JWA_ENC_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "request_object_encryption_enc_values_supported"))) {
+        if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A128CBC-HS256")) {
+          enc = R_JWA_ENC_A128CBC;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A192CBC-HS384")) {
+          enc = R_JWA_ENC_A192CBC;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A256CBC-HS512")) {
+          enc = R_JWA_ENC_A256CBC;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A128GCM")) {
+          enc = R_JWA_ENC_A128GCM;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A192GCM")) {
+          enc = R_JWA_ENC_A192GCM;
+        } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A256GCM")) {
+          enc = R_JWA_ENC_A256GCM;
+        }
+      }
+      if (i_session->client_enc_alg != R_JWA_ALG_UNKNOWN) {
+        enc_alg = i_session->client_enc_alg;
+      } else if (i_session->request_object_encryption_alg != R_JWA_ALG_UNKNOWN) {
+        enc_alg = i_session->request_object_encryption_alg;
+      }
+      if ((enc_alg == R_JWA_ALG_RSA1_5 || enc_alg == R_JWA_ALG_RSA_OAEP || enc_alg == R_JWA_ALG_RSA_OAEP_256) && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", r_jwa_alg_to_str(enc_alg))) {
+        if (!(r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key type");
+          ret = I_ERROR_PARAM;
+        }
+      } else if ((enc_alg == R_JWA_ALG_ECDH_ES || enc_alg == R_JWA_ALG_ECDH_ES_A128KW || enc_alg == R_JWA_ALG_ECDH_ES_A192KW || enc_alg == R_JWA_ALG_ECDH_ES_A256KW) && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", r_jwa_alg_to_str(enc_alg))) {
+        if (!(r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key type");
+          ret = I_ERROR_PARAM;
+        }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_generate_auth_jwt - Invalid encrypt key parameters (pubkey)");
+        ret = I_ERROR_PARAM;
+      }
+    } else if (!r_jwks_size(i_session->client_jwks)) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Server has no public key ");
+      ret = I_ERROR_PARAM;
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "Server has more than one public key, please specify one with the parameter I_OPT_SERVER_KID");
+      ret = I_ERROR_PARAM;
+    }
+    if (enc_alg != R_JWA_ALG_UNKNOWN && enc != R_JWA_ENC_UNKNOWN) {
+      r_jwt_set_enc_alg(jwt, enc_alg);
+      r_jwt_set_enc(jwt, enc);
+    } else {
+      ret = I_ERROR_PARAM;
+    }
+  }
+  if (ret == I_OK) {
+    if (i_session->auth_method & (I_AUTH_METHOD_JWT_SIGN_SECRET|I_AUTH_METHOD_JWT_SIGN_PRIVKEY) && !(i_session->auth_method & (I_AUTH_METHOD_JWT_ENCRYPT_SECRET|I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY))) {
+      jwt_str = r_jwt_serialize_signed(jwt, jwk_sign, i_session->x5u_flags);
+    } else if (!(i_session->auth_method & (I_AUTH_METHOD_JWT_SIGN_SECRET|I_AUTH_METHOD_JWT_SIGN_PRIVKEY)) && i_session->auth_method & (I_AUTH_METHOD_JWT_ENCRYPT_SECRET|I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY)) {
+      jwt_str = r_jwt_serialize_encrypted(jwt, jwk_enc, i_session->x5u_flags);
+    } else {
+      jwt_str = r_jwt_serialize_nested(jwt, R_JWT_TYPE_NESTED_SIGN_THEN_ENCRYPT, jwk_sign, i_session->x5u_flags, jwk_enc, i_session->x5u_flags);
+    }
+  }
+  r_jwk_free(jwk_sign);
+  r_jwk_free(jwk_enc);
+  return jwt_str;
+}
+
 static char * _i_generate_auth_jwt(struct _i_session * i_session) {
   jwt_t * jwt = NULL;
-  jwk_t * jwk_sign = NULL, * jwk_enc = NULL;
+  jwk_t * jwk_sign = NULL;
   char * jwt_str = NULL, * dpop_jkt = NULL;
   const char ** keys = NULL;
   unsigned int i;
-  jwa_alg sign_alg = R_JWA_ALG_UNKNOWN, enc_alg = R_JWA_ALG_UNKNOWN;
-  jwa_enc enc = R_JWA_ENC_UNKNOWN;
-  int has_error = 0;
 
   if (i_session != NULL) {
     r_jwt_init(&jwt);
@@ -1107,6 +1335,7 @@ static char * _i_generate_auth_jwt(struct _i_session * i_session) {
       }
       o_free(dpop_jkt);
       r_jwk_free(jwk_sign);
+      jwk_sign = NULL;
     }
 
     keys = u_map_enum_keys(&i_session->additional_parameters);
@@ -1119,226 +1348,183 @@ static char * _i_generate_auth_jwt(struct _i_session * i_session) {
       r_jwt_set_claim_json_t_value(jwt, "claims", i_session->j_claims);
     }
 
-    if (i_session->auth_method & I_AUTH_METHOD_JWT_SIGN_SECRET) {
-      if (!o_strnullempty(i_session->client_secret)) {
-        if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
-          sign_alg = i_session->client_sign_alg;
-        } else if (i_session->request_object_signing_alg != R_JWA_ALG_UNKNOWN) {
-          sign_alg = i_session->request_object_signing_alg;
-        }
-        if ((sign_alg == R_JWA_ALG_HS256 || sign_alg == R_JWA_ALG_HS384 || sign_alg == R_JWA_ALG_HS512) && !_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
-          sign_alg = R_JWA_ALG_UNKNOWN;
-        } else if (sign_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "request_object_signing_alg_values_supported"))) {
-          // no signtature alg specified, use one supported by the server
-          if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "HS256")) {
-            sign_alg = R_JWA_ALG_HS256;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "HS384")) {
-            sign_alg = R_JWA_ALG_HS384;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "HS512")) {
-            sign_alg = R_JWA_ALG_HS512;
-          }
-        }
-        if (sign_alg != R_JWA_ALG_UNKNOWN) {
-          r_jwt_set_sign_alg(jwt, sign_alg);
-          r_jwk_init(&jwk_sign);
-          r_jwk_import_from_symmetric_key(jwk_sign, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
-          has_error = 1;
-        }
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Client has no secret");
-        has_error = 1;
-      }
-    } else if (i_session->auth_method & I_AUTH_METHOD_JWT_SIGN_PRIVKEY) {
-      if ((i_session->client_kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, i_session->client_kid)) != NULL) ||
-          (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
-        if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
-          sign_alg = i_session->client_sign_alg;
-        } else if (i_session->request_object_signing_alg != R_JWA_ALG_UNKNOWN) {
-          sign_alg = i_session->request_object_signing_alg;
-        }
-        if ((sign_alg == R_JWA_ALG_RS256 || sign_alg == R_JWA_ALG_RS384 || sign_alg == R_JWA_ALG_RS512 ||
-             sign_alg == R_JWA_ALG_PS256 || sign_alg == R_JWA_ALG_PS384 || sign_alg == R_JWA_ALG_PS512) &&
-             _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
-          if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
-            has_error = 1;
-          }
-        } else if ((sign_alg == R_JWA_ALG_ES256 || sign_alg == R_JWA_ALG_ES384 || sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
-          if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
-            has_error = 1;
-          }
-        } else if (sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
-          if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
-            has_error = 1;
-          }
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
-          has_error = 1;
-        }
-      } else if (!r_jwks_size(i_session->client_jwks)) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Client has no private key ");
-        has_error = 1;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
-        has_error = 1;
-      }
-      if (jwk_sign != NULL) {
-        r_jwt_set_sign_alg(jwt, i_session->client_sign_alg);
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Client has no signing key");
-        has_error = 1;
-      }
+    if ((jwt_str = _i_sign_encrypt_jwt_auth(i_session, jwt)) == NULL) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_generate_auth_jwt - Error _i_sign_encrypt_jwt_auth");
     }
-    if (i_session->auth_method & I_AUTH_METHOD_JWT_ENCRYPT_SECRET) {
-      if (!o_strnullempty(i_session->client_secret)) {
-        if (i_session->client_enc != R_JWA_ENC_UNKNOWN) {
-          enc = i_session->client_enc;
-        } else if (i_session->request_object_encryption_enc != R_JWA_ENC_UNKNOWN) {
-          enc = i_session->request_object_encryption_enc;
-        }
-        if (enc != R_JWA_ENC_UNKNOWN && !_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", r_jwa_enc_to_str(enc))) {
-          enc = R_JWA_ENC_UNKNOWN;
-        } else if (enc == R_JWA_ENC_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "request_object_encryption_enc_values_supported"))) {
-          if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A128CBC-HS256")) {
-            enc = R_JWA_ENC_A128CBC;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A192CBC-HS384")) {
-            enc = R_JWA_ENC_A192CBC;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A256CBC-HS512")) {
-            enc = R_JWA_ENC_A256CBC;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A128GCM")) {
-            enc = R_JWA_ENC_A128GCM;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A192GCM")) {
-            enc = R_JWA_ENC_A192GCM;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A256GCM")) {
-            enc = R_JWA_ENC_A256GCM;
-          }
-        }
-        if (i_session->client_enc_alg != R_JWA_ALG_UNKNOWN) {
-          enc_alg = i_session->client_enc_alg;
-        } else if (i_session->request_object_encryption_alg != R_JWA_ALG_UNKNOWN) {
-          enc_alg = i_session->request_object_encryption_alg;
-        }
-        if ((enc_alg == R_JWA_ALG_A128GCMKW ||
-             enc_alg == R_JWA_ALG_A192GCMKW ||
-             enc_alg == R_JWA_ALG_A256GCMKW ||
-             enc_alg == R_JWA_ALG_A128KW ||
-             enc_alg == R_JWA_ALG_A192KW ||
-             enc_alg == R_JWA_ALG_A256KW ||
-             enc_alg == R_JWA_ALG_DIR ||
-             enc_alg == R_JWA_ALG_PBES2_H256 ||
-             enc_alg == R_JWA_ALG_PBES2_H384 ||
-             enc_alg == R_JWA_ALG_PBES2_H512) &&
-             !_i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", r_jwa_alg_to_str(enc_alg))) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
-          enc_alg = R_JWA_ALG_UNKNOWN;
-        } else if (i_session->client_enc_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "request_object_encryption_alg_values_supported"))) {
-          // no signtature alg specified, use one supported by the server
-          if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", "A128KW")) {
-            enc_alg = R_JWA_ALG_A128KW;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A192KW")) {
-            enc_alg = R_JWA_ALG_A192KW;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A256KW")) {
-            enc_alg = R_JWA_ALG_A256KW;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A128GCMKW")) {
-            enc_alg = R_JWA_ALG_A128GCMKW;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A192GCMKW")) {
-            enc_alg = R_JWA_ALG_A192GCMKW;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A256GCMKW")) {
-            enc_alg = R_JWA_ALG_A256GCMKW;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "dir")) {
-            enc_alg = R_JWA_ALG_DIR;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "PBES2-HS256+A128KW")) {
-            enc_alg = R_JWA_ALG_PBES2_H256;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "PBES2-HS384+A192KW")) {
-            enc_alg = R_JWA_ALG_PBES2_H384;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "PBES2-HS512+A256KW")) {
-            enc_alg = R_JWA_ALG_PBES2_H512;
-          }
-        }
-        if (enc_alg != R_JWA_ALG_UNKNOWN && enc != R_JWA_ENC_UNKNOWN) {
-          r_jwt_set_enc_alg(jwt, enc_alg);
-          r_jwt_set_enc(jwt, enc);
-          r_jwk_init(&jwk_enc);
-          r_jwk_import_from_symmetric_key(jwk_enc, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key parameters (secret)");
-          has_error = 1;
-        }
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Client has no secret");
-        has_error = 1;
-      }
-    } else if (i_session->auth_method & I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY) {
-      if ((i_session->server_kid != NULL && (jwk_enc = r_jwks_get_by_kid(i_session->server_jwks, i_session->server_kid)) != NULL) || (r_jwks_size(i_session->server_jwks) == 1 && (jwk_enc = r_jwks_get_at(i_session->server_jwks, 0)) != NULL)) {
-        if (i_session->client_enc != R_JWA_ENC_UNKNOWN && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_ENC))) {
-          enc = i_session->client_enc;
-        } else if (i_session->request_object_encryption_enc != R_JWA_ENC_UNKNOWN && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", i_get_str_parameter(i_session, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC))) {
-          enc = i_session->request_object_encryption_enc;
-        } else if (i_session->client_enc == R_JWA_ENC_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "request_object_encryption_enc_values_supported"))) {
-          if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A128CBC-HS256")) {
-            enc = R_JWA_ENC_A128CBC;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A192CBC-HS384")) {
-            enc = R_JWA_ENC_A192CBC;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A256CBC-HS512")) {
-            enc = R_JWA_ENC_A256CBC;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A128GCM")) {
-            enc = R_JWA_ENC_A128GCM;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A192GCM")) {
-            enc = R_JWA_ENC_A192GCM;
-          } else if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_enc_values_supported", "A256GCM")) {
-            enc = R_JWA_ENC_A256GCM;
-          }
-        }
-        if (i_session->client_enc_alg != R_JWA_ALG_UNKNOWN) {
-          enc_alg = i_session->client_enc_alg;
-        } else if (i_session->request_object_encryption_alg != R_JWA_ALG_UNKNOWN) {
-          enc_alg = i_session->request_object_encryption_alg;
-        }
-        if ((enc_alg == R_JWA_ALG_RSA1_5 || enc_alg == R_JWA_ALG_RSA_OAEP || enc_alg == R_JWA_ALG_RSA_OAEP_256) && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", r_jwa_alg_to_str(enc_alg))) {
-          if (!(r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key type");
-            has_error = 1;
-          }
-        } else if ((enc_alg == R_JWA_ALG_ECDH_ES || enc_alg == R_JWA_ALG_ECDH_ES_A128KW || enc_alg == R_JWA_ALG_ECDH_ES_A192KW || enc_alg == R_JWA_ALG_ECDH_ES_A256KW) && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", r_jwa_alg_to_str(enc_alg))) {
-          if (!(r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key type");
-            has_error = 1;
-          }
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "_i_generate_auth_jwt - Invalid encrypt key parameters (pubkey)");
-          has_error = 1;
-        }
-      } else if (!r_jwks_size(i_session->client_jwks)) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Server has no public key ");
-        has_error = 1;
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "Server has more than one public key, please specify one with the parameter I_OPT_SERVER_KID");
-        has_error = 1;
-      }
-      if (enc_alg != R_JWA_ALG_UNKNOWN && enc != R_JWA_ENC_UNKNOWN) {
-        r_jwt_set_enc_alg(jwt, enc_alg);
-        r_jwt_set_enc(jwt, enc);
-      } else {
-        has_error = 1;
-      }
-    }
-    if (!has_error) {
-      if (i_session->auth_method & (I_AUTH_METHOD_JWT_SIGN_SECRET|I_AUTH_METHOD_JWT_SIGN_PRIVKEY) && !(i_session->auth_method & (I_AUTH_METHOD_JWT_ENCRYPT_SECRET|I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY))) {
-        jwt_str = r_jwt_serialize_signed(jwt, jwk_sign, i_session->x5u_flags);
-      } else if (!(i_session->auth_method & (I_AUTH_METHOD_JWT_SIGN_SECRET|I_AUTH_METHOD_JWT_SIGN_PRIVKEY)) && i_session->auth_method & (I_AUTH_METHOD_JWT_ENCRYPT_SECRET|I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY)) {
-        jwt_str = r_jwt_serialize_encrypted(jwt, jwk_enc, i_session->x5u_flags);
-      } else {
-        jwt_str = r_jwt_serialize_nested(jwt, R_JWT_TYPE_NESTED_SIGN_THEN_ENCRYPT, jwk_sign, i_session->x5u_flags, jwk_enc, i_session->x5u_flags);
-      }
-    }
+
     r_jwt_free(jwt);
     r_jwk_free(jwk_sign);
-    r_jwk_free(jwk_enc);
+  }
+  return jwt_str;
+}
+
+static char * _i_generate_ciba_jwt(struct _i_session * i_session) {
+  jwt_t * jwt = NULL, * jwt_login_hint = NULL;
+  jwk_t * jwk_sign = NULL;
+  char * jwt_str = NULL, * dpop_jkt = NULL, * tmp;
+  const char ** keys = NULL;
+  unsigned int i;
+  jwa_alg sign_alg = R_JWA_ALG_UNKNOWN;
+  json_t * j_login_hint;
+  int ret = I_OK;
+
+  if (i_session != NULL) {
+    if ((i_session->auth_method & I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY) && !(i_session->auth_method & (I_AUTH_METHOD_JWT_SIGN_PRIVKEY|I_AUTH_METHOD_JWT_SIGN_SECRET))) {
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_generate_ciba_jwt - Error, signature required to authenticate the client");
+      ret = I_ERROR_PARAM;
+    } else {
+      r_jwt_init(&jwt);
+      r_jwt_set_claim_str_value(jwt, "client_id", i_session->client_id);
+
+      if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN) {
+        r_jwt_set_claim_str_value(jwt, "id_token_hint", i_session->ciba_login_hint);
+      }
+
+      if (i_session->ciba_mode != I_CIBA_MODE_POLL) {
+        r_jwt_set_claim_str_value(jwt, "client_notification_token", i_session->ciba_client_notification_token);
+      }
+      if (i_session->ciba_requested_expiry) {
+        r_jwt_set_claim_int_value(jwt, "requested_expiry", (int)i_session->ciba_requested_expiry);
+      }
+      if (i_session->ciba_user_code != NULL) {
+        r_jwt_set_claim_str_value(jwt, "user_code", i_session->ciba_user_code);
+      }
+      if (i_session->ciba_binding_message != NULL) {
+        r_jwt_set_claim_str_value(jwt, "binding_message", i_session->ciba_binding_message);
+      }
+      if (i_session->ciba_acr_values != NULL) {
+        r_jwt_set_claim_str_value(jwt, "acr_values", i_session->ciba_acr_values);
+      }
+      if (i_session->use_dpop) {
+        if ((jwk_sign = _i_get_dpop_sign_privkey(i_session)) != NULL && (dpop_jkt = r_jwk_thumbprint(jwk_sign, R_JWK_THUMB_SHA256, i_session->x5u_flags)) != NULL) {
+          r_jwt_set_claim_str_value(jwt, "dpop_jkt", dpop_jkt);
+        }
+        o_free(dpop_jkt);
+        r_jwk_free(jwk_sign);
+      }
+
+      keys = u_map_enum_keys(&i_session->additional_parameters);
+
+      for (i=0; keys[i] != NULL; i++) {
+        r_jwt_set_claim_str_value(jwt, keys[i], u_map_get(&i_session->additional_parameters, keys[i]));
+      }
+
+      if (_i_has_claims(i_session)) {
+        r_jwt_set_claim_json_t_value(jwt, "claims", i_session->j_claims);
+      }
+
+      do {
+        if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_JSON) {
+          if ((j_login_hint = json_loads(i_session->ciba_login_hint, JSON_DECODE_ANY, NULL)) != NULL) {
+            tmp = json_dumps(j_login_hint, JSON_COMPACT);
+            r_jwt_set_claim_str_value(jwt, "login_hint", tmp);
+            o_free(tmp);
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_generate_ciba_jwt - Error parsing login_hint");
+            ret = I_ERROR_PARAM;
+            break;
+          }
+        }
+        
+        if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_JWT) {
+          r_jwt_init(&jwt_login_hint);
+          if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
+            sign_alg = i_session->client_sign_alg;
+          } else if (i_session->ciba_request_signing_alg != R_JWA_ALG_UNKNOWN) {
+            sign_alg = i_session->ciba_request_signing_alg;
+          }
+          if (r_jwt_set_full_claims_json_str(jwt_login_hint, i_session->ciba_login_hint) == RHN_OK) {
+            if (i_session->token_method == I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET) {
+              if (i_session->client_secret != NULL) {
+                if ((sign_alg == R_JWA_ALG_HS256 || sign_alg == R_JWA_ALG_HS384 || sign_alg == R_JWA_ALG_HS512) && !_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
+                  ret = I_ERROR_PARAM;
+                } else if (sign_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "backchannel_authentication_request_signing_alg_values_supported"))) {
+                  // no signtature alg specified, use one supported by the server
+                  if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS256")) {
+                    sign_alg = R_JWA_ALG_HS256;
+                  } else if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS384")) {
+                    sign_alg = R_JWA_ALG_HS384;
+                  } else if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS512")) {
+                    sign_alg = R_JWA_ALG_HS512;
+                  }
+                }
+                if (sign_alg != R_JWA_ALG_UNKNOWN) {
+                  r_jwt_set_sign_alg(jwt_login_hint, sign_alg);
+                  r_jwk_init(&jwk_sign);
+                  r_jwk_import_from_symmetric_key(jwk_sign, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
+                  ret = I_ERROR_PARAM;
+                  break;
+                }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Client has no secret");
+                ret = I_ERROR_PARAM;
+                break;
+              }
+            } else {
+              if ((i_session->ciba_login_hint_kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, i_session->ciba_login_hint_kid)) != NULL) || (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
+                if ((sign_alg == R_JWA_ALG_RS256 || sign_alg == R_JWA_ALG_RS384 || sign_alg == R_JWA_ALG_RS512 ||
+                     sign_alg == R_JWA_ALG_PS256 || sign_alg == R_JWA_ALG_PS384 || sign_alg == R_JWA_ALG_PS512) &&
+                     _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+                    ret = I_ERROR_PARAM;
+                    break;
+                  }
+                } else if ((sign_alg == R_JWA_ALG_ES256 || sign_alg == R_JWA_ALG_ES384 || sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+                    ret = I_ERROR_PARAM;
+                    break;
+                  }
+                } else if (sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+                    ret = I_ERROR_PARAM;
+                    break;
+                  }
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
+                  ret = I_ERROR_PARAM;
+                  break;
+                }
+                r_jwt_set_sign_alg(jwt_login_hint, sign_alg);
+              } else if (!r_jwks_size(i_session->client_jwks)) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Client has no private key ");
+                ret = I_ERROR_PARAM;
+                break;
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
+                ret = I_ERROR_PARAM;
+                break;
+              }
+            }
+            if (ret == I_OK) {
+              tmp = r_jwt_serialize_signed(jwt_login_hint, jwk_sign, i_session->x5u_flags);
+              r_jwt_set_claim_str_value(jwt, "login_hint_token", tmp);
+              o_free(tmp);
+            }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error parsing login_hint");
+            ret = I_ERROR_PARAM;
+            break;
+          }
+        }
+
+      } while (0);
+      r_jwt_free(jwt_login_hint);
+      r_jwk_free(jwk_sign);
+      json_decref(j_login_hint);
+
+      if ((jwt_str = _i_sign_encrypt_jwt_auth(i_session, jwt)) == NULL) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error _i_sign_encrypt_jwt_auth");
+      }
+
+      r_jwt_free(jwt);
+      r_jwk_free(jwk_sign);
+    }
   }
   return jwt_str;
 }
@@ -1727,6 +1913,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->ciba_binding_message = NULL;
     i_session->ciba_requested_expiry = 0;
     i_session->ciba_client_notification_token = NULL;
+    i_session->ciba_acr_values = NULL;
     i_session->ciba_auth_req_id = NULL;
     i_session->ciba_client_notification_endpoint = NULL;
     i_session->ciba_auth_req_expires_in = 0;
@@ -1829,7 +2016,8 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->ciba_login_hint);
     o_free(i_session->ciba_login_hint_kid);
     o_free(i_session->ciba_binding_message);
-    o_free(i_session->ciba_client_notification_token );
+    o_free(i_session->ciba_client_notification_token);
+    o_free(i_session->ciba_acr_values);
     o_free(i_session->ciba_auth_req_id);
     o_free(i_session->ciba_client_notification_endpoint);
     o_free(i_session->frontchannel_logout_uri);
@@ -2696,6 +2884,23 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
           i_session->ciba_client_notification_token = NULL;
         }
         break;
+      case I_OPT_CIBA_ACR_VALUES:
+        o_free(i_session->ciba_acr_values);
+        if (!o_strnullempty(s_value)) {
+          i_session->ciba_acr_values = o_strdup(s_value);
+        } else {
+          i_session->ciba_acr_values = NULL;
+        }
+        break;
+      case I_OPT_CIBA_ACR_VALUES_APPEND:
+        if (!o_strnullempty(s_value)) {
+          if (i_session->ciba_acr_values == NULL) {
+            i_session->ciba_acr_values = o_strdup(s_value);
+          } else {
+            i_session->ciba_acr_values = mstrcatf(i_session->ciba_acr_values, " %s", s_value);
+          }
+        }
+        break;
       case I_OPT_CIBA_AUTH_REQ_ID:
         o_free(i_session->ciba_auth_req_id);
         if (!o_strnullempty(s_value)) {
@@ -2998,6 +3203,8 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_CIBA_LOGIN_HINT_KID:
         case I_OPT_CIBA_BINDING_MESSAGE:
         case I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN:
+        case I_OPT_CIBA_ACR_VALUES:
+        case I_OPT_CIBA_ACR_VALUES_APPEND:
         case I_OPT_CIBA_AUTH_REQ_ID:
         case I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT:
         case I_OPT_FRONTCHANNEL_LOGOUT_URI:
@@ -3042,8 +3249,7 @@ int i_get_openid_config(struct _i_session * i_session) {
     _i_init_request(i_session, &request);
     ulfius_init_response(&response);
 
-    ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
-                                            U_OPT_HEADER_PARAMETER, "Accept", "application/json",
+    ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                             U_OPT_HTTP_URL, i_session->openid_config_endpoint,
                                             U_OPT_NONE);
     if (_i_send_http_request(i_session, &request, &response) == U_OK) {
@@ -3131,7 +3337,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
     } else {
       bearer = msprintf("%s%s", I_HEADER_PREFIX_BEARER, i_session->access_token);
     }
-    if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) == U_OK) {
+    if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "Authorization", bearer, U_OPT_NONE) == U_OK) {
       // Set DPoP
       if (i_session->use_dpop) {
         if ((dpop_token = i_generate_dpop_token(i_session, http_method!=NULL?http_method:"GET", i_session->userinfo_endpoint, 0, 1)) != NULL) {
@@ -3653,6 +3859,9 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
       case I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN:
         result = (const char *)i_session->ciba_client_notification_token;
         break;
+      case I_OPT_CIBA_ACR_VALUES:
+        result = (const char *)i_session->ciba_acr_values;
+        break;
       case I_OPT_CIBA_AUTH_REQ_ID:
         result = (const char *)i_session->ciba_auth_req_id;
         break;
@@ -3976,7 +4185,6 @@ int i_run_auth_request(struct _i_session * i_session) {
       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error initializing request or response");
       ret = I_ERROR;
     } else {
-      ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR, U_OPT_NONE);
       if (i_session->auth_method & I_AUTH_METHOD_GET) {
         if (i_session->auth_method & (I_AUTH_METHOD_JWT_SIGN_SECRET|I_AUTH_METHOD_JWT_SIGN_PRIVKEY|I_AUTH_METHOD_JWT_ENCRYPT_SECRET|I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY)) {
           if ((jwt = _i_generate_auth_jwt(i_session)) != NULL) {
@@ -3989,7 +4197,7 @@ int i_run_auth_request(struct _i_session * i_session) {
             }
             o_free(jwt);
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error generating jwt");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error generating jwt (1)");
             ret = I_ERROR_PARAM;
           }
         } else if ((ret = i_build_auth_url_get(i_session)) == I_OK) {
@@ -4012,7 +4220,7 @@ int i_run_auth_request(struct _i_session * i_session) {
             ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "request", jwt, U_OPT_NONE);
             o_free(jwt);
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error generating jwt");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error generating jwt (1)");
             ret = I_ERROR_PARAM;
           }
         } else {
@@ -4230,7 +4438,6 @@ int i_run_token_request(struct _i_session * i_session) {
         ulfius_init_response(&response);
         if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
                                                     U_OPT_HTTP_URL, _i_get_endpoint(i_session, "token"),
-                                                    U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                     U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                                     U_OPT_POST_BODY_PARAMETER, "grant_type", "authorization_code",
                                                     U_OPT_POST_BODY_PARAMETER, "code", i_session->code,
@@ -4321,7 +4528,6 @@ int i_run_token_request(struct _i_session * i_session) {
             ulfius_init_response(&response);
             if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
                                                         U_OPT_HTTP_URL, _i_get_endpoint(i_session, "token"),
-                                                        U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                         U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                                         U_OPT_POST_BODY_PARAMETER, "grant_type", "password",
                                                         U_OPT_POST_BODY_PARAMETER, "username", i_session->username,
@@ -4397,7 +4603,6 @@ int i_run_token_request(struct _i_session * i_session) {
             ulfius_init_response(&response);
             if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
                                                         U_OPT_HTTP_URL, _i_get_endpoint(i_session, "token"),
-                                                        U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                         U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                                         U_OPT_POST_BODY_PARAMETER, "grant_type", "client_credentials",
                                                         U_OPT_NONE) != U_OK) {
@@ -4476,7 +4681,6 @@ int i_run_token_request(struct _i_session * i_session) {
             ulfius_init_response(&response);
             if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
                                                         U_OPT_HTTP_URL, _i_get_endpoint(i_session, "token"),
-                                                        U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                         U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                                         U_OPT_POST_BODY_PARAMETER, "grant_type", "refresh_token",
                                                         U_OPT_POST_BODY_PARAMETER, "refresh_token", i_session->refresh_token,
@@ -4551,7 +4755,6 @@ int i_run_token_request(struct _i_session * i_session) {
             ulfius_set_request_properties(&request,
                                           U_OPT_HTTP_VERB, "POST",
                                           U_OPT_HTTP_URL, _i_get_endpoint(i_session, "token"),
-                                          U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                           U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                           U_OPT_POST_BODY_PARAMETER, "grant_type", "urn:ietf:params:oauth:grant-type:device_code",
                                           U_OPT_POST_BODY_PARAMETER, "device_code", i_session->device_auth_code,
@@ -4618,7 +4821,6 @@ int i_run_token_request(struct _i_session * i_session) {
             ulfius_set_request_properties(&request,
                                           U_OPT_HTTP_VERB, "POST",
                                           U_OPT_HTTP_URL, _i_get_endpoint(i_session, "token"),
-                                          U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                           U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                           U_OPT_POST_BODY_PARAMETER, "grant_type", "urn:openid:params:grant-type:ciba",
                                           U_OPT_POST_BODY_PARAMETER, "auth_req_id", i_session->ciba_auth_req_id,
@@ -4907,7 +5109,6 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
       ret = I_OK;
       if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
                                                   U_OPT_HTTP_URL, _i_get_endpoint(i_session, "revocation"),
-                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                   U_OPT_POST_BODY_PARAMETER, "token", i_session->token_target,
                                                   U_OPT_NONE) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting request properties");
@@ -5023,7 +5224,6 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
       ret = I_OK;
       if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
                                                   U_OPT_HTTP_URL, _i_get_endpoint(i_session, "introspection"),
-                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                   U_OPT_HEADER_PARAMETER, "Accept", get_jwt?"application/token-userinfo+jwt":"application/json",
                                                   U_OPT_POST_BODY_PARAMETER, "token", i_session->token_target,
                                                   U_OPT_NONE) != U_OK) {
@@ -5271,7 +5471,6 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
         ret = I_OK;
         if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "POST",
                                                     U_OPT_HTTP_URL, i_session->registration_endpoint,
-                                                    U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                     U_OPT_JSON_BODY, j_copy_parameters,
                                                     U_OPT_NONE) != U_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error setting parameters");
@@ -5358,7 +5557,6 @@ int i_get_registration_client(struct _i_session * i_session, json_t ** j_result)
                                                   U_OPT_HTTP_URL, i_session->registration_endpoint,
                                                   U_OPT_HTTP_URL_APPEND, "/",
                                                   U_OPT_HTTP_URL_APPEND, i_session->client_id,
-                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                   U_OPT_NONE) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error setting parameters");
         ret = I_ERROR;
@@ -5521,7 +5719,6 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
     } else {
       ret = I_OK;
       if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "PUT",
-                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                   U_OPT_JSON_BODY, j_copy_parameters,
                                                   U_OPT_NONE) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error setting parameters");
@@ -5611,7 +5808,6 @@ int i_delete_registration_client(struct _i_session * i_session) {
     } else {
       ret = I_OK;
       if (ulfius_set_request_properties(&request, U_OPT_HTTP_VERB, "DELETE",
-                                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                                   U_OPT_NONE) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error setting parameters");
         ret = I_ERROR;
@@ -5679,7 +5875,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* si }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* si ss* }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -5831,7 +6027,8 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "save_http_request_response", i_get_int_parameter(i_session, I_OPT_SAVE_HTTP_REQUEST_RESPONSE),
                          "dpop_nonce_as", i_get_str_parameter(i_session, I_OPT_DPOP_NONCE_AS),
                          "dpop_nonce_rs", i_get_str_parameter(i_session, I_OPT_DPOP_NONCE_RS),
-                         "ciba_requested_expiry", i_get_int_parameter(i_session, I_OPT_CIBA_REQUESTED_EXPIRY)
+                         "ciba_requested_expiry", i_get_int_parameter(i_session, I_OPT_CIBA_REQUESTED_EXPIRY),
+                         "ciba_acr_values", i_get_str_parameter(i_session, I_OPT_CIBA_ACR_VALUES)
                          );
   }
   return j_return;
@@ -5946,6 +6143,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                    I_OPT_CIBA_BINDING_MESSAGE, json_string_value(json_object_get(j_import, "ciba_binding_message")),
                                    I_OPT_CIBA_REQUESTED_EXPIRY, (int)json_integer_value(json_object_get(j_import, "ciba_requested_expiry")),
                                    I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, json_string_value(json_object_get(j_import, "ciba_client_notification_token")),
+                                   I_OPT_CIBA_ACR_VALUES, json_string_value(json_object_get(j_import, "ciba_acr_values")),
                                    I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_import, "ciba_auth_req_id")),
                                    I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, json_string_value(json_object_get(j_import, "ciba_client_notification_endpoint")),
                                    I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (int)json_integer_value(json_object_get(j_import, "ciba_auth_req_expires_in")),
@@ -6542,7 +6740,6 @@ int i_run_device_auth_request(struct _i_session * i_session) {
     ulfius_set_request_properties(&request,
                                   U_OPT_HTTP_VERB, "POST",
                                   U_OPT_HTTP_URL, _i_get_endpoint(i_session, "device"),
-                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                   U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                   U_OPT_POST_BODY_PARAMETER, "grant_type", "device_authorization",
                                   U_OPT_NONE);
@@ -6657,7 +6854,6 @@ int i_run_par_request(struct _i_session * i_session) {
     ulfius_set_request_properties(&request,
                                   U_OPT_HTTP_VERB, "POST",
                                   U_OPT_HTTP_URL, _i_get_endpoint(i_session, "par"),
-                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                   U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                   U_OPT_POST_BODY_PARAMETER, "client_id", i_session->client_id,
                                   U_OPT_POST_BODY_PARAMETER, "redirect_uri", i_session->redirect_uri,
@@ -6775,10 +6971,10 @@ int i_run_ciba_request(struct _i_session * i_session) {
   struct _u_request request;
   struct _u_response response;
   json_t * j_response, * j_login_hint = NULL;
-  char * tmp = NULL;
+  char * tmp = NULL, * jwt_request = NULL;
   const char ** key = NULL;
   int i;
-  jwt_t * jwt = NULL;
+  jwt_t * jwt_login_hint = NULL;
   jwk_t * jwk_sign = NULL;
   jwa_alg sign_alg = R_JWA_ALG_UNKNOWN, enc_alg = R_JWA_ALG_UNKNOWN;
   jwa_enc enc = R_JWA_ENC_UNKNOWN;
@@ -6793,149 +6989,162 @@ int i_run_ciba_request(struct _i_session * i_session) {
     _i_init_request(i_session, &request);
     ulfius_init_response(&response);
 
-    if (u_map_count(&i_session->additional_parameters)) {
-      key = u_map_enum_keys(&i_session->additional_parameters);
-      for (i=0; key[i]!=NULL; i++) {
-        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, key[i], u_map_get(&i_session->additional_parameters, key[i]), U_OPT_NONE);
-      }
-    }
-
     ulfius_set_request_properties(&request,
                                   U_OPT_HTTP_VERB, "POST",
                                   U_OPT_HTTP_URL, _i_get_endpoint(i_session, "ciba"),
-                                  U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
                                   U_OPT_HEADER_PARAMETER, "Accept", "application/json",
                                   U_OPT_POST_BODY_PARAMETER, "client_id", i_session->client_id,
                                   U_OPT_POST_BODY_PARAMETER, "scope", i_session->scope,
                                   U_OPT_NONE);
 
-    if (i_session->ciba_mode != I_CIBA_MODE_POLL) {
-      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "client_notification_token", i_session->ciba_client_notification_token, U_OPT_NONE);
-    }
-    
-    do {
-      if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_JSON) {
-        if ((j_login_hint = json_loads(i_session->ciba_login_hint, JSON_DECODE_ANY, NULL)) != NULL) {
-          tmp = json_dumps(j_login_hint, JSON_COMPACT);
-          ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "login_hint", tmp, U_OPT_NONE);
-          o_free(tmp);
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error parsing login_hint");
-          ret = I_ERROR_PARAM;
-          break;
+    if (i_session->auth_method & (I_AUTH_METHOD_JWT_SIGN_SECRET|I_AUTH_METHOD_JWT_SIGN_PRIVKEY|I_AUTH_METHOD_JWT_ENCRYPT_SECRET|I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY)) {
+      if ((jwt_request = _i_generate_ciba_jwt(i_session)) != NULL) {
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "request", jwt_request, U_OPT_NONE);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_request - Error _i_generate_ciba_jwt");
+        ret = I_ERROR;
+      }
+      o_free(jwt_request);
+    } else {
+      if (u_map_count(&i_session->additional_parameters)) {
+        key = u_map_enum_keys(&i_session->additional_parameters);
+        for (i=0; key[i]!=NULL; i++) {
+          ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, key[i], u_map_get(&i_session->additional_parameters, key[i]), U_OPT_NONE);
         }
       }
-      
-      if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_JWT) {
-        r_jwt_init(&jwt);
-        if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
-          sign_alg = i_session->client_sign_alg;
-        } else if (i_session->ciba_request_signing_alg != R_JWA_ALG_UNKNOWN) {
-          sign_alg = i_session->ciba_request_signing_alg;
-        }
-        if (r_jwt_set_full_claims_json_str(jwt, i_session->ciba_login_hint) == RHN_OK) {
-          if (i_session->token_method == I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET) {
-            if (i_session->client_secret != NULL) {
-              if ((sign_alg == R_JWA_ALG_HS256 || sign_alg == R_JWA_ALG_HS384 || sign_alg == R_JWA_ALG_HS512) && !_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
-                ret = I_ERROR_PARAM;
-              } else if (sign_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "backchannel_authentication_request_signing_alg_values_supported"))) {
-                // no signtature alg specified, use one supported by the server
-                if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS256")) {
-                  sign_alg = R_JWA_ALG_HS256;
-                } else if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS384")) {
-                  sign_alg = R_JWA_ALG_HS384;
-                } else if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS512")) {
-                  sign_alg = R_JWA_ALG_HS512;
-                }
-              }
-              if (sign_alg != R_JWA_ALG_UNKNOWN) {
-                r_jwt_set_sign_alg(jwt, sign_alg);
-                r_jwk_init(&jwk_sign);
-                r_jwk_import_from_symmetric_key(jwk_sign, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
-              } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
-                ret = I_ERROR_PARAM;
-                break;
-              }
-            } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "Client has no secret");
-              ret = I_ERROR_PARAM;
-              break;
-            }
-          } else {
-            if ((i_session->ciba_login_hint_kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, i_session->ciba_login_hint_kid)) != NULL) || (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
-              if ((sign_alg == R_JWA_ALG_RS256 || sign_alg == R_JWA_ALG_RS384 || sign_alg == R_JWA_ALG_RS512 ||
-                   sign_alg == R_JWA_ALG_PS256 || sign_alg == R_JWA_ALG_PS384 || sign_alg == R_JWA_ALG_PS512) &&
-                   _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
-                if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
-                  ret = I_ERROR_PARAM;
-                  break;
-                }
-              } else if ((sign_alg == R_JWA_ALG_ES256 || sign_alg == R_JWA_ALG_ES384 || sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
-                if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
-                  ret = I_ERROR_PARAM;
-                  break;
-                }
-              } else if (sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
-                if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
-                  ret = I_ERROR_PARAM;
-                  break;
-                }
-              } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
-                ret = I_ERROR_PARAM;
-                break;
-              }
-              r_jwt_set_sign_alg(jwt, sign_alg);
-            } else if (!r_jwks_size(i_session->client_jwks)) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "Client has no private key ");
-              ret = I_ERROR_PARAM;
-              break;
-            } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
-              ret = I_ERROR_PARAM;
-              break;
-            }
-          }
-          if (ret == I_OK) {
-            tmp = r_jwt_serialize_signed(jwt, jwk_sign, i_session->x5u_flags);
-            ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "login_hint_token", tmp, U_OPT_NONE);
-            o_free(tmp);
-          }
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error parsing login_hint");
-          ret = I_ERROR_PARAM;
-          break;
-        }
+
+      if (i_session->ciba_acr_values != NULL) {
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "acr_values", i_session->ciba_acr_values, U_OPT_NONE);
       }
 
       if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN) {
         ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "id_token_hint", i_session->ciba_login_hint, U_OPT_NONE);
       }
-      
+
       if (i_session->ciba_binding_message != NULL) {
         ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "binding_message", i_session->ciba_binding_message, U_OPT_NONE);
       }
-      
+
       if (i_session->ciba_user_code != NULL) {
         ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "user_code", i_session->ciba_user_code, U_OPT_NONE);
       }
-      
+
       if (i_session->ciba_requested_expiry) {
         tmp = msprintf("%u", i_session->ciba_requested_expiry);
         ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "requested_expiry", tmp, U_OPT_NONE);
         o_free(tmp);
       }
-    } while (0);
-    r_jwt_free(jwt);
-    r_jwk_free(jwk_sign);
-    json_decref(j_login_hint);
 
-  
+      if (i_session->ciba_mode != I_CIBA_MODE_POLL) {
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "client_notification_token", i_session->ciba_client_notification_token, U_OPT_NONE);
+      }
+
+      do {
+        if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_JSON) {
+          if ((j_login_hint = json_loads(i_session->ciba_login_hint, JSON_DECODE_ANY, NULL)) != NULL) {
+            tmp = json_dumps(j_login_hint, JSON_COMPACT);
+            ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "login_hint", tmp, U_OPT_NONE);
+            o_free(tmp);
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error parsing login_hint");
+            ret = I_ERROR_PARAM;
+            break;
+          }
+        }
+        
+        if (i_session->ciba_login_hint_format == I_CIBA_LOGIN_HINT_FORMAT_JWT) {
+          r_jwt_init(&jwt_login_hint);
+          if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
+            sign_alg = i_session->client_sign_alg;
+          } else if (i_session->ciba_request_signing_alg != R_JWA_ALG_UNKNOWN) {
+            sign_alg = i_session->ciba_request_signing_alg;
+          }
+          if (r_jwt_set_full_claims_json_str(jwt_login_hint, i_session->ciba_login_hint) == RHN_OK) {
+            if (i_session->token_method == I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET) {
+              if (i_session->client_secret != NULL) {
+                if ((sign_alg == R_JWA_ALG_HS256 || sign_alg == R_JWA_ALG_HS384 || sign_alg == R_JWA_ALG_HS512) && !_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
+                  ret = I_ERROR_PARAM;
+                } else if (sign_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "backchannel_authentication_request_signing_alg_values_supported"))) {
+                  // no signtature alg specified, use one supported by the server
+                  if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS256")) {
+                    sign_alg = R_JWA_ALG_HS256;
+                  } else if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS384")) {
+                    sign_alg = R_JWA_ALG_HS384;
+                  } else if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS512")) {
+                    sign_alg = R_JWA_ALG_HS512;
+                  }
+                }
+                if (sign_alg != R_JWA_ALG_UNKNOWN) {
+                  r_jwt_set_sign_alg(jwt_login_hint, sign_alg);
+                  r_jwk_init(&jwk_sign);
+                  r_jwk_import_from_symmetric_key(jwk_sign, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
+                  ret = I_ERROR_PARAM;
+                  break;
+                }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Client has no secret");
+                ret = I_ERROR_PARAM;
+                break;
+              }
+            } else {
+              if ((i_session->ciba_login_hint_kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, i_session->ciba_login_hint_kid)) != NULL) || (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
+                if ((sign_alg == R_JWA_ALG_RS256 || sign_alg == R_JWA_ALG_RS384 || sign_alg == R_JWA_ALG_RS512 ||
+                     sign_alg == R_JWA_ALG_PS256 || sign_alg == R_JWA_ALG_PS384 || sign_alg == R_JWA_ALG_PS512) &&
+                     _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+                    ret = I_ERROR_PARAM;
+                    break;
+                  }
+                } else if ((sign_alg == R_JWA_ALG_ES256 || sign_alg == R_JWA_ALG_ES384 || sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+                    ret = I_ERROR_PARAM;
+                    break;
+                  }
+                } else if (sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
+                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
+                    ret = I_ERROR_PARAM;
+                    break;
+                  }
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key parameters");
+                  ret = I_ERROR_PARAM;
+                  break;
+                }
+                r_jwt_set_sign_alg(jwt_login_hint, sign_alg);
+              } else if (!r_jwks_size(i_session->client_jwks)) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Client has no private key ");
+                ret = I_ERROR_PARAM;
+                break;
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
+                ret = I_ERROR_PARAM;
+                break;
+              }
+            }
+            if (ret == I_OK) {
+              tmp = r_jwt_serialize_signed(jwt_login_hint, jwk_sign, i_session->x5u_flags);
+              ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "login_hint_token", tmp, U_OPT_NONE);
+              o_free(tmp);
+            }
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error parsing login_hint");
+            ret = I_ERROR_PARAM;
+            break;
+          }
+        }
+
+      } while (0);
+      r_jwt_free(jwt_login_hint);
+      r_jwk_free(jwk_sign);
+      json_decref(j_login_hint);
+    }
+
     if (ret == I_OK) {
       if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
         sign_alg = i_session->client_sign_alg;
