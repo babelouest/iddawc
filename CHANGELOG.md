@@ -5,7 +5,7 @@
 - Improve tests
 - Rename `uint` to `unsigned int`
 - Add `i_delete_registration_client`, `i_set_server_configuration`
-- Add properties `I_OPT_REGISTRATION_CLIENT_URI`, `I_OPT_SERVER_JWKS_CACHE_EXPIRATION`, `I_OPT_SAVE_HTTP_REQUEST_RESPONSE`, `I_OPT_CIBA_ACR_VALUES`, `I_OPT_CIBA_ACR_VALUES_APPEND`, `I_OPT_DPOP_NONCE_AS`, `I_OPT_DPOP_NONCE_RS`
+- Add properties `I_OPT_REGISTRATION_CLIENT_URI`, `I_OPT_SERVER_JWKS_CACHE_EXPIRATION`, `I_OPT_SAVE_HTTP_REQUEST_RESPONSE`, `I_OPT_CIBA_ACR_VALUES`, `I_OPT_CIBA_ACR_VALUES_APPEND`, `I_OPT_DPOP_NONCE_AS`, `I_OPT_DPOP_NONCE_RS`, `I_OPT_HTTP_PROXY`
 - Implement [OAuth 2.0 Demonstrating Proof-of-Possession at the Application Layer (DPoP) Draft 07](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-07)
 
 ## 1.1.1
