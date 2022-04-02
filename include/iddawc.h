@@ -208,59 +208,60 @@ typedef enum {
   I_OPT_DECRYPT_REFRESH_TOKEN                   = 73, ///< Decrypt refresh token when received by the AS as a JWE
   I_OPT_DECRYPT_ACCESS_TOKEN                    = 74, ///< Decrypt access token when received by the AS as a JWE
   I_OPT_DPOP_SIGN_ALG                           = 75, ///< signature algorithm to use when the client signs a DPoP, values available are 'none', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512', 'PS256', 'PS384', 'PS512', 'EDDSA'
-  I_OPT_TLS_KEY_FILE                            = 76, ///< Path to the private key PEM file to use in a TLS authentication
-  I_OPT_TLS_CERT_FILE                           = 77, ///< Path to the certificate PEM file to use in a TLS authentication
-  I_OPT_REMOTE_CERT_FLAG                        = 78, ///< Flags to use with remote connexions to ignore incorrect certificates, flags available are I_REMOTE_HOST_VERIFY_PEER, I_REMOTE_HOST_VERIFY_HOSTNAME, I_REMOTE_PROXY_VERIFY_PEER, I_REMOTE_PROXY_VERIFY_HOSTNAME, I_REMOTE_VERIFY_NONE, default is I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME
-  I_OPT_PKCE_CODE_VERIFIER                      = 79, ///< PKCE code verifier, must be a string of 43 characters minumum only using the characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
-  I_OPT_PKCE_CODE_VERIFIER_GENERATE             = 80, ///< Generate a random PKCE code verifier
-  I_OPT_PKCE_METHOD                             = 81, ///< PKCE method to use, values available are I_PKCE_NONE (no PKCE, default), I_PKCE_METHOD_PLAIN or I_PKCE_METHOD_S256
-  I_OPT_RESOURCE_INDICATOR                      = 82, ///< Resource indicator as detailed in the RFC 8707
-  I_OPT_ACCESS_TOKEN_SIGNING_ALG                = 83, ///< registration value access_token_signing_alg to specify a signing algorithm for access_token
-  I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG             = 84, ///< registration value access_token_encryption_alg to specify a key management algorithm for access_token
-  I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC             = 85, ///< registration value access_token_encryption_enc to specify an encryption algorithm for access_token
-  I_OPT_ID_TOKEN_SIGNING_ALG                    = 86, ///< registration value id_token_signing_alg to specify a signing algorithm for id_token
-  I_OPT_ID_TOKEN_ENCRYPTION_ALG                 = 87, ///< registration value id_token_encryption_alg to specify a key management algorithm for id_token
-  I_OPT_ID_TOKEN_ENCRYPTION_ENC                 = 88, ///< registration value id_token_encryption_enc to specify an encryption algorithm for id_token
-  I_OPT_USERINFO_SIGNING_ALG                    = 89, ///< registration value userinfo_signing_alg to specify a signing algorithm for userinfo
-  I_OPT_USERINFO_ENCRYPTION_ALG                 = 90, ///< registration value userinfo_encryption_alg to specify a key management algorithm for userinfo
-  I_OPT_USERINFO_ENCRYPTION_ENC                 = 91, ///< registration value userinfo_encryption_enc to specify an encryption algorithm for userinfo
-  I_OPT_REQUEST_OBJECT_SIGNING_ALG              = 92, ///< registration value request_object_signing_alg to specify a signing algorithm for request_object
-  I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG           = 93, ///< registration value request_object_encryption_alg to specify a key management algorithm for request_object
-  I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC           = 94, ///< registration value request_object_encryption_enc to specify an encryption algorithm for request_object
-  I_OPT_TOKEN_ENDPOINT_SIGNING_ALG              = 95, ///< registration value token_endpoint_signing_alg to specify a signing algorithm for token_endpoint
-  I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG           = 96, ///< registration value token_endpoint_encryption_alg to specify a key management algorithm for token_endpoint
-  I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC           = 97, ///< registration value token_endpoint_encryption_enc to specify an encryption algorithm for token_endpoint
-  I_OPT_CIBA_REQUEST_SIGNING_ALG                = 98, ///< registration value ciba_request_signing_alg to specify a signing algorithm for ciba_request
-  I_OPT_CIBA_REQUEST_ENCRYPTION_ALG             = 99, ///< registration value ciba_request_encryption_alg to specify a key management algorithm for ciba_request
-  I_OPT_CIBA_REQUEST_ENCRYPTION_ENC             = 100, ///< registration value ciba_request_encryption_enc to specify an encryption algorithm for ciba_request
-  I_OPT_AUTH_RESPONSE_SIGNING_ALG               = 101, ///< registration value auth_response_signing_alg to specify a signing algorithm for auth_response
-  I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG            = 102, ///< registration value auth_response_encryption_alg to specify a key management algorithm for auth_response
-  I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC            = 103, ///< registration value auth_response_encryption_enc to specify an encryption algorithm for auth_response
-  I_OPT_CIBA_ENDPOINT                           = 104, ///< absolute url for the CIBA endpoint or equivalent, string
-  I_OPT_CIBA_MODE                               = 105, ///< backchannel token delivery mode, values available are I_CIBA_MODE_NONE, I_CIBA_MODE_POLL, I_CIBA_MODE_PING and I_CIBA_MODE_PUSH
-  I_OPT_CIBA_USER_CODE                          = 106, ///< CIBA user code to specify in the CIBA request, string, optional
-  I_OPT_CIBA_LOGIN_HINT                         = 107, ///< CIBA login_hint value, mandatory on CIBA requests
-  I_OPT_CIBA_LOGIN_HINT_FORMAT                  = 108, ///< CIBA login_hint format, values available are I_CIBA_LOGIN_HINT_FORMAT_JSON, I_CIBA_LOGIN_HINT_FORMAT_JWT or I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN
-  I_OPT_CIBA_LOGIN_HINT_KID                     = 109, ///< key id to use to sign CIBA requests or login_hint_token if multiple jwk are available on the client, string
-  I_OPT_CIBA_BINDING_MESSAGE                    = 110, ///< CIBA binding message to specify in the CIBA request, string, optional
-  I_OPT_CIBA_REQUESTED_EXPIRY                   = 111, ///< CIBA binding message to specify in the CIBA request, string, optional
-  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN          = 112, ///< client_notification_token value to use on CIBA requests, string, mandatory if mode is ping or push
-  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE = 113, ///< Generate a random client_notification_token of the specified length
-  I_OPT_CIBA_ACR_VALUES                         = 114, ///< ACR values that the OpenID Provider is being requested to use for processing this Authentication Request
-  I_OPT_CIBA_ACR_VALUES_APPEND                  = 115, ///< append another ACR value to the ACR values list, string
-  I_OPT_CIBA_AUTH_REQ_ID                        = 116, ///< auth_req_id value received by the server on succesfull request
-  I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT       = 117, ///< backchannel_client_notification_endpoint value to specify the url for ping or push modes
-  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 118, ///< expiration of the request in seconds received by the server on succesfull request
-  I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 119, ///< Interval to poll token endpoint on poll mode in seconds
-  I_OPT_FRONTCHANNEL_LOGOUT_URI                 = 120, ///< Frontchannel logout URI
-  I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED    = 121, ///< Frontchannel logout session required
-  I_OPT_BACKCHANNEL_LOGOUT_URI                  = 122, ///< Backchannel logout URI
-  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 123, ///< Backchannel logout session required
-  I_OPT_POST_LOGOUT_REDIRECT_URI                = 124, ///< Post logout redirect URI
-  I_OPT_ID_TOKEN_SID                            = 125, ///< ID_Token SID
-  I_OPT_SAVE_HTTP_REQUEST_RESPONSE              = 126, ///< Save HTTP request and response
-  I_OPT_DPOP_NONCE_AS                           = 127, ///< DPoP Nonce for the AS
-  I_OPT_DPOP_NONCE_RS                           = 128  ///< DPoP Nonce for the RS
+  I_OPT_HTTP_PROXY                              = 76, ///< HTTP proxy address to use for outgoing connections
+  I_OPT_TLS_KEY_FILE                            = 77, ///< Path to the private key PEM file to use in a TLS authentication
+  I_OPT_TLS_CERT_FILE                           = 78, ///< Path to the certificate PEM file to use in a TLS authentication
+  I_OPT_REMOTE_CERT_FLAG                        = 79, ///< Flags to use with remote connexions to ignore incorrect certificates, flags available are I_REMOTE_HOST_VERIFY_PEER, I_REMOTE_HOST_VERIFY_HOSTNAME, I_REMOTE_PROXY_VERIFY_PEER, I_REMOTE_PROXY_VERIFY_HOSTNAME, I_REMOTE_VERIFY_NONE, default is I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME
+  I_OPT_PKCE_CODE_VERIFIER                      = 80, ///< PKCE code verifier, must be a string of 43 characters minumum only using the characters [A-Z] / [a-z] / [0-9] / "-" / "." / "_" / "~"
+  I_OPT_PKCE_CODE_VERIFIER_GENERATE             = 81, ///< Generate a random PKCE code verifier
+  I_OPT_PKCE_METHOD                             = 82, ///< PKCE method to use, values available are I_PKCE_NONE (no PKCE, default), I_PKCE_METHOD_PLAIN or I_PKCE_METHOD_S256
+  I_OPT_RESOURCE_INDICATOR                      = 83, ///< Resource indicator as detailed in the RFC 8707
+  I_OPT_ACCESS_TOKEN_SIGNING_ALG                = 84, ///< registration value access_token_signing_alg to specify a signing algorithm for access_token
+  I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG             = 85, ///< registration value access_token_encryption_alg to specify a key management algorithm for access_token
+  I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC             = 86, ///< registration value access_token_encryption_enc to specify an encryption algorithm for access_token
+  I_OPT_ID_TOKEN_SIGNING_ALG                    = 87, ///< registration value id_token_signing_alg to specify a signing algorithm for id_token
+  I_OPT_ID_TOKEN_ENCRYPTION_ALG                 = 88, ///< registration value id_token_encryption_alg to specify a key management algorithm for id_token
+  I_OPT_ID_TOKEN_ENCRYPTION_ENC                 = 89, ///< registration value id_token_encryption_enc to specify an encryption algorithm for id_token
+  I_OPT_USERINFO_SIGNING_ALG                    = 90, ///< registration value userinfo_signing_alg to specify a signing algorithm for userinfo
+  I_OPT_USERINFO_ENCRYPTION_ALG                 = 91, ///< registration value userinfo_encryption_alg to specify a key management algorithm for userinfo
+  I_OPT_USERINFO_ENCRYPTION_ENC                 = 92, ///< registration value userinfo_encryption_enc to specify an encryption algorithm for userinfo
+  I_OPT_REQUEST_OBJECT_SIGNING_ALG              = 93, ///< registration value request_object_signing_alg to specify a signing algorithm for request_object
+  I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG           = 94, ///< registration value request_object_encryption_alg to specify a key management algorithm for request_object
+  I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC           = 95, ///< registration value request_object_encryption_enc to specify an encryption algorithm for request_object
+  I_OPT_TOKEN_ENDPOINT_SIGNING_ALG              = 96, ///< registration value token_endpoint_signing_alg to specify a signing algorithm for token_endpoint
+  I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG           = 97, ///< registration value token_endpoint_encryption_alg to specify a key management algorithm for token_endpoint
+  I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC           = 98, ///< registration value token_endpoint_encryption_enc to specify an encryption algorithm for token_endpoint
+  I_OPT_CIBA_REQUEST_SIGNING_ALG                = 99, ///< registration value ciba_request_signing_alg to specify a signing algorithm for ciba_request
+  I_OPT_CIBA_REQUEST_ENCRYPTION_ALG             = 100, ///< registration value ciba_request_encryption_alg to specify a key management algorithm for ciba_request
+  I_OPT_CIBA_REQUEST_ENCRYPTION_ENC             = 101, ///< registration value ciba_request_encryption_enc to specify an encryption algorithm for ciba_request
+  I_OPT_AUTH_RESPONSE_SIGNING_ALG               = 102, ///< registration value auth_response_signing_alg to specify a signing algorithm for auth_response
+  I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG            = 103, ///< registration value auth_response_encryption_alg to specify a key management algorithm for auth_response
+  I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC            = 104, ///< registration value auth_response_encryption_enc to specify an encryption algorithm for auth_response
+  I_OPT_CIBA_ENDPOINT                           = 105, ///< absolute url for the CIBA endpoint or equivalent, string
+  I_OPT_CIBA_MODE                               = 106, ///< backchannel token delivery mode, values available are I_CIBA_MODE_NONE, I_CIBA_MODE_POLL, I_CIBA_MODE_PING and I_CIBA_MODE_PUSH
+  I_OPT_CIBA_USER_CODE                          = 107, ///< CIBA user code to specify in the CIBA request, string, optional
+  I_OPT_CIBA_LOGIN_HINT                         = 108, ///< CIBA login_hint value, mandatory on CIBA requests
+  I_OPT_CIBA_LOGIN_HINT_FORMAT                  = 109, ///< CIBA login_hint format, values available are I_CIBA_LOGIN_HINT_FORMAT_JSON, I_CIBA_LOGIN_HINT_FORMAT_JWT or I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN
+  I_OPT_CIBA_LOGIN_HINT_KID                     = 110, ///< key id to use to sign CIBA requests or login_hint_token if multiple jwk are available on the client, string
+  I_OPT_CIBA_BINDING_MESSAGE                    = 111, ///< CIBA binding message to specify in the CIBA request, string, optional
+  I_OPT_CIBA_REQUESTED_EXPIRY                   = 112, ///< CIBA binding message to specify in the CIBA request, string, optional
+  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN          = 113, ///< client_notification_token value to use on CIBA requests, string, mandatory if mode is ping or push
+  I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE = 114, ///< Generate a random client_notification_token of the specified length
+  I_OPT_CIBA_ACR_VALUES                         = 115, ///< ACR values that the OpenID Provider is being requested to use for processing this Authentication Request
+  I_OPT_CIBA_ACR_VALUES_APPEND                  = 116, ///< append another ACR value to the ACR values list, string
+  I_OPT_CIBA_AUTH_REQ_ID                        = 117, ///< auth_req_id value received by the server on succesfull request
+  I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT       = 118, ///< backchannel_client_notification_endpoint value to specify the url for ping or push modes
+  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 119, ///< expiration of the request in seconds received by the server on succesfull request
+  I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 120, ///< Interval to poll token endpoint on poll mode in seconds
+  I_OPT_FRONTCHANNEL_LOGOUT_URI                 = 121, ///< Frontchannel logout URI
+  I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED    = 122, ///< Frontchannel logout session required
+  I_OPT_BACKCHANNEL_LOGOUT_URI                  = 123, ///< Backchannel logout URI
+  I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED     = 124, ///< Backchannel logout session required
+  I_OPT_POST_LOGOUT_REDIRECT_URI                = 125, ///< Post logout redirect URI
+  I_OPT_ID_TOKEN_SID                            = 126, ///< ID_Token SID
+  I_OPT_SAVE_HTTP_REQUEST_RESPONSE              = 127, ///< Save HTTP request and response
+  I_OPT_DPOP_NONCE_AS                           = 128, ///< DPoP Nonce for the AS
+  I_OPT_DPOP_NONCE_RS                           = 129  ///< DPoP Nonce for the RS
 } i_option;
 
 /**
@@ -352,6 +353,7 @@ struct _i_session {
   int                   decrypt_code;
   int                   decrypt_refresh_token;
   int                   decrypt_access_token;
+  char                * http_proxy;
   char                * key_file;
   char                * cert_file;
   int                   remote_cert_flag;
@@ -538,7 +540,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
  * I_OPT_CIBA_AUTH_REQ_ID, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT,
  * I_OPT_FRONTCHANNEL_LOGOUT_URI, I_OPT_BACKCHANNEL_LOGOUT_URI,
  * I_OPT_POST_LOGOUT_REDIRECT_URI, I_OPT_ID_TOKEN_SID,
- * I_OPT_DPOP_NONCE_AS, I_OPT_DPOP_NONCE_RS
+ * I_OPT_DPOP_NONCE_AS, I_OPT_DPOP_NONCE_RS, I_OPT_HTTP_PROXY
  * @param s_value: The const char * value to set
  * @return I_OK on success, an error value on error
  */
@@ -700,7 +702,7 @@ unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option)
  * I_OPT_CIBA_AUTH_REQ_ID, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT,
  * I_OPT_FRONTCHANNEL_LOGOUT_URI, I_OPT_BACKCHANNEL_LOGOUT_URI,
  * I_OPT_POST_LOGOUT_REDIRECT_URI, I_OPT_ID_TOKEN_SID,
- * I_OPT_DPOP_NONCE_AS, I_OPT_DPOP_NONCE_RS
+ * I_OPT_DPOP_NONCE_AS, I_OPT_DPOP_NONCE_RS, I_OPT_HTTP_PROXY
  * @return the char * value of the option, NULL if no value set
  */
 const char * i_get_str_parameter(struct _i_session * i_session, i_option option);

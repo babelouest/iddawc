@@ -202,6 +202,7 @@ static int _i_init_request(struct _i_session * i_session, struct _u_request * re
     if (ulfius_set_request_properties(request, U_OPT_CHECK_SERVER_CERTIFICATE_FLAG, flag_host,
                                                U_OPT_CHECK_PROXY_CERTIFICATE_FLAG, flag_proxy,
                                                U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR,
+                                               U_OPT_HTTP_PROXY, i_session->http_proxy,
                                                U_OPT_NONE) == U_OK) {
       ret = I_OK;
     } else {
@@ -1876,6 +1877,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->decrypt_code = 0;
     i_session->decrypt_refresh_token = 0;
     i_session->decrypt_access_token = 0;
+    i_session->http_proxy = NULL;
     i_session->key_file = NULL;
     i_session->cert_file = NULL;
     i_session->pkce_code_verifier = NULL;
@@ -2007,6 +2009,7 @@ void i_clean_session(struct _i_session * i_session) {
     o_free(i_session->dpop_kid);
     o_free(i_session->dpop_nonce_as);
     o_free(i_session->dpop_nonce_rs);
+    o_free(i_session->http_proxy);
     o_free(i_session->key_file);
     o_free(i_session->cert_file);
     o_free(i_session->pkce_code_verifier);
@@ -2661,6 +2664,14 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
           i_session->key_file = NULL;
         }
         break;
+      case I_OPT_HTTP_PROXY:
+        o_free(i_session->http_proxy);
+        if (!o_strnullempty(s_value)) {
+          i_session->http_proxy = o_strdup(s_value);
+        } else {
+          i_session->http_proxy = NULL;
+        }
+        break;
       case I_OPT_TLS_CERT_FILE:
         o_free(i_session->cert_file);
         if (!o_strnullempty(s_value)) {
@@ -3172,6 +3183,7 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_PUSHED_AUTH_REQ_URI:
         case I_OPT_DPOP_KID:
         case I_OPT_DPOP_SIGN_ALG:
+        case I_OPT_HTTP_PROXY:
         case I_OPT_TLS_KEY_FILE:
         case I_OPT_TLS_CERT_FILE:
         case I_OPT_PKCE_CODE_VERIFIER:
@@ -3765,6 +3777,9 @@ const char * i_get_str_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_DPOP_SIGN_ALG:
         result = r_jwa_alg_to_str(i_session->dpop_sign_alg);
+        break;
+      case I_OPT_HTTP_PROXY:
+        result = (const char *)i_session->http_proxy;
         break;
       case I_OPT_TLS_KEY_FILE:
         result = (const char *)i_session->key_file;
@@ -5875,7 +5890,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* si ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* si ss*  ss* }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -6028,7 +6043,9 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "dpop_nonce_as", i_get_str_parameter(i_session, I_OPT_DPOP_NONCE_AS),
                          "dpop_nonce_rs", i_get_str_parameter(i_session, I_OPT_DPOP_NONCE_RS),
                          "ciba_requested_expiry", i_get_int_parameter(i_session, I_OPT_CIBA_REQUESTED_EXPIRY),
-                         "ciba_acr_values", i_get_str_parameter(i_session, I_OPT_CIBA_ACR_VALUES)
+                         "ciba_acr_values", i_get_str_parameter(i_session, I_OPT_CIBA_ACR_VALUES),
+                         
+                         "http_proxy", i_get_str_parameter(i_session, I_OPT_HTTP_PROXY)
                          );
   }
   return j_return;
@@ -6107,6 +6124,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                    I_OPT_DECRYPT_CODE, json_object_get(j_import, "decrypt_code")==json_true(),
                                    I_OPT_DECRYPT_REFRESH_TOKEN, json_object_get(j_import, "decrypt_refresh_token")==json_true(),
                                    I_OPT_DECRYPT_ACCESS_TOKEN, json_object_get(j_import, "decrypt_access_token")==json_true(),
+                                   I_OPT_HTTP_PROXY, json_string_value(json_object_get(j_import, "http_proxy")),
                                    I_OPT_TLS_KEY_FILE, json_string_value(json_object_get(j_import, "key_file")),
                                    I_OPT_TLS_CERT_FILE, json_string_value(json_object_get(j_import, "cert_file")),
                                    I_OPT_REMOTE_CERT_FLAG, (int)json_integer_value(json_object_get(j_import, "remote_cert_flag")),
@@ -7173,7 +7191,7 @@ int i_run_ciba_request(struct _i_session * i_session) {
                 i_set_parameter_list(i_session,
                                      I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_response, "auth_req_id")),
                                      I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
-                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
+                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, (unsigned int)json_integer_value(json_object_get(j_response, "interval")),
                                      I_OPT_NONE);
                 ret = I_OK;
               } else {
@@ -7193,6 +7211,7 @@ int i_run_ciba_request(struct _i_session * i_session) {
             ret = I_ERROR_UNAUTHORIZED;
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Invalid response status");
+            y_log_message(Y_LOG_LEVEL_DEBUG, "response status %d", response.status);
             ret = I_ERROR;
           }
         } else {
