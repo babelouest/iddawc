@@ -108,6 +108,7 @@
 #define DECRYPT_CODE 1
 #define DECRYPT_REFRESH_TOKEN 1
 #define DECRYPT_ACCESS_TOKEN 1
+#define HTTP_PROXY "https://proxy.local/"
 #define TLS_KEY_FILE "client.key"
 #define TLS_CERT_FILE "client.pem"
 #define REMOTE_CERT_FLAG 42
@@ -487,6 +488,9 @@ START_TEST(test_iddawc_set_str_parameter)
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_DPOP_SIGN_ALG, DPOP_SIGN_ALG), I_OK);
 
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_HTTP_PROXY, NULL), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_HTTP_PROXY, HTTP_PROXY), I_OK);
+
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_KEY_FILE, NULL), I_OK);
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_KEY_FILE, TLS_KEY_FILE), I_OK);
 
@@ -812,6 +816,9 @@ START_TEST(test_iddawc_get_str_parameter)
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_KEY_FILE, TLS_KEY_FILE), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
+
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_HTTP_PROXY, HTTP_PROXY), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_HTTP_PROXY), HTTP_PROXY);
 
   ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_TLS_CERT_FILE, TLS_CERT_FILE), I_OK);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
@@ -1233,6 +1240,7 @@ START_TEST(test_iddawc_parameter_list)
                                                   I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                   I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                   I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                  I_OPT_HTTP_PROXY, HTTP_PROXY,
                                                   I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
                                                   I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
                                                   I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
@@ -1332,6 +1340,7 @@ START_TEST(test_iddawc_parameter_list)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_HTTP_PROXY), HTTP_PROXY);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
@@ -1541,6 +1550,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_code")), 0);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_refresh_token")), 0);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "decrypt_access_token")), 0);
+  ck_assert_ptr_eq(json_object_get(j_export, "http_proxy"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "key_file"), NULL);
   ck_assert_ptr_eq(json_object_get(j_export, "cert_file"), NULL);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "remote_cert_flag")), I_REMOTE_HOST_VERIFY_PEER|I_REMOTE_HOST_VERIFY_HOSTNAME|I_REMOTE_PROXY_VERIFY_PEER|I_REMOTE_PROXY_VERIFY_HOSTNAME);
@@ -1662,6 +1672,7 @@ START_TEST(test_iddawc_export_json_t)
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_HTTP_PROXY, HTTP_PROXY,
                                                     I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
                                                     I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
                                                     I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
@@ -1788,6 +1799,7 @@ START_TEST(test_iddawc_export_json_t)
   ck_assert_ptr_eq(json_object_get(j_export, "decrypt_code"), json_true());
   ck_assert_ptr_eq(json_object_get(j_export, "decrypt_refresh_token"), json_true());
   ck_assert_ptr_eq(json_object_get(j_export, "decrypt_access_token"), json_true());
+  ck_assert_str_eq(json_string_value(json_object_get(j_export, "http_proxy")), HTTP_PROXY);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "key_file")), TLS_KEY_FILE);
   ck_assert_str_eq(json_string_value(json_object_get(j_export, "cert_file")), TLS_CERT_FILE);
   ck_assert_int_eq(json_integer_value(json_object_get(j_export, "remote_cert_flag")), REMOTE_CERT_FLAG);
@@ -1926,6 +1938,7 @@ START_TEST(test_iddawc_import_json_t)
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_HTTP_PROXY, HTTP_PROXY,
                                                     I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
                                                     I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
                                                     I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
@@ -2055,6 +2068,7 @@ START_TEST(test_iddawc_import_json_t)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_HTTP_PROXY), HTTP_PROXY);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
@@ -2196,6 +2210,7 @@ START_TEST(test_iddawc_export_str)
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_HTTP_PROXY, HTTP_PROXY,
                                                     I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
                                                     I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
                                                     I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
@@ -2343,6 +2358,7 @@ START_TEST(test_iddawc_import_str)
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_HTTP_PROXY, HTTP_PROXY,
                                                     I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
                                                     I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
                                                     I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
@@ -2476,6 +2492,7 @@ START_TEST(test_iddawc_import_str)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_HTTP_PROXY), HTTP_PROXY);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
@@ -2619,6 +2636,7 @@ START_TEST(test_iddawc_import_multiple)
                                                     I_OPT_DECRYPT_CODE, DECRYPT_CODE,
                                                     I_OPT_DECRYPT_REFRESH_TOKEN, DECRYPT_REFRESH_TOKEN,
                                                     I_OPT_DECRYPT_ACCESS_TOKEN, DECRYPT_ACCESS_TOKEN,
+                                                    I_OPT_HTTP_PROXY, HTTP_PROXY,
                                                     I_OPT_TLS_KEY_FILE, TLS_KEY_FILE,
                                                     I_OPT_TLS_CERT_FILE, TLS_CERT_FILE,
                                                     I_OPT_REMOTE_CERT_FLAG, REMOTE_CERT_FLAG,
@@ -2753,6 +2771,7 @@ START_TEST(test_iddawc_import_multiple)
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_HTTP_PROXY), HTTP_PROXY);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
   ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
@@ -2877,6 +2896,7 @@ START_TEST(test_iddawc_import_multiple)
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_DECRYPT_CODE), DECRYPT_CODE);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_DECRYPT_REFRESH_TOKEN), DECRYPT_REFRESH_TOKEN);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_DECRYPT_ACCESS_TOKEN), DECRYPT_ACCESS_TOKEN);
+  ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_HTTP_PROXY), HTTP_PROXY);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TLS_KEY_FILE), TLS_KEY_FILE);
   ck_assert_str_eq(i_get_str_parameter(&i_session_import, I_OPT_TLS_CERT_FILE), TLS_CERT_FILE);
   ck_assert_int_eq(i_get_int_parameter(&i_session_import, I_OPT_REMOTE_CERT_FLAG), REMOTE_CERT_FLAG);
