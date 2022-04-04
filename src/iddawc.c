@@ -535,9 +535,6 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
             // expected typ value is recommended but not mandatory
             switch (token_type) {
               case I_TOKEN_TYPE_ACCESS_TOKEN:
-                if (0 != o_strcmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
-                  y_log_message(Y_LOG_LEVEL_DEBUG, "Invalid jwt 'typ' value, expected: 'at+jwt', result: '%s'", r_jwt_get_header_str_value(jwt, "typ"));
-                }
                 if (i_session->openid_config_strict & I_STRICT_YES) {
                   if (i_session->access_token_signing_alg != R_JWA_ALG_UNKNOWN && i_session->access_token_signing_alg != r_jwt_get_sign_alg(jwt)) {
                     y_log_message(Y_LOG_LEVEL_DEBUG, "Invalid jwt access token sign alg value: '%s'", r_jwa_alg_to_str(r_jwt_get_sign_alg(jwt)));
@@ -1838,7 +1835,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->token_method = I_TOKEN_AUTH_METHOD_NONE;
     i_session->x5u_flags = 0;
     i_session->openid_config = NULL;
-    i_session->openid_config_strict = I_STRICT_JWT_AT_SIGNATURE|I_STRICT_JWT_AT_HEADER_TYP|I_STRICT_JWT_AT_CLAIM;
+    i_session->openid_config_strict = I_STRICT_NO|I_STRICT_JWT_AT_SIGNATURE|I_STRICT_JWT_AT_HEADER_TYP|I_STRICT_JWT_AT_CLAIM;
     i_session->issuer = NULL;
     i_session->userinfo = NULL;
     i_session->j_userinfo = NULL;
@@ -5074,8 +5071,8 @@ int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud) {
     if (r_jwt_init(&jwt) == RHN_OK) {
       if ((res = _i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt)) == I_OK || !(i_session->openid_config_strict&I_STRICT_JWT_AT_SIGNATURE)) {
         y_log_message(Y_LOG_LEVEL_DEBUG, "sig %d, strict %d", _i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt), !(i_session->openid_config_strict));
-        if (i_session->openid_config_strict&I_STRICT_JWT_AT_HEADER_TYP && 0 != o_strcmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid typ");
+        if (i_session->openid_config_strict&I_STRICT_JWT_AT_HEADER_TYP && 0 != o_strcasecmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcasecmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - invalid 'typ' value, expected: 'at+jwt' or 'application/at+jwt', result: '%s'", r_jwt_get_header_str_value(jwt, "typ"));
           ret = I_ERROR_PARAM;
         } else if (i_session->openid_config_strict&I_STRICT_JWT_AT_CLAIM &&
                    r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
@@ -5320,7 +5317,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error _i_verify_jwt_sig_enc");
                   ret = I_ERROR;
                 } else {
-                  if (0 != o_strcmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
+                  if (i_session->openid_config_strict&I_STRICT_JWT_AT_HEADER_TYP && 0 != o_strcasecmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcasecmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - invalid typ");
                     ret = I_ERROR;
                   } else if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
