@@ -483,7 +483,7 @@ int i_verify_id_token(struct _i_session * i_session);
 
 ### Verify an access_token
 
-If the access_token is a JWT, you can use the function `i_verify_jwt_access_token` to verify its signature and content. The access token must use the format specified in the [JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-access-token-jwt-13) standard.
+If the access_token is a JWT, you can use the function `i_verify_jwt_access_token` to verify its signature and content. The access token must use the format specified in the [JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens](https://datatracker.ietf.org/doc/html/rfc9068) standard.
 
 The function will verify the claims `iss`, `iat` and `aud`.
 
@@ -499,6 +499,17 @@ When an access_token is validated, its claims are available in the property `jso
  * @return I_OK on success, an error value on error
  */
 int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud);
+```
+
+If your Authorization Server provides JWT Access Tokens but not strictly according to the RFC, you can disable or enable the following JWT AT checks by (un)setting the following flags to the int property `I_OPT_OPENID_CONFIG_STRICT`:
+
+- `I_STRICT_JWT_AT_SIGNATURE`: verify JWT AT signature
+- `I_STRICT_JWT_AT_HEADER_TYP`: verify JWT AT header typ to be 'jwt+at' or 'application/jwt+at'
+- `I_STRICT_JWT_AT_CLAIM`: verify mandatory other claims (iss, iat, etc.)
+
+```
+// Example setting to verify the access token signature and the claims, but not the `typ` header
+i_set_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT, I_STRICT_JWT_AT_SIGNATURE|I_STRICT_JWT_AT_CLAIM); 
 ```
 
 ### Load userinfo
