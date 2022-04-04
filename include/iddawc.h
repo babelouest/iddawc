@@ -153,7 +153,7 @@ typedef enum {
   I_OPT_TOKEN_ENDPOINT                          = 13, ///< absolute url for the token endpoint, string
   I_OPT_OPENID_CONFIG_ENDPOINT                  = 14, ///< absolute url for the .well-known/openid-configuration endpoint, string
   I_OPT_OPENID_CONFIG                           = 15, ///< result of the .well-known/openid-configuration
-  I_OPT_OPENID_CONFIG_STRICT                    = 16, ///< must the .well-known/openid-configuration parameters be strictly
+  I_OPT_OPENID_CONFIG_STRICT                    = 16, ///< must the .well-known/openid-configuration parameters be strictly verified? After i_init_session(), the value is I_STRICT_NO|I_STRICT_JWT_AT_SIGNATURE|I_STRICT_JWT_AT_HEADER_TYP|I_STRICT_JWT_AT_CLAIM, if the function i_get_openid_config() is used, then the flag I_STRICT_NO will be replaced by I_STRICT_YES, the others will remain
   I_OPT_USERINFO_ENDPOINT                       = 17, ///< absolute url for the userinfo endpoint or equivalent, string
   I_OPT_RESULT                                  = 18, ///< result of a request
   I_OPT_ERROR                                   = 19, ///< error value of a failed request, string
