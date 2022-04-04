@@ -74,10 +74,11 @@ extern "C"
 #define I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00100000 ///< token endpoint using a JWT encrypted with the client secret
 #define I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x01000000 ///< token endpoint using a JWT signed with the client private key and encrypted with the server public key or the client secret
 
-#define I_STRICT_NO               0x00000000 ///< Do not stricly conform to openid config result
-#define I_STRICT_YES              0x00000001 ///< Stricly conform to openid config result
-#define I_STRICT_JWT_AT_SIGNATURE 0x00000010 ///< Strictly conform JWT Access Tokens header typ value
-#define I_STRICT_JWT_AT_RFC       0x00000100 ///< Strictly conform JWT Access Tokens header typ value
+#define I_STRICT_NO                0x00000000 ///< Do not stricly conform to openid config result
+#define I_STRICT_YES               0x00000001 ///< Stricly conform to openid config result
+#define I_STRICT_JWT_AT_SIGNATURE  0x00000010 ///< Verify JWT access tokens signatures
+#define I_STRICT_JWT_AT_HEADER_TYP 0x00000100 ///< Verify JWT access tokens header typ value
+#define I_STRICT_JWT_AT_CLAIM      0x00001000 ///< Verify JWT access tokens claims values
 
 #define I_AUTH_SIGN_ALG_MAX_LENGTH 8 ///< Max length of a sign algorithm name
 
