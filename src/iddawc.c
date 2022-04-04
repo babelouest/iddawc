@@ -390,7 +390,7 @@ static int _i_has_openid_config_parameter_value(struct _i_session * i_session, c
   json_t * j_element = NULL, * j_param;
 
   if (i_session != NULL) {
-    if (i_session->openid_config_strict == I_STRICT_YES) {
+    if (i_session->openid_config_strict & I_STRICT_YES) {
       if (i_session->openid_config != NULL && (j_param = json_object_get(i_session->openid_config, parameter)) != NULL) {
         if (json_is_string(json_object_get(i_session->openid_config, parameter))) {
           if (0 == o_strcmp(value, json_string_value(j_param))) {
@@ -538,7 +538,7 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
                 if (0 != o_strcmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
                   y_log_message(Y_LOG_LEVEL_DEBUG, "Invalid jwt 'typ' value, expected: 'at+jwt', result: '%s'", r_jwt_get_header_str_value(jwt, "typ"));
                 }
-                if (i_session->openid_config_strict == I_STRICT_YES) {
+                if (i_session->openid_config_strict & I_STRICT_YES) {
                   if (i_session->access_token_signing_alg != R_JWA_ALG_UNKNOWN && i_session->access_token_signing_alg != r_jwt_get_sign_alg(jwt)) {
                     y_log_message(Y_LOG_LEVEL_DEBUG, "Invalid jwt access token sign alg value: '%s'", r_jwa_alg_to_str(r_jwt_get_sign_alg(jwt)));
                   }
@@ -551,7 +551,7 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
                 }
                 break;
               case I_TOKEN_TYPE_USERINFO:
-                if (i_session->openid_config_strict == I_STRICT_YES) {
+                if (i_session->openid_config_strict & I_STRICT_YES) {
                   if (i_session->userinfo_signing_alg != R_JWA_ALG_UNKNOWN && i_session->userinfo_signing_alg != r_jwt_get_sign_alg(jwt)) {
                     y_log_message(Y_LOG_LEVEL_DEBUG, "Invalid jwt userinfo sign alg value: '%s'", r_jwa_alg_to_str(r_jwt_get_sign_alg(jwt)));
                   }
@@ -573,7 +573,7 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
                 break;
               case I_TOKEN_TYPE_ID_TOKEN:
                 // I don't see any typ value for id_token in the specs, weird eh?
-                if (i_session->openid_config_strict == I_STRICT_YES) {
+                if (i_session->openid_config_strict & I_STRICT_YES) {
                   if (i_session->id_token_signing_alg != R_JWA_ALG_UNKNOWN && i_session->id_token_signing_alg != r_jwt_get_sign_alg(jwt)) {
                     y_log_message(Y_LOG_LEVEL_DEBUG, "Invalid jwt id token sign alg value: '%s'", r_jwa_alg_to_str(r_jwt_get_sign_alg(jwt)));
                   }
@@ -586,7 +586,7 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
                 }
                 break;
               case I_TOKEN_TYPE_RESPONSE_AUTH:
-                if (i_session->openid_config_strict == I_STRICT_YES) {
+                if (i_session->openid_config_strict & I_STRICT_YES) {
                   if (i_session->auth_response_signing_alg != R_JWA_ALG_UNKNOWN && i_session->auth_response_signing_alg != r_jwt_get_sign_alg(jwt)) {
                     y_log_message(Y_LOG_LEVEL_DEBUG, "Invalid jwt response auth sign alg value: '%s'", r_jwa_alg_to_str(r_jwt_get_sign_alg(jwt)));
                   }
@@ -1837,7 +1837,7 @@ int i_init_session(struct _i_session * i_session) {
     i_session->token_method = I_TOKEN_AUTH_METHOD_NONE;
     i_session->x5u_flags = 0;
     i_session->openid_config = NULL;
-    i_session->openid_config_strict = I_STRICT_NO;
+    i_session->openid_config_strict = I_STRICT_JWT_AT_SIGNATURE|I_STRICT_JWT_AT_RFC;
     i_session->issuer = NULL;
     i_session->userinfo = NULL;
     i_session->j_userinfo = NULL;
@@ -5069,41 +5069,45 @@ int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud) {
   int ret, res;
   jwt_t * jwt = NULL;
 
-  if (r_jwt_init(&jwt) == RHN_OK) {
-    if ((res = _i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt)) == I_OK) {
-      if (0 != o_strcmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid typ");
-        ret = I_ERROR_PARAM;
-      } else if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
-                                            R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
-                                            R_JWT_CLAIM_SUB, NULL,
-                                            R_JWT_CLAIM_IAT, R_JWT_CLAIM_NOW,
-                                            R_JWT_CLAIM_JTI, NULL,
-                                            R_JWT_CLAIM_STR, "client_id", NULL,
-                                            R_JWT_CLAIM_NOP) != RHN_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid claims");
+  if (i_session != NULL) {
+    if (r_jwt_init(&jwt) == RHN_OK) {
+      if ((res = _i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt)) == I_OK) {
+        if (0 != o_strcmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid typ");
+          ret = I_ERROR_PARAM;
+        } else if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
+                                              R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
+                                              R_JWT_CLAIM_SUB, NULL,
+                                              R_JWT_CLAIM_IAT, R_JWT_CLAIM_NOW,
+                                              R_JWT_CLAIM_JTI, NULL,
+                                              R_JWT_CLAIM_STR, "client_id", NULL,
+                                              R_JWT_CLAIM_NOP) != RHN_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid claims");
+          ret = I_ERROR_PARAM;
+        } else {
+          if (o_strnullempty(aud) || r_jwt_validate_claims(jwt, R_JWT_CLAIM_AUD, aud, R_JWT_CLAIM_NOP) == RHN_OK) {
+            json_decref(i_session->access_token_payload);
+            i_session->access_token_payload = r_jwt_get_full_claims_json_t(jwt);
+            ret = I_OK;
+          } else {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid claim aud");
+            ret = I_ERROR_PARAM;
+          }
+        }
+      } else if (res == I_ERROR) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error _i_verify_jwt_sig_enc");
         ret = I_ERROR_PARAM;
       } else {
-        if (o_strnullempty(aud) || r_jwt_validate_claims(jwt, R_JWT_CLAIM_AUD, aud, R_JWT_CLAIM_NOP) == RHN_OK) {
-          json_decref(i_session->access_token_payload);
-          i_session->access_token_payload = r_jwt_get_full_claims_json_t(jwt);
-          ret = I_OK;
-        } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid claim aud");
-          ret = I_ERROR_PARAM;
-        }
+        ret = res;
       }
-    } else if (res == I_ERROR) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error _i_verify_jwt_sig_enc");
-      ret = I_ERROR_PARAM;
     } else {
-      ret = res;
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error r_jwt_init");
+      ret = I_ERROR;
     }
+    r_jwt_free(jwt);
   } else {
-    y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error r_jwt_init");
-    ret = I_ERROR;
+    ret = I_ERROR_PARAM;
   }
-  r_jwt_free(jwt);
   return ret;
 }
 
@@ -5890,7 +5894,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* si ss*  ss* }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* si ss*  ss* si }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -5932,7 +5936,7 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "x5u_flags", i_get_int_parameter(i_session, I_OPT_X5U_FLAGS),
                          "openid_config", i_session->openid_config,
 
-                         "openid_config_strict", i_get_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT)?json_true():json_false(),
+                         "openid_config_strict", i_get_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT)&I_STRICT_YES?json_true():json_false(),
                          "issuer", i_get_str_parameter(i_session, I_OPT_ISSUER),
                          "userinfo", i_get_str_parameter(i_session, I_OPT_USERINFO),
                          "server-kid", i_get_str_parameter(i_session, I_OPT_SERVER_KID),
@@ -6045,7 +6049,8 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "ciba_requested_expiry", i_get_int_parameter(i_session, I_OPT_CIBA_REQUESTED_EXPIRY),
                          "ciba_acr_values", i_get_str_parameter(i_session, I_OPT_CIBA_ACR_VALUES),
                          
-                         "http_proxy", i_get_str_parameter(i_session, I_OPT_HTTP_PROXY)
+                         "http_proxy", i_get_str_parameter(i_session, I_OPT_HTTP_PROXY),
+                         "openid_config_strict_flags", i_get_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT)
                          );
   }
   return j_return;
@@ -6087,7 +6092,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                    I_OPT_TOKEN_METHOD, (int)json_integer_value(json_object_get(j_import, "token_method")),
                                    I_OPT_USER_PASSWORD, json_string_value(json_object_get(j_import, "user_password")),
                                    I_OPT_X5U_FLAGS, (int)json_integer_value(json_object_get(j_import, "x5u_flags")),
-                                   I_OPT_OPENID_CONFIG_STRICT, json_object_get(j_import, "openid_config_strict")==json_true(),
+                                   I_OPT_OPENID_CONFIG_STRICT, (json_object_get(j_import, "openid_config_strict")==json_true()?I_STRICT_YES:I_STRICT_NO)|(int)json_integer_value(json_object_get(j_import, "openid_config_strict_flags")),
                                    I_OPT_ISSUER, json_string_value(json_object_get(j_import, "issuer")),
                                    I_OPT_USERINFO, json_string_value(json_object_get(j_import, "userinfo")),
                                    I_OPT_SERVER_KID, json_string_value(json_object_get(j_import, "server-kid")),
@@ -6979,6 +6984,7 @@ int i_run_par_request(struct _i_session * i_session) {
     ulfius_clean_request(&request);
     ulfius_clean_response(&response);
   } else {
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_par_request - Error input parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
