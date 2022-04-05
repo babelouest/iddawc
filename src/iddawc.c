@@ -5070,7 +5070,6 @@ int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud) {
   if (i_session != NULL) {
     if (r_jwt_init(&jwt) == RHN_OK) {
       if ((res = _i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt)) == I_OK || !(i_session->openid_config_strict&I_STRICT_JWT_AT_SIGNATURE)) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "sig %d, strict %d", _i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt), !(i_session->openid_config_strict));
         if (i_session->openid_config_strict&I_STRICT_JWT_AT_HEADER_TYP && 0 != o_strcasecmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcasecmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - invalid 'typ' value, expected: 'at+jwt' or 'application/at+jwt', result: '%s'", r_jwt_get_header_str_value(jwt, "typ"));
           ret = I_ERROR_PARAM;
