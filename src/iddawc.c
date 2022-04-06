@@ -794,36 +794,44 @@ static int _i_parse_redirect_to_parameters(struct _i_session * i_session, struct
 
 static jwk_t * _i_get_dpop_sign_privkey(struct _i_session * i_session) {
   jwk_t * jwk_sign = NULL;
+  jwa_alg alg = R_JWA_ALG_UNKNOWN;
   const char * kid;
   
   if (i_session != NULL && r_jwks_size(i_session->client_jwks)) {
     kid = i_session->dpop_kid!=NULL?i_session->dpop_kid:i_session->client_kid;
     if ((kid != NULL && (jwk_sign = r_jwks_get_by_kid(i_session->client_jwks, kid)) != NULL) ||
         (r_jwks_size(i_session->client_jwks) == 1 && (jwk_sign = r_jwks_get_at(i_session->client_jwks, 0)) != NULL)) {
-      if ((i_session->dpop_sign_alg == R_JWA_ALG_RS256 || i_session->dpop_sign_alg == R_JWA_ALG_RS384 || i_session->dpop_sign_alg == R_JWA_ALG_RS512 ||
-           i_session->dpop_sign_alg == R_JWA_ALG_PS256 || i_session->dpop_sign_alg == R_JWA_ALG_PS384 || i_session->dpop_sign_alg == R_JWA_ALG_PS512)) {
+      if (i_session->dpop_sign_alg != R_JWA_ALG_UNKNOWN) {
+        alg = i_session->dpop_sign_alg;
+      } else {
+        alg = r_str_to_jwa_alg(r_jwk_get_property_str(jwk_sign, "alg"));
+      }
+      if ((alg == R_JWA_ALG_RS256 || alg == R_JWA_ALG_RS384 || alg == R_JWA_ALG_RS512 ||
+           alg == R_JWA_ALG_PS256 || alg == R_JWA_ALG_PS384 || alg == R_JWA_ALG_PS512)) {
         if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key type");
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_get_dpop_sign_privkey - Invalid signing key type");
           r_jwk_free(jwk_sign);
           jwk_sign = NULL;
         }
-      } else if (i_session->dpop_sign_alg == R_JWA_ALG_ES256 || i_session->dpop_sign_alg == R_JWA_ALG_ES384 || i_session->dpop_sign_alg == R_JWA_ALG_ES512) {
+      } else if (alg == R_JWA_ALG_ES256 || alg == R_JWA_ALG_ES384 || alg == R_JWA_ALG_ES512) {
         if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key type");
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_get_dpop_sign_privkey - Invalid signing key type");
           r_jwk_free(jwk_sign);
           jwk_sign = NULL;
         }
-      } else if (i_session->dpop_sign_alg == R_JWA_ALG_EDDSA) {
+      } else if (alg == R_JWA_ALG_EDDSA) {
         if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key type");
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_get_dpop_sign_privkey - Invalid signing key type");
           r_jwk_free(jwk_sign);
           jwk_sign = NULL;
         }
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Invalid signing key parameters");
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_get_dpop_sign_privkey - Invalid signing key parameters");
+        r_jwk_free(jwk_sign);
+        jwk_sign = NULL;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_get_dpop_sign_privkey - Client has more than one private key, please specify one with the parameter I_OPT_CLIENT_KID");
     }
   }
   return jwk_sign;
@@ -1029,6 +1037,7 @@ static int _i_parse_openid_config(struct _i_session * i_session, int get_jwks) {
 
 static int _i_check_strict_parameters(struct _i_session * i_session) {
   char ** str_array = NULL;
+  const char * scope;
   int ret;
   size_t i;
 
@@ -1037,8 +1046,9 @@ static int _i_check_strict_parameters(struct _i_session * i_session) {
     if (i_session->scope != NULL) {
       if (split_string(i_session->scope, " ", &str_array)) {
         for (i=0; str_array[i]!=NULL; i++) {
-          if (!_i_has_openid_config_parameter_value(i_session, "scopes_supported", str_array[i])) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "scope %s not supported", str_array[i]);
+          scope = trimwhitespace(str_array[i]);
+          if (!o_strnullempty(scope) && !_i_has_openid_config_parameter_value(i_session, "scopes_supported", scope)) {
+            y_log_message(Y_LOG_LEVEL_DEBUG, "scope '%s' not supported", str_array[i]);
             ret = 0;
           }
         }
@@ -6749,9 +6759,10 @@ int i_run_device_auth_request(struct _i_session * i_session) {
   struct _u_request request;
   struct _u_response response;
   json_t * j_response;
-  char * claims;
+  char * claims, * dpop_jkt;
   jwa_alg sign_alg = R_JWA_ALG_UNKNOWN, enc_alg = R_JWA_ALG_UNKNOWN;
   jwa_enc enc = R_JWA_ENC_UNKNOWN;
+  jwk_t * jwk_sign;
 
   if (i_session != NULL &&
       i_session->device_authorization_endpoint != NULL &&
@@ -6777,6 +6788,14 @@ int i_run_device_auth_request(struct _i_session * i_session) {
 
     if (i_session->resource_indicator != NULL) {
       ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "resource", i_session->resource_indicator, U_OPT_NONE);
+    }
+
+    if (i_session->use_dpop) {
+      if ((jwk_sign = _i_get_dpop_sign_privkey(i_session)) != NULL && (dpop_jkt = r_jwk_thumbprint(jwk_sign, R_JWK_THUMB_SHA256, i_session->x5u_flags)) != NULL) {
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "dpop_jkt", dpop_jkt, U_OPT_NONE);
+      }
+      o_free(dpop_jkt);
+      r_jwk_free(jwk_sign);
     }
 
     if (i_session->client_sign_alg != R_JWA_ALG_UNKNOWN) {
@@ -6994,7 +7013,7 @@ int i_run_ciba_request(struct _i_session * i_session) {
   struct _u_request request;
   struct _u_response response;
   json_t * j_response, * j_login_hint = NULL;
-  char * tmp = NULL, * jwt_request = NULL;
+  char * tmp = NULL, * jwt_request = NULL, * dpop_jkt;
   const char ** key = NULL;
   int i;
   jwt_t * jwt_login_hint = NULL;
@@ -7060,6 +7079,14 @@ int i_run_ciba_request(struct _i_session * i_session) {
 
       if (i_session->ciba_mode != I_CIBA_MODE_POLL) {
         ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "client_notification_token", i_session->ciba_client_notification_token, U_OPT_NONE);
+      }
+
+      if (i_session->use_dpop) {
+        if ((jwk_sign = _i_get_dpop_sign_privkey(i_session)) != NULL && (dpop_jkt = r_jwk_thumbprint(jwk_sign, R_JWK_THUMB_SHA256, i_session->x5u_flags)) != NULL) {
+          ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "dpop_jkt", dpop_jkt, U_OPT_NONE);
+        }
+        o_free(dpop_jkt);
+        r_jwk_free(jwk_sign);
       }
 
       do {
