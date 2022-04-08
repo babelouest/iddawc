@@ -1374,7 +1374,7 @@ static char * _i_generate_ciba_jwt(struct _i_session * i_session) {
   const char ** keys = NULL;
   unsigned int i;
   jwa_alg sign_alg = R_JWA_ALG_UNKNOWN;
-  json_t * j_login_hint;
+  json_t * j_login_hint = NULL;
   int ret = I_OK;
 
   if (i_session != NULL) {
@@ -6759,7 +6759,7 @@ int i_run_device_auth_request(struct _i_session * i_session) {
   struct _u_request request;
   struct _u_response response;
   json_t * j_response;
-  char * claims, * dpop_jkt;
+  char * claims, * dpop_jkt = NULL;
   jwa_alg sign_alg = R_JWA_ALG_UNKNOWN, enc_alg = R_JWA_ALG_UNKNOWN;
   jwa_enc enc = R_JWA_ENC_UNKNOWN;
   jwk_t * jwk_sign;
@@ -7013,7 +7013,7 @@ int i_run_ciba_request(struct _i_session * i_session) {
   struct _u_request request;
   struct _u_response response;
   json_t * j_response, * j_login_hint = NULL;
-  char * tmp = NULL, * jwt_request = NULL, * dpop_jkt;
+  char * tmp = NULL, * jwt_request = NULL, * dpop_jkt = NULL;
   const char ** key = NULL;
   int i;
   jwt_t * jwt_login_hint = NULL;
