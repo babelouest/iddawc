@@ -824,3 +824,53 @@ int i_close_session(struct _i_session * i_session, const char * sid);
 ```
 
 Even if Iddawc doesn't provide Front-Channel or Back-Channel logout endpoints, you can use the function `i_verify_end_session_backchannel_token` to verify an end_session backchannel token, and `i_close_session` to clean the current session.
+
+### Rich Authorization Requests
+
+Iddawc supports [OAuth 2.0 Rich Authorization Requests Draft 11](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-rar-11). You can manage RAR types using the following functions:
+
+```C
+/**
+ * Adds an rich authorization request object in JSON format or replace it if the type already exists
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @param j_value: the authorization request, must be a JSON object
+ * @return I_OK on success, an error value on error
+ */
+int i_set_rich_authorization_request_json_t(struct _i_session * i_session, const char * type, json_t * j_value);
+
+/**
+ * Adds an rich authorization request object in stringified JSON format or replace it if the type already exists
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @param value: the authorization request, must be a stringified JSON object
+ * @return I_OK on success, an error value on error
+ */
+int i_set_rich_authorization_request_str(struct _i_session * i_session, const char * type, const char * value);
+
+/**
+ * Remove an authorization request object based on the type
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @return I_OK on success, an error value on error
+ */
+int i_remove_rich_authorization_request(struct _i_session * i_session, const char * type);
+
+/**
+ * Returns an authorization request object based on the type
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @return a json_t * containing a JSON authorization request, or NULL if not found, must be i_free'd after use
+ */
+json_t * i_get_rich_authorization_request_json_t(struct _i_session * i_session, const char * type);
+
+/**
+ * Returns an authorization request object based on the type
+ * @param i_session: a reference to a struct _i_session *
+ * @param type: the type of the authorization request
+ * @return a char * containing a JSON stringified authorization request, or NULL if not found, must be i_free'd after use
+ */
+char * i_get_rich_authorization_request_str(struct _i_session * i_session, const char * type);
+```
+
+Then, when using the authentication functions (auth, device, ciba, par), the `authorization_details` parameter will be set accordingly.
