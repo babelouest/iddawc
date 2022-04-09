@@ -1039,7 +1039,8 @@ static int _i_check_strict_parameters(struct _i_session * i_session) {
   char ** str_array = NULL;
   const char * scope;
   int ret;
-  size_t i;
+  size_t i = 0;
+  json_t * j_element = NULL;
 
   if (i_session != NULL) {
     ret = 1;
@@ -1048,16 +1049,24 @@ static int _i_check_strict_parameters(struct _i_session * i_session) {
         for (i=0; str_array[i]!=NULL; i++) {
           scope = trimwhitespace(str_array[i]);
           if (!o_strnullempty(scope) && !_i_has_openid_config_parameter_value(i_session, "scopes_supported", scope)) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "scope '%s' not supported", str_array[i]);
+            y_log_message(Y_LOG_LEVEL_DEBUG, "scope '%s' not supported by the Authentication Server", str_array[i]);
             ret = 0;
           }
         }
       }
       free_string_array(str_array);
     }
-    if (i_session->response_type != I_RESPONSE_TYPE_DEVICE_CODE && i_session->response_type != I_RESPONSE_TYPE_CIBA &&!_i_has_openid_config_parameter_value(i_session, "response_types_supported", _i_get_response_type(i_session->response_type))) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "response_type '%s' not supported", _i_get_response_type(i_session->response_type));
+    if (i_session->response_type != I_RESPONSE_TYPE_DEVICE_CODE && i_session->response_type != I_RESPONSE_TYPE_CIBA && !_i_has_openid_config_parameter_value(i_session, "response_types_supported", _i_get_response_type(i_session->response_type))) {
+      y_log_message(Y_LOG_LEVEL_DEBUG, "response_type '%s' not supported by the Authentication Server", _i_get_response_type(i_session->response_type));
       ret = 0;
+    }
+    if (json_array_size(i_session->j_authorization_details)) {
+      json_array_foreach(i_session->j_authorization_details, i, j_element) {
+        if (!_i_has_openid_config_parameter_value(i_session, "authorization_details_types_supported", json_string_value(json_object_get(j_element, "type")))) {
+          y_log_message(Y_LOG_LEVEL_DEBUG, "authorization_details type '%s' not supported by the Authentication Server", json_string_value(json_object_get(j_element, "type")));
+          ret = 0;
+        }
+      }
     }
   } else {
     ret = 0;
@@ -4190,7 +4199,7 @@ int i_run_auth_request(struct _i_session * i_session) {
   struct _u_response response;
   const char ** keys = NULL;
   unsigned int i;
-  char * jwt = NULL, * dpop_jkt = NULL;
+  char * jwt = NULL, * dpop_jkt = NULL, * tmp;
   jwk_t * jwk_sign = NULL;
 
   if (i_session != NULL &&
@@ -4272,6 +4281,12 @@ int i_run_auth_request(struct _i_session * i_session) {
 
           for (i=0; keys[i] != NULL; i++) {
             ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, keys[i], u_map_get(&i_session->additional_parameters, keys[i]), U_OPT_NONE);
+          }
+
+          if (json_array_size(i_session->j_authorization_details)) {
+            tmp = json_dumps(i_session->j_authorization_details, JSON_COMPACT);
+            ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "authorization_details", tmp, U_OPT_NONE);
+            o_free(tmp);
           }
         }
       } else {
@@ -6759,7 +6774,7 @@ int i_run_device_auth_request(struct _i_session * i_session) {
   struct _u_request request;
   struct _u_response response;
   json_t * j_response;
-  char * claims, * dpop_jkt = NULL;
+  char * claims, * dpop_jkt = NULL, * tmp;
   jwa_alg sign_alg = R_JWA_ALG_UNKNOWN, enc_alg = R_JWA_ALG_UNKNOWN;
   jwa_enc enc = R_JWA_ENC_UNKNOWN;
   jwk_t * jwk_sign;
@@ -6788,6 +6803,12 @@ int i_run_device_auth_request(struct _i_session * i_session) {
 
     if (i_session->resource_indicator != NULL) {
       ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "resource", i_session->resource_indicator, U_OPT_NONE);
+    }
+
+    if (json_array_size(i_session->j_authorization_details)) {
+      tmp = json_dumps(i_session->j_authorization_details, JSON_COMPACT);
+      ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "authorization_details", tmp, U_OPT_NONE);
+      o_free(tmp);
     }
 
     if (i_session->use_dpop) {
@@ -7079,6 +7100,12 @@ int i_run_ciba_request(struct _i_session * i_session) {
 
       if (i_session->ciba_mode != I_CIBA_MODE_POLL) {
         ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "client_notification_token", i_session->ciba_client_notification_token, U_OPT_NONE);
+      }
+
+      if (json_array_size(i_session->j_authorization_details)) {
+        tmp = json_dumps(i_session->j_authorization_details, JSON_COMPACT);
+        ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "authorization_details", tmp, U_OPT_NONE);
+        o_free(tmp);
       }
 
       if (i_session->use_dpop) {
