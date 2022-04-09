@@ -24,7 +24,7 @@
 #define CIBA_LOGIN_HINT_KID "ciba kid"
 #define CIBA_BINDING_MESSAGE "CIBABindingMessage"
 #define CIBA_REQUESTED_EXPIRY 99
-#define CIBA_REQUESTED_EXPIRY_str "99"
+#define CIBA_REQUESTED_EXPIRY_STR "99"
 #define CIBA_CLIENT_NOTIFICATION_TOKEN "CIBAClientNotificationToken123456789012345678901234567890"
 #define CIBA_ACR_VALUES "password"
 #define CIBA_AUTH_REQ_ID "CIBAAuthReqId123456789012345678901234567890"
@@ -63,7 +63,7 @@ const char jwk_privkey_str_2[] = "{\"kty\":\"RSA\",\"n\":\"0vx7agoebGcQSuuPiLJXZ
 int callback_ciba_login_hint_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
   ck_assert_str_eq(CIBA_LOGIN_HINT, u_map_get(request->map_post_body, "login_hint"));
-  ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_str, u_map_get(request->map_post_body, "requested_expiry"));
+  ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_STR, u_map_get(request->map_post_body, "requested_expiry"));
   ck_assert_str_eq(CIBA_BINDING_MESSAGE, u_map_get(request->map_post_body, "binding_message"));
   ck_assert_str_eq(CIBA_ACR_VALUES, u_map_get(request->map_post_body, "acr_values"));
   ulfius_set_json_body_response(response, 200, j_response);
@@ -130,7 +130,7 @@ int callback_ciba_jwt_encrypt_pubkey_valid (const struct _u_request * request, s
 int callback_ciba_id_token_hint_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
   ck_assert_str_eq(CIBA_ID_TOKEN_HINT, u_map_get(request->map_post_body, "id_token_hint"));
-  ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_str, u_map_get(request->map_post_body, "requested_expiry"));
+  ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_STR, u_map_get(request->map_post_body, "requested_expiry"));
   ck_assert_str_eq(CIBA_BINDING_MESSAGE, u_map_get(request->map_post_body, "binding_message"));
   ck_assert_str_eq(CIBA_ACR_VALUES, u_map_get(request->map_post_body, "acr_values"));
   ulfius_set_json_body_response(response, 200, j_response);
@@ -141,7 +141,7 @@ int callback_ciba_id_token_hint_valid (const struct _u_request * request, struct
 int callback_ciba_login_hint_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   jwt_t * jwt = NULL;
   ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "login_hint_token"), R_PARSE_NONE, 0));
-  ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_str, u_map_get(request->map_post_body, "requested_expiry"));
+  ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_STR, u_map_get(request->map_post_body, "requested_expiry"));
   ck_assert_str_eq(CIBA_BINDING_MESSAGE, u_map_get(request->map_post_body, "binding_message"));
   ck_assert_str_eq(CIBA_ACR_VALUES, u_map_get(request->map_post_body, "acr_values"));
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
