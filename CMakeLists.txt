@@ -358,6 +358,7 @@ if (BUILD_IDDAWC_TESTING)
             par
             ciba
             session
+            rar
             )
 
         configure_file(
