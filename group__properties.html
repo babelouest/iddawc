@@ -88,6 +88,8 @@ Functions</h2></td></tr>
 <tr class="separator:ga72f1f165ce3101bb70be9cb007a6f6ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9e3b09bc9efb664f73369c1c347585a5"><td class="memItemLeft" align="right" valign="top">json_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga9e3b09bc9efb664f73369c1c347585a5">i_get_server_configuration</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga9e3b09bc9efb664f73369c1c347585a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa92fb1148a063ae06bdd111a70080b7a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gaa92fb1148a063ae06bdd111a70080b7a">i_set_server_configuration</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_openid_config)</td></tr>
+<tr class="separator:gaa92fb1148a063ae06bdd111a70080b7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4587ca3263c3403d85d44f5539e535d4"><td class="memItemLeft" align="right" valign="top">json_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga4587ca3263c3403d85d44f5539e535d4">i_get_server_jwks</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga4587ca3263c3403d85d44f5539e535d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0fb4f18052e82c9f327bcbc60ac69607"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga0fb4f18052e82c9f327bcbc60ac69607">i_set_server_jwks</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_jwks)</td></tr>
@@ -261,7 +263,7 @@ Functions</h2></td></tr>
 <p>Sets a char * property value </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
-    <tr><td class="paramname">option</td><td>the option to set options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE, I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID, I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT, I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_OPENID_CONFIG, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR, I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN, I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_TOKEN_TYPE, I_OPT_USERNAME, I_OPT_USER_PASSWORD, I_OPT_ISSUER, I_OPT_USERINFO, I_OPT_SERVER_KID, I_OPT_SERVER_ENC_ALG, I_OPT_SERVER_ENC, I_OPT_CLIENT_KID, I_OPT_CLIENT_SIGN_ALG, I_OPT_CLIENT_ENC_ALG, I_OPT_CLIENT_ENC, I_OPT_TOKEN_JTI, I_OPT_TOKEN_TARGET, I_OPT_TOKEN_TARGET_TYPE_HINT, I_OPT_REVOCATION_ENDPOINT, I_OPT_INTROSPECTION_ENDPOINT, I_OPT_REGISTRATION_ENDPOINT, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, I_OPT_DEVICE_AUTH_CODE, I_OPT_DEVICE_AUTH_USER_CODE, I_OPT_DEVICE_AUTH_VERIFICATION_URI, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, I_OPT_END_SESSION_ENDPOINT, I_OPT_CHECK_SESSION_IRAME, I_OPT_PUSHED_AUTH_REQ_ENDPOINT, I_OPT_PUSHED_AUTH_REQ_URI, I_OPT_DPOP_KID, I_OPT_DPOP_SIGN_ALG, I_OPT_TLS_KEY_FILE, I_OPT_TLS_CERT_FILE, I_OPT_PKCE_CODE_VERIFIER, I_OPT_RESOURCE_INDICATOR, I_OPT_ACCESS_TOKEN_SIGNING_ALG, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, I_OPT_ID_TOKEN_SIGNING_ALG, I_OPT_ID_TOKEN_ENCRYPTION_ALG, I_OPT_ID_TOKEN_ENCRYPTION_ENC, I_OPT_USERINFO_SIGNING_ALG, I_OPT_USERINFO_ENCRYPTION_ALG, I_OPT_USERINFO_ENCRYPTION_ENC, I_OPT_REQUEST_OBJECT_SIGNING_ALG, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, I_OPT_CIBA_REQUEST_SIGNING_ALG, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, I_OPT_AUTH_RESPONSE_SIGNING_ALG, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, I_OPT_CIBA_ENDPOINT, I_OPT_CIBA_USER_CODE, I_OPT_CIBA_LOGIN_HINT, I_OPT_CIBA_LOGIN_HINT_KID, I_OPT_CIBA_BINDING_MESSAGE, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, I_OPT_CIBA_AUTH_REQ_ID, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, I_OPT_FRONTCHANNEL_LOGOUT_URI, I_OPT_BACKCHANNEL_LOGOUT_URI, I_OPT_POST_LOGOUT_REDIRECT_URI, I_OPT_ID_TOKEN_SID </td></tr>
+    <tr><td class="paramname">option</td><td>the option to set options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE, I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID, I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT, I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_OPENID_CONFIG, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR, I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN, I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_TOKEN_TYPE, I_OPT_USERNAME, I_OPT_USER_PASSWORD, I_OPT_ISSUER, I_OPT_USERINFO, I_OPT_SERVER_KID, I_OPT_SERVER_ENC_ALG, I_OPT_SERVER_ENC, I_OPT_CLIENT_KID, I_OPT_CLIENT_SIGN_ALG, I_OPT_CLIENT_ENC_ALG, I_OPT_CLIENT_ENC, I_OPT_TOKEN_JTI, I_OPT_TOKEN_TARGET, I_OPT_TOKEN_TARGET_TYPE_HINT, I_OPT_REVOCATION_ENDPOINT, I_OPT_INTROSPECTION_ENDPOINT, I_OPT_REGISTRATION_ENDPOINT, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, I_OPT_DEVICE_AUTH_CODE, I_OPT_DEVICE_AUTH_USER_CODE, I_OPT_DEVICE_AUTH_VERIFICATION_URI, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, I_OPT_END_SESSION_ENDPOINT, I_OPT_CHECK_SESSION_IRAME, I_OPT_PUSHED_AUTH_REQ_ENDPOINT, I_OPT_PUSHED_AUTH_REQ_URI, I_OPT_DPOP_KID, I_OPT_DPOP_SIGN_ALG, I_OPT_TLS_KEY_FILE, I_OPT_TLS_CERT_FILE, I_OPT_PKCE_CODE_VERIFIER, I_OPT_RESOURCE_INDICATOR, I_OPT_ACCESS_TOKEN_SIGNING_ALG, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, I_OPT_ID_TOKEN_SIGNING_ALG, I_OPT_ID_TOKEN_ENCRYPTION_ALG, I_OPT_ID_TOKEN_ENCRYPTION_ENC, I_OPT_USERINFO_SIGNING_ALG, I_OPT_USERINFO_ENCRYPTION_ALG, I_OPT_USERINFO_ENCRYPTION_ENC, I_OPT_REQUEST_OBJECT_SIGNING_ALG, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, I_OPT_CIBA_REQUEST_SIGNING_ALG, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, I_OPT_AUTH_RESPONSE_SIGNING_ALG, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, I_OPT_CIBA_ENDPOINT, I_OPT_CIBA_USER_CODE, I_OPT_CIBA_LOGIN_HINT, I_OPT_CIBA_LOGIN_HINT_KID, I_OPT_CIBA_BINDING_MESSAGE, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, I_OPT_CIBA_AUTH_REQ_ID, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, I_OPT_FRONTCHANNEL_LOGOUT_URI, I_OPT_BACKCHANNEL_LOGOUT_URI, I_OPT_POST_LOGOUT_REDIRECT_URI, I_OPT_ID_TOKEN_SID, I_OPT_DPOP_NONCE_AS, I_OPT_DPOP_NONCE_RS, I_OPT_HTTP_PROXY </td></tr>
     <tr><td class="paramname">s_value</td><td>The const char * value to set </td></tr>
   </table>
   </dd>
@@ -764,7 +766,7 @@ Functions</h2></td></tr>
 <p>Returns the char * value of an option </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
-    <tr><td class="paramname">option</td><td>the option to get options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE, I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID, I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT, I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_OPENID_CONFIG, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR, I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN, I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_TOKEN_TYPE, I_OPT_USERNAME, I_OPT_USER_PASSWORD, I_OPT_ISSUER, I_OPT_USERINFO, I_OPT_SERVER_KID, I_OPT_SERVER_ENC_ALG, I_OPT_SERVER_ENC, I_OPT_CLIENT_KID, I_OPT_CLIENT_SIGN_ALG, I_OPT_CLIENT_ENC_ALG, I_OPT_CLIENT_ENC, I_OPT_TOKEN_JTI, I_OPT_TOKEN_TARGET, I_OPT_TOKEN_TARGET_TYPE_HINT, I_OPT_REVOCATION_ENDPOINT, I_OPT_INTROSPECTION_ENDPOINT, I_OPT_REGISTRATION_ENDPOINT, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, I_OPT_DEVICE_AUTH_CODE, I_OPT_DEVICE_AUTH_USER_CODE, I_OPT_DEVICE_AUTH_VERIFICATION_URI, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, I_OPT_END_SESSION_ENDPOINT, I_OPT_CHECK_SESSION_IRAME, I_OPT_PUSHED_AUTH_REQ_ENDPOINT, I_OPT_PUSHED_AUTH_REQ_URI, I_OPT_DPOP_KID, I_OPT_DPOP_SIGN_ALG, I_OPT_TLS_KEY_FILE, I_OPT_TLS_CERT_FILE, I_OPT_PKCE_CODE_VERIFIER, I_OPT_RESOURCE_INDICATOR </td></tr>
+    <tr><td class="paramname">option</td><td>the option to get options available are I_OPT_SCOPE, I_OPT_SCOPE_APPEND, I_OPT_STATE, I_OPT_NONCE, I_OPT_REDIRECT_URI, I_OPT_REDIRECT_TO, I_OPT_CLIENT_ID, I_OPT_CLIENT_SECRET, I_OPT_AUTH_ENDPOINT, I_OPT_TOKEN_ENDPOINT, I_OPT_OPENID_CONFIG_ENDPOINT, I_OPT_OPENID_CONFIG, I_OPT_USERINFO_ENDPOINT, I_OPT_ERROR, I_OPT_ERROR_DESCRIPTION, I_OPT_ERROR_URI, I_OPT_CODE, I_OPT_REFRESH_TOKEN, I_OPT_ACCESS_TOKEN, I_OPT_ID_TOKEN, I_OPT_TOKEN_TYPE, I_OPT_USERNAME, I_OPT_USER_PASSWORD, I_OPT_ISSUER, I_OPT_USERINFO, I_OPT_SERVER_KID, I_OPT_SERVER_ENC_ALG, I_OPT_SERVER_ENC, I_OPT_CLIENT_KID, I_OPT_CLIENT_SIGN_ALG, I_OPT_CLIENT_ENC_ALG, I_OPT_CLIENT_ENC, I_OPT_TOKEN_JTI, I_OPT_TOKEN_TARGET, I_OPT_TOKEN_TARGET_TYPE_HINT, I_OPT_REVOCATION_ENDPOINT, I_OPT_INTROSPECTION_ENDPOINT, I_OPT_REGISTRATION_ENDPOINT, I_OPT_DEVICE_AUTHORIZATION_ENDPOINT, I_OPT_DEVICE_AUTH_CODE, I_OPT_DEVICE_AUTH_USER_CODE, I_OPT_DEVICE_AUTH_VERIFICATION_URI, I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, I_OPT_END_SESSION_ENDPOINT, I_OPT_CHECK_SESSION_IRAME, I_OPT_PUSHED_AUTH_REQ_ENDPOINT, I_OPT_PUSHED_AUTH_REQ_URI, I_OPT_DPOP_KID, I_OPT_DPOP_SIGN_ALG, I_OPT_TLS_KEY_FILE, I_OPT_TLS_CERT_FILE, I_OPT_PKCE_CODE_VERIFIER, I_OPT_RESOURCE_INDICATOR, I_OPT_ACCESS_TOKEN_SIGNING_ALG, I_OPT_ACCESS_TOKEN_ENCRYPTION_ALG, I_OPT_ACCESS_TOKEN_ENCRYPTION_ENC, I_OPT_ID_TOKEN_SIGNING_ALG, I_OPT_ID_TOKEN_ENCRYPTION_ALG, I_OPT_ID_TOKEN_ENCRYPTION_ENC, I_OPT_USERINFO_SIGNING_ALG, I_OPT_USERINFO_ENCRYPTION_ALG, I_OPT_USERINFO_ENCRYPTION_ENC, I_OPT_REQUEST_OBJECT_SIGNING_ALG, I_OPT_REQUEST_OBJECT_ENCRYPTION_ALG, I_OPT_REQUEST_OBJECT_ENCRYPTION_ENC, I_OPT_TOKEN_ENDPOINT_SIGNING_ALG, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ALG, I_OPT_TOKEN_ENDPOINT_ENCRYPTION_ENC, I_OPT_CIBA_REQUEST_SIGNING_ALG, I_OPT_CIBA_REQUEST_ENCRYPTION_ALG, I_OPT_CIBA_REQUEST_ENCRYPTION_ENC, I_OPT_AUTH_RESPONSE_SIGNING_ALG, I_OPT_AUTH_RESPONSE_ENCRYPTION_ALG, I_OPT_AUTH_RESPONSE_ENCRYPTION_ENC, I_OPT_CIBA_ENDPOINT, I_OPT_CIBA_USER_CODE, I_OPT_CIBA_LOGIN_HINT, I_OPT_CIBA_LOGIN_HINT_KID, I_OPT_CIBA_BINDING_MESSAGE, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, I_OPT_CIBA_AUTH_REQ_ID, I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT, I_OPT_FRONTCHANNEL_LOGOUT_URI, I_OPT_BACKCHANNEL_LOGOUT_URI, I_OPT_POST_LOGOUT_REDIRECT_URI, I_OPT_ID_TOKEN_SID, I_OPT_DPOP_NONCE_AS, I_OPT_DPOP_NONCE_RS, I_OPT_HTTP_PROXY </td></tr>
   </table>
   </dd>
 </dl>
@@ -869,6 +871,42 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="gaa92fb1148a063ae06bdd111a70080b7a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaa92fb1148a063ae06bdd111a70080b7a">&#9670;&nbsp;</a></span>i_set_server_configuration()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int i_set_server_configuration </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="struct__i__session.html">_i_session</a> *&#160;</td>
+          <td class="paramname"><em>i_session</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">json_t *&#160;</td>
+          <td class="paramname"><em>j_openid_config</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Sets the server configuration </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
+    <tr><td class="paramname">j_openid_config</td><td>the AS openid configuration result </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>I_OK on success, an error value on error </dd></dl>
+
+</div>
+</div>
 <a id="ga4587ca3263c3403d85d44f5539e535d4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga4587ca3263c3403d85d44f5539e535d4">&#9670;&nbsp;</a></span>i_get_server_jwks()</h2>
 
@@ -919,7 +957,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Gets the server configuration </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Sets the server public JWKS </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
     <tr><td class="paramname">j_jwks</td><td>the server public JWKS in json_t * format </td></tr>
@@ -980,7 +1018,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Gets the client configuration </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Sets the client configuration </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">i_session</td><td>a reference to a struct <a class="el" href="struct__i__session.html">_i_session</a> * </td></tr>
     <tr><td class="paramname">j_jwks</td><td>the client public JWKS in json_t * format </td></tr>

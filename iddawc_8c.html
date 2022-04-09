@@ -57,8 +57,6 @@ $(function() {
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:afca11f3d5e92b5b9f23c90d79f6a3d45"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iddawc_8c.html#afca11f3d5e92b5b9f23c90d79f6a3d45">random_at_most</a> (unsigned char max, int nonce)</td></tr>
-<tr class="separator:afca11f3d5e92b5b9f23c90d79f6a3d45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga74a3452a89fef139072602162847ae49"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#ga74a3452a89fef139072602162847ae49">i_global_init</a> ()</td></tr>
 <tr class="separator:ga74a3452a89fef139072602162847ae49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac94619aa9efbbe5ca77e2e5d7908ec18"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__core.html#gac94619aa9efbbe5ca77e2e5d7908ec18">i_global_close</a> ()</td></tr>
@@ -109,6 +107,8 @@ Functions</h2></td></tr>
 <tr class="separator:ga72f1f165ce3101bb70be9cb007a6f6ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9e3b09bc9efb664f73369c1c347585a5"><td class="memItemLeft" align="right" valign="top">json_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga9e3b09bc9efb664f73369c1c347585a5">i_get_server_configuration</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga9e3b09bc9efb664f73369c1c347585a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa92fb1148a063ae06bdd111a70080b7a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#gaa92fb1148a063ae06bdd111a70080b7a">i_set_server_configuration</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_openid_config)</td></tr>
+<tr class="separator:gaa92fb1148a063ae06bdd111a70080b7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4587ca3263c3403d85d44f5539e535d4"><td class="memItemLeft" align="right" valign="top">json_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga4587ca3263c3403d85d44f5539e535d4">i_get_server_jwks</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session)</td></tr>
 <tr class="separator:ga4587ca3263c3403d85d44f5539e535d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0fb4f18052e82c9f327bcbc60ac69607"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__properties.html#ga0fb4f18052e82c9f327bcbc60ac69607">i_set_server_jwks</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, json_t *j_jwks)</td></tr>
@@ -182,41 +182,6 @@ Functions</h2></td></tr>
 <tr class="memitem:gafa6f85f310dccda2962ccf09815c2eb9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__run.html#gafa6f85f310dccda2962ccf09815c2eb9">i_close_session</a> (struct <a class="el" href="struct__i__session.html">_i_session</a> *i_session, const char *sid)</td></tr>
 <tr class="separator:gafa6f85f310dccda2962ccf09815c2eb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Function Documentation</h2>
-<a id="afca11f3d5e92b5b9f23c90d79f6a3d45"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afca11f3d5e92b5b9f23c90d79f6a3d45">&#9670;&nbsp;</a></span>random_at_most()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned char random_at_most </td>
-          <td>(</td>
-          <td class="paramtype">unsigned char&#160;</td>
-          <td class="paramname"><em>max</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nonce</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Iddawc OAuth2 client library</p>
-<p><a class="el" href="iddawc_8c.html">iddawc.c</a>: library implementation</p>
-<p>Copyright 2019-2022 Nicolas Mora <a href="#" onclick="location.href='mai'+'lto:'+'mai'+'l@'+'bab'+'el'+'oue'+'st'+'.or'+'g'; return false;">mail@<span style="display: none;">.nosp@m.</span>babe<span style="display: none;">.nosp@m.</span>loues<span style="display: none;">.nosp@m.</span>t.or<span style="display: none;">.nosp@m.</span>g</a></p>
-<p>This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; version 2.1 of the License.</p>
-<p>This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU GENERAL PUBLIC LICENSE for more details.</p>
-<p>You should have received a copy of the GNU General Public License along with this library. If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>. Generates a random long integer between 0 and max </p>
-
-</div>
-</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
