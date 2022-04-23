@@ -6427,7 +6427,7 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
 int i_perform_resource_service_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat) {
   int ret = I_OK, reset_resp_type = 0;
   unsigned int cur_resp_type;
-  char * dpop_token = NULL, * auth_header;
+  char * dpop_token = NULL, * auth_header, * htu = NULL;
   struct _u_request copy_req;
 
   if (i_session != NULL && http_request != NULL && i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN) != NULL) {
@@ -6476,7 +6476,14 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
           // Set DPoP
           if (use_dpop) {
             if (I_OK == ret) {
-              if ((dpop_token = i_generate_dpop_token(i_session, copy_req.http_verb, copy_req.http_url, dpop_iat, 1)) != NULL) {
+              htu = o_strdup(copy_req.http_url);
+              if (o_strchr(htu, '?') != NULL) {
+                *o_strchr(htu, '?') = '\0';
+              }
+              if (o_strchr(htu, '#') != NULL) {
+                *o_strchr(htu, '#') = '\0';
+              }
+              if ((dpop_token = i_generate_dpop_token(i_session, copy_req.http_verb, htu, dpop_iat, 1)) != NULL) {
                 if (ulfius_set_request_properties(&copy_req, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
                   y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error setting DPoP in header");
                   ret = I_ERROR;
@@ -6486,6 +6493,7 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
                 ret = I_ERROR;
               }
               o_free(dpop_token);
+              o_free(htu);
             }
           }
           // Perform HTTP request
