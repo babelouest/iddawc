@@ -1,5 +1,9 @@
 # Iddawc Changelog
 
+## 1.1.3
+
+- Fix `i_perform_resource_service_request` with DPoP `htu` value
+
 ## 1.1.2
 
 - Improve tests
