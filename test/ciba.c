@@ -12,7 +12,7 @@
 #define CIBA_ERROR_DESCRIPTION "invalid_request description"
 #define CIBA_ERROR_URI "https://as.tld/#error"
 #define CLIENT_ID "client"
-#define CLIENT_SECRET "client_secret"
+#define CLIENT_SECRET "secretXyx1234567"
 #define CLIENT_SECRET_ERROR "client_secret error"
 #define CLIENT_REDIRECT "https://client.tld"
 #define TOKEN_ENDPOINT "http://localhost:8080/token"
@@ -107,7 +107,7 @@ int callback_ciba_jwt_encrypt_secret_valid (const struct _u_request * request, s
   jwt_t * jwt = NULL;
   ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "request"), R_PARSE_NONE, 0));
   ck_assert_int_eq(R_JWT_TYPE_ENCRYPT, r_jwt_get_type(jwt));
-  ck_assert_int_eq(R_JWA_ALG_PBES2_H256, r_jwt_get_enc_alg(jwt));
+  ck_assert_int_eq(R_JWA_ALG_A128GCMKW, r_jwt_get_enc_alg(jwt));
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
@@ -989,7 +989,7 @@ START_TEST(test_iddawc_ciba_jwt_encrypt_secret_valid)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CIBA,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
                                                     I_OPT_CLIENT_SECRET, CLIENT_SECRET,
-                                                    I_OPT_CLIENT_ENC_ALG, "PBES2-HS256+A128KW",
+                                                    I_OPT_CLIENT_ENC_ALG, "A128GCMKW",
                                                     I_OPT_CLIENT_ENC, "A128CBC-HS256",
                                                     I_OPT_AUTH_METHOD, I_AUTH_METHOD_JWT_ENCRYPT_SECRET,
                                                     I_OPT_SCOPE, SCOPE,

@@ -340,6 +340,7 @@ START_TEST(test_iddawc_api_request_with_query_and_dpop)
   
   ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, DPOP_HTM, NULL, "/object", 0, &callback_resource_service_object_with_dpop, NULL), U_OK);
+  ck_assert_int_eq(ulfius_set_default_endpoint(&instance, &callback_resource_service_object_with_dpop, NULL), U_OK); // Apparently Debian buster doesn't like url DPOP_HTU DPOP_HTU_HASH DPOP_HTU_QUERY
   ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(ulfius_init_request(&req), I_OK);
