@@ -59,6 +59,7 @@ const char jwk_privkey_str_2[] = "{\"kty\":\"RSA\",\"n\":\"0vx7agoebGcQSuuPiLJXZ
                                     "6huUUvMfBcMpn8lqeW6vzznYY5SSQF7pMdC_agI3nG8Ibp1BUb0JUiraRNqUfLhcQb_d9GF4Dh7e74WbRsobRonujTYN1xCaP6TO61jvWrX-L18txXw494Q_cg"\
                                     "k\",\"qi\":\"GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_m"\
                                     "HZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU\",\"alg\":\"RSA1_5\",\"kid\":\"2\"}";
+const char jwk_key_128[] = "{\"kty\":\"oct\",\"alg\":\"HS256\",\"k\":\"GawgguFyGrWKav7AX4VKUg\"}";
 
 int callback_ciba_login_hint_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
@@ -980,6 +981,7 @@ START_TEST(test_iddawc_ciba_jwt_encrypt_secret_valid)
 {
   struct _i_session i_session;
   struct _u_instance instance;
+  jwk_t * jwk = r_jwk_quick_import(R_IMPORT_JSON_STR, jwk_key_128);
   
   ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/ciba", 0, &callback_ciba_jwt_encrypt_secret_valid, NULL), U_OK);
@@ -988,7 +990,6 @@ START_TEST(test_iddawc_ciba_jwt_encrypt_secret_valid)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CIBA,
                                                     I_OPT_CLIENT_ID, CLIENT_ID,
-                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
                                                     I_OPT_CLIENT_ENC_ALG, "A128GCMKW",
                                                     I_OPT_CLIENT_ENC, "A128CBC-HS256",
                                                     I_OPT_AUTH_METHOD, I_AUTH_METHOD_JWT_ENCRYPT_SECRET,
@@ -1002,12 +1003,14 @@ START_TEST(test_iddawc_ciba_jwt_encrypt_secret_valid)
                                                     I_OPT_CIBA_BINDING_MESSAGE, CIBA_BINDING_MESSAGE,
                                                     I_OPT_CIBA_REQUESTED_EXPIRY, CIBA_REQUESTED_EXPIRY,
                                                     I_OPT_NONE), I_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk), RHN_OK);
   ck_assert_int_eq(i_run_ciba_request(&i_session), I_OK);
   ck_assert_str_eq(CIBA_AUTH_REQ_ID, i_get_str_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_ID));
   ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_EXPIRES_IN));
   ck_assert_int_ne(0, i_get_int_parameter(&i_session, I_OPT_CIBA_AUTH_REQ_INTERVAL));
   i_clean_session(&i_session);
   
+  r_jwk_free(jwk);
   ulfius_stop_framework(&instance);
   ulfius_clean_instance(&instance);
 }
