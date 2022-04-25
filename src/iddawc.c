@@ -1174,7 +1174,7 @@ static char * _i_sign_encrypt_jwt_auth(struct _i_session * i_session, jwt_t * jw
     }
   }
   if (i_session->auth_method & I_AUTH_METHOD_JWT_ENCRYPT_SECRET) {
-    if (!o_strnullempty(i_session->client_secret)) {
+    if (!o_strnullempty(i_session->client_secret) || r_jwks_size(i_session->client_jwks)) {
       if (i_session->client_enc != R_JWA_ENC_UNKNOWN) {
         enc = i_session->client_enc;
       } else if (i_session->request_object_encryption_enc != R_JWA_ENC_UNKNOWN) {
@@ -1242,8 +1242,20 @@ static char * _i_sign_encrypt_jwt_auth(struct _i_session * i_session, jwt_t * jw
       if (enc_alg != R_JWA_ALG_UNKNOWN && enc != R_JWA_ENC_UNKNOWN) {
         r_jwt_set_enc_alg(jwt, enc_alg);
         r_jwt_set_enc(jwt, enc);
-        r_jwk_init(&jwk_enc);
-        r_jwk_import_from_symmetric_key(jwk_enc, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
+        if (!o_strnullempty(i_session->client_secret)) {
+          r_jwk_init(&jwk_enc);
+          r_jwk_import_from_symmetric_key(jwk_enc, (const unsigned char *)i_session->client_secret, o_strlen(i_session->client_secret));
+        } else {
+          if (r_jwks_size(i_session->client_jwks) == 1) {
+            jwk_enc = r_jwks_get_at(i_session->client_jwks, 0);
+          } else {
+            jwk_enc = r_jwks_get_by_kid(i_session->client_jwks, i_session->client_kid);
+          }
+          if (jwk_enc == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key parameters (client_jwks)");
+            ret = I_ERROR_PARAM;
+          }
+        }
       } else {
         y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key parameters (secret)");
         ret = I_ERROR_PARAM;
