@@ -3,6 +3,7 @@
 ## 1.1.3
 
 - Fix `i_perform_resource_service_request` with DPoP `htu` value
+- Allow encrypted request using a symmetric key in the `client_jwks`
 
 ## 1.1.2
 
