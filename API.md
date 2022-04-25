@@ -475,7 +475,7 @@ Note: By default, token endpoint authentication method is `I_TOKEN_AUTH_METHOD_N
 - `I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE`: [MTLS](https://datatracker.ietf.org/doc/html/rfc8705) authentication
 - `I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET`: Client Assertion in JWT format signed with the client secret
 - `I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY`: Client Assertion in JWT format signed with the client private key
-- `I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET`: Client Assertion in JWT format encrypted using the client secret
+- `I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET`: Client Assertion in JWT format encrypted using the client secret or a client symmetric stored in the `client_jwks` parameter
 - `I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_PUBKEY`: Client Assertion in JWT format encrypted using the AS public key
 
 The values `I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET` and `I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_PUBKEY` must be combined with the values `I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET` or `I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY`.
