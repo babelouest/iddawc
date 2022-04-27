@@ -937,9 +937,6 @@ int main(int argc, char ** argv) {
             callback_struct.webapp_path = WEBAPP_PATH;
           }
           file_config.url_prefix = PREFIX_STATIC;
-          file_config.allow_cache_compressed = 0;
-          file_config.allow_gzip = 1;
-          file_config.allow_deflate = 1;
 
           callback_struct.session = &session;
           callback_struct.ciba_status = 0;

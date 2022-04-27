@@ -2,9 +2,9 @@
  *
  * Static file server with compression Ulfius callback
  *
- * Copyright 2020-2021 Nicolas Mora <mail@babelouest.org>
+ * Copyright 2020-2022 Nicolas Mora <mail@babelouest.org>
  *
- * Version 20220201
+ * Version 20220425
  * 
  * The MIT License (MIT)
  * 
