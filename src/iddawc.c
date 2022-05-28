@@ -6348,7 +6348,7 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
   jwk_t * jwk_sign = NULL, * jwk_pub = NULL;
   json_t * j_dpop_pub = NULL;
   int has_error = 0;
-  unsigned char ath[32] = {0}, ath_enc[64] = {0};
+  unsigned char ath[32] = {0}, ath_enc[65] = {0};
   size_t ath_len = 32, ath_enc_len = 64;
   gnutls_datum_t hash_data;
 
@@ -6548,7 +6548,7 @@ int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char *
   char * jkt_from_token = NULL;
   time_t now;
   int ret;
-  unsigned char ath[32] = {0}, ath_enc[64] = {0};
+  unsigned char ath[32] = {0}, ath_enc[65] = {0};
   size_t ath_len = 32, ath_enc_len = 64;
   gnutls_datum_t hash_data;
   
