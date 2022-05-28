@@ -1,5 +1,10 @@
 # Iddawc Changelog
 
+## 1.1.4
+
+- Fix pkg-config file with absolute path for `CMAKE_INSTALL_{INCLUDE,LIB}DIR`
+- Fix `CMAKE_MODULE_PATH` who was used as single value
+
 ## 1.1.3
 
 - Fix `i_perform_resource_service_request` with DPoP `htu` value
