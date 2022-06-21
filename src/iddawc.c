@@ -5119,6 +5119,12 @@ int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud) {
                                               R_JWT_CLAIM_STR, "client_id", NULL,
                                               R_JWT_CLAIM_NOP) != RHN_OK) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - invalid claims");
+          y_log_message(Y_LOG_LEVEL_DEBUG, "- iss: %s", r_jwt_get_claim_str_value(jwt, "iss"));
+          y_log_message(Y_LOG_LEVEL_DEBUG, "- sub: %s", r_jwt_get_claim_str_value(jwt, "sub"));
+          y_log_message(Y_LOG_LEVEL_DEBUG, "- jti: %s", r_jwt_get_claim_str_value(jwt, "jti"));
+          y_log_message(Y_LOG_LEVEL_DEBUG, "- client_id: %s", r_jwt_get_claim_str_value(jwt, "client_id"));
+          y_log_message(Y_LOG_LEVEL_DEBUG, "- iat: %"RHONABWY_INTEGER_FORMAT, r_jwt_get_claim_int_value(jwt, "iat"));
+          y_log_message(Y_LOG_LEVEL_DEBUG, "- exp: %"RHONABWY_INTEGER_FORMAT, r_jwt_get_claim_int_value(jwt, "exp"));
           ret = I_ERROR_PARAM;
         } else {
           if (!(i_session->openid_config_strict&I_STRICT_JWT_AT_CLAIM) || o_strnullempty(aud) || r_jwt_validate_claims(jwt, R_JWT_CLAIM_AUD, aud, R_JWT_CLAIM_NOP) == RHN_OK) {
