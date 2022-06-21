@@ -1848,6 +1848,50 @@ START_TEST(test_iddawc_access_token_rotate_key_invalid)
 }
 END_TEST
 
+START_TEST(test_iddawc_access_token_unsigned_key)
+{
+  struct _i_session i_session;
+  jwk_t * jwk, * jwk_sign, * jwk_pub;
+  jwt_t * jwt;
+  char * grants = NULL, * jwt_str;
+  time_t now;
+  
+  ck_assert_int_eq(r_jwt_init(&jwt), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk_sign), RHN_OK);
+  ck_assert_int_eq(r_jwk_init(&jwk_pub), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_pem_der(jwk_sign, R_X509_TYPE_PUBKEY, R_FORMAT_PEM, public_key, o_strlen((const char *)public_key)), RHN_OK);
+  time(&now);
+  grants = msprintf(access_token_pattern, (long long)now, (long long)(now + EXPIRES_IN), ISSUER);
+  ck_assert_ptr_ne(grants, NULL);
+  ck_assert_int_eq(r_jwt_set_full_claims_json_str(jwt, grants), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_header_str_value(jwt, "typ", "at+jwt"), RHN_OK);
+  ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_privkey_fool_str), RHN_OK);
+  ck_assert_int_eq(r_jwk_set_property_str(jwk, "kid", r_jwk_get_property_str(jwk_sign, "kid")), RHN_OK);
+  ck_assert_int_eq(r_jwk_extract_pubkey(jwk, jwk_pub, 0), RHN_OK);
+  ck_assert_int_eq(r_jwt_set_sign_alg(jwt, R_JWA_ALG_NONE), RHN_OK);
+  ck_assert_ptr_ne((jwt_str = r_jwt_serialize_signed_unsecure(jwt, jwk, 0)), NULL);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ISSUER, ISSUER), I_OK);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_ACCESS_TOKEN, jwt_str), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), jwt_str);
+  ck_assert_int_eq(i_set_str_parameter(&i_session, I_OPT_NONCE, NONCE_VALID), I_OK);
+  ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk_sign), RHN_OK);
+  
+  ck_assert_int_eq(i_verify_jwt_access_token(&i_session, NULL), I_ERROR_PARAM);
+  
+  r_jwk_free(jwk);
+  r_jwk_free(jwk_sign);
+  r_jwk_free(jwk_pub);
+  o_free(grants);
+  o_free(jwt_str);
+  r_jwt_free(jwt);
+  i_clean_session(&i_session);
+}
+END_TEST
+
 START_TEST(test_iddawc_access_token_invalid_aud)
 {
   struct _i_session i_session;
@@ -1976,6 +2020,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_access_token_ignore_claims);
   tcase_add_test(tc_core, test_iddawc_access_token_rotate_key);
   tcase_add_test(tc_core, test_iddawc_access_token_rotate_key_invalid);
+  tcase_add_test(tc_core, test_iddawc_access_token_unsigned_key);
   tcase_add_test(tc_core, test_iddawc_access_token_invalid_aud);
   tcase_add_test(tc_core, test_iddawc_access_token_aud);
   tcase_set_timeout(tc_core, 30);
