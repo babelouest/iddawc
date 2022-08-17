@@ -808,19 +808,19 @@ static jwk_t * _i_get_dpop_sign_privkey(struct _i_session * i_session) {
       }
       if ((alg == R_JWA_ALG_RS256 || alg == R_JWA_ALG_RS384 || alg == R_JWA_ALG_RS512 ||
            alg == R_JWA_ALG_PS256 || alg == R_JWA_ALG_PS384 || alg == R_JWA_ALG_PS512)) {
-        if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+        if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_get_dpop_sign_privkey - Invalid signing key type");
           r_jwk_free(jwk_sign);
           jwk_sign = NULL;
         }
       } else if (alg == R_JWA_ALG_ES256 || alg == R_JWA_ALG_ES384 || alg == R_JWA_ALG_ES512) {
-        if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+        if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_get_dpop_sign_privkey - Invalid signing key type");
           r_jwk_free(jwk_sign);
           jwk_sign = NULL;
         }
       } else if (alg == R_JWA_ALG_EDDSA) {
-        if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+        if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "_i_get_dpop_sign_privkey - Invalid signing key type");
           r_jwk_free(jwk_sign);
           jwk_sign = NULL;
@@ -1141,17 +1141,17 @@ static char * _i_sign_encrypt_jwt_auth(struct _i_session * i_session, jwt_t * jw
       if ((sign_alg == R_JWA_ALG_RS256 || sign_alg == R_JWA_ALG_RS384 || sign_alg == R_JWA_ALG_RS512 ||
            sign_alg == R_JWA_ALG_PS256 || sign_alg == R_JWA_ALG_PS384 || sign_alg == R_JWA_ALG_PS512) &&
            _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
-        if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+        if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
           ret = I_ERROR_PARAM;
         }
       } else if ((sign_alg == R_JWA_ALG_ES256 || sign_alg == R_JWA_ALG_ES384 || sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
-        if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+        if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
           ret = I_ERROR_PARAM;
         }
       } else if (sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", r_jwa_alg_to_str(sign_alg))) {
-        if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+        if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
           ret = I_ERROR_PARAM;
         }
@@ -1291,12 +1291,12 @@ static char * _i_sign_encrypt_jwt_auth(struct _i_session * i_session, jwt_t * jw
         enc_alg = i_session->request_object_encryption_alg;
       }
       if ((enc_alg == R_JWA_ALG_RSA1_5 || enc_alg == R_JWA_ALG_RSA_OAEP || enc_alg == R_JWA_ALG_RSA_OAEP_256) && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", r_jwa_alg_to_str(enc_alg))) {
-        if (!(r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+        if ((r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PUBLIC)) != (R_KEY_TYPE_RSA|R_KEY_TYPE_PUBLIC)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key type");
           ret = I_ERROR_PARAM;
         }
       } else if ((enc_alg == R_JWA_ALG_ECDH_ES || enc_alg == R_JWA_ALG_ECDH_ES_A128KW || enc_alg == R_JWA_ALG_ECDH_ES_A192KW || enc_alg == R_JWA_ALG_ECDH_ES_A256KW) && _i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", r_jwa_alg_to_str(enc_alg))) {
-        if (!(r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+        if ((r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PUBLIC)) != (R_KEY_TYPE_EC|R_KEY_TYPE_PUBLIC)) {
           y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key type");
           ret = I_ERROR_PARAM;
         }
@@ -1498,19 +1498,19 @@ static char * _i_generate_ciba_jwt(struct _i_session * i_session) {
                 if ((sign_alg == R_JWA_ALG_RS256 || sign_alg == R_JWA_ALG_RS384 || sign_alg == R_JWA_ALG_RS512 ||
                      sign_alg == R_JWA_ALG_PS256 || sign_alg == R_JWA_ALG_PS384 || sign_alg == R_JWA_ALG_PS512) &&
                      _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
-                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+                  if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
                     ret = I_ERROR_PARAM;
                     break;
                   }
                 } else if ((sign_alg == R_JWA_ALG_ES256 || sign_alg == R_JWA_ALG_ES384 || sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
-                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+                  if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
                     ret = I_ERROR_PARAM;
                     break;
                   }
                 } else if (sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
-                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+                  if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
                     ret = I_ERROR_PARAM;
                     break;
@@ -1616,17 +1616,17 @@ static char * _i_generate_client_assertion(struct _i_session * i_session, const 
         if ((sign_alg == R_JWA_ALG_RS256 || sign_alg == R_JWA_ALG_RS384 || sign_alg == R_JWA_ALG_RS512 ||
              sign_alg == R_JWA_ALG_PS256 || sign_alg == R_JWA_ALG_PS384 || sign_alg == R_JWA_ALG_PS512) &&
              _i_has_openid_config_parameter_value(i_session, sign_alg_values, r_jwa_alg_to_str(sign_alg))) {
-          if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+          if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
             ret = I_ERROR_PARAM;
           }
         } else if ((sign_alg == R_JWA_ALG_ES256 || sign_alg == R_JWA_ALG_ES384 || sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, sign_alg_values, r_jwa_alg_to_str(sign_alg))) {
-          if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+          if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
             ret = I_ERROR_PARAM;
           }
         } else if (sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, sign_alg_values, r_jwa_alg_to_str(sign_alg))) {
-          if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+          if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
             ret = I_ERROR_PARAM;
           }
@@ -1717,7 +1717,7 @@ static char * _i_generate_client_assertion(struct _i_session * i_session, const 
         if ((enc_alg == R_JWA_ALG_RSA1_5 ||
              enc_alg == R_JWA_ALG_RSA_OAEP ||
              enc_alg == R_JWA_ALG_RSA_OAEP_256) && _i_has_openid_config_parameter_value(i_session, enc_alg_values, r_jwa_alg_to_str(enc_alg))) {
-          if (!(r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+          if ((r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key type");
             ret = I_ERROR_PARAM;
           }
@@ -1725,7 +1725,7 @@ static char * _i_generate_client_assertion(struct _i_session * i_session, const 
                     enc_alg == R_JWA_ALG_ECDH_ES_A128KW ||
                     enc_alg == R_JWA_ALG_ECDH_ES_A192KW ||
                     enc_alg == R_JWA_ALG_ECDH_ES_A256KW) && _i_has_openid_config_parameter_value(i_session, enc_alg_values, r_jwa_alg_to_str(enc_alg))) {
-          if (!(r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+          if ((r_jwk_key_type(jwk_enc, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) {
             y_log_message(Y_LOG_LEVEL_ERROR, "Invalid encrypt key type");
             ret = I_ERROR_PARAM;
           }
@@ -7197,19 +7197,19 @@ int i_run_ciba_request(struct _i_session * i_session) {
                 if ((sign_alg == R_JWA_ALG_RS256 || sign_alg == R_JWA_ALG_RS384 || sign_alg == R_JWA_ALG_RS512 ||
                      sign_alg == R_JWA_ALG_PS256 || sign_alg == R_JWA_ALG_PS384 || sign_alg == R_JWA_ALG_PS512) &&
                      _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
-                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE))) {
+                  if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_RSA|R_KEY_TYPE_PRIVATE)) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
                     ret = I_ERROR_PARAM;
                     break;
                   }
                 } else if ((sign_alg == R_JWA_ALG_ES256 || sign_alg == R_JWA_ALG_ES384 || sign_alg == R_JWA_ALG_ES512) && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
-                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE))) {
+                  if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EC|R_KEY_TYPE_PRIVATE)) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
                     ret = I_ERROR_PARAM;
                     break;
                   }
                 } else if (sign_alg == R_JWA_ALG_EDDSA && _i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", i_get_str_parameter(i_session, I_OPT_CLIENT_SIGN_ALG))) {
-                  if (!(r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE))) {
+                  if ((r_jwk_key_type(jwk_sign, NULL, i_session->x5u_flags) & (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) != (R_KEY_TYPE_EDDSA|R_KEY_TYPE_PRIVATE)) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "Invalid signing key type");
                     ret = I_ERROR_PARAM;
                     break;
