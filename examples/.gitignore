@@ -4,3 +4,6 @@ glewlwyd_oidc_id_token_code
 google_example
 microsoft_example
 facebook_example
+token_introspection
+token_revocation
+client_registration

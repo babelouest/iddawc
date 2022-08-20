@@ -13,8 +13,8 @@ IDDAWC_LOCATION=../src
 IDDAWC_LIBRARY=$(IDDAWC_LOCATION)/libiddawc.so
 CC=gcc
 CFLAGS+=-Wall -D_REENTRANT -I$(IDDAWC_INCLUDE) -DDEBUG -g -O0 $(CPPFLAGS)
-LDFLAGS=-lc -liddawc -ljansson -L$(IDDAWC_LOCATION) -lyder
-TARGET=github_example gitlab_example glewlwyd_oidc_id_token_code google_example microsoft_example facebook_example
+LDFLAGS=-lc -liddawc -ljansson -L$(IDDAWC_LOCATION) -lyder -lorcania
+TARGET=github_example gitlab_example glewlwyd_oidc_id_token_code google_example microsoft_example facebook_example token_introspection token_revocation client_registration
 
 all: $(TARGET)
 
