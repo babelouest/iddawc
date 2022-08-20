@@ -1,5 +1,10 @@
 # Iddawc Changelog
 
+## 1.1.5
+
+- Add new examples
+- Minor bugfixes
+
 ## 1.1.4
 
 - Fix pkg-config file with absolute path for `CMAKE_INSTALL_{INCLUDE,LIB}DIR`
