@@ -1,5 +1,9 @@
 # Iddawc Changelog
 
+## 1.1.6
+
+- Update rhonabwy dependency version
+
 ## 1.1.5
 
 - Add new examples
