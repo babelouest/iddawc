@@ -1,5 +1,9 @@
 # Iddawc Changelog
 
+## 1.1.7
+
+- Minor bugfixes
+
 ## 1.1.6
 
 - Update rhonabwy dependency version
