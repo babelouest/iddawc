@@ -48,6 +48,8 @@
 
 #define CHUNK 0x4000
 
+#define UNUSED(x) (void)(x)
+
 struct _callback_struct {
   struct _i_session * session;
   const char        * webapp_path;
@@ -89,9 +91,9 @@ static void print_help(FILE * output, const char * command) {
 static ssize_t callback_static_file_uncompressed_stream(void * cls, uint64_t pos, char * buf, size_t max) {
   (void)(pos);
   if (cls != NULL) {
-    return fread (buf, sizeof(char), max, (FILE *)cls);
+    return (ssize_t)fread (buf, sizeof(char), max, (FILE *)cls);
   } else {
-    return U_STREAM_END;
+    return (ssize_t)U_STREAM_END;
   }
 }
 
@@ -130,6 +132,7 @@ static int _i_load_session_file(struct _i_session * session, const char * file) 
 }
 
 static int callback_get_session(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
   struct _i_session * session = (struct _i_session *)user_data;
   json_t * j_session = i_export_session_json_t(session);
 
@@ -166,6 +169,7 @@ static int callback_save_session(const struct _u_request * request, struct _u_re
 
 static int callback_generate(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _i_session * session = (struct _i_session *)user_data;
+  UNUSED(response);
 
   if (0 == o_strcmp("nonce", u_map_get(request->map_post_body, "property"))) {
     i_set_int_parameter(session, I_OPT_NONCE_GENERATE, 32);
@@ -248,6 +252,7 @@ static int callback_run_token(const struct _u_request * request, struct _u_respo
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
   json_t * j_return;
+  UNUSED(request);
 
   if (session->token_method & (I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET|I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY) && !o_strlen(i_get_str_parameter(session, I_OPT_TOKEN_JTI))) {
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
@@ -271,6 +276,7 @@ static int callback_run_device_auth(const struct _u_request * request, struct _u
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
   json_t * j_return;
+  UNUSED(request);
 
   if (session->token_method & (I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET|I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY) && !o_strlen(i_get_str_parameter(session, I_OPT_TOKEN_JTI))) {
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
@@ -374,7 +380,7 @@ static int callback_redirect_uri(const struct _u_request * request, struct _u_re
     if (f) {
       u_map_put(response->map_header, "Content-Type", "text/html");
       fseek (f, 0, SEEK_END);
-      length = ftell (f);
+      length = (size_t)ftell (f);
       fseek (f, 0, SEEK_SET);
       if (ulfius_set_stream_response(response, 200, callback_static_file_uncompressed_stream, callback_static_file_uncompressed_stream_free, length, CHUNK, f) != U_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "callback_redirect_uri File Server - Error ulfius_set_stream_response");
@@ -409,6 +415,7 @@ static int callback_parse_redirect_to(const struct _u_request * request, struct 
 static int callback_config_download(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
+  UNUSED(request);
 
   if ((ret = i_get_openid_config(session)) == I_ERROR_PARAM) {
     ulfius_set_string_body_response(response, 400, "Invalid configuration endpoint");
@@ -422,6 +429,7 @@ static int callback_config_download(const struct _u_request * request, struct _u
 static int callback_userinfo_download(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _i_session * session = (struct _i_session *)user_data;
   int ret;
+  UNUSED(request);
 
   if (session->use_dpop) {
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
@@ -532,6 +540,7 @@ static int callback_access_token_verify(const struct _u_request * request, struc
   struct _i_session * session = (struct _i_session *)user_data;
   json_t * j_return;
   int ret;
+  UNUSED(request);
 
   if ((ret = i_verify_jwt_access_token(session, NULL)) == I_ERROR_PARAM) {
     y_log_message(Y_LOG_LEVEL_ERROR, "Error params");
@@ -611,7 +620,8 @@ static int callback_resource_request(const struct _u_request * request, struct _
 static int callback_get_ciba_status(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
   json_t * j_resp;
-  
+  UNUSED(request);
+
   switch (callback_struct->ciba_status) {
     case 0:
       j_resp = json_pack("{ss}", "result", "none");
@@ -647,6 +657,7 @@ static int callback_run_ciba(const struct _u_request * request, struct _u_respon
   struct _i_session * session = callback_struct->session;
   int ret;
   json_t * j_return;
+  UNUSED(request);
 
   if (session->token_method & (I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET|I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY) && !o_strlen(i_get_str_parameter(session, I_OPT_TOKEN_JTI))) {
     i_set_int_parameter(session, I_OPT_TOKEN_JTI_GENERATE, 16);
@@ -689,7 +700,7 @@ static int callback_ciba_callback(const struct _u_request * request, struct _u_r
       auth = msprintf("Bearer %s", i_get_str_parameter(session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN));
       j_body = ulfius_get_json_body_request(request, NULL);
       if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), auth)) {
-        if (i_parse_token_response(session, response->status, j_body) == RHN_OK) {
+        if (i_parse_token_response(session, (int)response->status, j_body) == RHN_OK) {
           callback_struct->ciba_status = 3;
         } else {
           y_log_message(Y_LOG_LEVEL_ERROR, "Error i_parse_token_response");
@@ -710,7 +721,8 @@ static int callback_get_end_session(const struct _u_request * request, struct _u
   struct _i_session * session = callback_struct->session;
   char * url = i_build_end_session_url(session);
   json_t * j_resp;
-  
+  UNUSED(request);
+
   if (url != NULL) {
     j_resp = json_pack("{ss}", "url", url);
     ulfius_set_json_body_response(response, 200, j_resp);
@@ -802,7 +814,8 @@ static int callback_backchannel_logout(const struct _u_request * request, struct
 static int callback_message(const struct _u_request * request, struct _u_response * response, void * user_data) {
   struct _callback_struct * callback_struct = (struct _callback_struct *)user_data;
   json_t * j_message;
-  
+  UNUSED(request);
+
   if (!pthread_mutex_lock(&callback_struct->change_lock)) {
     if (o_strlen(callback_struct->message)) {
       j_message = json_pack("{ss}", "message", callback_struct->message);
@@ -822,11 +835,14 @@ static int callback_message(const struct _u_request * request, struct _u_respons
 }
 
 static int callback_default(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
+  UNUSED(user_data);
   response->status = 404;
   return U_CALLBACK_CONTINUE;
 }
 
 static int callback_static_close(const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (!request->callback_position) {
     response->status = 404;
   }
@@ -907,7 +923,7 @@ int main(int argc, char ** argv) {
   if (!exit_loop) {
     if (bind_localhost) {
       bind_address.sin_family = AF_INET;
-      bind_address.sin_port = htons(port);
+      bind_address.sin_port = htons((uint16_t)port);
       inet_aton("127.0.0.1", (struct in_addr *)&bind_address.sin_addr.s_addr);
     }
 

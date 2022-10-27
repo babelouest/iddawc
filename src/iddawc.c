@@ -35,7 +35,7 @@
  */
 static unsigned char random_at_most(unsigned char max, int nonce) {
   unsigned char
-  num_bins = (unsigned char) max + 1,
+  num_bins = (unsigned char) (max + 1),
   num_rand = (unsigned char) 0xff,
   bin_size = num_rand / num_bins,
   defect   = num_rand % num_bins;
@@ -666,7 +666,7 @@ static int _i_extract_parameters(struct _i_session * i_session, const char * url
   if (split_string(url_params, "&", &unescaped_parameters)) {
     for (offset = 0; ret == I_OK && unescaped_parameters[offset] != NULL; offset++) {
       if (o_strchr(unescaped_parameters[offset], '=') != NULL) {
-        key = o_strndup(unescaped_parameters[offset], o_strchr(unescaped_parameters[offset], '=') - unescaped_parameters[offset]);
+        key = o_strndup(unescaped_parameters[offset], (size_t)(o_strchr(unescaped_parameters[offset], '=') - unescaped_parameters[offset]));
         value = ulfius_url_decode(o_strchr(unescaped_parameters[offset], '=')+1);
         if (0 == o_strcmp("response", key)) {
           ret = _i_parse_jwt_response(i_session, value, map);
@@ -1009,8 +1009,8 @@ static int _i_parse_openid_config(struct _i_session * i_session, int get_jwks) {
           ret = I_ERROR;
         }
       }
-      res = I_STRICT_YES|i_get_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT);
-      if (i_set_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT, res) != I_OK) {
+      res = (int)(I_STRICT_YES|i_get_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT));
+      if (i_set_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT, (unsigned int)res) != I_OK) {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_openid_config - Error setting openid_config_strict");
         ret = I_ERROR;
       }
@@ -1581,7 +1581,7 @@ static char * _i_generate_client_assertion(struct _i_session * i_session, const 
     r_jwt_set_claim_str_value(jwt, "sub", i_session->client_id);
     r_jwt_set_claim_str_value(jwt, "aud", aud);
     r_jwt_set_claim_str_value(jwt, "jti", i_session->token_jti);
-    r_jwt_set_claim_int_value(jwt, "exp", now+i_session->token_exp);
+    r_jwt_set_claim_int_value(jwt, "exp", (now+(time_t)i_session->token_exp));
     r_jwt_set_claim_int_value(jwt, "nbf", now);
     r_jwt_set_claim_int_value(jwt, "iat", now);
     if (i_session->token_method == I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET) {
@@ -2134,7 +2134,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         i_session->expires_at = (time_t)i_value;
         break;
       case I_OPT_OPENID_CONFIG_STRICT:
-        i_session->openid_config_strict = i_value;
+        i_session->openid_config_strict = (int)i_value;
         break;
       case I_OPT_STATE_GENERATE:
         if (i_value > 0) {
@@ -2173,7 +2173,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         }
         break;
       case I_OPT_X5U_FLAGS:
-        i_session->x5u_flags = i_value;
+        i_session->x5u_flags = (int)i_value;
         break;
       case I_OPT_TOKEN_EXP:
         i_session->token_exp = i_value;
@@ -2191,19 +2191,19 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         i_session->pushed_authorization_request_expires_in = i_value;
         break;
       case I_OPT_USE_DPOP:
-        i_session->use_dpop = i_value;
+        i_session->use_dpop = (int)i_value;
         break;
       case I_OPT_DECRYPT_CODE:
-        i_session->decrypt_code = i_value;
+        i_session->decrypt_code = (int)i_value;
         break;
       case I_OPT_DECRYPT_REFRESH_TOKEN:
-        i_session->decrypt_refresh_token = i_value;
+        i_session->decrypt_refresh_token = (int)i_value;
         break;
       case I_OPT_DECRYPT_ACCESS_TOKEN:
-        i_session->decrypt_access_token = i_value;
+        i_session->decrypt_access_token = (int)i_value;
         break;
       case I_OPT_REMOTE_CERT_FLAG:
-        i_session->remote_cert_flag = i_value;
+        i_session->remote_cert_flag = (int)i_value;
         break;
       case I_OPT_PKCE_CODE_VERIFIER_GENERATE:
         if (i_value >= 43) {
@@ -2218,7 +2218,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         }
         break;
       case I_OPT_PKCE_METHOD:
-        i_session->pkce_method = i_value;
+        i_session->pkce_method = (int)i_value;
         break;
       case I_OPT_CIBA_MODE:
         i_session->ciba_mode = i_value;
@@ -3118,7 +3118,8 @@ int i_remove_claim_request(struct _i_session * i_session, int target, const char
 }
 
 int i_set_parameter_list(struct _i_session * i_session, ...) {
-  unsigned int option, i_value, ret = I_OK;
+  unsigned int option, i_value;
+  int ret = I_OK;
   const char * str_key, * str_value;
   va_list vl;
 
@@ -3504,10 +3505,10 @@ unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option)
         return (unsigned int)i_session->expires_at;
         break;
       case I_OPT_X5U_FLAGS:
-        return i_session->x5u_flags;
+        return (unsigned int)i_session->x5u_flags;
         break;
       case I_OPT_OPENID_CONFIG_STRICT:
-        return i_session->openid_config_strict;
+        return (unsigned int)i_session->openid_config_strict;
         break;
       case I_OPT_TOKEN_EXP:
         return i_session->token_exp;
@@ -3525,22 +3526,22 @@ unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option)
         return i_session->pushed_authorization_request_expires_in;
         break;
       case I_OPT_USE_DPOP:
-        return i_session->use_dpop;
+        return (unsigned int)i_session->use_dpop;
         break;
       case I_OPT_DECRYPT_CODE:
-        return i_session->decrypt_code;
+        return (unsigned int)i_session->decrypt_code;
         break;
       case I_OPT_DECRYPT_REFRESH_TOKEN:
-        return i_session->decrypt_refresh_token;
+        return (unsigned int)i_session->decrypt_refresh_token;
         break;
       case I_OPT_DECRYPT_ACCESS_TOKEN:
-        return i_session->decrypt_access_token;
+        return (unsigned int)i_session->decrypt_access_token;
         break;
       case I_OPT_REMOTE_CERT_FLAG:
-        return i_session->remote_cert_flag;
+        return (unsigned int)i_session->remote_cert_flag;
         break;
       case I_OPT_PKCE_METHOD:
-        return i_session->pkce_method;
+        return (unsigned int)i_session->pkce_method;
         break;
       case I_OPT_CIBA_MODE:
         return i_session->ciba_mode;
@@ -3549,7 +3550,7 @@ unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option)
         return i_session->ciba_login_hint_format;
         break;
       case I_OPT_CIBA_REQUESTED_EXPIRY:
-        return i_session->ciba_requested_expiry;
+        return (unsigned int)i_session->ciba_requested_expiry;
         break;
       case I_OPT_CIBA_AUTH_REQ_EXPIRES_IN:
         return i_session->ciba_auth_req_expires_in;
@@ -4121,7 +4122,7 @@ int i_build_auth_url_get(struct _i_session * i_session) {
             o_free(escaped);
           } else if (i_session->pkce_method == I_PKCE_METHOD_S256) {
             hash_data.data = (unsigned char *)i_session->pkce_code_verifier;
-            hash_data.size = o_strlen(i_session->pkce_code_verifier);
+            hash_data.size = (unsigned int)o_strlen(i_session->pkce_code_verifier);
             if (gnutls_fingerprint(GNUTLS_DIG_SHA256, &hash_data, code_challenge, &code_challenge_len) == GNUTLS_E_SUCCESS) {
               if (o_base64url_encode(code_challenge, code_challenge_len, code_challenge_encoded, &code_challenge_encoded_len)) {
                 code_challenge_encoded[code_challenge_encoded_len] = '\0';
@@ -4375,7 +4376,7 @@ int i_parse_token_response(struct _i_session * i_session, int http_status, json_
             ret = I_ERROR;
           }
           r_jwt_free(jwt);
-          if (json_integer_value(json_object_get(j_response, "expires_in")) && i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, json_integer_value(json_object_get(j_response, "expires_in"))) != I_OK) {
+          if (json_integer_value(json_object_get(j_response, "expires_in")) && i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in"))) != I_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_token_response - Error setting expires_in");
             ret = I_ERROR;
           }
@@ -4446,6 +4447,9 @@ int i_parse_token_response(struct _i_session * i_session, int http_status, json_
         y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_token_response - _i_parse_error_response (2)");
         ret = I_ERROR;
       }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_token_response - Invalid http status: %d", http_status);
+      ret = I_ERROR;
     }
   } else {
     ret = I_ERROR_PARAM;
@@ -4522,7 +4526,7 @@ int i_run_token_request(struct _i_session * i_session) {
             if (response.status == 200 || response.status == 400) {
               j_response = ulfius_get_json_body_response(&response, NULL);
               if (j_response != NULL) {
-                if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                   ret = response.status == 200?I_OK:I_ERROR_PARAM;
                 } else {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error i_parse_token_response (1)");
@@ -4533,10 +4537,10 @@ int i_run_token_request(struct _i_session * i_session) {
                 ret = I_ERROR;
               }
               json_decref(j_response);
-            } else if (response.status == 401 || response.status == 403) {
+            } else if (response.status == 401 || (int)response.status == 403) {
               j_response = ulfius_get_json_body_response(&response, NULL);
               ret = I_ERROR_UNAUTHORIZED;
-              if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+              if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Unauthorized");
               } else {
                 y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error i_parse_token_response (2)");
@@ -4608,7 +4612,7 @@ int i_run_token_request(struct _i_session * i_session) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
-                    if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                       ret = response.status == 200?I_OK:I_ERROR_PARAM;
                     } else {
                       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Error i_parse_token_response");
@@ -4621,7 +4625,7 @@ int i_run_token_request(struct _i_session * i_session) {
                   json_decref(j_response);
                 } else if (response.status == 403 || response.status == 401) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
-                  if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                  if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Unauthorized");
                     ret = I_ERROR_UNAUTHORIZED;
                   } else {
@@ -4681,7 +4685,7 @@ int i_run_token_request(struct _i_session * i_session) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
-                    if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                       ret = response.status == 200?I_OK:I_ERROR_PARAM;
                     } else {
                       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error i_parse_token_response ok");
@@ -4695,7 +4699,7 @@ int i_run_token_request(struct _i_session * i_session) {
                 } else if (response.status == 403 || response.status == 401) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
-                    if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Unauthorized");
                       ret = I_ERROR_UNAUTHORIZED;
                     } else {
@@ -4760,7 +4764,7 @@ int i_run_token_request(struct _i_session * i_session) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
-                    if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                       ret = response.status == 200?I_OK:I_ERROR_PARAM;
                     } else {
                       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Error i_parse_token_response");
@@ -4772,7 +4776,7 @@ int i_run_token_request(struct _i_session * i_session) {
                   json_decref(j_response);
                 } else if (response.status == 403 || response.status == 401) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
-                  if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                  if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Unauthorized");
                     ret = I_ERROR_UNAUTHORIZED;
                   } else {
@@ -4825,7 +4829,7 @@ int i_run_token_request(struct _i_session * i_session) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
-                    if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                       ret = response.status == 200?I_OK:I_ERROR_PARAM;
                     } else {
                       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request device - Error i_parse_token_response");
@@ -4838,7 +4842,7 @@ int i_run_token_request(struct _i_session * i_session) {
                   json_decref(j_response);
                 } else if (response.status == 403 || response.status == 401) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
-                  if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                  if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request device - Unauthorized");
                     ret = I_ERROR_UNAUTHORIZED;
                   } else {
@@ -4891,7 +4895,7 @@ int i_run_token_request(struct _i_session * i_session) {
                 if (response.status == 200 || response.status == 400) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
                   if (j_response != NULL) {
-                    if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                    if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                       ret = response.status == 200?I_OK:I_ERROR_PARAM;
                     } else {
                       y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Error i_parse_token_response");
@@ -4904,7 +4908,7 @@ int i_run_token_request(struct _i_session * i_session) {
                   json_decref(j_response);
                 } else if (response.status == 403 || response.status == 401) {
                   j_response = ulfius_get_json_body_response(&response, NULL);
-                  if (i_parse_token_response(i_session, response.status, j_response) == I_OK) {
+                  if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                     y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Unauthorized");
                     ret = I_ERROR_UNAUTHORIZED;
                   } else {
@@ -4994,7 +4998,7 @@ int i_verify_id_token(struct _i_session * i_session) {
               if (i_session->access_token != NULL) {
                 if (alg != GNUTLS_DIG_UNKNOWN) {
                   hash_data.data = (unsigned char*)i_session->access_token;
-                  hash_data.size = o_strlen(i_session->access_token);
+                  hash_data.size = (unsigned int)o_strlen(i_session->access_token);
                   if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
                     if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
                       if (o_strncmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "at_hash")), hash_encoded_len) != 0) {
@@ -5022,7 +5026,7 @@ int i_verify_id_token(struct _i_session * i_session) {
               if (i_session->code != NULL) {
                 if (alg != GNUTLS_DIG_UNKNOWN) {
                   hash_data.data = (unsigned char*)i_session->code;
-                  hash_data.size = o_strlen(i_session->code);
+                  hash_data.size = (unsigned int)o_strlen(i_session->code);
                   if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
                     if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
                       if (o_strncmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "c_hash")), hash_encoded_len) != 0) {
@@ -5050,7 +5054,7 @@ int i_verify_id_token(struct _i_session * i_session) {
               if (i_session->state != NULL) {
                 if (alg != GNUTLS_DIG_UNKNOWN) {
                   hash_data.data = (unsigned char*)i_session->state;
-                  hash_data.size = o_strlen(i_session->state);
+                  hash_data.size = (unsigned int)o_strlen(i_session->state);
                   if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
                     if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
                       if (o_strncmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "s_hash")), hash_encoded_len) != 0) {
@@ -6368,7 +6372,7 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
               if (add_ath) {
                 if (i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN) != NULL) {
                   hash_data.data = (unsigned char*)i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN);
-                  hash_data.size = o_strlen(i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN));
+                  hash_data.size = (unsigned int)o_strlen(i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN));
                   if (gnutls_fingerprint(GNUTLS_DIG_SHA256, &hash_data, ath, &ath_len) == GNUTLS_E_SUCCESS) {
                     if (!o_base64url_encode(ath, ath_len, ath_enc, &ath_enc_len)) {
                       y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error o_base64url_encode ath");
@@ -6630,7 +6634,7 @@ int i_verify_dpop_proof(const char * dpop_header, const char * htm, const char *
             break;
           }
           hash_data.data = (unsigned char*)access_token;
-          hash_data.size = o_strlen(access_token);
+          hash_data.size = (unsigned int)o_strlen(access_token);
           if (gnutls_fingerprint(GNUTLS_DIG_SHA256, &hash_data, ath, &ath_len) != GNUTLS_E_SUCCESS) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_dpop_proof - Error gnutls_fingerprint");
             ret = I_ERROR;
