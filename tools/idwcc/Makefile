@@ -26,7 +26,7 @@ IDDAWC_LIBRARY=../../src/libiddawc.so
 IDDAWC_VERSION=$(shell curl -s https://api.github.com/repos/babelouest/iddawc/releases/latest | grep tag_name | cut -d '"' -f 4 | cut -c 2-)
 ALPINE_VERSION=3.15.4
 
-CFLAGS+=-c -Wall -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS) -DWEBAPP_PATH=\"$(DESTDIR)/share/idwcc/webapp/\"
+CFLAGS+=-c -Wall -Werror -Wconversion -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS) -DWEBAPP_PATH=\"$(DESTDIR)/share/idwcc/webapp/\"
 LIBS=-lc -liddawc -L$(IDDAWC_LOCATION) $(shell pkg-config --libs liborcania) $(shell pkg-config --libs libyder) $(shell pkg-config --libs libulfius) $(shell pkg-config --libs jansson) -lpthread -lz
 VALGRIND_COMMAND=valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes
 OBJECTS=idwcc.o static_compressed_inmemory_website_callback.o http_compression_callback.o
