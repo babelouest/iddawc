@@ -472,7 +472,6 @@ START_TEST(test_iddawc_userinfo_response_jwt_nested)
   struct _i_session i_session;
   struct _u_instance instance;
   jwk_t * jwk_decrypt, * jwk_verify;
-  json_t * j_userinfo = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
   
   ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
   ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/userinfo", 0, &callback_openid_userinfo_valid_jwt_nested, NULL), U_OK);
@@ -488,10 +487,8 @@ START_TEST(test_iddawc_userinfo_response_jwt_nested)
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk_decrypt), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk_verify), RHN_OK);
-  ck_assert_int_eq(i_get_userinfo(&i_session, 1), I_OK);
-  ck_assert_int_eq(json_equal(i_session.j_userinfo, j_userinfo), 1);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 1), I_ERROR);
   i_clean_session(&i_session);
-  json_decref(j_userinfo);
   
   ulfius_stop_framework(&instance);
   ulfius_clean_instance(&instance);

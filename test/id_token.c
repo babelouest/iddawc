@@ -898,7 +898,7 @@ START_TEST(test_iddawc_id_token_nested)
   ck_assert_int_eq(r_jwks_append_jwk(i_session.client_jwks, jwk_decrypt), RHN_OK);
   ck_assert_int_eq(r_jwks_append_jwk(i_session.server_jwks, jwk_verify), RHN_OK);
   
-  ck_assert_int_eq(i_verify_id_token(&i_session), I_OK);
+  ck_assert_int_eq(i_verify_id_token(&i_session), I_ERROR);
   
   o_free(grants);
   o_free(jwt_str);
