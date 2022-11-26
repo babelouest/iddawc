@@ -467,7 +467,7 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
   return ret;
 }
 
-static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * token, int token_type, jwt_t * jwt) {
+static int _i_verify_jwt_sig(struct _i_session * i_session, const char * token, int token_type, jwt_t * jwt) {
   int ret = I_ERROR_PARAM, res = RHN_ERROR;
   jwk_t * jwk_sign, * jwk_sign2;
   time_t now;
@@ -487,9 +487,9 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
             if (res == RHN_ERROR_INVALID && i_session->server_jwks_cache_expiration) {
               time(&now);
               if (now > i_session->server_jwks_cache_expires_at) {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "_i_verify_jwt_sig_enc - Rotate key");
+                y_log_message(Y_LOG_LEVEL_DEBUG, "_i_verify_jwt_sig - Rotate key");
                 if ((res = _i_load_jwks_endpoint(i_session)) != I_OK && res != I_ERROR_UNAUTHORIZED) {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig_enc - Error _i_load_jwks_endpoint");
+                  y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig - Error _i_load_jwks_endpoint");
                   res = RHN_ERROR;
                 } else {
                   i_session->server_jwks_cache_expires_at = now + i_session->server_jwks_cache_expiration;
@@ -502,33 +502,6 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
                   r_jwk_free(jwk_sign2);
                 }
               }
-            }
-          } else if (jwt->type == R_JWT_TYPE_NESTED_SIGN_THEN_ENCRYPT) {
-            if (_i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_alg_values_supported"), r_jwa_alg_to_str(r_jwt_get_enc_alg(jwt))) &&
-                _i_has_openid_config_parameter_value(i_session, _i_get_parameter_key(token_type, "encryption_enc_values_supported"), r_jwa_enc_to_str(r_jwt_get_enc(jwt)))) {
-              res = r_jwt_decrypt_verify_signature_nested(jwt, jwk_sign, i_session->x5u_flags, NULL, i_session->x5u_flags);
-              if (res == RHN_ERROR_INVALID && i_session->server_jwks_cache_expiration) {
-                time(&now);
-                if (now > i_session->server_jwks_cache_expires_at) {
-                  y_log_message(Y_LOG_LEVEL_DEBUG, "_i_verify_jwt_sig_enc - Rotate key");
-                  if ((res = _i_load_jwks_endpoint(i_session)) != I_OK && res != I_ERROR_UNAUTHORIZED) {
-                    y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig_enc - Error _i_load_jwks_endpoint");
-                    res = RHN_ERROR;
-                  } else {
-                    i_session->server_jwks_cache_expires_at = now + i_session->server_jwks_cache_expiration;
-                    if (r_jwks_size(i_session->server_jwks) > 1) {
-                      jwk_sign2 = r_jwks_get_by_kid(i_session->server_jwks, r_jwt_get_header_str_value(jwt, "kid"));
-                    } else {
-                      jwk_sign2 = r_jwks_get_at(i_session->server_jwks, 0);
-                    }
-                    res = r_jwt_verify_signature(jwt, jwk_sign2, i_session->x5u_flags);
-                    r_jwk_free(jwk_sign2);
-                  }
-                }
-              }
-            } else {
-              y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig_enc - Error invalid jwt encryption");
-              res = I_ERROR;
             }
           }
           if (res == RHN_OK) {
@@ -600,20 +573,20 @@ static int _i_verify_jwt_sig_enc(struct _i_session * i_session, const char * tok
             }
             ret = I_OK;
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig_enc - Error token validation");
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig - Error token validation");
             ret = I_ERROR;
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig_enc - Error Adding JWKS to jwt");
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig - Error Adding JWKS to jwt");
           ret = I_ERROR;
         }
         r_jwk_free(jwk_sign);
       } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig_enc - Error invalid jwt signature");
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig - Error invalid jwt signature");
         ret = I_ERROR_UNAUTHORIZED;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig_enc - Error parsing token");
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_sig - Error parsing token");
       ret = I_ERROR_PARAM;
     }
   } else {
@@ -630,7 +603,7 @@ static int _i_parse_jwt_response(struct _i_session * i_session, const char * tok
   const char * key = NULL;
   
   if (r_jwt_init(&jwt) == RHN_OK) {
-    if ((ret = _i_verify_jwt_sig_enc(i_session, token, I_TOKEN_TYPE_RESPONSE_AUTH, jwt)) == I_OK) {
+    if ((ret = _i_verify_jwt_sig(i_session, token, I_TOKEN_TYPE_RESPONSE_AUTH, jwt)) == I_OK) {
       if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
                                      R_JWT_CLAIM_AUD, i_get_str_parameter(i_session, I_OPT_CLIENT_ID),
                                      R_JWT_CLAIM_EXP, R_JWT_CLAIM_NOW,
@@ -3402,8 +3375,8 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
           if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
             if (r_jwt_init(&jwt) == RHN_OK) {
               token = o_strndup(response.binary_body, response.binary_body_length);
-              if (_i_verify_jwt_sig_enc(i_session, token, I_TOKEN_TYPE_USERINFO, jwt) != I_OK) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error _i_verify_jwt_sig_enc");
+              if (_i_verify_jwt_sig(i_session, token, I_TOKEN_TYPE_USERINFO, jwt) != I_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error _i_verify_jwt_sig");
                 ret = I_ERROR;
               } else {
                 json_decref(i_session->j_userinfo);
@@ -4955,8 +4928,8 @@ int i_verify_id_token(struct _i_session * i_session) {
 
   if (i_session != NULL && i_session->id_token != NULL) {
     if (r_jwt_init(&jwt) == RHN_OK) {
-      if (_i_verify_jwt_sig_enc(i_session, i_session->id_token, I_TOKEN_TYPE_ID_TOKEN, jwt) != I_OK) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error _i_verify_jwt_sig_enc");
+      if (_i_verify_jwt_sig(i_session, i_session->id_token, I_TOKEN_TYPE_ID_TOKEN, jwt) != I_OK) {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - Error _i_verify_jwt_sig");
         ret = I_ERROR;
       } else {
         json_decref(i_session->id_token_payload);
@@ -5110,7 +5083,7 @@ int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud) {
 
   if (i_session != NULL) {
     if (r_jwt_init(&jwt) == RHN_OK) {
-      if ((res = _i_verify_jwt_sig_enc(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt)) == I_OK || !(i_session->openid_config_strict&I_STRICT_JWT_AT_SIGNATURE)) {
+      if ((res = _i_verify_jwt_sig(i_session, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), I_TOKEN_TYPE_ACCESS_TOKEN, jwt)) == I_OK || !(i_session->openid_config_strict&I_STRICT_JWT_AT_SIGNATURE)) {
         if (i_session->openid_config_strict&I_STRICT_JWT_AT_HEADER_TYP && 0 != o_strcasecmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcasecmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_jwt_access_token - invalid 'typ' value, expected: 'at+jwt' or 'application/at+jwt', result: '%s'", r_jwt_get_header_str_value(jwt, "typ"));
           ret = I_ERROR_PARAM;
@@ -5141,7 +5114,7 @@ int i_verify_jwt_access_token(struct _i_session * i_session, const char * aud) {
           }
         }
       } else if (res == I_ERROR) {
-        y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error _i_verify_jwt_sig_enc");
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_verify_jwt_access_token_claims - Error _i_verify_jwt_sig");
         ret = I_ERROR_PARAM;
       } else {
         ret = res;
@@ -5359,8 +5332,8 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
             if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
               if (r_jwt_init(&jwt) == RHN_OK) {
                 token = o_strndup(response.binary_body, response.binary_body_length);
-                if (_i_verify_jwt_sig_enc(i_session, token, I_TOKEN_TYPE_INTROSPECTION, jwt) != I_OK) {
-                  y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error _i_verify_jwt_sig_enc");
+                if (_i_verify_jwt_sig(i_session, token, I_TOKEN_TYPE_INTROSPECTION, jwt) != I_OK) {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error _i_verify_jwt_sig");
                   ret = I_ERROR;
                 } else {
                   if (i_session->openid_config_strict&I_STRICT_JWT_AT_HEADER_TYP && 0 != o_strcasecmp("at+jwt", r_jwt_get_header_str_value(jwt, "typ")) && 0 != o_strcasecmp("application/at+jwt", r_jwt_get_header_str_value(jwt, "typ"))) {
@@ -7342,7 +7315,7 @@ int i_verify_end_session_backchannel_token(struct _i_session * i_session, const 
   json_t * j_events;
 
   if (r_jwt_init(&jwt) == RHN_OK) {
-    if ((res = _i_verify_jwt_sig_enc(i_session, token, I_TOKEN_TYPE_ID_TOKEN, jwt)) == I_OK) {
+    if ((res = _i_verify_jwt_sig(i_session, token, I_TOKEN_TYPE_ID_TOKEN, jwt)) == I_OK) {
       if (r_jwt_validate_claims(jwt, R_JWT_CLAIM_ISS, i_get_str_parameter(i_session, I_OPT_ISSUER),
                                      R_JWT_CLAIM_AUD, i_get_str_parameter(i_session, I_OPT_CLIENT_ID),
                                      R_JWT_CLAIM_IAT, R_JWT_CLAIM_NOW,
@@ -7374,7 +7347,7 @@ int i_verify_end_session_backchannel_token(struct _i_session * i_session, const 
         ret = I_ERROR_PARAM;
       }
     } else if (res == I_ERROR) {
-      y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_end_session_backchannel_token - Error _i_verify_jwt_sig_enc");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_end_session_backchannel_token - Error _i_verify_jwt_sig");
       ret = I_ERROR_PARAM;
     } else {
       ret = res;
