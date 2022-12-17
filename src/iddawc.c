@@ -2110,7 +2110,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         i_session->openid_config_strict = (int)i_value;
         break;
       case I_OPT_STATE_GENERATE:
-        if (i_value > 0) {
+        if (i_value > 0 && i_value < 65536) {
           char value[i_value+1];
           value[0] = '\0';
           rand_string_nonce(value, i_value);
@@ -2179,7 +2179,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         i_session->remote_cert_flag = (int)i_value;
         break;
       case I_OPT_PKCE_CODE_VERIFIER_GENERATE:
-        if (i_value >= 43) {
+        if (i_value >= 43 && i_value < 256) {
           char value[i_value+1];
           value[0] = '\0';
           rand_string_nonce(value, i_value);
@@ -6421,7 +6421,7 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
 
 int i_perform_resource_service_request(struct _i_session * i_session, struct _u_request * http_request, struct _u_response * http_response, int refresh_if_expired, int bearer_type, int use_dpop, time_t dpop_iat) {
   int ret = I_OK, reset_resp_type = 0;
-  unsigned int cur_resp_type;
+  unsigned int cur_resp_type = I_RESPONSE_TYPE_NONE;
   char * dpop_token = NULL, * auth_header, * htu = NULL;
   struct _u_request copy_req;
 
@@ -6513,7 +6513,7 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
         ret = I_ERROR;
       }
     }
-    if (reset_resp_type && cur_resp_type != I_RESPONSE_TYPE_NONE) {
+    if (cur_resp_type != I_RESPONSE_TYPE_NONE) {
       i_set_response_type(i_session, cur_resp_type);
     }
   } else {
