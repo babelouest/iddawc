@@ -1,5 +1,10 @@
 # Iddawc Changelog
 
+## 1.1.8
+
+- Build with flag `-Wconversion`
+- Breaking: Remove support for nested JWT received from the server
+
 ## 1.1.7
 
 - Minor bugfixes

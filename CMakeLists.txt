@@ -30,11 +30,11 @@ set(PROJECT_HOMEPAGE_URL "https://github.com/babelouest/iddawc/")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/iddawc/issues")
 set(LIBRARY_VERSION_MAJOR "1")
 set(LIBRARY_VERSION_MINOR "1")
-set(LIBRARY_VERSION_PATCH "7")
-set(ORCANIA_VERSION_REQUIRED "2.3.1")
-set(YDER_VERSION_REQUIRED "1.4.18")
-set(ULFIUS_VERSION_REQUIRED "2.7.11")
-set(RHONABWY_VERSION_REQUIRED "1.1.9")
+set(LIBRARY_VERSION_PATCH "8")
+set(ORCANIA_VERSION_REQUIRED "2.3.2")
+set(YDER_VERSION_REQUIRED "1.4.19")
+set(ULFIUS_VERSION_REQUIRED "2.7.12")
+set(RHONABWY_VERSION_REQUIRED "1.1.10")
 
 set(PROJECT_VERSION "${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
 set(PROJECT_VERSION_MAJOR ${LIBRARY_VERSION_MAJOR})
@@ -115,7 +115,7 @@ endif ()
 
 add_library(iddawc SHARED ${LIB_SRC})
 set_target_properties(iddawc PROPERTIES
-        COMPILE_OPTIONS "-Wextra;-Wconversion"
+        COMPILE_OPTIONS "-Wextra;-Wconversion;-Werror=sign-conversion"
         PUBLIC_HEADER "${INC_DIR}/iddawc.h;${PROJECT_BINARY_DIR}/iddawc-cfg.h"
         VERSION "${LIBRARY_VERSION}"
         SOVERSION "${LIBRARY_SOVERSION}")
@@ -308,7 +308,7 @@ if (BUILD_IDWCC)
       include_directories(${ZLIB_INCLUDE_DIRS})
     endif ()
     add_executable(idwcc ${IDWCC_DIR}/idwcc.c ${INC_DIR}/iddawc.h ${IDWCC_DIR}/http_compression_callback.c ${IDWCC_DIR}/http_compression_callback.h ${IDWCC_DIR}/static_compressed_inmemory_website_callback.c ${IDWCC_DIR}/static_compressed_inmemory_website_callback.h ${PROJECT_BINARY_DIR}/iddawc-cfg.h)
-    set_target_properties(idwcc PROPERTIES SKIP_BUILD_RPATH TRUE COMPILE_OPTIONS "-Wextra;-Wconversion")
+    set_target_properties(idwcc PROPERTIES SKIP_BUILD_RPATH TRUE COMPILE_OPTIONS "-Wextra;-Wconversion;-Werror=sign-conversion")
     add_dependencies(idwcc iddawc)
     target_link_libraries(idwcc iddawc ${LIBS})
     install(TARGETS idwcc RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
