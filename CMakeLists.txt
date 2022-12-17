@@ -115,7 +115,7 @@ endif ()
 
 add_library(iddawc SHARED ${LIB_SRC})
 set_target_properties(iddawc PROPERTIES
-        COMPILE_OPTIONS "-Wextra;-Wconversion;-Werror=sign-conversion"
+        COMPILE_OPTIONS "-Wextra;-Wconversion"
         PUBLIC_HEADER "${INC_DIR}/iddawc.h;${PROJECT_BINARY_DIR}/iddawc-cfg.h"
         VERSION "${LIBRARY_VERSION}"
         SOVERSION "${LIBRARY_SOVERSION}")
@@ -308,7 +308,7 @@ if (BUILD_IDWCC)
       include_directories(${ZLIB_INCLUDE_DIRS})
     endif ()
     add_executable(idwcc ${IDWCC_DIR}/idwcc.c ${INC_DIR}/iddawc.h ${IDWCC_DIR}/http_compression_callback.c ${IDWCC_DIR}/http_compression_callback.h ${IDWCC_DIR}/static_compressed_inmemory_website_callback.c ${IDWCC_DIR}/static_compressed_inmemory_website_callback.h ${PROJECT_BINARY_DIR}/iddawc-cfg.h)
-    set_target_properties(idwcc PROPERTIES SKIP_BUILD_RPATH TRUE COMPILE_OPTIONS "-Wextra;-Wconversion;-Werror=sign-conversion")
+    set_target_properties(idwcc PROPERTIES SKIP_BUILD_RPATH TRUE COMPILE_OPTIONS "-Wextra;-Wconversion")
     add_dependencies(idwcc iddawc)
     target_link_libraries(idwcc iddawc ${LIBS})
     install(TARGETS idwcc RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
