@@ -6513,7 +6513,7 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
         ret = I_ERROR;
       }
     }
-    if (cur_resp_type != I_RESPONSE_TYPE_NONE) {
+    if (reset_resp_type && cur_resp_type != I_RESPONSE_TYPE_NONE) {
       i_set_response_type(i_session, cur_resp_type);
     }
   } else {
