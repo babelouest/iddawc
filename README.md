@@ -144,11 +144,12 @@ You can install Iddawc with a pre-compiled package available in the [release pag
 
 [CMake](https://cmake.org/download/) minimum 3.5 is required.
 
+Last Iddawc release: [https://github.com/babelouest/iddawc/releases/latest/](https://github.com/babelouest/iddawc/releases/latest/)
+
 Run the CMake script in a sub-directory, example:
 
 ```shell
-$ git clone https://github.com/babelouest/iddawc.git
-$ cd iddawc/
+$ cd <iddawc_source>
 $ mkdir build
 $ cd build
 $ cmake ..
@@ -167,8 +168,9 @@ The available options for CMake are:
 
 Download Iddawc from GitHub repository, compile and install.
 
+Last Iddawc release: [https://github.com/babelouest/iddawc/releases/latest/](https://github.com/babelouest/iddawc/releases/latest/)
+
 ```shell
-$ git clone https://github.com/babelouest/iddawc.git
 $ cd iddawc/src
 $ make
 $ sudo make install
