@@ -41,6 +41,7 @@ int main() {
                                    I_OPT_CLIENT_ID, CLIENT_ID,
                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                   I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SECRET_BASIC,
                                    I_OPT_SCOPE, SCOPE,
                                    I_OPT_STATE_GENERATE, 16,
                                    I_OPT_NONCE_GENERATE, 32,
