@@ -4923,7 +4923,7 @@ int i_verify_id_token(struct _i_session * i_session) {
   jwt_t * jwt = NULL;
   size_t hash_len = 128, hash_encoded_len = 128;
   unsigned char hash[128], hash_encoded[128] = {0};
-  int alg = GNUTLS_DIG_UNKNOWN;
+  gnutls_digest_algorithm_t alg = GNUTLS_DIG_UNKNOWN;
   gnutls_datum_t hash_data;
 
   if (i_session != NULL && i_session->id_token != NULL) {
