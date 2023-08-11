@@ -4,6 +4,7 @@
 
 - Build with flag `-Wconversion`
 - Breaking: Remove support for nested JWT received from the server
+- cmake: remove `DownloadProject` feature, now dependencies must be previously installed
 
 ## 1.1.7
 
