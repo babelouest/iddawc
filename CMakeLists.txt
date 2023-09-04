@@ -4,7 +4,7 @@
 # CMake file used to build all programs
 #
 # Copyright 2018 Silvio Clecio <silvioprog@gmail.com>
-# Copyright 2019-2022 Nicolas Mora <mail@babelouest.org>
+# Copyright 2019-2023 Nicolas Mora <mail@babelouest.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the MIT License
@@ -25,12 +25,14 @@ endif()
 
 # library info
 
-set(PROJECT_DESCRIPTION "OAuth2/OIDC client library")
+set(IDDAWC_LIBS )
+
+set(PROJECT_DESCRIPTION "OAuth2/OIDC Client and RP library")
 set(PROJECT_HOMEPAGE_URL "https://github.com/babelouest/iddawc/")
 set(PROJECT_BUGREPORT_PATH "https://github.com/babelouest/iddawc/issues")
 set(LIBRARY_VERSION_MAJOR "1")
 set(LIBRARY_VERSION_MINOR "1")
-set(LIBRARY_VERSION_PATCH "8")
+set(LIBRARY_VERSION_PATCH "9")
 set(ORCANIA_VERSION_REQUIRED "2.3.3")
 set(YDER_VERSION_REQUIRED "1.4.19")
 set(ULFIUS_VERSION_REQUIRED "2.7.14")
@@ -70,6 +72,8 @@ set(IDWCC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tools/idwcc)
 
 include(GNUInstallDirs)
 include(CheckSymbolExists)
+include(CMakeDependentOption)
+include(CMakePackageConfigHelpers)
 
 # check if _GNU_SOURCE is available
 
@@ -100,75 +104,128 @@ set(LIB_SRC
 set(PKGCONF_REQ "")
 set(PKGCONF_REQ_PRIVATE "")
 
+include(FindJansson)
+set(JANSSON_MIN_VERSION 2.4)
+find_package(Jansson ${JANSSON_MIN_VERSION} REQUIRED)
+list(APPEND IDDAWC_LIBS Jansson::Jansson)
+
+include(FindGnuTLS)
+find_package(GnuTLS REQUIRED)
+list(APPEND IDDAWC_LIBS GnuTLS::GnuTLS)
+
 # static library
 
 option(BUILD_STATIC "Build static library." OFF)
 
 if (BUILD_STATIC)
     add_library(iddawc_static STATIC ${LIB_SRC})
-    target_compile_definitions(iddawc_static PUBLIC -DO_STATIC_LIBRARY)
+    add_library(Iddawc::Iddawc-static ALIAS iddawc_static)
+    target_include_directories(iddawc_static
+        PUBLIC "$<BUILD_INTERFACE:${INC_DIR}>"
+        PUBLIC "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>"
+        PUBLIC "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+    target_link_libraries(iddawc_static PUBLIC ${IDDAWC_LIBS})
+    target_compile_definitions(iddawc_static PUBLIC O_STATIC_LIBRARY)
     set_target_properties(iddawc_static PROPERTIES
-            OUTPUT_NAME iddawc)
+            PUBLIC_HEADER "${INC_DIR}/iddawc.h;${PROJECT_BINARY_DIR}/iddawc-cfg.h"
+            OUTPUT_NAME iddawc
+            EXPORT_NAME Iddawc-static)
+    if (MSVC)
+        set_target_properties(iddawc_static PROPERTIES
+                OUTPUT_NAME iddawc-static)
+    endif ()
+    if (NOT MSVC)
+        target_compile_options(iddawc_static PRIVATE -Wextra -Wconversion)
+    endif ()
+    set(iddawc_lib iddawc_static)
 endif ()
 
 # shared library
 
 add_library(iddawc SHARED ${LIB_SRC})
+add_library(Iddawc::Iddawc ALIAS iddawc)
+target_include_directories(iddawc
+    PUBLIC "$<BUILD_INTERFACE:${INC_DIR}>"
+    PUBLIC "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>"
+    PUBLIC "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+target_link_libraries(iddawc PUBLIC ${IDDAWC_LIBS})
 set_target_properties(iddawc PROPERTIES
-        COMPILE_OPTIONS "-Wextra;-Wconversion"
         PUBLIC_HEADER "${INC_DIR}/iddawc.h;${PROJECT_BINARY_DIR}/iddawc-cfg.h"
         VERSION "${LIBRARY_VERSION}"
-        SOVERSION "${LIBRARY_SOVERSION}")
-
-include(FindJansson)
-set(JANSSON_MIN_VERSION 2.11)
-find_package(Jansson ${JANSSON_MIN_VERSION} REQUIRED)
-if (JANSSON_FOUND)
-	set(LIBS ${LIBS} ${JANSSON_LIBRARIES})
-	include_directories(${JANSSON_INCLUDE_DIRS})
+        SOVERSION "${LIBRARY_SOVERSION}"
+        WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+        EXPORT_NAME Iddawc)
+if (WIN32)
+    set_target_properties(iddawc PROPERTIES SUFFIX "-${LIBRARY_VERSION_MAJOR}.dll")
 endif ()
+if (NOT MSVC)
+    target_compile_options(iddawc PRIVATE -Wextra -Wconversion)
+endif()
+set(iddawc_lib iddawc)
 
-include(FindNettle)
-find_package(Nettle REQUIRED)
-if (NETTLE_FOUND)
-	set(LIBS ${LIBS} ${NETTLE_LIBRARIES})
-	include_directories(${NETTLE_INCLUDE_DIRS})
-endif ()
-
-include(FindGnuTLS)
-find_package(GnuTLS REQUIRED)
-if (GNUTLS_FOUND)
-	set(LIBS ${LIBS} ${GNUTLS_LIBRARIES})
-	include_directories(${GNUTLS_INCLUDE_DIRS})
-endif ()
-target_link_libraries(iddawc ${LIBS})
-
-include(FindMHD)
-find_package(MHD REQUIRED)
-
-include(FindOrcania)
 find_package(Orcania ${ORCANIA_VERSION_REQUIRED} REQUIRED)
-set(LIBS ${LIBS} ${ORCANIA_LIBRARIES})
-include_directories(${ORCANIA_INCLUDE_DIRS})
-target_link_libraries(iddawc ${ORCANIA_LIBRARIES})
+if ("${ORCANIA_VERSION_STRING}" VERSION_GREATER_EQUAL "${ORCANIA_VERSION_REQUIRED}")
+    message(STATUS "Orcania found: ${ORCANIA_VERSION_STRING}")
+else ()
+    message( FATAL_ERROR "Orcania version required: ${ORCANIA_VERSION_REQUIRED} - version installed: ${ORCANIA_VERSION_STRING}")
+endif ()
 
-include(FindYder)
+target_link_libraries(iddawc PUBLIC $<TARGET_NAME:Orcania::Orcania>)
+if (BUILD_STATIC)
+    if(TARGET Orcania::Orcania-static)
+        target_link_libraries(iddawc_static PUBLIC $<TARGET_NAME:Orcania::Orcania-static>)
+    else()
+        target_link_libraries(iddawc_static PUBLIC $<TARGET_NAME:Orcania::Orcania>)
+    endif()
+endif ()
+
 find_package(Yder ${YDER_VERSION_REQUIRED} REQUIRED)
-set(LIBS ${LIBS} ${YDER_LIBRARIES})
-include_directories(${YDER_INCLUDE_DIRS})
-target_link_libraries(iddawc ${YDER_LIBRARIES})
+if ("${YDER_VERSION_STRING}" VERSION_GREATER_EQUAL "${YDER_VERSION_REQUIRED}")
+    message(STATUS "Yder found: ${YDER_VERSION_STRING}")
+else ()
+    message( FATAL_ERROR "Yder version required: ${YDER_VERSION_REQUIRED} - version installed: ${YDER_VERSION_STRING}")
+endif ()
 
-include(FindUlfius)
+target_link_libraries(iddawc PUBLIC $<TARGET_NAME:Yder::Yder>)
+if (BUILD_STATIC)
+    if(TARGET Yder::Yder-static)
+        target_link_libraries(iddawc_static PUBLIC $<TARGET_NAME:Yder::Yder-static>)
+    else()
+        target_link_libraries(iddawc_static PUBLIC $<TARGET_NAME:Yder::Yder>)
+    endif()
+endif ()
+
 find_package(Ulfius ${ULFIUS_VERSION_REQUIRED} REQUIRED)
-set(LIBS ${LIBS} ${ULFIUS_LIBRARIES})
-include_directories(${ULFIUS_INCLUDE_DIRS})
-target_link_libraries(iddawc ${ULFIUS_LIBRARIES})
+if ("${ULFIUS_VERSION_STRING}" VERSION_GREATER_EQUAL "${ULFIUS_VERSION_REQUIRED}")
+    message(STATUS "Ulfius found: ${ULFIUS_VERSION_STRING}")
+else ()
+    message( FATAL_ERROR "Ulfius version required: ${ULFIUS_VERSION_REQUIRED} - version installed: ${ULFIUS_VERSION_STRING}")
+endif ()
 
-include(FindRhonabwy)
+target_link_libraries(iddawc PUBLIC $<TARGET_NAME:Ulfius::Ulfius>)
+if (BUILD_STATIC)
+    if(TARGET Ulfius::Ulfius-static)
+        target_link_libraries(iddawc_static PUBLIC $<TARGET_NAME:Ulfius::Ulfius-static>)
+    else()
+        target_link_libraries(iddawc_static PUBLIC $<TARGET_NAME:Ulfius::Ulfius>)
+    endif()
+endif ()
+
 find_package(Rhonabwy ${RHONABWY_VERSION_REQUIRED} REQUIRED)
-set(LIBS ${LIBS} ${RHONABWY_LIBRARIES})
-include_directories(${RHONABWY_INCLUDE_DIRS})
-target_link_libraries(iddawc ${RHONABWY_LIBRARIES})
+if ("${RHONABWY_VERSION_STRING}" VERSION_GREATER_EQUAL "${RHONABWY_VERSION_REQUIRED}")
+    message(STATUS "Rhonabwy found: ${RHONABWY_VERSION_STRING}")
+else ()
+    message( FATAL_ERROR "Rhonabwy version required: ${RHONABWY_VERSION_REQUIRED} - version installed: ${RHONABWY_VERSION_STRING}")
+endif ()
+
+target_link_libraries(iddawc PUBLIC $<TARGET_NAME:Rhonabwy::Rhonabwy>)
+if (BUILD_STATIC)
+    if(TARGET Rhonabwy::Rhonabwy-static)
+        target_link_libraries(iddawc_static PUBLIC $<TARGET_NAME:Rhonabwy::Rhonabwy-static>)
+    else()
+        target_link_libraries(iddawc_static PUBLIC $<TARGET_NAME:Rhonabwy::Rhonabwy>)
+    endif()
+endif ()
 
 # build idwcc
 
@@ -176,17 +233,23 @@ option(BUILD_IDWCC "Build idwcc application." OFF)
 
 if (BUILD_IDWCC)
     find_package(Threads REQUIRED)
-    set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    list(APPEND IDDAWC_LIBS ${CMAKE_THREAD_LIBS_INIT})
     include(FindZLIB)
     find_package(ZLIB REQUIRED)
     if (ZLIB_FOUND)
-      set(LIBS ${LIBS} ${ZLIB_LIBRARIES})
+      list(APPEND IDDAWC_LIBS ${ZLIB_LIBRARIES})
       include_directories(${ZLIB_INCLUDE_DIRS})
     endif ()
-    add_executable(idwcc ${IDWCC_DIR}/idwcc.c ${INC_DIR}/iddawc.h ${IDWCC_DIR}/http_compression_callback.c ${IDWCC_DIR}/http_compression_callback.h ${IDWCC_DIR}/static_compressed_inmemory_website_callback.c ${IDWCC_DIR}/static_compressed_inmemory_website_callback.h ${PROJECT_BINARY_DIR}/iddawc-cfg.h)
+    add_executable(idwcc ${IDWCC_DIR}/idwcc.c
+                         ${INC_DIR}/iddawc.h
+                         ${IDWCC_DIR}/http_compression_callback.c
+                         ${IDWCC_DIR}/http_compression_callback.h
+                         ${IDWCC_DIR}/static_compressed_inmemory_website_callback.c
+                         ${IDWCC_DIR}/static_compressed_inmemory_website_callback.h
+                         ${PROJECT_BINARY_DIR}/iddawc-cfg.h)
     set_target_properties(idwcc PROPERTIES SKIP_BUILD_RPATH TRUE COMPILE_OPTIONS "-Wextra;-Wconversion")
     add_dependencies(idwcc iddawc)
-    target_link_libraries(idwcc iddawc ${LIBS})
+    target_link_libraries(idwcc iddawc ${IDDAWC_LIBS})
     install(TARGETS idwcc RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     install(FILES ${IDWCC_DIR}/idwcc.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT runtime)
     install(DIRECTORY ${IDWCC_DIR}/webapp/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/idwcc/webapp/ COMPONENT runtime)
@@ -200,9 +263,9 @@ if (BUILD_IDDAWC_DOCUMENTATION)
     if (DOXYGEN_FOUND)
         set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen.cfg)
         set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/doxyfile)
-        
+
         configure_file(${doxyfile_in} ${doxyfile} @ONLY)
-        
+
         add_custom_target(doc
                           COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile_in}
                           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -224,19 +287,32 @@ include_directories(${PROJECT_BINARY_DIR})
 option(BUILD_IDDAWC_TESTING "Build the testing tree." OFF) # because we do not use include(CTest)
 
 if (BUILD_IDDAWC_TESTING)
-    include(FindCheck)
     find_package(Check REQUIRED)
     if (CHECK_FOUND)
-		include(FindSubunit)
-		find_package(Subunit REQUIRED)
-        find_package(Threads REQUIRED)
+        if (NOT WIN32 AND NOT APPLE)
+            include(FindSubunit)
+            find_package(Subunit REQUIRED)
+        endif ()
 
         enable_testing()
 
         set(CMAKE_CTEST_COMMAND ctest -V)
 
+        set(TEST_LIBS )
+
         set(TST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test)
-        set(LIBS iddawc ${LIBS} ${CHECK_LIBRARIES} ${SUBUNIT_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} "-lm -lrt")
+        list(APPEND TEST_LIBS Check::Check)
+        list(APPEND TEST_LIBS Iddawc::Iddawc)
+        if (NOT WIN32)
+            find_package(Threads REQUIRED)
+            list(APPEND TEST_LIBS ${CMAKE_THREAD_LIBS_INIT} m)
+        endif ()
+        if (NOT APPLE AND NOT WIN32)
+            list(APPEND TEST_LIBS rt)
+        endif ()
+        if (NOT WIN32 AND NOT APPLE)
+            list(APPEND TEST_LIBS Subunit::Subunit)
+        endif ()
 
         set(TESTS
             core
@@ -256,7 +332,7 @@ if (BUILD_IDDAWC_TESTING)
             ciba
             session
             rar
-            )
+        )
 
         configure_file(
                 "${I_CMAKE_MODULE_PATH}/CTestCustom.cmake.in"
@@ -265,13 +341,15 @@ if (BUILD_IDDAWC_TESTING)
 
         foreach (t ${TESTS})
             add_executable(${t} EXCLUDE_FROM_ALL ${TST_DIR}/${t}.c)
-            target_include_directories(${t} PUBLIC ${TST_DIR})
-            target_link_libraries(${t} PUBLIC ${LIBS})
+            target_include_directories(${t} PRIVATE ${TST_DIR})
+            target_link_libraries(${t} PRIVATE ${TEST_LIBS})
             add_test(NAME ${t}
-                    WORKING_DIRECTORY ${TST_DIR}
-                    COMMAND ${t})
+                     WORKING_DIRECTORY ${TST_DIR}
+                     COMMAND ${t})
         endforeach ()
+
     endif ()
+
 endif ()
 
 # install target
@@ -298,16 +376,40 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libiddawc.pc
 set(TARGETS iddawc)
 
 if (INSTALL_HEADER)
-    install(TARGETS ${TARGETS}
+    install(TARGETS ${TARGETS} EXPORT IddawcExports
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 else ()
-    install(TARGETS ${TARGETS}
+    install(TARGETS ${TARGETS} EXPORT IddawcExports
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif ()
+
+if (INSTALL_HEADER)
+    set(IDDAWC_INSTALL_CMAKEDIR_DEFAULT "${CMAKE_INSTALL_LIBDIR}/cmake/Iddawc")
+    if (WIN32 AND NOT MINGW)
+        set(IDDAWC_INSTALL_CMAKEDIR_DEFAULT "cmake")
+    endif ()
+    set(IDDAWC_INSTALL_CMAKEDIR ${IDDAWC_INSTALL_CMAKEDIR_DEFAULT} CACHE STRING "Location where to install the cmake config files")
+
+    install(EXPORT IddawcExports DESTINATION "${IDDAWC_INSTALL_CMAKEDIR}"
+        NAMESPACE "Iddawc::"
+        FILE "IddawcTargets.cmake")
+
+    configure_package_config_file(cmake-modules/IddawcConfig.cmake.in IddawcConfig.cmake
+        INSTALL_DESTINATION "${IDDAWC_INSTALL_CMAKEDIR}")
+    write_basic_package_version_file(IddawcConfigVersion.cmake
+        COMPATIBILITY AnyNewerVersion)
+
+    install(FILES
+                cmake-modules/FindGnuTLS.cmake
+                cmake-modules/FindJansson.cmake
+                "${PROJECT_BINARY_DIR}/IddawcConfig.cmake"
+                "${PROJECT_BINARY_DIR}/IddawcConfigVersion.cmake"
+            DESTINATION "${IDDAWC_INSTALL_CMAKEDIR}")
 endif ()
 
 # uninstall target

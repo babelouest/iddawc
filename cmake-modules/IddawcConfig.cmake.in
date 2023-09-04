@@ -1,0 +1,21 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/IddawcTargets.cmake")
+
+set(CMAKE_CURRENT_LIST_DIR ${_original_cmake_module_path})
+
+include(CMakeFindDependencyMacro)
+
+set(_original_cmake_module_path ${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+
+find_dependency(Orcania)
+find_dependency(Yder)
+find_dependency(Ulfius)
+find_dependency(Jansson)
+find_dependency(GnuTLS)
+
+set(CMAKE_MODULE_PATH ${_original_cmake_module_path})
+
+set(IDDAWC_VERSION_STRING "@PROJECT_VERSION@")
+set(Iddawc_FOUND TRUE)
