@@ -18,7 +18,7 @@
  */
 #define AUTH_ENDPOINT "https://www.facebook.com/v5.0/dialog/oauth"
 #define TOKEN_ENDPOINT "https://graph.facebook.com/v5.0/oauth/access_token"
-#define USERINFO_ENDPOINT "https://graph.facebook.com/v5.0/me"
+#define USERINFO_ENDPOINT "https://graph.facebook.com/v5.0/me?fields=id,name,email"
 
 /**
  * Update the values below with your client values
@@ -43,6 +43,7 @@ int main() {
                                    I_OPT_USERINFO_ENDPOINT, USERINFO_ENDPOINT,
                                    I_OPT_CLIENT_ID, CLIENT_ID,
                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                   I_OPT_TOKEN_METHOD, I_TOKEN_AUTH_METHOD_SECRET_BASIC,
                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
                                    I_OPT_STATE_GENERATE, 16,
                                    I_OPT_NONE);
