@@ -369,6 +369,14 @@ char * i_export_session_str(struct _i_session * i_session);
 int i_import_session_str(struct _i_session * i_session, const char * str_import);
 ```
 
+### Export HTTP requests and responses
+
+You can set the `struct _i_session` parameter `I_OPT_SAVE_HTTP_REQUEST_RESPONSE` to `true`.
+
+Then all HTTP requests send by Iddawc will be stored in the `struct _i_session` properties `saved_request` and `saved_response` as Ulfius' structures [struct _u_request](https://github.com/babelouest/ulfius/blob/master/API.md#request-structure) and [struct _u_response](https://github.com/babelouest/ulfius/blob/master/API.md#response-structure).
+
+Using those structures, you will be able to parse the HTTP requests with more details, or [export them in a readable format](https://github.com/babelouest/ulfius/blob/master/API.md#export-struct-_u_request--and-struct-_u_response--in-http11-stream-format).
+
 ## Run OAuth2 or OIDC requests
 
 Finally, to run OAuth2 or OIDC requests, you must use the dedicated functions using the initialized and set `struct _i_session *` and some additional parameters if required.
@@ -400,7 +408,7 @@ The function `i_build_auth_url_get` can be used to build the full auth request w
 int i_build_auth_url_get(struct _i_session * i_session);
 ```
 
-The function `i_run_auth_request` builds the full auth requests and executes it. If the OAuth2 server answers with a successful response, the response will be parsed in the session properties. Otherwise, the redirect_to value and the errors if any will be parsed and made available in the session properties.
+The function `i_run_auth_request` builds the full auth requests and executes it. If the OAuth2 server answers with a successful response, the response will be parsed in the session properties. Otherwise, the redirect_to value and the errors if any will be parsed and made available in the session properties. The error message and error description, if any, will be available in the `struct _i_session` parameters `I_OPT_ERROR` and `I_OPT_ERROR_DESCRIPTION`
 
 ```C
 /**
@@ -412,7 +420,7 @@ The function `i_run_auth_request` builds the full auth requests and executes it.
 int i_run_auth_request(struct _i_session * i_session);
 ```
 
-If the auth request is executed by an external program such as the browser, you can parse the redirect_to response afterwards using this function. You must set the `I_OPT_REDIRECT_TO`.
+If the auth request is executed by an external program such as the browser, you can parse the redirect_to response afterwards using this function. You must set the `I_OPT_REDIRECT_TO`. If the redirect_to has error. The error message and error description, if any, will be available in the `struct _i_session` parameters `I_OPT_ERROR` and `I_OPT_ERROR_DESCRIPTION`
 
 ```C
 /**
@@ -457,7 +465,7 @@ int i_run_par_request(struct _i_session * i_session);
 
 ### Build and run token requests and parse results
 
-To execute a request in the token endpoint, get a refresh token from a code or refresh a token, 
+To execute a request in the token endpoint, get a refresh token from a code or refresh a token. The error message and error description, if any, will be available in the `struct _i_session` parameters `I_OPT_ERROR` and `I_OPT_ERROR_DESCRIPTION`
 
 ```C
 /**
