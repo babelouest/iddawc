@@ -22,6 +22,7 @@
 LIBIDDAWC_LOCATION=./src
 IDWCC_LOCATION=./tools/idwcc
 TESTS_LOCATION=./test
+EXAMPLE_LOCATION=./examples
 
 all:
 	cd $(LIBIDDAWC_LOCATION) && $(MAKE) $*
@@ -34,6 +35,7 @@ clean:
 	cd $(LIBIDDAWC_LOCATION) && $(MAKE) clean
 	cd $(IDWCC_LOCATION) && $(MAKE) clean
 	cd $(TESTS_LOCATION) && $(MAKE) clean
+	cd $(EXAMPLE_LOCATION) && $(MAKE) clean
 	rm -rf doc/html/
 
 install:
