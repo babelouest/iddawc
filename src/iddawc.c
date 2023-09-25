@@ -451,7 +451,7 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
         json_decref(j_jwks);
       } else if (response.status == 401 || response.status == 403) {
         ret = I_ERROR_UNAUTHORIZED;
-      } else if (response.status >= 500 && response.status < 599) {
+      } else if (response.status >= 500 && response.status <= 599) {
         y_log_message(Y_LOG_LEVEL_ERROR, "_i_load_jwks_endpoint - Error server response status: %ld", response.status);
         ret = I_ERROR_SERVER;
       } else {
@@ -3429,7 +3429,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
             y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error _i_parse_error_response (unauthorized)");
           }
           ret = I_ERROR_UNAUTHORIZED;
-        } else if (response.status >= 500 && response.status < 599) {
+        } else if (response.status >= 500 && response.status <= 599) {
           y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error server response status: %ld", response.status);
           ret = I_ERROR_SERVER;
         } else {
@@ -4426,7 +4426,7 @@ int i_parse_token_response(struct _i_session * i_session, int http_status, json_
         y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_token_response - _i_parse_error_response (unauthorozed)");
         ret = I_ERROR;
       }
-    } else if (http_status >= 500 && http_status < 599) {
+    } else if (http_status >= 500 && http_status <= 599) {
       y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_token_response - Error server response status: %d", http_status);
       ret = I_ERROR_SERVER;
     } else {
@@ -4528,7 +4528,7 @@ int i_run_token_request(struct _i_session * i_session) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error i_parse_token_response (unauthorized)");
               }
               json_decref(j_response);
-            } else if (response.status >= 500 && response.status < 599) {
+            } else if (response.status >= 500 && response.status <= 599) {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error server response status: %ld", response.status);
               ret = I_ERROR_SERVER;
             } else {
@@ -4618,7 +4618,7 @@ int i_run_token_request(struct _i_session * i_session) {
                     ret = I_ERROR_PARAM;
                   }
                   json_decref(j_response);
-                } else if (response.status >= 500 && response.status < 599) {
+                } else if (response.status >= 500 && response.status <= 599) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request password - Error server response status: %ld", response.status);
                   ret = I_ERROR_SERVER;
                 } else {
@@ -4698,7 +4698,7 @@ int i_run_token_request(struct _i_session * i_session) {
                   } else {
                     ret = I_ERROR_UNAUTHORIZED;
                   }
-                } else if (response.status >= 500 && response.status < 599) {
+                } else if (response.status >= 500 && response.status <= 599) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error server response status: %ld", response.status);
                   ret = I_ERROR_SERVER;
                 } else {
@@ -4775,7 +4775,7 @@ int i_run_token_request(struct _i_session * i_session) {
                     ret = I_ERROR_PARAM;
                   }
                   json_decref(j_response);
-                } else if (response.status >= 500 && response.status < 599) {
+                } else if (response.status >= 500 && response.status <= 599) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request refresh - Error server response status: %ld", response.status);
                   ret = I_ERROR_SERVER;
                 } else {
@@ -4844,7 +4844,7 @@ int i_run_token_request(struct _i_session * i_session) {
                     ret = I_ERROR_PARAM;
                   }
                   json_decref(j_response);
-                } else if (response.status >= 500 && response.status < 599) {
+                } else if (response.status >= 500 && response.status <= 599) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request device - Error server response status: %ld", response.status);
                   ret = I_ERROR_SERVER;
                 } else {
@@ -4917,7 +4917,7 @@ int i_run_token_request(struct _i_session * i_session) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Invalid response status");
                   ret = I_ERROR;
                 }
-              } else if (response.status >= 500 && response.status < 599) {
+              } else if (response.status >= 500 && response.status <= 599) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request ciba - Error server response status: %ld", response.status);
                 ret = I_ERROR_SERVER;
               } else {
@@ -5252,7 +5252,7 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error _i_parse_error_response (unauthorized)");
             }
             ret = I_ERROR_UNAUTHORIZED;
-          } else if (response.status >= 500 && response.status < 599) {
+          } else if (response.status >= 500 && response.status <= 599) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error server response status: %ld", response.status);
             ret = I_ERROR_SERVER;
           } else if (response.status != 200) {
@@ -5406,7 +5406,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
               y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error _i_parse_error_response (unauthorized)");
             }
             ret = I_ERROR_UNAUTHORIZED;
-          } else if (response.status >= 500 && response.status < 599) {
+          } else if (response.status >= 500 && response.status <= 599) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error server response status: %ld", response.status);
             ret = I_ERROR_SERVER;
           } else if (response.status != 200) {
@@ -5586,7 +5586,7 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
                 y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (unauthorized)");
               }
               ret = I_ERROR_UNAUTHORIZED;
-          } else if (response.status >= 500 && response.status < 599) {
+          } else if (response.status >= 500 && response.status <= 599) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Error server response status: %ld", response.status);
             ret = I_ERROR_SERVER;
             } else if (response.status != 200) {
@@ -5665,7 +5665,7 @@ int i_get_registration_client(struct _i_session * i_session, json_t ** j_result)
               y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error _i_parse_error_response (unauthorized)");
             }
             ret = I_ERROR_UNAUTHORIZED;
-          } else if (response.status >= 500 && response.status < 599) {
+          } else if (response.status >= 500 && response.status <= 599) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Error server response status: %ld", response.status);
             ret = I_ERROR_SERVER;
           } else if (response.status != 200) {
@@ -5850,7 +5850,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
               y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error _i_parse_error_response (unauthorized)");
             }
             ret = I_ERROR_UNAUTHORIZED;
-          } else if (response.status >= 500 && response.status < 599) {
+          } else if (response.status >= 500 && response.status <= 599) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Error server response status: %ld", response.status);
             ret = I_ERROR_SERVER;
           } else if (response.status != 200) {
@@ -5932,7 +5932,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error _i_parse_error_response (unauthorized)");
             }
             ret = I_ERROR_UNAUTHORIZED;
-          } else if (response.status >= 500 && response.status < 599) {
+          } else if (response.status >= 500 && response.status <= 599) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Error server response status: %ld", response.status);
             ret = I_ERROR_SERVER;
           } else if (response.status != 200) {
@@ -7316,7 +7316,7 @@ int i_run_ciba_request(struct _i_session * i_session) {
             json_decref(j_response);
           } else if (response.status == 403 || response.status == 401) {
             ret = I_ERROR_UNAUTHORIZED;
-          } else if (response.status >= 500 && response.status < 599) {
+          } else if (response.status >= 500 && response.status <= 599) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error server response status: %ld", response.status);
             ret = I_ERROR_SERVER;
           } else {
