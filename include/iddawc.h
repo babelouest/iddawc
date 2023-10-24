@@ -131,6 +131,9 @@ extern "C"
 #define I_CIBA_LOGIN_HINT_FORMAT_JWT      1
 #define I_CIBA_LOGIN_HINT_FORMAT_ID_TOKEN 2
 
+#define I_DEFAULT_RESPONSE_MAX_BODY_SIZE    4194304
+#define I_DEFAULT_RESPONSE_MAX_HEADER_COUNT 64
+
 /**
  * Options available to set or get properties using
  * i_set_int_parameter, i_set_str_parameter,
@@ -264,7 +267,9 @@ typedef enum {
   I_OPT_ID_TOKEN_SID                            = 126, ///< ID_Token SID
   I_OPT_SAVE_HTTP_REQUEST_RESPONSE              = 127, ///< Save HTTP request and response
   I_OPT_DPOP_NONCE_AS                           = 128, ///< DPoP Nonce for the AS
-  I_OPT_DPOP_NONCE_RS                           = 129  ///< DPoP Nonce for the RS
+  I_OPT_DPOP_NONCE_RS                           = 129, ///< DPoP Nonce for the RS
+  I_OPT_RESPONSE_MAX_BODY_SIZE                  = 130, ///< Maximum response size allowed
+  I_OPT_RESPONSE_MAX_HEADER_COUNT               = 131, ///< Maximum response header elements allowed
 } i_option;
 
 /**
@@ -331,6 +336,8 @@ struct _i_session {
   jwa_alg               client_enc_alg;
   jwa_enc               client_enc;
   int                   x5u_flags;
+  unsigned int          response_body_limit;
+  unsigned int          max_header;
   json_t              * openid_config;
   int                   openid_config_strict;
   char                * issuer;
@@ -501,7 +508,8 @@ int i_set_result(struct _i_session * i_session, unsigned int i_value);
  * I_OPT_CIBA_MODE, I_OPT_CIBA_LOGIN_HINT_FORMAT, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE,
  * I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, I_OPT_CIBA_AUTH_REQ_INTERVAL,
  * I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED, I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED,
- * I_OPT_SERVER_JWKS_CACHE_EXPIRATION, I_OPT_SAVE_HTTP_REQUEST_RESPONSE
+ * I_OPT_SERVER_JWKS_CACHE_EXPIRATION, I_OPT_SAVE_HTTP_REQUEST_RESPONSE,
+ * I_OPT_RESPONSE_MAX_BODY_SIZE, I_OPT_RESPONSE_MAX_HEADER_COUNT
  * @param i_value: The unsigned integer value to set
  * @return I_OK on success, an error value on error
  */
@@ -664,7 +672,8 @@ unsigned int i_get_result(struct _i_session * i_session);
  * I_OPT_TOKEN_EXP, I_OPT_DEVICE_AUTH_EXPIRES_IN, I_OPT_DEVICE_AUTH_INTERVAL,
  * I_OPT_PUSHED_AUTH_REQ_REQUIRED, I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, I_OPT_USE_DPOP,
  * I_OPT_DECRYPT_CODE, I_OPT_DECRYPT_REFRESH_TOKEN, I_OPT_DECRYPT_ACCESS_TOKEN,
- * I_OPT_REMOTE_CERT_FLAG, I_OPT_PKCE_CODE_VERIFIER_GENERATE, I_OPT_PKCE_METHOD
+ * I_OPT_REMOTE_CERT_FLAG, I_OPT_PKCE_CODE_VERIFIER_GENERATE, I_OPT_PKCE_METHOD,
+ * I_OPT_RESPONSE_MAX_BODY_SIZE, I_OPT_RESPONSE_MAX_HEADER_COUNT
  * @return the option value
  */
 unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option);

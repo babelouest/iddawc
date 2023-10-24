@@ -103,59 +103,75 @@ static char * rand_string_nonce(char * str, size_t str_size) {
 
 static int _i_send_http_request(struct _i_session * i_session, struct _u_request  * request, struct _u_response * response) {
   int ret;
-  if (ulfius_send_http_request(request, response) == U_OK) {
-    ret = I_OK;
-    if (i_session->save_http_request_response) {
-      do {
-        if (i_session->saved_request == NULL) {
-          if ((i_session->saved_request = o_malloc(sizeof(struct _u_request))) == NULL) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_request");
-            ret = I_ERROR_MEMORY;
-            break;
-          }
-          if (ulfius_init_request(i_session->saved_request) != U_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_request");
-            ret = I_ERROR;
-            break;
-          }
-        } else {
-          ulfius_clean_request(i_session->saved_request);
-          if (ulfius_init_request(i_session->saved_request) != U_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_request");
-            ret = I_ERROR;
-            break;
-          }
+  const char * content_length_str;
+  char * endptr = NULL;
+  long int content_length = 0;
+
+  if (ulfius_send_http_request_with_limit(request, response, (size_t)i_session->response_body_limit, (size_t)i_session->max_header) == U_OK) {
+    // Check if response body length corresponds to header Content-Length
+    if (!o_strnullempty(content_length_str = u_map_get_case(response->map_header, "Content-Length"))) {
+      content_length = strtol(content_length_str, &endptr, 10);
+      if (endptr != content_length_str && *endptr == '\0' && ((size_t)content_length) == response->binary_body_length) {
+        ret = I_OK;
+        if (i_session->save_http_request_response) {
+          do {
+            if (i_session->saved_request == NULL) {
+              if ((i_session->saved_request = o_malloc(sizeof(struct _u_request))) == NULL) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_request");
+                ret = I_ERROR_MEMORY;
+                break;
+              }
+              if (ulfius_init_request(i_session->saved_request) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_request");
+                ret = I_ERROR;
+                break;
+              }
+            } else {
+              ulfius_clean_request(i_session->saved_request);
+              if (ulfius_init_request(i_session->saved_request) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_request");
+                ret = I_ERROR;
+                break;
+              }
+            }
+            if (i_session->saved_response == NULL) {
+              if ((i_session->saved_response = o_malloc(sizeof(struct _u_response))) == NULL) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_response");
+                ret = I_ERROR_MEMORY;
+                break;
+              }
+              if (ulfius_init_response(i_session->saved_response) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_response");
+                ret = I_ERROR;
+                break;
+              }
+            } else {
+              ulfius_clean_response(i_session->saved_response);
+              if (ulfius_init_response(i_session->saved_response) != U_OK) {
+                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_response");
+                ret = I_ERROR;
+                break;
+              }
+            }
+            if (ulfius_copy_request(i_session->saved_request, request) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying request");
+              ret = I_ERROR;
+              break;
+            }
+            if (ulfius_copy_response(i_session->saved_response, response) != U_OK) {
+              y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying response");
+              ret = I_ERROR;
+              break;
+            }
+          } while (0);
         }
-        if (i_session->saved_response == NULL) {
-          if ((i_session->saved_response = o_malloc(sizeof(struct _u_response))) == NULL) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_response");
-            ret = I_ERROR_MEMORY;
-            break;
-          }
-          if (ulfius_init_response(i_session->saved_response) != U_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_response");
-            ret = I_ERROR;
-            break;
-          }
-        } else {
-          ulfius_clean_response(i_session->saved_response);
-          if (ulfius_init_response(i_session->saved_response) != U_OK) {
-            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_response");
-            ret = I_ERROR;
-            break;
-          }
-        }
-        if (ulfius_copy_request(i_session->saved_request, request) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying request");
-          ret = I_ERROR;
-          break;
-        }
-        if (ulfius_copy_response(i_session->saved_response, response) != U_OK) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying response");
-          ret = I_ERROR;
-          break;
-        }
-      } while (0);
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error Content-Length invalid");
+        ret = I_ERROR;
+      }
+    } else {
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error no Content-Length header");
+      ret = I_ERROR;
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error sending HTTP request");
@@ -1841,6 +1857,8 @@ int i_init_session(struct _i_session * i_session) {
     i_session->auth_method = I_AUTH_METHOD_GET;
     i_session->token_method = I_TOKEN_AUTH_METHOD_NONE;
     i_session->x5u_flags = 0;
+    i_session->response_body_limit = I_DEFAULT_RESPONSE_MAX_BODY_SIZE;
+    i_session->max_header = I_DEFAULT_RESPONSE_MAX_HEADER_COUNT;
     i_session->openid_config = NULL;
     i_session->openid_config_strict = I_STRICT_NO|I_STRICT_JWT_AT_SIGNATURE|I_STRICT_JWT_AT_HEADER_TYP|I_STRICT_JWT_AT_CLAIM;
     i_session->issuer = NULL;
@@ -2234,6 +2252,12 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         break;
       case I_OPT_SAVE_HTTP_REQUEST_RESPONSE:
         i_session->save_http_request_response = i_value;
+        break;
+      case I_OPT_RESPONSE_MAX_BODY_SIZE:
+        i_session->response_body_limit = i_value;
+        break;
+      case I_OPT_RESPONSE_MAX_HEADER_COUNT:
+        i_session->max_header = i_value;
         break;
       default:
         y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
@@ -3136,6 +3160,8 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
         case I_OPT_BACKCHANNEL_LOGOUT_SESSION_REQUIRED:
         case I_OPT_SERVER_JWKS_CACHE_EXPIRATION:
         case I_OPT_SAVE_HTTP_REQUEST_RESPONSE:
+        case I_OPT_RESPONSE_MAX_BODY_SIZE:
+        case I_OPT_RESPONSE_MAX_HEADER_COUNT:
           i_value = va_arg(vl, unsigned int);
           ret = i_set_int_parameter(i_session, option, i_value);
           break;
@@ -3548,6 +3574,12 @@ unsigned int i_get_int_parameter(struct _i_session * i_session, i_option option)
         break;
       case I_OPT_SAVE_HTTP_REQUEST_RESPONSE:
         return i_session->save_http_request_response;
+        break;
+      case I_OPT_RESPONSE_MAX_BODY_SIZE:
+        return i_session->response_body_limit;
+        break;
+      case I_OPT_RESPONSE_MAX_HEADER_COUNT:
+        return i_session->max_header;
         break;
       default:
         return 0;
@@ -4490,7 +4522,7 @@ int i_run_token_request(struct _i_session * i_session) {
           }
         }
         if (i_session->pkce_method != I_PKCE_NONE && !o_strnullempty(i_session->pkce_code_verifier)) {
-          ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "code_verifier", i_session->pkce_code_verifier);
+          ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "code_verifier", i_session->pkce_code_verifier, U_OPT_NONE);
         }
         if (i_session->use_dpop) {
           dpop_token = i_generate_dpop_token(i_session, "POST", _i_get_endpoint(i_session, "token"), 0, 0);
@@ -5958,7 +5990,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
 json_t * i_export_session_json_t(struct _i_session * i_session) {
   json_t * j_return = NULL;
   if (i_session != NULL) {
-    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* si ss*  ss* si }",
+    j_return = json_pack("{ si ss* ss* ss* ss*  ss* ss* ss* ss* ss*  so so ss* ss* ss*  ss* si ss* ss* ss*  ss* ss* ss* ss* si  si ss* sO*  si si so* si sO*  so ss* ss* ss* ss* ss* ss* ss* ss* si  ss* ss* ss* ss* ss* sO  ss* ss* ss* ss* ss*  si si ss* ss* ss*  so si ss* ss* ss*  sO* so ss* so so  so ss* so* ss* ss*  si ss* si sO* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* ss* ss*  ss* si ss* ss* si  ss* ss* ss* ss* ss*  si si ss* si ss*  si ss* ss* ss* si  si ss* ss* si ss*  ss* si si si }",
 
                          "response_type", i_get_int_parameter(i_session, I_OPT_RESPONSE_TYPE),
                          "scope", i_get_str_parameter(i_session, I_OPT_SCOPE),
@@ -6114,7 +6146,9 @@ json_t * i_export_session_json_t(struct _i_session * i_session) {
                          "ciba_acr_values", i_get_str_parameter(i_session, I_OPT_CIBA_ACR_VALUES),
                          
                          "http_proxy", i_get_str_parameter(i_session, I_OPT_HTTP_PROXY),
-                         "openid_config_strict_flags", i_get_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT)
+                         "openid_config_strict_flags", i_get_int_parameter(i_session, I_OPT_OPENID_CONFIG_STRICT),
+                         "response_body_limit", i_get_int_parameter(i_session, I_OPT_RESPONSE_MAX_BODY_SIZE),
+                         "max_header", i_get_int_parameter(i_session, I_OPT_RESPONSE_MAX_HEADER_COUNT)
                          );
   }
   return j_return;
@@ -6245,6 +6279,8 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
                                    I_OPT_SAVE_HTTP_REQUEST_RESPONSE, (int)json_integer_value(json_object_get(j_import, "save_http_request_response")),
                                    I_OPT_DPOP_NONCE_AS, json_string_value(json_object_get(j_import, "dpop_nonce_as")),
                                    I_OPT_DPOP_NONCE_RS, json_string_value(json_object_get(j_import, "dpop_nonce_rs")),
+                                   I_OPT_RESPONSE_MAX_BODY_SIZE, (int)json_integer_value(json_object_get(j_import, "response_body_limit")),
+                                   I_OPT_RESPONSE_MAX_HEADER_COUNT, (int)json_integer_value(json_object_get(j_import, "max_header")),
                                    I_OPT_NONE)) == I_OK) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
