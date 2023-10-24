@@ -507,6 +507,35 @@ START_TEST(test_iddawc_token_code_invalid_scope)
 }
 END_TEST
 
+START_TEST(test_iddawc_token_code_invalid_response_header_length)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/token", 0, &callback_oauth2_token_code_ok, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_CLIENT_SECRET, CLIENT_SECRET,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_TOKEN_ENDPOINT, TOKEN_ENDPOINT,
+                                                    I_OPT_CODE, CODE,
+                                                    I_OPT_RESPONSE_MAX_BODY_SIZE, 32,
+                                                    I_OPT_RESPONSE_MAX_HEADER_COUNT, 4,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_run_token_request(&i_session), I_ERROR);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_ACCESS_TOKEN), NULL);
+  ck_assert_ptr_eq(i_get_str_parameter(&i_session, I_OPT_REFRESH_TOKEN), NULL);
+  ck_assert_int_eq(i_get_int_parameter(&i_session, I_OPT_EXPIRES_IN), 0);
+  
+  i_clean_session(&i_session);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_token_code_ok)
 {
   struct _i_session i_session;
@@ -1445,6 +1474,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_token_code_unauthorized_client);
   tcase_add_test(tc_core, test_iddawc_token_code_unsupported_grant_type);
   tcase_add_test(tc_core, test_iddawc_token_code_invalid_scope);
+  tcase_add_test(tc_core, test_iddawc_token_code_invalid_response_header_length);
   tcase_add_test(tc_core, test_iddawc_token_code_ok);
   tcase_add_test(tc_core, test_iddawc_token_code_encrypted_invalid);
   tcase_add_test(tc_core, test_iddawc_token_code_encrypted_ok);

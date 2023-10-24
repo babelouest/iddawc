@@ -427,6 +427,30 @@ START_TEST(test_iddawc_configuration_valid)
 }
 END_TEST
 
+START_TEST(test_iddawc_configuration_invalid_response_size_header)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/.well-known/openid-configuration", 0, &callback_openid_configuration_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/jwks", 0, &callback_openid_jwks_valid, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_OPENID_CONFIG_ENDPOINT, "http://localhost:8080/.well-known/openid-configuration",
+                                                    I_OPT_RESPONSE_MAX_BODY_SIZE, 32,
+                                                    I_OPT_RESPONSE_MAX_HEADER_COUNT, 4,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_openid_config(&i_session), I_ERROR);
+  i_clean_session(&i_session);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_set_offline_configuration)
 {
   struct _i_session i_session;
@@ -460,6 +484,7 @@ static Suite *iddawc_suite(void)
   tc_core = tcase_create("test_iddawc_oauth2");
   tcase_add_test(tc_core, test_iddawc_configuration_invalid);
   tcase_add_test(tc_core, test_iddawc_configuration_valid);
+  tcase_add_test(tc_core, test_iddawc_configuration_invalid_response_size_header);
   tcase_add_test(tc_core, test_iddawc_set_offline_configuration);
   tcase_set_timeout(tc_core, 30);
   suite_add_tcase(s, tc_core);

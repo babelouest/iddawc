@@ -300,6 +300,28 @@ START_TEST(test_iddawc_userinfo_response_empty)
 }
 END_TEST
 
+START_TEST(test_iddawc_userinfo_invalid_response_size_header)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "GET", NULL, "/userinfo", 0, &callback_openid_userinfo_valid_json, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_USERINFO_ENDPOINT, "http://localhost:8080/userinfo",
+                                                    I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                    I_OPT_RESPONSE_MAX_BODY_SIZE, 32,
+                                                    I_OPT_RESPONSE_MAX_HEADER_COUNT, 4,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_userinfo(&i_session, 0), I_ERROR);
+  i_clean_session(&i_session);
+  
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_userinfo_response_char)
 {
   struct _i_session i_session;
@@ -508,6 +530,7 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_userinfo_invalid_response);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_unauthorized);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_empty);
+  tcase_add_test(tc_core, test_iddawc_userinfo_invalid_response_size_header);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_char);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_json);
   tcase_add_test(tc_core, test_iddawc_userinfo_response_json_dpop);

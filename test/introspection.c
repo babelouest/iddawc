@@ -163,6 +163,32 @@ START_TEST(test_iddawc_introspection_invalid)
 }
 END_TEST
 
+START_TEST(test_iddawc_introspection_invalid_response_size_header)
+{
+  struct _i_session i_session;
+  struct _u_instance instance;
+  json_t * j_result = NULL;
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, "POST", NULL, "/introspect", 0, &callback_introspect, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
+                                                    I_OPT_ACCESS_TOKEN, TOKEN,
+                                                    I_OPT_TOKEN_TARGET, TOKEN,
+                                                    I_OPT_RESPONSE_MAX_BODY_SIZE, 32,
+                                                    I_OPT_RESPONSE_MAX_HEADER_COUNT, 4,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_ERROR);
+  ck_assert_ptr_eq(NULL, j_result);
+  i_clean_session(&i_session);
+  json_decref(j_result);
+
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_introspection_valid)
 {
   struct _i_session i_session;
@@ -403,6 +429,7 @@ static Suite *iddawc_suite(void)
   s = suite_create("Iddawc token introspection tests");
   tc_core = tcase_create("test_iddawc_introspection");
   tcase_add_test(tc_core, test_iddawc_introspection_invalid);
+  tcase_add_test(tc_core, test_iddawc_introspection_invalid_response_size_header);
   tcase_add_test(tc_core, test_iddawc_introspection_valid);
   tcase_add_test(tc_core, test_iddawc_introspection_dpop);
   tcase_add_test(tc_core, test_iddawc_introspection_dpop_nonce);

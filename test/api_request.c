@@ -144,6 +144,36 @@ START_TEST(test_iddawc_api_request_invalid_parameters)
 }
 END_TEST
 
+START_TEST(test_iddawc_api_request_invalid_response_size_header)
+{
+  struct _i_session i_session;
+  struct _u_request req;
+  struct _u_response resp;
+  struct _u_instance instance;
+
+  ck_assert_int_eq(ulfius_init_instance(&instance, 8080, NULL, NULL), U_OK);
+  ck_assert_int_eq(ulfius_add_endpoint_by_val(&instance, DPOP_HTM, NULL, "/object", 0, &callback_resource_service_object_at_header, NULL), U_OK);
+  ck_assert_int_eq(ulfius_start_framework(&instance), U_OK);
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(ulfius_init_request(&req), I_OK);
+  ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_ACCESS_TOKEN, ACCESS_TOKEN,
+                                                    I_OPT_RESPONSE_MAX_BODY_SIZE, 8,
+                                                    I_OPT_RESPONSE_MAX_HEADER_COUNT, 2,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR);
+  ck_assert_int_eq(2, u_map_count(resp.map_header));
+  ck_assert_int_eq(8, resp.binary_body_length);
+
+  i_clean_session(&i_session);
+  ulfius_clean_request(&req);
+  ulfius_clean_response(&resp);
+  ulfius_stop_framework(&instance);
+  ulfius_clean_instance(&instance);
+}
+END_TEST
+
 START_TEST(test_iddawc_api_request_no_refresh_no_dpop)
 {
   struct _i_session i_session;
@@ -316,6 +346,8 @@ START_TEST(test_iddawc_api_request_refresh_not_required_dpop_required)
   ck_assert_ptr_ne(NULL, j_control = json_loads(resource_object, JSON_DECODE_ANY, NULL));
   ck_assert_ptr_ne(NULL, j_resp = ulfius_get_json_body_response(&resp, NULL));
   ck_assert_int_eq(1, json_equal(j_control, j_resp));
+  ulfius_clean_response(&resp);
+  ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
   ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
   ck_assert_int_eq(401, resp.status);
 
@@ -438,6 +470,8 @@ START_TEST(test_iddawc_api_request_refresh_not_required_dpop_required_nonce)
   ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 1, 0), I_OK);
   ck_assert_ptr_ne(NULL, i_get_str_parameter(&i_session, I_OPT_DPOP_NONCE_RS));
   ck_assert_int_eq(401, resp.status);
+  ulfius_clean_response(&resp);
+  ck_assert_int_eq(ulfius_init_response(&resp), I_OK);
   ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 1, 0), I_OK);
   ck_assert_int_eq(200, resp.status);
   ck_assert_ptr_ne(NULL, j_control = json_loads(resource_object, JSON_DECODE_ANY, NULL));
@@ -527,6 +561,7 @@ static Suite *iddawc_suite(void)
   s = suite_create("Iddawc API request tests");
   tc_core = tcase_create("test_iddawc_api_request");
   tcase_add_test(tc_core, test_iddawc_api_request_invalid_parameters);
+  tcase_add_test(tc_core, test_iddawc_api_request_invalid_response_size_header);
   tcase_add_test(tc_core, test_iddawc_api_request_no_refresh_no_dpop);
   tcase_add_test(tc_core, test_iddawc_api_request_refresh_not_required_no_dpop);
   tcase_add_test(tc_core, test_iddawc_api_request_refresh_required_not_available_no_dpop);
