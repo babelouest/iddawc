@@ -1041,7 +1041,7 @@ static int _i_check_strict_parameters(struct _i_session * i_session) {
         for (i=0; str_array[i]!=NULL; i++) {
           scope = trimwhitespace(str_array[i]);
           if (!o_strnullempty(scope) && !_i_has_openid_config_parameter_value(i_session, "scopes_supported", scope)) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "scope '%s' not supported by the Authentication Server", str_array[i]);
+            y_log_message(Y_LOG_LEVEL_ERROR, "scope '%s' not supported by the Authentication Server", str_array[i]);
             ret = 0;
           }
         }
@@ -1049,13 +1049,13 @@ static int _i_check_strict_parameters(struct _i_session * i_session) {
       free_string_array(str_array);
     }
     if (i_session->response_type != I_RESPONSE_TYPE_DEVICE_CODE && i_session->response_type != I_RESPONSE_TYPE_CIBA && !_i_has_openid_config_parameter_value(i_session, "response_types_supported", _i_get_response_type(i_session->response_type))) {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "response_type '%s' not supported by the Authentication Server", _i_get_response_type(i_session->response_type));
+      y_log_message(Y_LOG_LEVEL_ERROR, "response_type '%s' not supported by the Authentication Server", _i_get_response_type(i_session->response_type));
       ret = 0;
     }
     if (json_array_size(i_session->j_authorization_details)) {
       json_array_foreach(i_session->j_authorization_details, i, j_element) {
         if (!_i_has_openid_config_parameter_value(i_session, "authorization_details_types_supported", json_string_value(json_object_get(j_element, "type")))) {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "authorization_details type '%s' not supported by the Authentication Server", json_string_value(json_object_get(j_element, "type")));
+          y_log_message(Y_LOG_LEVEL_ERROR, "authorization_details type '%s' not supported by the Authentication Server", json_string_value(json_object_get(j_element, "type")));
           ret = 0;
         }
       }
@@ -1750,7 +1750,7 @@ static char * _i_generate_client_assertion(struct _i_session * i_session, const 
     r_jwk_free(jwk_sign);
     r_jwt_free(jwt);
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "_i_generate_client_assertion - jti required");
+    y_log_message(Y_LOG_LEVEL_ERROR, "_i_generate_client_assertion - jti required");
     ret = I_ERROR_PARAM;
   }
   return token;
@@ -1764,7 +1764,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
     if (i_session->client_secret != NULL) {
       ulfius_set_request_properties(request, U_OPT_AUTH_BASIC_USER, i_session->client_id, U_OPT_AUTH_BASIC_PASSWORD, i_session->client_secret, U_OPT_NONE);
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "_i_add_token_authentication - client_secret required");
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_add_token_authentication - client_secret required");
       ret = I_ERROR_PARAM;
     }
   } else if (i_session->token_method & I_TOKEN_AUTH_METHOD_SECRET_POST) {
@@ -1773,7 +1773,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
                                              U_OPT_POST_BODY_PARAMETER, "client_secret", i_session->client_secret,
                                              U_OPT_NONE);
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "_i_add_token_authentication - client_secret required");
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_add_token_authentication - client_secret required");
       ret = I_ERROR_PARAM;
     }
   } else if (i_session->token_method & I_TOKEN_AUTH_METHOD_TLS_CERTIFICATE) {
@@ -1783,7 +1783,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
                                              U_OPT_POST_BODY_PARAMETER, "client_id", i_session->client_id,
                                              U_OPT_NONE);
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "_i_add_token_authentication - key_file and cert_file required");
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_add_token_authentication - key_file and cert_file required");
       ret = I_ERROR_PARAM;
     }
   } else if (i_session->token_method & I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET || i_session->token_method & I_TOKEN_AUTH_METHOD_JWT_SIGN_PRIVKEY) {
@@ -1793,7 +1793,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
                                              U_OPT_NONE);
       o_free(jwt_str);
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "_i_add_token_authentication - Error _i_generate_client_assertion");
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_add_token_authentication - Error _i_generate_client_assertion");
       ret = I_ERROR_PARAM;
     }
   } else {
@@ -2095,7 +2095,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
             i_session->response_type = i_value;
             break;
           default:
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error unknown response type");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_set_int_parameter - Error unknown response type");
             ret = I_ERROR_PARAM;
             break;
         }
@@ -2110,7 +2110,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
             i_session->result = i_value;
             break;
           default:
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error unknown result");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_set_int_parameter - Error unknown result");
             ret = I_ERROR_PARAM;
             break;
         }
@@ -2138,7 +2138,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
           value[i_value] = '\0';
           ret = i_set_str_parameter(i_session, I_OPT_STATE, value);
         } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error invalid state length");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_set_int_parameter - Error invalid state length");
           ret = I_ERROR_PARAM;
         }
         break;
@@ -2150,7 +2150,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
           value[i_value] = '\0';
           ret = i_set_str_parameter(i_session, I_OPT_NONCE, value);
         } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error invalid nonce length");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_set_int_parameter - Error invalid nonce length");
           ret = I_ERROR_PARAM;
         }
         break;
@@ -2162,7 +2162,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
           value[i_value] = '\0';
           ret = i_set_str_parameter(i_session, I_OPT_TOKEN_JTI, value);
         } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error invalid nonce length");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_set_int_parameter - Error invalid nonce length");
           ret = I_ERROR_PARAM;
         }
         break;
@@ -2207,7 +2207,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
           value[i_value] = '\0';
           ret = i_set_str_parameter(i_session, I_OPT_PKCE_CODE_VERIFIER, value);
         } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error invalid PKCE length");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_set_int_parameter - Error invalid PKCE length");
           ret = I_ERROR_PARAM;
         }
         break;
@@ -2225,7 +2225,7 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
           value[i_value] = '\0';
           ret = i_set_str_parameter(i_session, I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN, value);
         } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error invalid client_notification_token length");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_set_int_parameter - Error invalid client_notification_token length");
           ret = I_ERROR_PARAM;
         }
         break;
@@ -2260,12 +2260,12 @@ int i_set_int_parameter(struct _i_session * i_session, i_option option, unsigned
         i_session->max_header = i_value;
         break;
       default:
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error option");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_set_int_parameter - Error option");
         ret = I_ERROR_PARAM;
         break;
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_int_parameter - Error input parameter");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_set_int_parameter - Error input parameter");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -2716,7 +2716,7 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
           if (o_strlen(s_value) >= 43 && string_use_char_list_only(s_value, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")) {
             i_session->pkce_code_verifier = o_strdup(s_value);
           } else {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error invalid PCKCE code verifier");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_set_str_parameter - Error invalid PCKCE code verifier");
             ret = I_ERROR_PARAM;
           }
         }
@@ -3006,12 +3006,12 @@ int i_set_str_parameter(struct _i_session * i_session, i_option option, const ch
         }
         break;
       default:
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error unknown option %d", option);
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_set_str_parameter - Error unknown option %d", option);
         ret = I_ERROR_PARAM;
         break;
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_str_parameter - Error input parameter");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_set_str_parameter - Error input parameter");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -3271,14 +3271,14 @@ int i_set_parameter_list(struct _i_session * i_session, ...) {
           ret = i_set_additional_response(i_session, str_key, str_value);
           break;
         default:
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_parameter_list - Error unknown option %d", option);
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_set_parameter_list - Error unknown option %d", option);
           ret = I_ERROR_PARAM;
           break;
       }
     }
     va_end(vl);
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_parameter_list - Error input parameter");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_set_parameter_list - Error input parameter");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -3386,11 +3386,11 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
       if (i_session->use_dpop) {
         if ((dpop_token = i_generate_dpop_token(i_session, http_method!=NULL?http_method:"GET", i_session->userinfo_endpoint, 0, 1)) != NULL) {
           if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_userinfo_custom - Error setting DPoP in header");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error setting DPoP in header");
             ret = I_ERROR;
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_userinfo_custom - Error i_generate_dpop_token");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error i_generate_dpop_token");
           ret = I_ERROR;
         }
         o_free(dpop_token);
@@ -3615,7 +3615,7 @@ int i_parse_redirect_to(struct _i_session * i_session) {
       if (_i_extract_parameters(i_session, query, &map) == I_OK) {
         if ((ret = _i_parse_redirect_to_parameters(i_session, &map)) == I_OK) {
          if (i_session->id_token != NULL && r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error id_token invalid");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to query - Error id_token invalid");
             ret = I_ERROR_SERVER;
           }
         }
@@ -3632,7 +3632,7 @@ int i_parse_redirect_to(struct _i_session * i_session) {
       if (_i_extract_parameters(i_session, fragment, &map) == I_OK) {
         if ((ret = _i_parse_redirect_to_parameters(i_session, &map)) == I_OK) {
           if (i_session->id_token != NULL && r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to fragment - Error id_token invalid");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to fragment - Error id_token invalid");
             ret = I_ERROR_SERVER;
           }
         }
@@ -3645,23 +3645,23 @@ int i_parse_redirect_to(struct _i_session * i_session) {
     if (ret == I_OK) {
       if (i_get_str_parameter(i_session, I_OPT_STATE) != NULL) {
         if (0 != o_strcmp(i_get_str_parameter(i_session, I_OPT_STATE), state)) {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error state invalid %s %s", state, i_get_str_parameter(i_session, I_OPT_STATE));
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to query - Error state invalid %s %s", state, i_get_str_parameter(i_session, I_OPT_STATE));
           ret = I_ERROR_SERVER;
         }
       }
 
       if (i_get_response_type(i_session) & I_RESPONSE_TYPE_CODE && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_CODE) == NULL) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected code");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to query - Error expected code");
         ret = I_ERROR_SERVER;
       }
 
       if (i_get_response_type(i_session) & I_RESPONSE_TYPE_TOKEN && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN) == NULL) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected access_token");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to query - Error expected access_token");
         ret = I_ERROR_SERVER;
       }
 
       if (i_get_response_type(i_session) & I_RESPONSE_TYPE_ID_TOKEN && i_get_str_parameter(i_session, I_OPT_ERROR) == NULL && i_get_str_parameter(i_session, I_OPT_ID_TOKEN) == NULL) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_redirect_to query - Error expected id_token");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to query - Error expected id_token");
         ret = I_ERROR_SERVER;
       }
     }
@@ -4315,7 +4315,7 @@ int i_run_auth_request(struct _i_session * i_session) {
         }
       } else {
         // Unsupported auth_method
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Unsupported auth_method");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Unsupported auth_method");
         ret = I_ERROR_PARAM;
       }
 
@@ -4344,7 +4344,7 @@ int i_run_auth_request(struct _i_session * i_session) {
       ulfius_clean_response(&response);
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_auth_request - Invalid input parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Invalid input parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -4415,7 +4415,7 @@ int i_parse_token_response(struct _i_session * i_session, int http_status, json_
               ret = I_ERROR;
             }
             if (r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
-              y_log_message(Y_LOG_LEVEL_DEBUG, "i_parse_token_response - Error id_token invalid");
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_token_response - Error id_token invalid");
               ret = I_ERROR_SERVER;
             }
           }
@@ -4579,7 +4579,7 @@ int i_run_token_request(struct _i_session * i_session) {
         ulfius_clean_request(&request);
         ulfius_clean_response(&response);
       } else {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - Error input parameters");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error input parameters");
         if (i_session->redirect_uri == NULL) {
           y_log_message(Y_LOG_LEVEL_DEBUG, "i_run_token_request code - redirect_uri NULL");
         }
@@ -5034,7 +5034,7 @@ int i_verify_id_token(struct _i_session * i_session) {
                   if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
                     if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
                       if (o_strncmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "at_hash")), hash_encoded_len) != 0) {
-                        y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - at_hash invalid");
+                        y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - at_hash invalid");
                         ret = I_ERROR_PARAM;
                       }
                     } else {
@@ -5046,11 +5046,11 @@ int i_verify_id_token(struct _i_session * i_session) {
                     ret = I_ERROR;
                   }
                 } else {
-                  y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - Invalid alg");
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - Invalid alg");
                   ret = I_ERROR_PARAM;
                 }
               } else {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token at - missing input");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token at - missing input");
                 ret = I_ERROR_PARAM;
               }
             }
@@ -5062,7 +5062,7 @@ int i_verify_id_token(struct _i_session * i_session) {
                   if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
                     if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
                       if (o_strncmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "c_hash")), hash_encoded_len) != 0) {
-                        y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - c_hash invalid");
+                        y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - c_hash invalid");
                         ret = I_ERROR_PARAM;
                       }
                     } else {
@@ -5074,11 +5074,11 @@ int i_verify_id_token(struct _i_session * i_session) {
                     ret = I_ERROR;
                   }
                 } else {
-                  y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token c - unknown alg");
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token c - unknown alg");
                   ret = I_ERROR_PARAM;
                 }
               } else {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token c - missing input");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token c - missing input");
                 ret = I_ERROR_PARAM;
               }
             }
@@ -5090,7 +5090,7 @@ int i_verify_id_token(struct _i_session * i_session) {
                   if (gnutls_fingerprint(alg, &hash_data, hash, &hash_len) == GNUTLS_E_SUCCESS) {
                     if (o_base64url_encode(hash, hash_len/2, hash_encoded, &hash_encoded_len)) {
                       if (o_strncmp((const char *)hash_encoded, json_string_value(json_object_get(i_session->id_token_payload, "s_hash")), hash_encoded_len) != 0) {
-                        y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - s_hash invalid");
+                        y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - s_hash invalid");
                         ret = I_ERROR_PARAM;
                       }
                     } else {
@@ -5102,11 +5102,11 @@ int i_verify_id_token(struct _i_session * i_session) {
                     ret = I_ERROR;
                   }
                 } else {
-                  y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token c - unknown alg");
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token c - unknown alg");
                   ret = I_ERROR_PARAM;
                 }
               } else {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token c - missing input");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token c - missing input");
                 ret = I_ERROR_PARAM;
               }
             }
@@ -5116,7 +5116,7 @@ int i_verify_id_token(struct _i_session * i_session) {
               }
             }
           } else {
-            y_log_message(Y_LOG_LEVEL_DEBUG, "i_verify_id_token - invalid JWT claims");
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_verify_id_token - invalid JWT claims");
             ret = I_ERROR_PARAM;
           }
         } else {
@@ -5217,11 +5217,11 @@ int i_revoke_token(struct _i_session * i_session, int authentication) {
           if (i_session->use_dpop) {
             if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->revocation_endpoint, 0, 1)) != NULL) {
               if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "i_revoke_token - Error setting DPoP in header");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error setting DPoP in header");
                 ret = I_ERROR;
               }
             } else {
-              y_log_message(Y_LOG_LEVEL_DEBUG, "i_revoke_token - Error i_generate_dpop_token");
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_revoke_token - Error i_generate_dpop_token");
               ret = I_ERROR;
             }
             o_free(dpop_token);
@@ -5336,11 +5336,11 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
           if (i_session->use_dpop) {
             if ((dpop_token = i_generate_dpop_token(i_session, "POST", i_session->introspection_endpoint, 0, 1)) != NULL) {
               if (ulfius_set_request_properties(&request, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_token_introspection - Error setting DPoP in header");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error setting DPoP in header");
                 ret = I_ERROR;
               }
             } else {
-              y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_token_introspection - Error i_generate_dpop_token");
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error i_generate_dpop_token");
               ret = I_ERROR;
             }
             o_free(dpop_token);
@@ -5635,11 +5635,11 @@ int i_register_client(struct _i_session * i_session, json_t * j_parameters, int 
         ulfius_clean_response(&response);
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_register_client - Invalid parameters, no redirect_uris specified");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Invalid parameters, no redirect_uris specified");
       ret = I_ERROR_PARAM;
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_register_client - Invalid parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_register_client - Invalid parameters");
     ret = I_ERROR_PARAM;
   }
   json_decref(j_copy_parameters);
@@ -5714,7 +5714,7 @@ int i_get_registration_client(struct _i_session * i_session, json_t ** j_result)
       ulfius_clean_response(&response);
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_get_registration_client - Invalid parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_get_registration_client - Invalid parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -5899,7 +5899,7 @@ int i_manage_registration_client(struct _i_session * i_session, json_t * j_param
       ulfius_clean_response(&response);
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_manage_registration_client - Invalid parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_manage_registration_client - Invalid parameters");
     ret = I_ERROR_PARAM;
   }
   json_decref(j_copy_parameters);
@@ -5981,7 +5981,7 @@ int i_delete_registration_client(struct _i_session * i_session) {
       ulfius_clean_response(&response);
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_delete_registration_client - Invalid parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_delete_registration_client - Invalid parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -6285,7 +6285,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
       json_object_foreach(json_object_get(j_import, "additional_parameters"), key, j_value) {
         if ((ret = i_set_additional_parameter(i_session, key, json_string_value(j_value))) != I_OK) {
           tmp = json_dumps(j_value, JSON_COMPACT);
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error importing additional_parameters '%s' / '%s'", key, tmp);
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_import_session_json_t - Error importing additional_parameters '%s' / '%s'", key, tmp);
           o_free(tmp);
           return ret;
         }
@@ -6293,7 +6293,7 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
       json_object_foreach(json_object_get(j_import, "additional_response"), key, j_value) {
         if ((ret = i_set_additional_response(i_session, key, json_string_value(j_value))) != I_OK) {
           tmp = json_dumps(j_value, JSON_COMPACT);
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error importing additional_response '%s' / '%s'", key, tmp);
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_import_session_json_t - Error importing additional_response '%s' / '%s'", key, tmp);
           o_free(tmp);
           return ret;
         }
@@ -6305,11 +6305,11 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
       json_decref(i_session->openid_config);
       i_session->openid_config = json_deep_copy(json_object_get(j_import, "openid_config"));
       if (json_object_get(j_import, "server_jwks") != NULL && (r_jwks_empty(i_session->server_jwks) != RHN_OK || r_jwks_import_from_json_t(i_session->server_jwks, json_object_get(j_import, "server_jwks")) != RHN_OK)) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t server_jwks");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_import_session_json_t - Error r_jwks_import_from_json_t server_jwks");
         ret = I_ERROR;
       }
       if (json_object_get(j_import, "client_jwks") != NULL && (r_jwks_empty(i_session->client_jwks) != RHN_OK || r_jwks_import_from_json_t(i_session->client_jwks, json_object_get(j_import, "client_jwks")) != RHN_OK)) {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error r_jwks_import_from_json_t client_jwks");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_import_session_json_t - Error r_jwks_import_from_json_t client_jwks");
         ret = I_ERROR;
       }
       json_decref(i_session->j_claims);
@@ -6320,10 +6320,10 @@ int i_import_session_json_t(struct _i_session * i_session, json_t * j_import) {
       }
       json_array_extend(i_session->j_authorization_details, json_object_get(j_import, "authorization_details"));
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Error i_set_parameter_list");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_import_session_json_t - Error i_set_parameter_list");
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_import_session_json_t - Invalid input parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_import_session_json_t - Invalid input parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -6491,11 +6491,11 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
       r_jwk_free(jwk_sign);
       json_decref(j_dpop_pub);
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_generate_dpop_token - Error r_jwt_init");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error r_jwt_init");
     }
     r_jwt_free(jwt_dpop);
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_generate_dpop_token - Error input parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_generate_dpop_token - Error input parameters");
   }
   return token;
 }
@@ -6514,7 +6514,7 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
         cur_resp_type = i_get_response_type(i_session);
         i_set_response_type(i_session, I_RESPONSE_TYPE_REFRESH_TOKEN);
         if (i_run_token_request(i_session) != I_OK) {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error refresh access token");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error refresh access token");
           ret = I_ERROR_PARAM;
         }
       }
@@ -6527,25 +6527,25 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
             case I_BEARER_TYPE_HEADER:
               auth_header = msprintf("%s%s", use_dpop?I_HEADER_PREFIX_DPOP:I_HEADER_PREFIX_BEARER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN));
               if (ulfius_set_request_properties(&copy_req, U_OPT_HEADER_PARAMETER, I_HEADER_AUTHORIZATION, auth_header, U_OPT_NONE) != U_OK) {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error setting access_token in header");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error setting access_token in header");
                 ret = I_ERROR;
               }
               o_free(auth_header);
               break;
             case I_BEARER_TYPE_BODY:
               if (ulfius_set_request_properties(&copy_req, U_OPT_POST_BODY_PARAMETER, I_BODY_URL_PARAMETER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), U_OPT_NONE) != U_OK) {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error setting access_token in body");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error setting access_token in body");
                 ret = I_ERROR;
               }
               break;
             case I_BEARER_TYPE_URL:
               if (ulfius_set_request_properties(&copy_req, U_OPT_URL_PARAMETER, I_BODY_URL_PARAMETER, i_get_str_parameter(i_session, I_OPT_ACCESS_TOKEN), U_OPT_NONE) != U_OK) {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error setting access_token in url");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error setting access_token in url");
                 ret = I_ERROR;
               }
               break;
             default:
-              y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Invalid bearer_type");
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Invalid bearer_type");
               ret = I_ERROR_PARAM;
               break;
           }
@@ -6561,11 +6561,11 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
               }
               if ((dpop_token = i_generate_dpop_token(i_session, copy_req.http_verb, htu, dpop_iat, 1)) != NULL) {
                 if (ulfius_set_request_properties(&copy_req, U_OPT_HEADER_PARAMETER, I_HEADER_DPOP, dpop_token, U_OPT_NONE) != U_OK) {
-                  y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error setting DPoP in header");
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error setting DPoP in header");
                   ret = I_ERROR;
                 }
               } else {
-                y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error i_generate_dpop_token");
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error i_generate_dpop_token");
                 ret = I_ERROR;
               }
               o_free(dpop_token);
@@ -6576,7 +6576,7 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
           if (I_OK == ret) {
             ulfius_set_request_properties(&copy_req, U_OPT_HEADER_PARAMETER, "User-Agent", "Iddawc/" IDDAWC_VERSION_STR, U_OPT_NONE);
             if (_i_send_http_request(i_session, &copy_req, http_response) != U_OK) {
-              y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error sending API request");
+              y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error sending API request");
               ret = I_ERROR;
             } else {
               if (u_map_get(http_response->map_header, "DPoP-Nonce") != NULL) {
@@ -6585,12 +6585,12 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
             }
           }
         } else {
-          y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error ulfius_copy_request");
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error ulfius_copy_request");
           ret = I_ERROR;
         }
         ulfius_clean_request(&copy_req);
       } else {
-        y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error ulfius_init_request");
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error ulfius_init_request");
         ret = I_ERROR;
       }
     }
@@ -6598,7 +6598,7 @@ int i_perform_resource_service_request(struct _i_session * i_session, struct _u_
       i_set_response_type(i_session, cur_resp_type);
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_perform_resource_service_request - Error input parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_perform_resource_service_request - Error input parameters");
     ret = I_ERROR_PARAM;
   }
   return ret;
@@ -6769,12 +6769,12 @@ int i_set_rich_authorization_request_str(struct _i_session * i_session, const ch
     if ((j_value = json_loads(value, JSON_DECODE_ANY, NULL)) != NULL) {
       ret = i_set_rich_authorization_request_json_t(i_session, type, j_value);
     } else {
-      y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_rich_authorization_request_str - Error loading value, not in JSON format");
+      y_log_message(Y_LOG_LEVEL_ERROR, "i_set_rich_authorization_request_str - Error loading value, not in JSON format");
       ret = I_ERROR_PARAM;
     }
     json_decref(j_value);
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_rich_authorization_request_str - Error input parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_set_rich_authorization_request_str - Error input parameters");
     ret = I_ERROR_PARAM;
   }
 
@@ -6797,7 +6797,7 @@ int i_set_rich_authorization_request_json_t(struct _i_session * i_session, const
     json_array_append(i_session->j_authorization_details, j_value);
     ret = I_OK;
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_set_rich_authorization_request_json_t - Error input parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_set_rich_authorization_request_json_t - Error input parameters");
     ret = I_ERROR_PARAM;
   }
 
@@ -6818,7 +6818,7 @@ int i_remove_rich_authorization_request(struct _i_session * i_session, const cha
       }
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_remove_rich_authorization_request - Error input parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_remove_rich_authorization_request - Error input parameters");
   }
 
   return ret;
@@ -6835,7 +6835,7 @@ json_t * i_get_rich_authorization_request_json_t(struct _i_session * i_session, 
       }
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_remove_rich_authorization_request - Error input parameters");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_get_rich_authorization_request_json_t - Error input parameters");
   }
 
   return NULL;
@@ -7388,7 +7388,7 @@ char * i_build_end_session_url(struct _i_session * i_session) {
       o_free(post_logout_enc);
     }
   } else {
-    y_log_message(Y_LOG_LEVEL_DEBUG, "i_build_end_session_url - session has no end_session_endpoint or id_token");
+    y_log_message(Y_LOG_LEVEL_ERROR, "i_build_end_session_url - session has no end_session_endpoint or id_token");
   }
   return url;
 }
