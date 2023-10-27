@@ -4,6 +4,7 @@
 
 - Improve cmake script
 - cmake: remove `DownloadProject` feature, now dependencies must be previously installed
+- Add properties `I_OPT_RESPONSE_MAX_BODY_SIZE`, `I_OPT_RESPONSE_MAX_HEADER_COUNT` to allow download limit when sending http requests 
 
 ## 1.1.8
 
