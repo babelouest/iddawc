@@ -385,7 +385,8 @@ else ()
     install(TARGETS ${TARGETS} EXPORT IddawcExports
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif ()
 
 if (INSTALL_HEADER)
@@ -439,30 +440,37 @@ endif ()
 set(PACKAGE_IGNORED_FILES
         "${CMAKE_CURRENT_BINARY_DIR}/;/.git/;.gitignore;~$;${CPACK_SOURCE_IGNORE_FILES}")
 
+set(CPACK_GENERATOR )
 set(CPACK_PACKAGE_NAME "libiddawc")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Handle the flow of OAuth2 and OpenID Connect authentication process from the client side")
-set(CPACK_GENERATOR "TGZ;DEB")
 set(CPACK_PACKAGE_VERSION_MAJOR ${LIBRARY_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${LIBRARY_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${LIBRARY_VERSION_PATCH})
+set(CPACK_PACKAGE_FILE_NAME ${PACKAGE_FILE_NAME})
+
+option(BUILD_TGZ "Build a TAR.GZ for your system" OFF)
+if (BUILD_TGZ)
+    list(APPEND CPACK_GENERATOR TGZ)
+    set(CPACK_SOURCE_GENERATOR "TGZ")
+    set(CPACK_SOURCE_PACKAGE_FILE_NAME ${PACKAGE_FILE_NAME})
+    set(CPACK_SOURCE_IGNORE_FILES ${PACKAGE_IGNORED_FILES})
+endif ()
+
+option(BUILD_DEB "Build a DEB for your system" OFF)
+if (BUILD_DEB)
+    list(APPEND CPACK_GENERATOR DEB)
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "mail@babelouest.org")
+    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION ${PROJECT_DESCRIPTION})
+    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/babelouest/iddawc")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.4), liborcania|liborcania-dev (>= ${ORCANIA_VERSION_REQUIRED}), libyder|libyder-dev (>= ${YDER_VERSION_REQUIRED}), libulfius|libulfius-dev (>= ${ULFIUS_VERSION_REQUIRED}), libgnutls28-dev|libgnutls-dev|libgnutls30 (>= 3.5.0)")
+endif ()
 
 option(BUILD_RPM "Build a RPM for your system" OFF)
 if (BUILD_RPM)
-  set(CPACK_GENERATOR "TGZ;DEB;RPM")
-  set(CPACK_RPM_PACKAGE_LICENSE "LGPL")
-  set(CPACK_RPM_PACKAGE_URL "http://babelouest.github.io/iddawc/")
+    list(APPEND CPACK_GENERATOR RPM)
+    set(CPACK_RPM_PACKAGE_LICENSE "LGPL")
+    set(CPACK_RPM_PACKAGE_URL "http://babelouest.github.io/iddawc/")
 endif ()
-
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "mail@babelouest.org")
-set(CPACK_DEBIAN_PACKAGE_DESCRIPTION ${PROJECT_DESCRIPTION})
-set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/babelouest/iddawc")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.4), liborcania|liborcania-dev (>= ${ORCANIA_VERSION_REQUIRED}), libyder|libyder-dev (>= ${YDER_VERSION_REQUIRED}), libulfius|libulfius-dev (>= ${ULFIUS_VERSION_REQUIRED}), libgnutls28-dev|libgnutls-dev|libgnutls30 (>= 3.5.0)")
-set(CPACK_PACKAGE_FILE_NAME ${PACKAGE_FILE_NAME})
-set(CPACK_PACKAGE_FILE_NAME ${PACKAGE_FILE_NAME})
-
-set(CPACK_SOURCE_GENERATOR "TGZ")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME ${PACKAGE_FILE_NAME})
-set(CPACK_SOURCE_IGNORE_FILES ${PACKAGE_IGNORED_FILES})
 
 include(CPack)
 
@@ -470,5 +478,7 @@ message(STATUS "Build testing tree:       ${BUILD_IDDAWC_TESTING}")
 message(STATUS "Install the header files: ${INSTALL_HEADER}")
 message(STATUS "Build idwcc:              ${BUILD_IDWCC}")
 message(STATUS "Build Static library:     ${BUILD_STATIC}")
+message(STATUS "Build TAR.GZ package:     ${BUILD_TGZ}")
+message(STATUS "Build DEB package:        ${BUILD_DEB}")
 message(STATUS "Build RPM package:        ${BUILD_RPM}")
 message(STATUS "Build documentation:      ${BUILD_IDDAWC_DOCUMENTATION}")
