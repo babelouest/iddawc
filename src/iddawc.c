@@ -451,7 +451,7 @@ static int _i_load_jwks_endpoint(struct _i_session * i_session) {
                                             U_OPT_NONE);
     if (_i_send_http_request(i_session, &request, &response) == U_OK) {
       if (response.status == 200 && (NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), ULFIUS_HTTP_ENCODING_JSON) || NULL != o_strstr(u_map_get_case(response.map_header, ULFIUS_HTTP_HEADER_CONTENT), I_CONTENT_TYPE_JWKS))) {
-        if ((j_jwks = json_loadb(response.binary_body, response.binary_body_length, JSON_DECODE_ANY, NULL)) != NULL) {
+        if ((j_jwks = json_loadb((const char *)response.binary_body, response.binary_body_length, JSON_DECODE_ANY, NULL)) != NULL) {
           r_jwks_free(i_session->server_jwks);
           r_jwks_init(&i_session->server_jwks);
           if (r_jwks_import_from_json_t(i_session->server_jwks, j_jwks) == RHN_OK) {
@@ -1803,7 +1803,7 @@ static int _i_add_token_authentication(struct _i_session * i_session, const char
   return ret;
 }
 
-int i_global_init() {
+int i_global_init(void) {
   if (ulfius_global_init() == U_OK && r_global_init() == RHN_OK) {
     return RHN_OK;
   } else {
@@ -1812,7 +1812,7 @@ int i_global_init() {
   }
 }
 
-void i_global_close() {
+void i_global_close(void) {
   ulfius_global_close();
   r_global_close();
 }
@@ -3403,7 +3403,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
         if (response.status == 200) {
           if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
             if (r_jwt_init(&jwt) == RHN_OK) {
-              token = o_strndup(response.binary_body, response.binary_body_length);
+              token = o_strndup((const char *)response.binary_body, response.binary_body_length);
               if (_i_verify_jwt_sig(i_session, token, I_TOKEN_TYPE_USERINFO, jwt) != I_OK) {
                 y_log_message(Y_LOG_LEVEL_ERROR, "i_get_userinfo_custom - Error _i_verify_jwt_sig");
                 ret = I_ERROR;
@@ -3422,7 +3422,7 @@ int i_get_userinfo_custom(struct _i_session * i_session, const char * http_metho
             r_jwt_free(jwt);
           } else {
             o_free(i_session->userinfo);
-            if ((i_session->userinfo = o_strndup(response.binary_body, response.binary_body_length)) != NULL) {
+            if ((i_session->userinfo = o_strndup((const char *)response.binary_body, response.binary_body_length)) != NULL) {
               json_decref(i_session->j_userinfo);
               i_session->j_userinfo = json_loads(i_session->userinfo, JSON_DECODE_ANY, NULL);
               ret = I_OK;
@@ -5393,7 +5393,7 @@ int i_get_token_introspection(struct _i_session * i_session, json_t ** j_result,
           if (response.status == 200) {
             if (NULL != o_strstr(u_map_get_case(response.map_header, "Content-Type"), "application/jwt")) {
               if (r_jwt_init(&jwt) == RHN_OK) {
-                token = o_strndup(response.binary_body, response.binary_body_length);
+                token = o_strndup((const char *)response.binary_body, response.binary_body_length);
                 if (_i_verify_jwt_sig(i_session, token, I_TOKEN_TYPE_INTROSPECTION, jwt) != I_OK) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "i_get_token_introspection - Error _i_verify_jwt_sig");
                   ret = I_ERROR;
