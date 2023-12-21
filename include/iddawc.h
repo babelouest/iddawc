@@ -433,12 +433,12 @@ struct _i_session {
  * The function i_global_close must be called when iddawc library is no longer required
  * @return RHN_OK on success, an error value on error
  */
-int i_global_init();
+int i_global_init(void);
 
 /**
  * Close iddawc global parameters
  */
-void i_global_close();
+void i_global_close(void);
 
 /**
  * Free a heap allocated variable
