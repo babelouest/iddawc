@@ -111,7 +111,7 @@ static int _i_send_http_request(struct _i_session * i_session, struct _u_request
     // Check if response body length corresponds to header Content-Length
     if (!o_strnullempty(content_length_str = u_map_get_case(response->map_header, "Content-Length"))) {
       content_length = strtol(content_length_str, &endptr, 10);
-      if (endptr != content_length_str && *endptr == '\0' && ((size_t)content_length) == response->binary_body_length) {
+      if (content_length >= 0 && endptr != content_length_str && *endptr == '\0' && ((size_t)content_length) == response->binary_body_length) {
         ret = I_OK;
         if (i_session->save_http_request_response) {
           do {
