@@ -348,6 +348,15 @@ static const char * _i_get_parameter_key(int token_type, const char * key_type) 
         param = "introspection_encryption_enc_values_supported";
       }
       break;
+    case I_TOKEN_TYPE_RESPONSE_AUTH:
+      if (0 == o_strcmp("signing_alg_values_supported", key_type)) {
+        param = "authorization_signing_alg_values_supported";
+      } else if (0 == o_strcmp("encryption_alg_values_supported", key_type)) {
+        param = "authorization_signing_alg_values_supported";
+      } else if (0 == o_strcmp("encryption_enc_values_supported", key_type)) {
+        param = "authorization_signing_enc_values_supported";
+      }
+      break;
     default:
       break;
   }
@@ -384,6 +393,9 @@ static const char * _i_get_response_type(unsigned int response_type) {
     case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_ID_TOKEN:
       o_strcpy(result, "token id_token");
       break;
+    case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_CODE:
+      o_strcpy(result, "code token");
+      break;
     case I_RESPONSE_TYPE_TOKEN|I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_ID_TOKEN:
       o_strcpy(result, "code token id_token");
       break;
@@ -405,7 +417,7 @@ static int _i_has_openid_config_parameter_value(struct _i_session * i_session, c
   size_t index = 0;
   json_t * j_element = NULL, * j_param;
 
-  if (i_session != NULL) {
+  if (i_session != NULL && !o_strnullempty(parameter) && !o_strnullempty(value)) {
     if (i_session->openid_config_strict & I_STRICT_YES) {
       if (i_session->openid_config != NULL && (j_param = json_object_get(i_session->openid_config, parameter)) != NULL) {
         if (json_is_string(json_object_get(i_session->openid_config, parameter))) {
@@ -640,7 +652,7 @@ static int _i_parse_jwt_response(struct _i_session * i_session, const char * tok
         ret = I_ERROR_SERVER;
       }
     } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_jwt_response - Error r_jwt_init");
+      y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_jwt_response - Error _i_verify_jwt_sig");
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "_i_parse_jwt_response - Error r_jwt_init");
@@ -3645,7 +3657,7 @@ int i_parse_redirect_to(struct _i_session * i_session) {
     if (ret == I_OK) {
       if (i_get_str_parameter(i_session, I_OPT_STATE) != NULL) {
         if (0 != o_strcmp(i_get_str_parameter(i_session, I_OPT_STATE), state)) {
-          y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to query - Error state invalid %s %s", state, i_get_str_parameter(i_session, I_OPT_STATE));
+          y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to query - Error state invalid '%s' vs session: '%s'", state, i_get_str_parameter(i_session, I_OPT_STATE));
           ret = I_ERROR_SERVER;
         }
       }
