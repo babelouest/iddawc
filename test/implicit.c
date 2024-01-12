@@ -12,6 +12,8 @@
 #define STATE "stateXyz1234"
 #define CODE "codeXyz1234"
 #define ACCESS_TOKEN "accessXyz1234"
+#define REFRESH_TOKEN "refreshXyz1234"
+#define ID_TOKEN "idTokenXyz1234"
 #define TOKEN_TYPE "typeXyz1234"
 #define EXPIRES_IN "3600"
 #define ERROR "errorXyz1234"
@@ -20,6 +22,8 @@
 #define REDIRECT_URI "https://iddawc.tld"
 #define REDIRECT_TO "https://iddawc.tld#access_token=plop"
 #define REDIRECT_TO_CODE "https://iddawc.tld?code=" CODE "&state=" STATE "&query_param=value1#fragment_param=value2"
+#define REDIRECT_TO_CODE_SLASH_ADDED "https://iddawc.tld/?code=" CODE "&state=" STATE "&query_param=value1#fragment_param=value2"
+#define REDIRECT_TO_CODE_ID_TOKEN "https://iddawc.tld?code=" CODE "&state=" STATE "&query_param=value1&id_token="ID_TOKEN"#fragment_param=value2"
 #define REDIRECT_TO_ACCESS_TOKEN "https://iddawc.tld#access_token=" ACCESS_TOKEN "&state=" STATE "&token_type=" TOKEN_TYPE "&expires_in=" EXPIRES_IN "&fragment_param=value2"
 #define REDIRECT_TO_ERROR "https://iddawc.tld#error=" ERROR "&error_description=" ERROR_DESCRIPTION "&error_uri=" ERROR_URI "&state=" STATE "&fragment_param=value2"
 #define REDIRECT_EXTERNAL_AUTH "https://glewlwyd.tld/login.html"
@@ -27,8 +31,6 @@
 #define CLIENT_SECRET "secretXyx1234567"
 #define CLIENT_SECRET_ERROR "secretXyx7654321"
 #define AUTH_ENDPOINT "http://localhost:8080/auth"
-#define REFRESH_TOKEN "refreshXyz1234"
-#define ID_TOKEN "idTokenXyz1234"
 #define GLEWLWYD_ISS "https://glewlwyd.tld/"
 #define GLEWLWYD_API_URL "https://glewlwyd.tld/api"
 #define GLEWLWYD_COOKIE_SESSION "cookieXyz1234"
@@ -985,6 +987,28 @@ START_TEST(test_iddawc_parse_redirect_to_code_ok)
 }
 END_TEST
 
+START_TEST(test_iddawc_parse_redirect_to_code_id_token_ok)
+{
+  struct _i_session i_session;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE|I_RESPONSE_TYPE_ID_TOKEN,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, REDIRECT_TO_CODE_ID_TOKEN,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_OK);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_CODE), CODE);
+  ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ID_TOKEN), ID_TOKEN);
+  ck_assert_str_eq(i_get_additional_response(&i_session, "query_param"), "value1");
+  ck_assert_ptr_eq(i_get_additional_response(&i_session, "fragment_param"), NULL);
+
+  i_clean_session(&i_session);
+}
+END_TEST
+
 START_TEST(test_iddawc_parse_redirect_to_access_token_ok)
 {
   struct _i_session i_session;
@@ -1024,6 +1048,24 @@ START_TEST(test_iddawc_parse_redirect_to_error_ok)
   ck_assert_str_eq(i_get_str_parameter(&i_session, I_OPT_ERROR_URI), ERROR_URI);
   ck_assert_ptr_eq(i_get_additional_response(&i_session, "query_param"), NULL);
   ck_assert_str_eq(i_get_additional_response(&i_session, "fragment_param"), "value2");
+
+  i_clean_session(&i_session);
+}
+END_TEST
+
+START_TEST(test_iddawc_parse_redirect_to_redirect_uri_error)
+{
+  struct _i_session i_session;
+  ck_assert_int_eq(i_init_session(&i_session), I_OK);
+  ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_RESPONSE_TYPE, I_RESPONSE_TYPE_CODE,
+                                                    I_OPT_CLIENT_ID, CLIENT_ID,
+                                                    I_OPT_REDIRECT_URI, REDIRECT_URI,
+                                                    I_OPT_SCOPE, SCOPE_LIST,
+                                                    I_OPT_AUTH_ENDPOINT, AUTH_ENDPOINT,
+                                                    I_OPT_STATE, STATE,
+                                                    I_OPT_REDIRECT_TO, REDIRECT_TO_CODE_SLASH_ADDED,
+                                                    I_OPT_NONE), I_OK);
+  ck_assert_int_eq(i_parse_redirect_to(&i_session), I_ERROR_SERVER);
 
   i_clean_session(&i_session);
 }
@@ -2116,8 +2158,10 @@ static Suite *iddawc_suite(void)
   tcase_add_test(tc_core, test_iddawc_code_valid_post);
   tcase_add_test(tc_core, test_iddawc_code_valid_post_dpop);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_code_ok);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_code_id_token_ok);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_access_token_ok);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_error_ok);
+  tcase_add_test(tc_core, test_iddawc_parse_redirect_to_redirect_uri_error);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_code_error_state);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_access_token_error_state);
   tcase_add_test(tc_core, test_iddawc_parse_redirect_to_access_token_error_token_type);
