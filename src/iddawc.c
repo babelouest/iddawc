@@ -3626,11 +3626,14 @@ int i_parse_redirect_to(struct _i_session * i_session) {
       u_map_init(&map);
       if (_i_extract_parameters(i_session, query, &map) == I_OK) {
         if ((ret = _i_parse_redirect_to_parameters(i_session, &map)) == I_OK) {
-         if (i_session->id_token != NULL && r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
+          if (i_session->id_token != NULL && r_jwks_size(i_session->server_jwks) && i_verify_id_token(i_session) != I_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to query - Error id_token invalid");
             ret = I_ERROR_SERVER;
           }
         }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to query - Error _i_extract_parameters");
+        ret = I_ERROR_SERVER;
       }
       if (u_map_get(&map, "state") != NULL && state == NULL) {
         state = o_strdup(u_map_get(&map, "state"));
@@ -3648,6 +3651,9 @@ int i_parse_redirect_to(struct _i_session * i_session) {
             ret = I_ERROR_SERVER;
           }
         }
+      } else {
+        y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_redirect_to fragment - Error _i_extract_parameters");
+        ret = I_ERROR_SERVER;
       }
       state = o_strdup(u_map_get(&map, "state"));
       u_map_clean(&map);
