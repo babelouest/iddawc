@@ -4726,7 +4726,7 @@ int i_run_token_request(struct _i_session * i_session) {
                     if (i_parse_token_response(i_session, (int)response.status, j_response) == I_OK) {
                       ret = response.status == 200?I_OK:I_ERROR_PARAM;
                     } else {
-                      y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error i_parse_token_response ok");
+                      y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request client_credentials - Error i_parse_token_response");
                       ret = I_ERROR_PARAM;
                     }
                   } else {
