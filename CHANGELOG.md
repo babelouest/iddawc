@@ -1,5 +1,10 @@
 # Iddawc Changelog
 
+## 1.1.10
+
+- Minor bugfixes
+- Build with flag `-Wpedantic`
+
 ## 1.1.9
 
 - Improve cmake script
