@@ -103,75 +103,60 @@ static char * rand_string_nonce(char * str, size_t str_size) {
 
 static int _i_send_http_request(struct _i_session * i_session, struct _u_request  * request, struct _u_response * response) {
   int ret;
-  const char * content_length_str;
-  char * endptr = NULL;
-  long int content_length = 0;
 
   if (ulfius_send_http_request_with_limit(request, response, (size_t)i_session->response_body_limit, (size_t)i_session->max_header) == U_OK) {
-    // Check if response body length corresponds to header Content-Length
-    if (!o_strnullempty(content_length_str = u_map_get_case(response->map_header, "Content-Length"))) {
-      content_length = strtol(content_length_str, &endptr, 10);
-      if (content_length >= 0 && endptr != content_length_str && *endptr == '\0' && ((size_t)content_length) == response->binary_body_length) {
-        ret = I_OK;
-        if (i_session->save_http_request_response) {
-          do {
-            if (i_session->saved_request == NULL) {
-              if ((i_session->saved_request = o_malloc(sizeof(struct _u_request))) == NULL) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_request");
-                ret = I_ERROR_MEMORY;
-                break;
-              }
-              if (ulfius_init_request(i_session->saved_request) != U_OK) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_request");
-                ret = I_ERROR;
-                break;
-              }
-            } else {
-              ulfius_clean_request(i_session->saved_request);
-              if (ulfius_init_request(i_session->saved_request) != U_OK) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_request");
-                ret = I_ERROR;
-                break;
-              }
-            }
-            if (i_session->saved_response == NULL) {
-              if ((i_session->saved_response = o_malloc(sizeof(struct _u_response))) == NULL) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_response");
-                ret = I_ERROR_MEMORY;
-                break;
-              }
-              if (ulfius_init_response(i_session->saved_response) != U_OK) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_response");
-                ret = I_ERROR;
-                break;
-              }
-            } else {
-              ulfius_clean_response(i_session->saved_response);
-              if (ulfius_init_response(i_session->saved_response) != U_OK) {
-                y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_response");
-                ret = I_ERROR;
-                break;
-              }
-            }
-            if (ulfius_copy_request(i_session->saved_request, request) != U_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying request");
-              ret = I_ERROR;
-              break;
-            }
-            if (ulfius_copy_response(i_session->saved_response, response) != U_OK) {
-              y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying response");
-              ret = I_ERROR;
-              break;
-            }
-          } while (0);
+    ret = I_OK;
+    if (i_session->save_http_request_response) {
+      do {
+        if (i_session->saved_request == NULL) {
+          if ((i_session->saved_request = o_malloc(sizeof(struct _u_request))) == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_request");
+            ret = I_ERROR_MEMORY;
+            break;
+          }
+          if (ulfius_init_request(i_session->saved_request) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_request");
+            ret = I_ERROR;
+            break;
+          }
+        } else {
+          ulfius_clean_request(i_session->saved_request);
+          if (ulfius_init_request(i_session->saved_request) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_request");
+            ret = I_ERROR;
+            break;
+          }
         }
-      } else {
-        y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error Content-Length invalid");
-        ret = I_ERROR;
-      }
-    } else {
-      y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error no Content-Length header");
-      ret = I_ERROR;
+        if (i_session->saved_response == NULL) {
+          if ((i_session->saved_response = o_malloc(sizeof(struct _u_response))) == NULL) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error allocating resources for saved_response");
+            ret = I_ERROR_MEMORY;
+            break;
+          }
+          if (ulfius_init_response(i_session->saved_response) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error initializing saved_response");
+            ret = I_ERROR;
+            break;
+          }
+        } else {
+          ulfius_clean_response(i_session->saved_response);
+          if (ulfius_init_response(i_session->saved_response) != U_OK) {
+            y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error reinitializing saved_response");
+            ret = I_ERROR;
+            break;
+          }
+        }
+        if (ulfius_copy_request(i_session->saved_request, request) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying request");
+          ret = I_ERROR;
+          break;
+        }
+        if (ulfius_copy_response(i_session->saved_response, response) != U_OK) {
+          y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error copying response");
+          ret = I_ERROR;
+          break;
+        }
+      } while (0);
     }
   } else {
     y_log_message(Y_LOG_LEVEL_ERROR, "_i_send_http_request - Error sending HTTP request");
