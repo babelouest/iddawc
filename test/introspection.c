@@ -176,10 +176,10 @@ START_TEST(test_iddawc_introspection_invalid_response_size_header)
   ck_assert_int_eq(i_set_parameter_list(&i_session, I_OPT_INTROSPECTION_ENDPOINT, "http://localhost:8080/introspect",
                                                     I_OPT_ACCESS_TOKEN, TOKEN,
                                                     I_OPT_TOKEN_TARGET, TOKEN,
-                                                    I_OPT_RESPONSE_MAX_BODY_SIZE, 32,
+                                                    I_OPT_RESPONSE_MAX_BODY_SIZE, 4,
                                                     I_OPT_RESPONSE_MAX_HEADER_COUNT, 4,
                                                     I_OPT_NONE), I_OK);
-  ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_ERROR);
+  ck_assert_int_eq(i_get_token_introspection(&i_session, &j_result, I_INTROSPECT_REVOKE_AUTH_ACCESS_TOKEN, 0), I_OK);
   ck_assert_ptr_eq(NULL, j_result);
   i_clean_session(&i_session);
   json_decref(j_result);

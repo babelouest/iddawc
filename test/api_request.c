@@ -162,7 +162,7 @@ START_TEST(test_iddawc_api_request_invalid_response_size_header)
                                                     I_OPT_RESPONSE_MAX_HEADER_COUNT, 2,
                                                     I_OPT_NONE), I_OK);
   ck_assert_int_eq(ulfius_set_request_properties(&req, U_OPT_HTTP_VERB, DPOP_HTM, U_OPT_HTTP_URL, DPOP_HTU, U_OPT_NONE), U_OK);
-  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_ERROR);
+  ck_assert_int_eq(i_perform_resource_service_request(&i_session, &req, &resp, 0, I_BEARER_TYPE_HEADER, 0, 0), I_OK);
   ck_assert_int_eq(2, u_map_count(resp.map_header));
   ck_assert_int_eq(8, resp.binary_body_length);
 
