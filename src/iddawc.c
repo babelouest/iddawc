@@ -4333,10 +4333,10 @@ int i_run_auth_request(struct _i_session * i_session) {
             }
           } else if (response.status == 400) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Server response 400");
-            y_log_message(Y_LOG_LEVEL_DEBUG, "%.*s", response.binary_body_length, response.binary_body);
+            y_log_message(Y_LOG_LEVEL_DEBUG, "%.*s", (int)response.binary_body_length, response.binary_body);
             ret = I_ERROR_PARAM;
           } else {
-            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error http response: %sd", response.status);
+            y_log_message(Y_LOG_LEVEL_ERROR, "i_run_auth_request - Error http response: %ld", response.status);
             ret = I_ERROR;
           }
         } else {
@@ -4550,7 +4550,7 @@ int i_run_token_request(struct _i_session * i_session) {
                   ret = I_ERROR_PARAM;
                 }
               } else {
-                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error parsing JSON response %.*s", response.binary_body_length, response.binary_body);
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Error parsing JSON response %.*s", (int)response.binary_body_length, response.binary_body);
                 ret = I_ERROR;
               }
               json_decref(j_response);
@@ -4568,7 +4568,7 @@ int i_run_token_request(struct _i_session * i_session) {
               ret = I_ERROR_SERVER;
             } else {
               y_log_message(Y_LOG_LEVEL_ERROR, "i_run_token_request code - Invalid response status: %ld", response.status);
-              y_log_message(Y_LOG_LEVEL_DEBUG, "response body %.*s", response.binary_body_length, response.binary_body);
+              y_log_message(Y_LOG_LEVEL_DEBUG, "response body %.*s", (int)response.binary_body_length, response.binary_body);
               ret = I_ERROR;
             }
           } else {
@@ -7180,7 +7180,7 @@ int i_run_ciba_request(struct _i_session * i_session) {
       }
 
       if (i_session->ciba_requested_expiry) {
-        tmp = msprintf("%u", i_session->ciba_requested_expiry);
+        tmp = msprintf("%ld", i_session->ciba_requested_expiry);
         ulfius_set_request_properties(&request, U_OPT_POST_BODY_PARAMETER, "requested_expiry", tmp, U_OPT_NONE);
         o_free(tmp);
       }
@@ -7360,7 +7360,7 @@ int i_run_ciba_request(struct _i_session * i_session) {
             ret = I_ERROR_SERVER;
           } else {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Invalid response status");
-            y_log_message(Y_LOG_LEVEL_DEBUG, "response status %d", response.status);
+            y_log_message(Y_LOG_LEVEL_DEBUG, "response status %ld", response.status);
             ret = I_ERROR;
           }
         } else {
