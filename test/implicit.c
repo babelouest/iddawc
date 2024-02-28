@@ -1287,7 +1287,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_exp)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)-120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)-120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1328,7 +1328,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_state)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", "error",
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1368,7 +1368,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_code)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", "error",
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1409,7 +1409,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_signkey)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str_2,
@@ -1449,7 +1449,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_ok)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1490,7 +1490,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_iss)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", "error",
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1530,7 +1530,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_aud)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", "error",
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1570,7 +1570,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_exp)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)-120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)-120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1611,7 +1611,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_state)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", "error",
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1651,7 +1651,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_code)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", "error",
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1692,7 +1692,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_signkey)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str_2,
