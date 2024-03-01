@@ -1403,7 +1403,7 @@ static char * _i_generate_ciba_jwt(struct _i_session * i_session) {
         r_jwt_set_claim_str_value(jwt, "client_notification_token", i_session->ciba_client_notification_token);
       }
       if (i_session->ciba_requested_expiry) {
-        r_jwt_set_claim_int_value(jwt, "requested_expiry", (int)i_session->ciba_requested_expiry);
+        r_jwt_set_claim_int_value(jwt, "requested_expiry", (rhn_int_t)i_session->ciba_requested_expiry);
       }
       if (i_session->ciba_user_code != NULL) {
         r_jwt_set_claim_str_value(jwt, "user_code", i_session->ciba_user_code);
@@ -1570,9 +1570,9 @@ static char * _i_generate_client_assertion(struct _i_session * i_session, const 
     r_jwt_set_claim_str_value(jwt, "sub", i_session->client_id);
     r_jwt_set_claim_str_value(jwt, "aud", aud);
     r_jwt_set_claim_str_value(jwt, "jti", i_session->token_jti);
-    r_jwt_set_claim_int_value(jwt, "exp", (now+(time_t)i_session->token_exp));
-    r_jwt_set_claim_int_value(jwt, "nbf", now);
-    r_jwt_set_claim_int_value(jwt, "iat", now);
+    r_jwt_set_claim_int_value(jwt, "exp", (rhn_int_t)(now+(time_t)i_session->token_exp));
+    r_jwt_set_claim_int_value(jwt, "nbf", (rhn_int_t)now);
+    r_jwt_set_claim_int_value(jwt, "iat", (rhn_int_t)now);
     if (i_session->token_method == I_TOKEN_AUTH_METHOD_JWT_SIGN_SECRET) {
       if (i_session->client_secret != NULL) {
         if ((sign_alg == R_JWA_ALG_HS256 || sign_alg == R_JWA_ALG_HS384 || sign_alg == R_JWA_ALG_HS512) && !_i_has_openid_config_parameter_value(i_session, sign_alg_values, r_jwa_alg_to_str(sign_alg))) {
@@ -6481,9 +6481,9 @@ char * i_generate_dpop_token(struct _i_session * i_session, const char * htm, co
         r_jwt_set_claim_str_value(jwt_dpop, "htm", htm);
         r_jwt_set_header_str_value(jwt_dpop, "typ", "dpop+jwt");
         if (iat) {
-          r_jwt_set_claim_int_value(jwt_dpop, "iat", iat);
+          r_jwt_set_claim_int_value(jwt_dpop, "iat", (rhn_int_t)iat);
         } else {
-          r_jwt_set_claim_int_value(jwt_dpop, "iat", time(NULL));
+          r_jwt_set_claim_int_value(jwt_dpop, "iat", (rhn_int_t)time(NULL));
         }
         if (add_ath) {
           r_jwt_set_claim_str_value(jwt_dpop, "ath", (const char *)ath_enc);
