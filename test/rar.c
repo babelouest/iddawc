@@ -7,6 +7,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define PAR_ERROR "invalid_request"
 #define PAR_ERROR_DESCRIPTION "invalid_request description"
 #define PAR_ERROR_URI "https://as.tld/#error"
@@ -99,6 +101,7 @@ int callback_auth_post (const struct _u_request * request, struct _u_response * 
   json_t * j_authorization_details = json_loads(u_map_get(request->map_post_body, "authorization_details"), JSON_DECODE_ANY, NULL), * j_element = NULL, * j_auth_detail1 = json_loads(AUTH_DETAIL_1, JSON_DECODE_ANY, NULL), * j_auth_detail2 = json_loads(AUTH_DETAIL_2, JSON_DECODE_ANY, NULL);
   size_t index = 0;
   int has_type1, has_type2;
+  UNUSED(user_data);
 
   ck_assert_ptr_ne(NULL, j_authorization_details);
   has_type1 = 0;
@@ -134,6 +137,7 @@ int callback_auth_post_jwt (const struct _u_request * request, struct _u_respons
          * j_auth_detail2 = json_loads(AUTH_DETAIL_2, JSON_DECODE_ANY, NULL);
   size_t index = 0;
   int has_type1, has_type2;
+  UNUSED(user_data);
 
   ck_assert_ptr_ne(NULL, jwt);
   ck_assert_ptr_ne(NULL, j_authorization_details = r_jwt_get_claim_json_t_value(jwt, "authorization_details"));
@@ -167,6 +171,7 @@ int callback_device_token_valid (const struct _u_request * request, struct _u_re
   json_t * j_authorization_details = json_loads(u_map_get(request->map_post_body, "authorization_details"), JSON_DECODE_ANY, NULL), * j_element = NULL, * j_auth_detail1 = json_loads(AUTH_DETAIL_1, JSON_DECODE_ANY, NULL), * j_auth_detail2 = json_loads(AUTH_DETAIL_2, JSON_DECODE_ANY, NULL);
   size_t index = 0;
   int has_type1, has_type2;
+  UNUSED(user_data);
 
   ck_assert_ptr_ne(NULL, j_authorization_details);
   has_type1 = 0;
@@ -202,6 +207,7 @@ int callback_ciba_login_hint_valid (const struct _u_request * request, struct _u
   json_t * j_authorization_details = json_loads(u_map_get(request->map_post_body, "authorization_details"), JSON_DECODE_ANY, NULL), * j_element = NULL, * j_auth_detail1 = json_loads(AUTH_DETAIL_1, JSON_DECODE_ANY, NULL), * j_auth_detail2 = json_loads(AUTH_DETAIL_2, JSON_DECODE_ANY, NULL);
   size_t index = 0;
   int has_type1, has_type2;
+  UNUSED(user_data);
 
   ck_assert_ptr_ne(NULL, j_authorization_details);
   has_type1 = 0;
@@ -234,6 +240,7 @@ int callback_par_valid (const struct _u_request * request, struct _u_response * 
   json_t * j_authorization_details = json_loads(u_map_get(request->map_post_body, "authorization_details"), JSON_DECODE_ANY, NULL), * j_element = NULL, * j_auth_detail1 = json_loads(AUTH_DETAIL_1, JSON_DECODE_ANY, NULL), * j_auth_detail2 = json_loads(AUTH_DETAIL_2, JSON_DECODE_ANY, NULL);
   size_t index = 0;
   int has_type1, has_type2;
+  UNUSED(user_data);
 
   ck_assert_ptr_ne(NULL, j_authorization_details);
   has_type1 = 0;
@@ -621,7 +628,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

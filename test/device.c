@@ -7,6 +7,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define DEVICE_ERROR "invalid_request"
 #define DEVICE_ERROR_DESCRIPTION "invalid_request description"
 #define DEVICE_ERROR_URI "https://as.tld/#error"
@@ -59,6 +61,8 @@ int callback_device_token_valid (const struct _u_request * request, struct _u_re
                              "token_type", TOKEN_TYPE,
                              "expires_in", EXPIRES_IN,
                              "refresh_token", REFRESH_TOKEN);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, result);
   json_decref(result);
   return U_CALLBACK_CONTINUE;
@@ -68,6 +72,8 @@ int callback_device_token_encrypted_valid (const struct _u_request * request, st
   jwe_t * jwe_at, * jwe_rt;
   jwk_t * jwk;
   char * at_t, * rt_t;
+  UNUSED(request);
+  UNUSED(user_data);
   ck_assert_int_eq(r_jwe_init(&jwe_at), RHN_OK);
   ck_assert_int_eq(r_jwe_init(&jwe_rt), RHN_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
@@ -102,6 +108,8 @@ int callback_device_token_encrypted_valid (const struct _u_request * request, st
 
 int callback_device_token_invalid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_error = json_pack("{ssssss}", "error", DEVICE_ERROR, "error_description", DEVICE_ERROR_DESCRIPTION, "error_uri", DEVICE_ERROR_URI);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, j_error);
   json_decref(j_error);
   return U_CALLBACK_CONTINUE;
@@ -115,6 +123,8 @@ int callback_device_valid (const struct _u_request * request, struct _u_response
                                "verification_uri_complete", DEVICE_AUTH_VERIFICATION_URI_COMPLETE,
                                "expires_in", DEVICE_AUTH_EXPIRES_IN,
                                "interval", DEVICE_AUTH_INTERVAL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_error);
   json_decref(j_error);
   return U_CALLBACK_CONTINUE;
@@ -129,6 +139,8 @@ int callback_device_claims_resource_valid (const struct _u_request * request, st
                                "expires_in", DEVICE_AUTH_EXPIRES_IN,
                                "interval", DEVICE_AUTH_INTERVAL), * j_claims = json_pack("{s{so}s{s{so}}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, "essential", json_false());
   char * str_claims = json_dumps(j_claims, JSON_COMPACT);
+  UNUSED(request);
+  UNUSED(user_data);
   ck_assert_str_eq(u_map_get(request->map_post_body, "claims"), str_claims);
   ck_assert_str_eq(u_map_get(request->map_post_body, "resource"), RESOURCE_INDICATOR);
   ulfius_set_json_body_response(response, 200, j_error);
@@ -140,12 +152,16 @@ int callback_device_claims_resource_valid (const struct _u_request * request, st
 
 int callback_device_invalid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_error = json_pack("{ssssss}", "error", DEVICE_ERROR, "error_description", DEVICE_ERROR_DESCRIPTION, "error_uri", DEVICE_ERROR_URI);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, j_error);
   json_decref(j_error);
   return U_CALLBACK_CONTINUE;
 }
 
 int callback_device_unauthorized (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
+  UNUSED(user_data);
   response->status = 403;
   return U_CALLBACK_CONTINUE;
 }
@@ -493,7 +509,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

@@ -6,6 +6,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define USERINFO_NAME "Dave Lopper"
 #define USERINFO_AUD "abcdxyz"
 #define USERINFO_EMAIL "dev@iddawc.tld"
@@ -85,6 +87,7 @@ const char jwk_privkey_rsa_str_2[] = "{\"kty\":\"RSA\",\"n\":\"ANjyvB_f8xm80wMZM
 static char userinfo_char[] = USERINFO_NAME ";" USERINFO_AUD ";" USERINFO_EMAIL;
 
 int callback_openid_userinfo_valid_json (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), "Bearer " ACCESS_TOKEN)) {
     json_t * j_response = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
     ulfius_set_json_body_response(response, 200, j_response);
@@ -96,6 +99,7 @@ int callback_openid_userinfo_valid_json (const struct _u_request * request, stru
 }
 
 int callback_openid_userinfo_valid_json_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), "DPoP " ACCESS_TOKEN) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
     json_t * j_response = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
     ulfius_set_json_body_response(response, 200, j_response);
@@ -107,6 +111,7 @@ int callback_openid_userinfo_valid_json_dpop (const struct _u_request * request,
 }
 
 int callback_openid_userinfo_valid_json_dpop_nonce (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), "DPoP " ACCESS_TOKEN) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
     jwt_t * jwt = r_jwt_quick_parse(u_map_get(request->map_header, I_HEADER_DPOP), R_PARSE_HEADER_JWK, 0);
     if (0 != o_strcmp(DPOP_NONCE, r_jwt_get_claim_str_value(jwt, "nonce"))) {
@@ -126,6 +131,7 @@ int callback_openid_userinfo_valid_json_dpop_nonce (const struct _u_request * re
 }
 
 int callback_openid_userinfo_valid_char (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp(u_map_get(request->map_header, "Authorization"), "Bearer " ACCESS_TOKEN)) {
     ulfius_set_string_body_response(response, 200, userinfo_char);
   } else {
@@ -135,10 +141,15 @@ int callback_openid_userinfo_valid_char (const struct _u_request * request, stru
 }
 
 int callback_openid_userinfo_valid_empty_result (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
+  UNUSED(response);
+  UNUSED(user_data);
   return U_CALLBACK_CONTINUE;
 }
 
 int callback_openid_userinfo_invalid_response (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
+  UNUSED(user_data);
   response->status = 401;
   return U_CALLBACK_CONTINUE;
 }
@@ -147,6 +158,7 @@ int callback_openid_userinfo_valid_jwt_signed (const struct _u_request * request
   jwt_t * jwt;
   jwk_t * jwk;
   char * token = NULL;
+  UNUSED(user_data);
   
   r_jwt_init(&jwt);
   r_jwk_init(&jwk);
@@ -170,6 +182,7 @@ int callback_openid_userinfo_valid_jwt_encrypted (const struct _u_request * requ
   jwt_t * jwt;
   jwk_t * jwk;
   char * token = NULL;
+  UNUSED(user_data);
   
   r_jwt_init(&jwt);
   r_jwk_init(&jwk);
@@ -194,6 +207,7 @@ int callback_openid_userinfo_valid_jwt_nested (const struct _u_request * request
   jwt_t * jwt;
   jwk_t * jwk_encrypt, * jwk_sign;
   char * token = NULL;
+  UNUSED(user_data);
   
   r_jwt_init(&jwt);
   r_jwk_init(&jwk_encrypt);
@@ -546,7 +560,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

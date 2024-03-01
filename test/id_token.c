@@ -8,6 +8,8 @@
 #include <rhonabwy.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define EXPIRES_IN 3600
 #define ISSUER "https://glewlwyd.tld"
 #define AUD "https://resource.tld"
@@ -179,6 +181,8 @@ const char openid_configuration_valid[] = "{\
 
 int callback_openid_configuration_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -188,6 +192,8 @@ int callback_openid_jwks_rotate (const struct _u_request * request, struct _u_re
   static int counter = 0;
   jwks_t * jwks;
   json_t * j_response;
+  UNUSED(request);
+  UNUSED(user_data);
   
   if (!counter) {
     jwks = r_jwks_quick_import(R_IMPORT_JSON_STR, jwk_pubkey_rsa_str_2, R_IMPORT_NONE);
@@ -205,6 +211,8 @@ int callback_openid_jwks_rotate (const struct _u_request * request, struct _u_re
 int callback_openid_jwks_norotate (const struct _u_request * request, struct _u_response * response, void * user_data) {
   jwks_t * jwks;
   json_t * j_response;
+  UNUSED(request);
+  UNUSED(user_data);
   
   jwks = r_jwks_quick_import(R_IMPORT_JSON_STR, jwk_pubkey_rsa_str_2, R_IMPORT_NONE);
   j_response = r_jwks_export_to_json_t(jwks);
@@ -2029,7 +2037,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

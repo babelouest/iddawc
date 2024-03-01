@@ -7,6 +7,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define PAR_ERROR "invalid_request"
 #define PAR_ERROR_DESCRIPTION "invalid_request description"
 #define PAR_ERROR_URI "https://as.tld/#error"
@@ -27,6 +29,8 @@
 
 int callback_par_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssi}", "request_uri", REQUEST_URI, "expires_in", EXPIRES_IN);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 201, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -35,6 +39,8 @@ int callback_par_valid (const struct _u_request * request, struct _u_response * 
 int callback_par_claims_resource_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssi}", "request_uri", REQUEST_URI, "expires_in", EXPIRES_IN), * j_claims = json_pack("{s{so}s{s{so}}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, "essential", json_false());
   char * str_claims = json_dumps(j_claims, JSON_COMPACT);
+  UNUSED(request);
+  UNUSED(user_data);
   ck_assert_str_eq(u_map_get(request->map_post_body, "claims"), str_claims);
   ck_assert_str_eq(u_map_get(request->map_post_body, "resource"), RESOURCE_INDICATOR);
   ulfius_set_json_body_response(response, 201, j_response);
@@ -46,12 +52,16 @@ int callback_par_claims_resource_valid (const struct _u_request * request, struc
 
 int callback_par_invalid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_error = json_pack("{ssssss}", "error", PAR_ERROR, "error_description", PAR_ERROR_DESCRIPTION, "error_uri", PAR_ERROR_URI);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, j_error);
   json_decref(j_error);
   return U_CALLBACK_CONTINUE;
 }
 
 int callback_par_unauthorized (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
+  UNUSED(user_data);
   response->status = 403;
   return U_CALLBACK_CONTINUE;
 }
@@ -254,7 +264,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

@@ -7,6 +7,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define TOKEN "accessTokenXyz1234"
 #define DPOP_NONCE "dpopNonceXyz1234"
 
@@ -68,6 +70,7 @@ const char jwk_privkey_rsa_str[] = "{\"kty\":\"RSA\",\"n\":\"ALrIdhuABv82Y7K1-LJ
                                    "e6GjKj3azo_V_MkShUSIycyFqIDbqIYWBnJDzfdKzvFkyJ-VEbo6LPlBxJRx9ktCtbdGQ\",\"kid\":\"1\",\"alg\":\"RS256\"}";
 
 int callback_introspect (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization"))) {
     if (0 == o_strcmp(TOKEN, u_map_get(request->map_post_body, "token"))) {
       json_t * j_response = json_loads(result, JSON_DECODE_ANY, NULL);
@@ -85,6 +88,7 @@ int callback_introspect (const struct _u_request * request, struct _u_response *
 }
 
 int callback_introspect_cert (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (request->client_cert != NULL) {
     if (0 == o_strcmp(TOKEN, u_map_get(request->map_post_body, "token"))) {
       json_t * j_response = json_loads(result, JSON_DECODE_ANY, NULL);
@@ -102,6 +106,7 @@ int callback_introspect_cert (const struct _u_request * request, struct _u_respo
 }
 
 int callback_introspect_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp("DPoP "TOKEN, u_map_get(request->map_header, "Authorization")) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
     if (0 == o_strcmp(TOKEN, u_map_get(request->map_post_body, "token"))) {
       json_t * j_response = json_loads(result, JSON_DECODE_ANY, NULL);
@@ -119,6 +124,7 @@ int callback_introspect_dpop (const struct _u_request * request, struct _u_respo
 }
 
 int callback_introspect_dpop_nonce (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp("DPoP "TOKEN, u_map_get(request->map_header, "Authorization")) && u_map_get(request->map_header, I_HEADER_DPOP) != NULL) {
     if (0 == o_strcmp(TOKEN, u_map_get(request->map_post_body, "token"))) {
       jwt_t * jwt = r_jwt_quick_parse(u_map_get(request->map_header, I_HEADER_DPOP), R_PARSE_HEADER_JWK, 0);
@@ -441,7 +447,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

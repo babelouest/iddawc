@@ -8,6 +8,8 @@
 #include <iddawc.h>
 #include <rhonabwy.h>
 
+#define UNUSED(x) (void)(x)
+
 #define CIBA_ERROR "invalid_request"
 #define CIBA_ERROR_DESCRIPTION "invalid_request description"
 #define CIBA_ERROR_URI "https://as.tld/#error"
@@ -63,6 +65,7 @@ const char jwk_key_128[] = "{\"kty\":\"oct\",\"alg\":\"HS256\",\"k\":\"GawgguFyG
 
 int callback_ciba_login_hint_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
+  UNUSED(user_data);
   ck_assert_str_eq(CIBA_LOGIN_HINT, u_map_get(request->map_post_body, "login_hint"));
   ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_STR, u_map_get(request->map_post_body, "requested_expiry"));
   ck_assert_str_eq(CIBA_BINDING_MESSAGE, u_map_get(request->map_post_body, "binding_message"));
@@ -74,6 +77,7 @@ int callback_ciba_login_hint_valid (const struct _u_request * request, struct _u
 
 int callback_ciba_jwt_sign_secret_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   jwt_t * jwt = NULL;
+  UNUSED(user_data);
   ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "request"), R_PARSE_NONE, 0));
   ck_assert_int_eq(R_JWT_TYPE_SIGN, r_jwt_get_type(jwt));
   ck_assert_int_eq(R_JWA_ALG_HS256, r_jwt_get_sign_alg(jwt));
@@ -90,6 +94,7 @@ int callback_ciba_jwt_sign_secret_valid (const struct _u_request * request, stru
 
 int callback_ciba_jwt_sign_pubkey_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   jwt_t * jwt = NULL;
+  UNUSED(user_data);
   ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "request"), R_PARSE_NONE, 0));
   ck_assert_int_eq(R_JWT_TYPE_SIGN, r_jwt_get_type(jwt));
   ck_assert_int_eq(R_JWA_ALG_RS256, r_jwt_get_sign_alg(jwt));
@@ -106,6 +111,7 @@ int callback_ciba_jwt_sign_pubkey_valid (const struct _u_request * request, stru
 
 int callback_ciba_jwt_encrypt_secret_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   jwt_t * jwt = NULL;
+  UNUSED(user_data);
   ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "request"), R_PARSE_NONE, 0));
   ck_assert_int_eq(R_JWT_TYPE_ENCRYPT, r_jwt_get_type(jwt));
   ck_assert_int_eq(R_JWA_ALG_A128GCMKW, r_jwt_get_enc_alg(jwt));
@@ -118,6 +124,7 @@ int callback_ciba_jwt_encrypt_secret_valid (const struct _u_request * request, s
 
 int callback_ciba_jwt_encrypt_pubkey_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   jwt_t * jwt = NULL;
+  UNUSED(user_data);
   ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "request"), R_PARSE_NONE, 0));
   ck_assert_int_eq(R_JWT_TYPE_NESTED_SIGN_THEN_ENCRYPT, r_jwt_get_type(jwt));
   ck_assert_int_eq(R_JWA_ALG_RSA_OAEP_256, r_jwt_get_enc_alg(jwt));
@@ -130,6 +137,7 @@ int callback_ciba_jwt_encrypt_pubkey_valid (const struct _u_request * request, s
 
 int callback_ciba_id_token_hint_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
+  UNUSED(user_data);
   ck_assert_str_eq(CIBA_ID_TOKEN_HINT, u_map_get(request->map_post_body, "id_token_hint"));
   ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_STR, u_map_get(request->map_post_body, "requested_expiry"));
   ck_assert_str_eq(CIBA_BINDING_MESSAGE, u_map_get(request->map_post_body, "binding_message"));
@@ -140,6 +148,7 @@ int callback_ciba_id_token_hint_valid (const struct _u_request * request, struct
 }
 
 int callback_ciba_login_hint_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   jwt_t * jwt = NULL;
   ck_assert_ptr_ne(NULL, jwt = r_jwt_quick_parse(u_map_get(request->map_post_body, "login_hint_token"), R_PARSE_NONE, 0));
   ck_assert_str_eq(CIBA_REQUESTED_EXPIRY_STR, u_map_get(request->map_post_body, "requested_expiry"));
@@ -153,6 +162,7 @@ int callback_ciba_login_hint_token_valid (const struct _u_request * request, str
 }
 
 int callback_ciba_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   ck_assert_str_eq("urn:openid:params:grant-type:ciba", u_map_get(request->map_post_body, "grant_type"));
   ck_assert_str_eq(CIBA_AUTH_REQ_ID, u_map_get(request->map_post_body, "auth_req_id"));
   json_t * result = json_pack("{sssssiss}", 
@@ -167,6 +177,8 @@ int callback_ciba_token_valid (const struct _u_request * request, struct _u_resp
 
 int callback_ciba_token_auth_pending (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * result = json_pack("{ss}", "error", ERROR_AUTH_PENDING);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, result);
   json_decref(result);
   return U_CALLBACK_CONTINUE;
@@ -174,6 +186,8 @@ int callback_ciba_token_auth_pending (const struct _u_request * request, struct 
 
 int callback_ciba_token_slow_down (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * result = json_pack("{ss}", "error", ERROR_SLOW_DOWN);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, result);
   json_decref(result);
   return U_CALLBACK_CONTINUE;
@@ -181,6 +195,8 @@ int callback_ciba_token_slow_down (const struct _u_request * request, struct _u_
 
 int callback_ciba_token_expired_token (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * result = json_pack("{ss}", "error", ERROR_EXPIRED_TOKEN);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, result);
   json_decref(result);
   return U_CALLBACK_CONTINUE;
@@ -188,6 +204,8 @@ int callback_ciba_token_expired_token (const struct _u_request * request, struct
 
 int callback_ciba_token_access_denied (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * result = json_pack("{ss}", "error", ERROR_ACCESS_DENIED);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, result);
   json_decref(result);
   return U_CALLBACK_CONTINUE;
@@ -195,18 +213,23 @@ int callback_ciba_token_access_denied (const struct _u_request * request, struct
 
 int callback_ciba_invalid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_error = json_pack("{ssssss}", "error", CIBA_ERROR, "error_description", CIBA_ERROR_DESCRIPTION, "error_uri", CIBA_ERROR_URI);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, j_error);
   json_decref(j_error);
   return U_CALLBACK_CONTINUE;
 }
 
 int callback_ciba_unauthorized (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
+  UNUSED(user_data);
   response->status = 403;
   return U_CALLBACK_CONTINUE;
 }
 
 int callback_ciba_jwt_auth_code_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_pack("{sssisi}", "auth_req_id", CIBA_AUTH_REQ_ID, "expires_in", CIBA_AUTH_REQ_EXPIRES_IN, "interval", CIBA_AUTH_REQ_INTERVAL);
+  UNUSED(user_data);
   
   if (0 == o_strcmp(u_map_get(request->map_post_body, "client_assertion_type"), "urn:ietf:params:oauth:client-assertion-type:jwt-bearer") && o_strlen(u_map_get(request->map_post_body, "client_assertion"))) {
     jwt_t * jwt;
@@ -1089,7 +1112,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

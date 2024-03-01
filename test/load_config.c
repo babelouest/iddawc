@@ -6,6 +6,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define ISSUER "https://glewlwyd.tld/"
 #define AUTH_ENDPOINT "http://localhost:8080/auth"
 #define TOKEN_ENDPOINT "http://localhost:8080/token"
@@ -237,6 +239,8 @@ const char jwks_pubkey_rsa_str_invalid_n[] = "{\"keys\":[{\"kty\":\"RSA\",\"n\":
 
 int callback_openid_jwks_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(jwks_pubkey_rsa_str, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -244,6 +248,8 @@ int callback_openid_jwks_valid (const struct _u_request * request, struct _u_res
 
 int callback_openid_jwks_invalid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(jwks_pubkey_rsa_str_invalid_n, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -251,6 +257,8 @@ int callback_openid_jwks_invalid (const struct _u_request * request, struct _u_r
 
 int callback_openid_configuration_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -258,6 +266,8 @@ int callback_openid_configuration_valid (const struct _u_request * request, stru
 
 int callback_openid_configuration_invalid_issuer (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_invalid_issuer, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -265,6 +275,8 @@ int callback_openid_configuration_invalid_issuer (const struct _u_request * requ
 
 int callback_openid_configuration_invalid_authorization_endpoint (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_invalid_authorization_endpoint, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -272,6 +284,8 @@ int callback_openid_configuration_invalid_authorization_endpoint (const struct _
 
 int callback_openid_configuration_invalid_jwks_uri (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_invalid_jwks_uri, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -279,6 +293,8 @@ int callback_openid_configuration_invalid_jwks_uri (const struct _u_request * re
 
 int callback_openid_configuration_invalid_response_types_supported (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_invalid_response_types_supported, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -286,6 +302,8 @@ int callback_openid_configuration_invalid_response_types_supported (const struct
 
 int callback_openid_configuration_invalid_subject_types_supported (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_invalid_subject_types_supported, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -293,6 +311,8 @@ int callback_openid_configuration_invalid_subject_types_supported (const struct 
 
 int callback_openid_configuration_invalid_id_token_signing_alg_values_supported (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_invalid_id_token_signing_alg_values_supported, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -300,6 +320,8 @@ int callback_openid_configuration_invalid_id_token_signing_alg_values_supported 
 
 int callback_openid_configuration_invalid_jwks (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_invalid_jwks, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -492,7 +514,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

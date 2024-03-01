@@ -7,6 +7,8 @@
 #include <rhonabwy.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define SCOPE_LIST "openid g_profile"
 #define STATE "stateXyz1234"
 #define REDIRECT_URI "https://iddawc.tld"
@@ -183,6 +185,8 @@ int callback_oauth2_redirect_external_auth (const struct _u_request * request, s
 
 int callback_userinfo_valid_json (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(userinfo_json, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -217,6 +221,8 @@ int callback_oauth2_token_code_id_token_ok (const struct _u_request * request, s
   char * grants = NULL, * jwt_str;
   time_t now;
   json_t * result;
+  UNUSED(request);
+  UNUSED(user_data);
   
   r_jwt_init(&jwt);
   r_jwk_init(&jwk);
@@ -247,6 +253,8 @@ int callback_oauth2_token_code_id_token_ok (const struct _u_request * request, s
 
 int callback_openid_configuration_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(openid_configuration_valid, JSON_DECODE_ANY, NULL);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, j_response);
   json_decref(j_response);
   return U_CALLBACK_CONTINUE;
@@ -256,6 +264,8 @@ int callback_openid_jwks_valid (const struct _u_request * request, struct _u_res
   jwk_t * jwk;
   jwks_t * jwks;
   json_t * j_response;
+  UNUSED(request);
+  UNUSED(user_data);
   
   r_jwk_init(&jwk);
   r_jwks_init(&jwks);
@@ -791,7 +801,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

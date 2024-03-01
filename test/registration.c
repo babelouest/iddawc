@@ -7,6 +7,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define TOKEN "accessTokenXyz1234"
 
 const char client_id[] = "s6BhdRkqt3";
@@ -16,6 +18,7 @@ const char register_pattern_2[] = "{\"client_id\": \"s6BhdRkqt3\",\"client_secre
 const char register_management_pattern[] = "{\"token_endpoint_auth_method\":\"client_secret_basic\",\"application_type\": \"web\",\"redirect_uris\":[],\"client_name\": \"My Example\",\"client_name#ja-Jpan-JP\":\"クライアント名\",\"logo_uri\": \"https://client.example.org/logo.png\",\"subject_type\": \"pairwise\",\"sector_identifier_uri\":\"https://other.example.net/file_of_redirect_uris.json\",\"jwks_uri\": \"https://client.example.org/my_public_keys.jwks\",\"userinfo_encrypted_response_alg\": \"RSA1_5\",\"userinfo_encrypted_response_enc\": \"A128CBC-HS256\",\"contacts\": [\"ve7jtb@example.org\", \"mary@example.org\"],\"request_uris\":[],\"frontchannel_logout_uri\": \"https://iddawc.tld/frontlogout\",\"frontchannel_logout_session_required\": true,\"backchannel_logout_uri\": \"https://iddawc.tld/backlogout\",\"backchannel_logout_session_required\": true}";
 
 int callback_register (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization"))) {
     json_t * j_parameters = ulfius_get_json_body_request(request, NULL);
     json_t * j_result = json_loads(register_pattern, JSON_DECODE_ANY, NULL);
@@ -28,6 +31,7 @@ int callback_register (const struct _u_request * request, struct _u_response * r
 }
 
 int callback_register_from_params (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization"))) {
     json_t * j_parameters = ulfius_get_json_body_request(request, NULL);
     json_t * j_result = json_loads(register_pattern, JSON_DECODE_ANY, NULL);
@@ -50,6 +54,7 @@ int callback_register_from_params (const struct _u_request * request, struct _u_
 }
 
 int callback_register_management (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization"))) {
     json_t * j_parameters = ulfius_get_json_body_request(request, NULL);
     json_t * j_result = json_loads(register_management_pattern, JSON_DECODE_ANY, NULL);
@@ -62,6 +67,9 @@ int callback_register_management (const struct _u_request * request, struct _u_r
 }
 
 int callback_register_delete (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
+  UNUSED(response);
+  UNUSED(user_data);
   return U_CALLBACK_CONTINUE;
 }
 
@@ -334,7 +342,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

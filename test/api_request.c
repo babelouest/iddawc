@@ -7,6 +7,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 const char jwk_privkey_str[] = "{\"kty\":\"RSA\",\"n\":\"ANgV1GxZbGBMIqqX5QsNrQQnPLk8UpkqH_60EuaHsI8YnUkPmPVXJ_4z_ziqZizvvjp_RhhXX2DnHEQuYwI-SZaBlK1VJiiWH9E"\
                                 "XrUeazcpEryFUR0I5iBROcgRJfHSvRvC7D83-xg9xC-NGVvIQ2llduYzmaK8rfuiHWlGqow3O2m5os9NTortdQf7BeTniStDokFvZy-I4i24UFkemoNPWZ9MCN0"\
                                 "WTea8n_TQmq9sVHGQtLIFqfblLxbSz_7m4g7_o3WfqlwXkVmCIu1wdzAjZV5BspBGrL0ed5Whpk9-bX69nUDvpcMAaPhuRwZ43e9koVRbVwXCNkne98VAs0_U\""\
@@ -41,6 +43,7 @@ const char resource_object[] = "{\"Hello\":\"World\"}";
 
 static int callback_resource_service_object_at_header (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(resource_object, JSON_DECODE_ANY, NULL);
+  UNUSED(user_data);
   if (u_map_get(request->map_header, I_HEADER_AUTHORIZATION) != NULL) {
     ulfius_set_json_body_response(response, 200, j_response);
   } else {
@@ -52,6 +55,7 @@ static int callback_resource_service_object_at_header (const struct _u_request *
 
 static int callback_resource_service_object_at_body (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(resource_object, JSON_DECODE_ANY, NULL);
+  UNUSED(user_data);
   if (u_map_get(request->map_post_body, I_BODY_URL_PARAMETER) != NULL) {
     ulfius_set_json_body_response(response, 200, j_response);
   } else {
@@ -63,6 +67,7 @@ static int callback_resource_service_object_at_body (const struct _u_request * r
 
 static int callback_resource_service_object_at_url (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(resource_object, JSON_DECODE_ANY, NULL);
+  UNUSED(user_data);
   if (u_map_get(request->map_url, I_BODY_URL_PARAMETER) != NULL) {
     ulfius_set_json_body_response(response, 200, j_response);
   } else {
@@ -72,9 +77,10 @@ static int callback_resource_service_object_at_url (const struct _u_request * re
   return U_CALLBACK_CONTINUE;
 }
 
-int callback_resource_service_object_with_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
+static int callback_resource_service_object_with_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(resource_object, JSON_DECODE_ANY, NULL);
   jwt_t * jwt;
+  UNUSED(user_data);
   
   if (0 == o_strcmp("DPoP "ACCESS_TOKEN, u_map_get(request->map_header, "Authorization")) && u_map_get(request->map_header, "DPoP") != NULL) {
     jwt = r_jwt_quick_parse(u_map_get(request->map_header, "DPoP"), R_PARSE_HEADER_JWK, 0);
@@ -91,8 +97,9 @@ int callback_resource_service_object_with_dpop (const struct _u_request * reques
   return U_CALLBACK_CONTINUE;
 }
 
-int callback_resource_service_object_with_dpop_nonce (const struct _u_request * request, struct _u_response * response, void * user_data) {
+static int callback_resource_service_object_with_dpop_nonce (const struct _u_request * request, struct _u_response * response, void * user_data) {
   json_t * j_response = json_loads(resource_object, JSON_DECODE_ANY, NULL);
+  UNUSED(user_data);
   if (0 == o_strcmp("DPoP "ACCESS_TOKEN, u_map_get(request->map_header, "Authorization")) && u_map_get(request->map_header, "DPoP") != NULL) {
     jwt_t * jwt = r_jwt_quick_parse(u_map_get(request->map_header, I_HEADER_DPOP), R_PARSE_HEADER_JWK, 0);
     if (0 != o_strcmp(DPOP_NONCE, r_jwt_get_claim_str_value(jwt, "nonce"))) {
@@ -111,6 +118,8 @@ int callback_resource_service_object_with_dpop_nonce (const struct _u_request * 
 }
 
 static int callback_refresh_token_invalid (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
+  UNUSED(user_data);
   response->status = 403;
   return U_CALLBACK_CONTINUE;
 }
@@ -120,6 +129,8 @@ static int callback_refresh_token_valid (const struct _u_request * request, stru
                              "access_token", ACCESS_TOKEN_2,
                              "token_type", TOKEN_TYPE,
                              "expires_in", EXPIRES_IN);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, result);
   json_decref(result);
   return U_CALLBACK_CONTINUE;
@@ -576,7 +587,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

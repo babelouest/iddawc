@@ -6,6 +6,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define SCOPE1 "scope1"
 #define SCOPE2 "scope2"
 #define SCOPE_LIST "scope1 scope2"
@@ -86,6 +88,8 @@ int callback_oauth2_token_invalid_request (const struct _u_request * request, st
                              "error", "invalid_request",
                              "error_description", "invalid_request description",
                              "error_uri", "invalid_request uri");
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, error);
   json_decref(error);
   return U_CALLBACK_CONTINUE;
@@ -96,6 +100,8 @@ int callback_oauth2_token_invalid_client (const struct _u_request * request, str
                              "error", "invalid_client",
                              "error_description", "invalid_client description",
                              "error_uri", "invalid_client uri");
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, error);
   json_decref(error);
   return U_CALLBACK_CONTINUE;
@@ -106,6 +112,8 @@ int callback_oauth2_token_invalid_grant (const struct _u_request * request, stru
                              "error", "invalid_grant",
                              "error_description", "invalid_grant description",
                              "error_uri", "invalid_grant uri");
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, error);
   json_decref(error);
   return U_CALLBACK_CONTINUE;
@@ -116,6 +124,8 @@ int callback_oauth2_token_unauthorized_client (const struct _u_request * request
                              "error", "unauthorized_client",
                              "error_description", "unauthorized_client description",
                              "error_uri", "unauthorized_client uri");
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, error);
   json_decref(error);
   return U_CALLBACK_CONTINUE;
@@ -126,6 +136,8 @@ int callback_oauth2_token_unsupported_grant_type (const struct _u_request * requ
                              "error", "unsupported_grant_type",
                              "error_description", "unsupported_grant_type description",
                              "error_uri", "unsupported_grant_type uri");
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, error);
   json_decref(error);
   return U_CALLBACK_CONTINUE;
@@ -136,6 +148,8 @@ int callback_oauth2_token_invalid_scope (const struct _u_request * request, stru
                              "error", "invalid_scope",
                              "error_description", "invalid_scope description",
                              "error_uri", "invalid_scope uri");
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 400, error);
   json_decref(error);
   return U_CALLBACK_CONTINUE;
@@ -147,6 +161,8 @@ int callback_oauth2_token_code_ok (const struct _u_request * request, struct _u_
                              "token_type", "bearer",
                              "expires_in", 3600,
                              "refresh_token", REFRESH_TOKEN);
+  UNUSED(request);
+  UNUSED(user_data);
   ulfius_set_json_body_response(response, 200, result);
   json_decref(result);
   return U_CALLBACK_CONTINUE;
@@ -156,6 +172,8 @@ int callback_oauth2_token_code_encrypted_ok (const struct _u_request * request, 
   jwe_t * jwe_at, * jwe_rt;
   jwk_t * jwk;
   char * at_t, * rt_t;
+  UNUSED(request);
+  UNUSED(user_data);
   ck_assert_int_eq(r_jwe_init(&jwe_at), RHN_OK);
   ck_assert_int_eq(r_jwe_init(&jwe_rt), RHN_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
@@ -189,6 +207,8 @@ int callback_oauth2_token_code_encrypted_ok (const struct _u_request * request, 
 }
 
 int callback_oauth2_token_access_token_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(request);
+  UNUSED(user_data);
   json_t * result = json_pack("{sssssi}", 
                              "access_token", ACCESS_TOKEN,
                              "token_type", "bearer",
@@ -199,6 +219,7 @@ int callback_oauth2_token_access_token_ok (const struct _u_request * request, st
 }
 
 int callback_oauth2_token_jwt_auth_code_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 == o_strcmp(u_map_get(request->map_post_body, "client_assertion_type"), "urn:ietf:params:oauth:client-assertion-type:jwt-bearer") && o_strlen(u_map_get(request->map_post_body, "client_assertion"))) {
     jwt_t * jwt;
     jwk_t * jwk;
@@ -256,6 +277,7 @@ int callback_oauth2_token_jwt_auth_code_ok (const struct _u_request * request, s
 }
 
 int callback_oauth2_token_code_cert_ok (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   json_t * result = json_pack("{sssssiss}", 
                              "access_token", ACCESS_TOKEN,
                              "token_type", "bearer",
@@ -1510,7 +1532,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;

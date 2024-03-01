@@ -7,6 +7,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define TOKEN "accessTokenXyz1234"
 #define DPOP_NONCE "dpopNonceXyz1234"
 
@@ -66,6 +68,7 @@ const char jwk_privkey_rsa_str[] = "{\"kty\":\"RSA\",\"n\":\"ALrIdhuABv82Y7K1-LJ
                                    "e6GjKj3azo_V_MkShUSIycyFqIDbqIYWBnJDzfdKzvFkyJ-VEbo6LPlBxJRx9ktCtbdGQ\",\"kid\":\"1\",\"alg\":\"RS256\"}";
 
 int callback_revoke (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 != o_strcmp("Bearer "TOKEN, u_map_get(request->map_header, "Authorization"))) {
     response->status = 403;
   }
@@ -73,6 +76,7 @@ int callback_revoke (const struct _u_request * request, struct _u_response * res
 }
 
 int callback_revoke_cert (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (request->client_cert == NULL) {
     response->status = 403;
   }
@@ -80,6 +84,7 @@ int callback_revoke_cert (const struct _u_request * request, struct _u_response 
 }
 
 int callback_revoke_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (0 != o_strcmp("DPoP "TOKEN, u_map_get(request->map_header, "Authorization")) || u_map_get(request->map_header, I_HEADER_DPOP) == NULL) {
     response->status = 403;
   }
@@ -88,6 +93,7 @@ int callback_revoke_dpop (const struct _u_request * request, struct _u_response 
 
 int callback_revoke_dpop_nonce (const struct _u_request * request, struct _u_response * response, void * user_data) {
   jwt_t * jwt;
+  UNUSED(user_data);
   if (0 != o_strcmp("DPoP "TOKEN, u_map_get(request->map_header, "Authorization")) || u_map_get(request->map_header, I_HEADER_DPOP) == NULL) {
     response->status = 403;
   } else {
@@ -322,7 +328,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;
