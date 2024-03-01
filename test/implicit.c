@@ -6,6 +6,8 @@
 #include <yder.h>
 #include <iddawc.h>
 
+#define UNUSED(x) (void)(x)
+
 #define SCOPE1 "scope1"
 #define SCOPE2 "scope2"
 #define SCOPE_LIST "scope1 scope2"
@@ -80,6 +82,7 @@ const char jwk_privkey_str_2[] = "{\"kty\":\"RSA\",\"n\":\"0vx7agoebGcQSuuPiLJXZ
 
 int callback_oauth2_unauthorized_public_client (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s?error=unauthorized_client&error_description=Invalid+client_id&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -88,6 +91,7 @@ int callback_oauth2_unauthorized_public_client (const struct _u_request * reques
 
 int callback_oauth2_invalid_scope (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s?error=invalid_scope&error_description=Scope+missing&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -96,6 +100,7 @@ int callback_oauth2_invalid_scope (const struct _u_request * request, struct _u_
 
 int callback_oauth2_invalid_response_type (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s?error=invalid_request&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -104,6 +109,7 @@ int callback_oauth2_invalid_response_type (const struct _u_request * request, st
 
 int callback_oauth2_invalid_state (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s?code=xyz&state=error%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -112,6 +118,7 @@ int callback_oauth2_invalid_state (const struct _u_request * request, struct _u_
 
 int callback_oauth2_code_empty (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s?code&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -120,6 +127,7 @@ int callback_oauth2_code_empty (const struct _u_request * request, struct _u_res
 
 int callback_oauth2_access_token_empty (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s#access_token&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -128,6 +136,7 @@ int callback_oauth2_access_token_empty (const struct _u_request * request, struc
 
 int callback_oauth2_token_type_empty (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type&code&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -136,6 +145,7 @@ int callback_oauth2_token_type_empty (const struct _u_request * request, struct 
 
 int callback_oauth2_expires_in_invalid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type=" TOKEN_TYPE "&expires_in=error&code&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -144,6 +154,7 @@ int callback_oauth2_expires_in_invalid (const struct _u_request * request, struc
 
 int callback_oauth2_redirect_external_auth (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf(REDIRECT_EXTERNAL_AUTH "?redirect_uri=%s&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -152,6 +163,7 @@ int callback_oauth2_redirect_external_auth (const struct _u_request * request, s
 
 int callback_oauth2_code_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s?code=" CODE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -162,6 +174,7 @@ int callback_oauth2_code_encrypted_valid (const struct _u_request * request, str
   jwe_t * jwe_code;
   jwk_t * jwk;
   char * code;
+  UNUSED(user_data);
   ck_assert_int_eq(r_jwe_init(&jwe_code), RHN_OK);
   ck_assert_int_eq(r_jwk_init(&jwk), RHN_OK);
   ck_assert_int_eq(r_jwk_import_from_json_str(jwk, jwk_pubkey_str), RHN_OK);
@@ -184,6 +197,7 @@ int callback_oauth2_code_encrypted_valid (const struct _u_request * request, str
 
 int callback_oauth2_access_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -192,6 +206,7 @@ int callback_oauth2_access_token_valid (const struct _u_request * request, struc
 
 int callback_oauth2_id_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s#id_token=" ID_TOKEN "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -200,6 +215,7 @@ int callback_oauth2_id_token_valid (const struct _u_request * request, struct _u
 
 int callback_oauth2_access_token_id_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&id_token=" ID_TOKEN "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -208,6 +224,7 @@ int callback_oauth2_access_token_id_token_valid (const struct _u_request * reque
 
 int callback_oauth2_access_token_code_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&code=" CODE "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -216,6 +233,7 @@ int callback_oauth2_access_token_code_valid (const struct _u_request * request, 
 
 int callback_oauth2_access_token_code_id_token_valid (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s#access_token=" ACCESS_TOKEN "&id_token=" ID_TOKEN "&code=" CODE "&token_type=" TOKEN_TYPE "&state=%s", u_map_get(request->map_url, "redirect_uri"), u_map_get(request->map_url, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -224,6 +242,7 @@ int callback_oauth2_access_token_code_id_token_valid (const struct _u_request * 
 
 int callback_oauth2_code_valid_post (const struct _u_request * request, struct _u_response * response, void * user_data) {
   char * redirect = msprintf("%s?code=" CODE "&state=%s", u_map_get(request->map_post_body, "redirect_uri"), u_map_get(request->map_post_body, "state"));
+  UNUSED(user_data);
   u_map_put(response->map_header, "Location", redirect);
   response->status = 302;
   o_free(redirect);
@@ -231,6 +250,7 @@ int callback_oauth2_code_valid_post (const struct _u_request * request, struct _
 }
 
 int callback_oauth2_code_valid_post_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (u_map_get(request->map_post_body, "dpop_jkt") == NULL) {
     response->status = 400;
   } else {
@@ -243,6 +263,7 @@ int callback_oauth2_code_valid_post_dpop (const struct _u_request * request, str
 }
 
 int callback_oauth2_code_valid_post_jwt_signed (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (u_map_get(request->map_post_body, "request") != NULL) {
     jwt_t * jwt;
     jwk_t * jwk;
@@ -279,6 +300,7 @@ int callback_oauth2_code_valid_post_jwt_signed (const struct _u_request * reques
 }
 
 int callback_oauth2_code_valid_post_jwt_signed_dpop (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (u_map_get(request->map_post_body, "request") != NULL) {
     jwt_t * jwt;
     jwk_t * jwk;
@@ -315,6 +337,7 @@ int callback_oauth2_code_valid_post_jwt_signed_dpop (const struct _u_request * r
 }
 
 int callback_oauth2_code_valid_post_jwt_signed_with_claims_resource (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   json_t * j_claims = json_pack("{s{so}s{s{so}}}", "userinfo", CLAIM1, json_loads(CLAIM1_CONTENT, JSON_DECODE_ANY, NULL), "id_token", CLAIM2, "essential", json_false()), * j_jwt_claims;
   if (u_map_get(request->map_post_body, "request") != NULL) {
     jwt_t * jwt;
@@ -357,6 +380,7 @@ int callback_oauth2_code_valid_post_jwt_signed_with_claims_resource (const struc
 }
 
 int callback_oauth2_code_valid_post_jwt_encrypted (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (u_map_get(request->map_post_body, "request") != NULL) {
     jwt_t * jwt;
     jwk_t * jwk;
@@ -393,6 +417,7 @@ int callback_oauth2_code_valid_post_jwt_encrypted (const struct _u_request * req
 }
 
 int callback_oauth2_code_valid_post_jwt_nested (const struct _u_request * request, struct _u_response * response, void * user_data) {
+  UNUSED(user_data);
   if (u_map_get(request->map_post_body, "request") != NULL) {
     jwt_t * jwt;
     jwk_t * jwk = NULL, * jwk2 = NULL;
@@ -1166,7 +1191,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_ok)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1207,7 +1232,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_iss)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", "error",
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1247,7 +1272,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_aud)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", "error",
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", time(NULL)+120,
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1287,7 +1312,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_exp)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)-120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)-120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1328,7 +1353,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_state)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", "error",
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1368,7 +1393,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_code)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", "error",
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1409,7 +1434,7 @@ START_TEST(test_iddawc_parse_redirect_to_query_jwt_invalid_signkey)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str_2,
@@ -1449,7 +1474,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_ok)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1490,7 +1515,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_iss)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", "error",
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1530,7 +1555,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_aud)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", "error",
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1570,7 +1595,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_exp)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)-120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)-120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1611,7 +1636,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_state)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", "error",
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1651,7 +1676,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_code)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", "error",
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str,
@@ -1692,7 +1717,7 @@ START_TEST(test_iddawc_parse_redirect_to_fragment_jwt_invalid_signkey)
   ck_assert_int_eq(i_init_session(&i_session), I_OK);
   ck_assert_int_eq(r_jwt_set_properties(jwt, RHN_OPT_CLAIM_STR_VALUE, "iss", GLEWLWYD_ISS,
                                              RHN_OPT_CLAIM_STR_VALUE, "aud", CLIENT_ID,
-                                             RHN_OPT_CLAIM_INT_VALUE, "exp", (int)(time(NULL)+120),
+                                             RHN_OPT_CLAIM_RHN_INT_VALUE, "exp", (rhn_int_t)(time(NULL)+120),
                                              RHN_OPT_CLAIM_STR_VALUE, "state", STATE,
                                              RHN_OPT_CLAIM_STR_VALUE, "code", CODE,
                                              RHN_OPT_SIGN_KEY_JSON_STR, jwk_privkey_str_2,
@@ -2198,7 +2223,7 @@ static Suite *iddawc_suite(void)
   return s;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
   int number_failed;
   Suite *s;
