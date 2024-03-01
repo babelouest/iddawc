@@ -30,7 +30,7 @@ CONFIG_FILE=$(IDDAWC_INCLUDE)/iddawc-cfg.h
 CONFIG_TEMPLATE=$(IDDAWC_INCLUDE)/iddawc-cfg.h.in
 DESTDIR=/usr/local
 CC=gcc
-CFLAGS+=-c -pedantic -std=gnu99 -fPIC -Wall -Werror -Wextra -Wconversion -Wpedantic -D_REENTRANT -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS)
+CFLAGS+=-c -std=gnu99 -fPIC -Wall -Werror -Wextra -Wconversion -Wpedantic -D_REENTRANT -I$(IDDAWC_INCLUDE) $(ADDITIONALFLAGS) $(CPPFLAGS)
 LIBS=-L$(DESTDIR)/lib -lc -lulfius -lyder -lorcania -lrhonabwy -lgnutls -ljansson $(LDFLAGS)
 SONAME=-soname
 OBJECTS=iddawc.o
