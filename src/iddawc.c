@@ -4390,7 +4390,7 @@ int i_parse_token_response(struct _i_session * i_session, int http_status, json_
             ret = I_ERROR;
           }
           r_jwt_free(jwt);
-          if (json_integer_value(json_object_get(j_response, "expires_in")) && i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in"))) != I_OK) {
+          if (json_integer_value(json_object_get(j_response, "expires_in")) > 0 && json_integer_value(json_object_get(j_response, "expires_in")) < UINT_MAX && i_set_int_parameter(i_session, I_OPT_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in"))) != I_OK) {
             y_log_message(Y_LOG_LEVEL_ERROR, "i_parse_token_response - Error setting expires_in");
             ret = I_ERROR;
           }
@@ -6930,15 +6930,25 @@ int i_run_device_auth_request(struct _i_session * i_session) {
           j_response = ulfius_get_json_body_response(&response, NULL);
           if (j_response != NULL) {
             if (response.status == 200) {
-              i_set_parameter_list(i_session,
-                                   I_OPT_DEVICE_AUTH_CODE, json_string_value(json_object_get(j_response, "device_code")),
-                                   I_OPT_DEVICE_AUTH_USER_CODE, json_string_value(json_object_get(j_response, "user_code")),
-                                   I_OPT_DEVICE_AUTH_VERIFICATION_URI, json_string_value(json_object_get(j_response, "verification_uri")),
-                                   I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, json_string_value(json_object_get(j_response, "verification_uri_complete")),
-                                   I_OPT_DEVICE_AUTH_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
-                                   I_OPT_DEVICE_AUTH_INTERVAL, (unsigned int)json_integer_value(json_object_get(j_response, "interval")),
-                                   I_OPT_NONE);
-              ret = I_OK;
+              if (json_integer_value(json_object_get(j_response, "expires_in")) > 0 && json_integer_value(json_object_get(j_response, "expires_in")) < UINT_MAX) {
+                if (json_object_get(j_response, "interval") == NULL || (json_integer_value(json_object_get(j_response, "interval")) > 0 && json_integer_value(json_object_get(j_response, "interval")) < UINT_MAX)) {
+                  i_set_parameter_list(i_session,
+                                       I_OPT_DEVICE_AUTH_CODE, json_string_value(json_object_get(j_response, "device_code")),
+                                       I_OPT_DEVICE_AUTH_USER_CODE, json_string_value(json_object_get(j_response, "user_code")),
+                                       I_OPT_DEVICE_AUTH_VERIFICATION_URI, json_string_value(json_object_get(j_response, "verification_uri")),
+                                       I_OPT_DEVICE_AUTH_VERIFICATION_URI_COMPLETE, json_string_value(json_object_get(j_response, "verification_uri_complete")),
+                                       I_OPT_DEVICE_AUTH_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
+                                       I_OPT_DEVICE_AUTH_INTERVAL, (unsigned int)json_integer_value(json_object_get(j_response, "interval")),
+                                       I_OPT_NONE);
+                  ret = I_OK;
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_device_auth_request - Error invalid interval");
+                  ret = I_ERROR;
+                }
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_device_auth_request - Error invalid expires_in");
+                ret = I_ERROR;
+              }
             } else {
               i_set_parameter_list(i_session,
                                    I_OPT_ERROR, json_string_value(json_object_get(j_response, "error")),
@@ -7069,17 +7079,22 @@ int i_run_par_request(struct _i_session * i_session) {
           j_response = ulfius_get_json_body_response(&response, NULL);
           if (j_response != NULL) {
             if (response.status == 201) {
-              redirect_to = msprintf("%s?client_id=%s&request_uri=%s", i_session->authorization_endpoint, i_session->client_id, json_string_value(json_object_get(j_response, "request_uri")));
-              if (!o_strnullempty(i_session->nonce)) {
-                redirect_to = mstrcatf(redirect_to, "&nonce=%s", i_session->nonce);
+              if (json_integer_value(json_object_get(j_response, "expires_in")) > 0 && json_integer_value(json_object_get(j_response, "expires_in")) < UINT_MAX) {
+                redirect_to = msprintf("%s?client_id=%s&request_uri=%s", i_session->authorization_endpoint, i_session->client_id, json_string_value(json_object_get(j_response, "request_uri")));
+                if (!o_strnullempty(i_session->nonce)) {
+                  redirect_to = mstrcatf(redirect_to, "&nonce=%s", i_session->nonce);
+                }
+                i_set_parameter_list(i_session,
+                                     I_OPT_PUSHED_AUTH_REQ_URI, json_string_value(json_object_get(j_response, "request_uri")),
+                                     I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
+                                     I_OPT_REDIRECT_TO, redirect_to,
+                                     I_OPT_NONE);
+                o_free(redirect_to);
+                ret = I_OK;
+              } else {
+                y_log_message(Y_LOG_LEVEL_ERROR, "i_run_par_request - Error invalid expires_in");
+                ret = I_ERROR;
               }
-              i_set_parameter_list(i_session,
-                                   I_OPT_PUSHED_AUTH_REQ_URI, json_string_value(json_object_get(j_response, "request_uri")),
-                                   I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
-                                   I_OPT_REDIRECT_TO, redirect_to,
-                                   I_OPT_NONE);
-              o_free(redirect_to);
-              ret = I_OK;
             } else {
               i_set_parameter_list(i_session,
                                    I_OPT_ERROR, json_string_value(json_object_get(j_response, "error")),
@@ -7334,12 +7349,22 @@ int i_run_ciba_request(struct _i_session * i_session) {
             j_response = ulfius_get_json_body_response(&response, NULL);
             if (j_response != NULL) {
               if (response.status == 200) {
-                i_set_parameter_list(i_session,
-                                     I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_response, "auth_req_id")),
-                                     I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
-                                     I_OPT_CIBA_AUTH_REQ_INTERVAL, (unsigned int)json_integer_value(json_object_get(j_response, "interval")),
-                                     I_OPT_NONE);
-                ret = I_OK;
+                if (json_integer_value(json_object_get(j_response, "expires_in")) > 0 && json_integer_value(json_object_get(j_response, "expires_in")) < UINT_MAX) {
+                  if (json_object_get(j_response, "interval") == NULL || (json_integer_value(json_object_get(j_response, "interval")) > 0 && json_integer_value(json_object_get(j_response, "interval")) < UINT_MAX)) {
+                    i_set_parameter_list(i_session,
+                                         I_OPT_CIBA_AUTH_REQ_ID, json_string_value(json_object_get(j_response, "auth_req_id")),
+                                         I_OPT_CIBA_AUTH_REQ_EXPIRES_IN, (unsigned int)json_integer_value(json_object_get(j_response, "expires_in")),
+                                         I_OPT_CIBA_AUTH_REQ_INTERVAL, (unsigned int)json_integer_value(json_object_get(j_response, "interval")),
+                                         I_OPT_NONE);
+                    ret = I_OK;
+                  } else {
+                    y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error invalid interval");
+                    ret = I_ERROR;
+                  }
+                } else {
+                  y_log_message(Y_LOG_LEVEL_ERROR, "i_run_ciba_auth_request - Error invalid expires_in");
+                  ret = I_ERROR;
+                }
               } else {
                 i_set_parameter_list(i_session,
                                      I_OPT_ERROR, json_string_value(json_object_get(j_response, "error")),
