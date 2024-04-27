@@ -74,8 +74,8 @@ extern "C"
 #define I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_SECRET  0x00100000 ///< token endpoint using a JWT encrypted with the client secret
 #define I_TOKEN_AUTH_METHOD_JWT_ENCRYPT_PUBKEY  0x01000000 ///< token endpoint using a JWT signed with the client private key and encrypted with the server public key or the client secret
 
-#define I_STRICT_NO                0x00000000 ///< Do not stricly conform to openid config result
-#define I_STRICT_YES               0x00000001 ///< Stricly conform to openid config result
+#define I_STRICT_NO                0x00000000 ///< Do not strictly conform to openid config result
+#define I_STRICT_YES               0x00000001 ///< Strictly conform to openid config result
 #define I_STRICT_JWT_AT_SIGNATURE  0x00000010 ///< Verify JWT access tokens signatures
 #define I_STRICT_JWT_AT_HEADER_TYP 0x00000100 ///< Verify JWT access tokens header typ value
 #define I_STRICT_JWT_AT_CLAIM      0x00001000 ///< Verify JWT access tokens claims values
@@ -162,22 +162,22 @@ typedef enum {
   I_OPT_ERROR                                   = 19, ///< error value of a failed request, string
   I_OPT_ERROR_DESCRIPTION                       = 20, ///< error description of a failed request, string
   I_OPT_ERROR_URI                               = 21, ///< error uri of a failed request, string
-  I_OPT_CODE                                    = 22, ///< code given after a succesfull auth request using the response_type I_RESPONSE_TYPE_CODE
-  I_OPT_REFRESH_TOKEN                           = 23, ///< refresh token given after a succesfull token request using the proper response_type
-  I_OPT_ACCESS_TOKEN                            = 24, ///< access token given after a succesfull auth or token request using the proper response_type
-  I_OPT_ID_TOKEN                                = 25, ///< id_token given after a succesfull auth or token request using the proper response_type
+  I_OPT_CODE                                    = 22, ///< code given after a successful auth request using the response_type I_RESPONSE_TYPE_CODE
+  I_OPT_REFRESH_TOKEN                           = 23, ///< refresh token given after a successful token request using the proper response_type
+  I_OPT_ACCESS_TOKEN                            = 24, ///< access token given after a successful auth or token request using the proper response_type
+  I_OPT_ID_TOKEN                                = 25, ///< id_token given after a successful auth or token request using the proper response_type
   I_OPT_AUTH_METHOD                             = 28, ///< Authentication method to use with the auth endpoint, values available are I_AUTH_METHOD_GET, I_AUTH_METHOD_POST, I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY, values I_AUTH_METHOD_JWT_SIGN_SECRET, I_AUTH_METHOD_JWT_SIGN_PRIVKEY, I_AUTH_METHOD_JWT_ENCRYPT_SECRET or I_AUTH_METHOD_JWT_ENCRYPT_PUBKEY can be combined with I_AUTH_METHOD_GET or I_AUTH_METHOD_POST
   I_OPT_TOKEN_METHOD                            = 29, ///< Authentication method to use with the token endpoint, values available are I_TOKEN_AUTH_METHOD_SECRET_BASIC, I_TOKEN_AUTH_METHOD_SECRET_POST, I_TOKEN_AUTH_METHOD_SECRET_JWT, I_TOKEN_AUTH_METHOD_PRIVATE_JWT, I_TOKEN_AUTH_METHOD_NONE
-  I_OPT_TOKEN_TYPE                              = 30, ///< token_type value after a succesfull auth or token request, string
-  I_OPT_EXPIRES_IN                              = 31, ///< expires_in value after a succesfull auth or token request, integer
-  I_OPT_EXPIRES_AT                              = 32, ///< expires_at value after a succesfull auth or token request, time_t
+  I_OPT_TOKEN_TYPE                              = 30, ///< token_type value after a successful auth or token request, string
+  I_OPT_EXPIRES_IN                              = 31, ///< expires_in value after a successful auth or token request, integer
+  I_OPT_EXPIRES_AT                              = 32, ///< expires_at value after a successful auth or token request, time_t
   I_OPT_USERNAME                                = 33, ///< username for password response_types, string
   I_OPT_USER_PASSWORD                           = 34, ///< password for password response_types, string
   I_OPT_ISSUER                                  = 35, ///< issuer value, string
   I_OPT_USERINFO                                = 36, ///< userinfo result, string
   I_OPT_NONCE_GENERATE                          = 37, ///< Generate a random nonce value
   I_OPT_STATE_GENERATE                          = 38, ///< Generate a random state value
-  I_OPT_X5U_FLAGS                               = 39, ///< x5u flage to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignrore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
+  I_OPT_X5U_FLAGS                               = 39, ///< x5u flags to apply when JWK used have a x5u property, values available are R_FLAG_IGNORE_SERVER_CERTIFICATE: ignore if web server certificate is invalid, R_FLAG_FOLLOW_REDIRECT: follow redirections if necessary, R_FLAG_IGNORE_REMOTE: do not download remote key
   I_OPT_SERVER_KID                              = 40, ///< key id to use if multiple jwk are available on the server, string
   I_OPT_SERVER_ENC_ALG                          = 41, ///< Key management algorithm to use when sending encrypted messages to the AS
   I_OPT_SERVER_ENC                              = 42, ///< Encryption algorithm to use when sending encrypted messages to the AS
@@ -204,7 +204,7 @@ typedef enum {
   I_OPT_DEVICE_AUTH_INTERVAL                    = 63, ///< device authorization code verification interval sent by the AS
   I_OPT_END_SESSION_ENDPOINT                    = 64, ///< absolute url for the end session endpoint, string
   I_OPT_CHECK_SESSION_IRAME                     = 65, ///< absolute url for the check session iframe, string
-  I_OPT_PUSHED_AUTH_REQ_ENDPOINT                = 66, ///< absolute url for the pushed authoization endpoint, string
+  I_OPT_PUSHED_AUTH_REQ_ENDPOINT                = 66, ///< absolute url for the pushed authorization endpoint, string
   I_OPT_PUSHED_AUTH_REQ_REQUIRED                = 67, ///< are pushed authorization requests required, boolean
   I_OPT_PUSHED_AUTH_REQ_EXPIRES_IN              = 68, ///< pushed authorization request expiration time in seconds
   I_OPT_PUSHED_AUTH_REQ_URI                     = 69, ///< request_uri sent by the par endpoint result, string
@@ -255,9 +255,9 @@ typedef enum {
   I_OPT_CIBA_CLIENT_NOTIFICATION_TOKEN_GENERATE = 114, ///< Generate a random client_notification_token of the specified length
   I_OPT_CIBA_ACR_VALUES                         = 115, ///< ACR values that the OpenID Provider is being requested to use for processing this Authentication Request
   I_OPT_CIBA_ACR_VALUES_APPEND                  = 116, ///< append another ACR value to the ACR values list, string
-  I_OPT_CIBA_AUTH_REQ_ID                        = 117, ///< auth_req_id value received by the server on succesfull request
+  I_OPT_CIBA_AUTH_REQ_ID                        = 117, ///< auth_req_id value received by the server on successful request
   I_OPT_CIBA_CLIENT_NOTIFICATION_ENDPOINT       = 118, ///< backchannel_client_notification_endpoint value to specify the url for ping or push modes
-  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 119, ///< expiration of the request in seconds received by the server on succesfull request
+  I_OPT_CIBA_AUTH_REQ_EXPIRES_IN                = 119, ///< expiration of the request in seconds received by the server on successful request
   I_OPT_CIBA_AUTH_REQ_INTERVAL                  = 120, ///< Interval to poll token endpoint on poll mode in seconds
   I_OPT_FRONTCHANNEL_LOGOUT_URI                 = 121, ///< Frontchannel logout URI
   I_OPT_FRONTCHANNEL_LOGOUT_SESSION_REQUIRED    = 122, ///< Frontchannel logout session required
@@ -975,7 +975,7 @@ int i_revoke_token(struct _i_session * i_session, int authentication);
  * @param j_parameters: a json_t * object containing the client metadata
  * The metadata content depends on the registration endpoint but at least
  * the parameter redirect_uris (array of string) is required to register a new client
- * @param update_session: if the registration is succesfull, update the session with the new client_id client_secret,
+ * @param update_session: if the registration is successful, update the session with the new client_id client_secret,
  * registration_client_uri and registration_access_token (as I_OPT_ACCESS_TOKEN)
  * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
  * @return I_OK on success, an error value on error
@@ -998,7 +998,7 @@ int i_get_registration_client(struct _i_session * i_session, json_t ** j_result)
  * @param j_parameters: a json_t * object containing the client metadata
  * The metadata content depends on the registration endpoint but at least
  * the parameter redirect_uris (array of string) is required to register a new client
- * @param update_session: if the registration is succesfull, update the session with the new client_id client_secret,
+ * @param update_session: if the registration is successful, update the session with the new client_id client_secret,
  * registration_client_uri and registration_access_token (as I_OPT_ACCESS_TOKEN)
  * @param j_result: if not NULL, set an allocated json_t * object with the endpoint result
  * @return I_OK on success, an error value on error
