@@ -1205,7 +1205,7 @@ static char * _i_sign_encrypt_jwt_auth(struct _i_session * i_session, jwt_t * jw
         y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
         enc_alg = R_JWA_ALG_UNKNOWN;
       } else if (i_session->client_enc_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "request_object_encryption_alg_values_supported"))) {
-        // no signtature alg specified, use one supported by the server
+        // no signature alg specified, use one supported by the server
         if (_i_has_openid_config_parameter_value(i_session, "request_object_encryption_alg_values_supported", "A128KW")) {
           enc_alg = R_JWA_ALG_A128KW;
         } else if (_i_has_openid_config_parameter_value(i_session, "request_object_signing_alg_values_supported", "A192KW")) {
@@ -1459,7 +1459,7 @@ static char * _i_generate_ciba_jwt(struct _i_session * i_session) {
                   y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
                   ret = I_ERROR_PARAM;
                 } else if (sign_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, "backchannel_authentication_request_signing_alg_values_supported"))) {
-                  // no signtature alg specified, use one supported by the server
+                  // no signature alg specified, use one supported by the server
                   if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS256")) {
                     sign_alg = R_JWA_ALG_HS256;
                   } else if (_i_has_openid_config_parameter_value(i_session, "backchannel_authentication_request_signing_alg_values_supported", "HS384")) {
@@ -1579,7 +1579,7 @@ static char * _i_generate_client_assertion(struct _i_session * i_session, const 
           y_log_message(Y_LOG_LEVEL_ERROR, "signature alg is not specified or supported by the server");
           ret = I_ERROR_PARAM;
         } else if (sign_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, sign_alg_values))) {
-          // no signtature alg specified, use one supported by the server
+          // no signature alg specified, use one supported by the server
           if (_i_has_openid_config_parameter_value(i_session, sign_alg_values, "HS256")) {
             sign_alg = R_JWA_ALG_HS256;
           } else if (_i_has_openid_config_parameter_value(i_session, sign_alg_values, "HS384")) {
@@ -1650,7 +1650,7 @@ static char * _i_generate_client_assertion(struct _i_session * i_session, const 
           }
         }
         if (i_session->client_enc_alg == R_JWA_ALG_UNKNOWN && json_array_size(json_object_get(i_session->openid_config, enc_alg_values))) {
-          // no signtature alg specified, use one supported by the server
+          // no signature alg specified, use one supported by the server
           if (_i_has_openid_config_parameter_value(i_session, enc_alg_values, "A128KW")) {
             enc_alg = R_JWA_ALG_A128KW;
           } else if (_i_has_openid_config_parameter_value(i_session, sign_alg_values, "A192KW")) {
