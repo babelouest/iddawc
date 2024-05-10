@@ -1,6 +1,14 @@
-# Iddawc - OAuth2/OIDC Client and Relying Party library
+# Iddawc
 
 ![.github/workflows/ccpp.yml](https://github.com/babelouest/iddawc/workflows/.github/workflows/ccpp.yml/badge.svg)
+
+## Disclaimer
+
+This library is a personal project mostly developped by myself on my free time, with gracious help from users.
+
+It also relies on libraries that have the same flaw, and please note that I have less time to work on it. So be careful on how you use this library.
+
+## OAuth2/OIDC Client and Relying Party library
 
 Handles the OAuth2 and OpenID Connect authentication process flow from the client side.
 - Generates requests based on input parameters
