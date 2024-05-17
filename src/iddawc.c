@@ -22,6 +22,7 @@
  */
 
 #include <stdarg.h>
+#include <limits.h>
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 #include <yder.h>
