@@ -1,6 +1,8 @@
 # Iddawc
 
-![.github/workflows/ccpp.yml](https://github.com/babelouest/iddawc/workflows/.github/workflows/ccpp.yml/badge.svg)
+## NOTICE: This project is no longer being maintained. ⚠️
+
+This project is now closed for me, I have no time nor motivation to maintain it, so I prefer closing this repository.
 
 ## Disclaimer
 
